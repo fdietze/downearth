@@ -5,7 +5,6 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
 import Util._
-import tools.nsc.util.Position
 
 case class WorldNodeInfo(pos:Vec3i,size:Int,value:Hexaeder)
 
