@@ -1,0 +1,22 @@
+10.6.2011 
+Bullet Einbau
+Alle Hexaeder durch statische ConvexHullShapes ersetzten:
+0 fps absolut nicht praktikabel
+nur die Hexaeder ersetzten an denen sich die Kugel befindet:
+funktioniert nicht
+Debug drawer implementiert, funktioniert nicht
+
+14.6.2011
+Octree Sektor in der physik
+direct glDebugDrawer
+
+Octree Iterator
+HexaederEinsparungen:
+surface: etwa 1/2
+plane: etwa 1/50
+
+16.6.2011
+World Octree
+Octree refactoring
+Hexaeder wegclicken kaputt gemacht
++ einstiegspunkt OctreeMesh ohne updates einbauen
