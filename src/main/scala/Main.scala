@@ -3,8 +3,8 @@ package xöpäx
 // What GL version you plan on using
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.{
-  Display, 
-  DisplayMode
+  Display, DisplayMode,
+  ARBShaderObjects, ARBVertexShader, ARBFragmentShader
 }
 import org.lwjgl.input._
 import Keyboard._
@@ -41,6 +41,11 @@ object Main {
 	var currentfps = 0
 	var timestamp = starttime
 	var framecounter = 0
+	
+	var shader = 0
+	var vertshader = 0
+	var fragshader = 0
+	
 	init
 	
 	def showfps{
@@ -81,6 +86,8 @@ object Main {
 		Display.setTitle("Worldgen")
 		Display.setDisplayMode(displayMode)
 		Display.create()
+
+		initshaders
 		
 		glEnable(GL_CULL_FACE)
 
@@ -91,6 +98,34 @@ object Main {
 		World
 		
 		Mouse.setGrabbed(true)
+	}
+	
+	def initshaders {
+		shader = ARBShaderObjects.glCreateProgramObjectARB
+		if( shader != 0 ) {
+			vertshader = ARBShaderObjects.glCreateShaderObjectARB(ARBVertexShader.GL_VERTEX_SHADER_ARB)
+			fragshader=ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
+			if( vertshader != 0 ) {
+				val vertexPath = getClass.getClassLoader.getResource("shaders/screen.vert").getPath
+				val vertexCode = io.Source.fromFile(vertexPath).mkString
+				ARBShaderObjects.glShaderSourceARB(vertshader, vertexCode)
+				ARBShaderObjects.glCompileShaderARB(vertshader)
+			}
+			
+			if( fragshader != 0 ) {
+				val fragPath = getClass.getClassLoader.getResource("shaders/screen.frag").getPath
+				val fragCode = io.Source.fromFile(fragPath).mkString
+				ARBShaderObjects.glShaderSourceARB(fragshader, fragCode)
+				ARBShaderObjects.glCompileShaderARB(fragshader)
+			}
+			
+			if(vertshader !=0 && fragshader !=0) {
+		        ARBShaderObjects.glAttachObjectARB(shader, vertshader)
+		        ARBShaderObjects.glAttachObjectARB(shader, fragshader)
+		        ARBShaderObjects.glLinkProgramARB(shader)
+		        ARBShaderObjects.glValidateProgramARB(shader)
+	        }
+		}
 	}
 	
 	def terminate{
@@ -216,13 +251,15 @@ object Main {
 	
 	def draw{
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+		
 		Camera.applyfrustum
 
 //		Physics.update
 
+		ARBShaderObjects.glUseProgramObjectARB(shader)
 		World.draw
 //		Dingens.draw
-		
+		ARBShaderObjects.glUseProgramObjectARB(0)
 		
 		glLoadIdentity
 		Camera.applyortho
