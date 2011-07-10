@@ -21,8 +21,9 @@ import scala.collection.mutable.WrappedArray
 // TODO eigener hexaeder der nicht geändert werden kann
 object FullHexaeder extends PartialHexaeder{
 	override def toString = "[X]"
-	//override val normals = new WrappedArray(Vec3( 1,0,0),Vec3(0, 1,0),Vec3(0,0, 1),
-	//                                        Vec3(-1,0,0),Vec3(0,-1,0),Vec3(0,0,-1))
+	private val m_normals = Array(Vec3( 1,0,0),Vec3(0, 1,0),Vec3(0,0, 1),Vec3(-1,0,0),Vec3(0,-1,0),Vec3(0,0,-1))
+	override def normals = m_normals
+	override def planemax(axis:Int, direction:Int) = true
 }
 
 object EmptyHexaeder extends Hexaeder{
@@ -36,6 +37,18 @@ object EmptyHexaeder extends Hexaeder{
 	def planetriangles(axis:Int, direction:Int) = Nil
 	def normals = Nil
 
+	override def toString = "[ ]"
+}
+
+object UndefHexaeder extends Hexaeder{
+	def apply(p:Int, axis:Int) = 0
+	def apply(p:Int) = Vec3(0)
+	def vertices = Nil
+	def noVolume = true
+	def planemax(axis:Int, direction:Int) = false
+	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
+	def planetriangles(axis:Int, direction:Int) = Nil
+	def normals = Nil
 	override def toString = "[ ]"
 }
 
@@ -193,7 +206,6 @@ class PartialHexaeder extends Hexaeder {
 	// planetriangles2d für texturkoordinaten und occlusion
 	
 	def planecoords(axis:Int, direction:Int) = {
-		//plane(axis, direction).map( apply _ ).map( v => accessor(v,axis) ).toSet
 		val (axisa,axisb) = Util.otherAxis( axis )
 		
 		plane(axis, direction).map( p => Vec2(

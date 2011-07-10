@@ -182,6 +182,7 @@ trait Octant extends Serializable{
 	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder):Int
 	//similar to updated, but this function also generates patches to update the mesh
 	def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : (Octant, Patch[TextureMeshData])
+  def repolyWorld(p:Vec3i, vertpos:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData]
 	def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int):Octant = {
 		throw new NoSuchMethodException("keine möglichkeit einen Mesh zu speichern")
 	}
@@ -268,6 +269,12 @@ class Leaf(val h:Hexaeder) extends Octant{
 		val patch = Patch(vertpos,offset,builder.result)
 		(replacement,patch)
 	}
+
+	override def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData] = {
+		val builder = new TextureMeshBuilder
+		genPolygons(nodepos,nodesize,builder)
+		Patch(vertpos,offset,builder.result)
+	}
 }
 
 class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
@@ -315,6 +322,15 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 		val hsize = nodesize >> 1 // half size
 		data(index).patchWorld(p, nh, -1, -1, nodepos+v*hsize, hsize)
 		(this,null)
+	}
+
+	override def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i,nodesize:Int):Patch[TextureMeshData] = {
+		//TODO nachbarn patchen
+		val v = indexVec(p,nodepos,nodesize)
+		val index = flat(v)
+		val hsize = nodesize >> 1 // half size
+		data(index).repolyWorld(p, -1, -1, nodepos+v*hsize, hsize)
+		null
 	}
 	
 	override def draw{
@@ -370,12 +386,11 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		val newvertpos = vertpos + voffset.view(0,index).sum
 		val newoffset = voffset(index)
 
-		var (newNode,patch) = data(index).patchWorld(p,nh,newvertpos,newoffset,nodepos+v*hsize,hsize)
+		val (newNode,patch) = data(index).patchWorld(p,nh,newvertpos,newoffset,nodepos+v*hsize,hsize)
 
 		data(index) = newNode
 		
 		voffset(index) += patch.data.size - patch.size
-		
 
 		if(merge_?){
 			val mb = new TextureMeshBuilder
@@ -385,6 +400,21 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		}
 		else
 			(this,patch)
+	}
+
+	override def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i,nodesize:Int) = {
+		val hsize = nodesize >> 1 // half size
+		val v = indexVec(p,nodepos,nodesize)
+		val index = flat(v)
+
+		val newvertpos = vertpos + voffset.view(0,index).sum
+		val newoffset = voffset(index)
+
+		val patch = data(index).patchWorld(p, newvertpos, newoffset, nodepos+v*hsize, hsize)
+		//vertexzahl hat sich geändert, und braucht ein update
+		voffset(index) += patch.data.size - patch.size
+
+		patch
 	}
 
 	override def genMesh(nodepos:Vec3i, nodesize:Int, destnodesize:Int) = {
@@ -438,10 +468,9 @@ class InnerNodeWithVertexArray(h:Hexaeder) extends InnerNode(h) {
 			val npos = p.clone
 			npos(i >> 1) += ((i&1) << 1)-1
 			if( inRange(npos) ){
-				val (_,patch) = super.patchWorld(npos, apply(npos,nodepos,nodesize), 0, mesh.size, nodepos, nodesize)
-				patches ::= patch
+				patches ::= repolyWorld(npos, 0, mesh.size, nodepos, nodesize)
 			}
-			// TODO nachbarn 
+			// TODO nachbarn
 		}
 
 		// mehrer patches die hintereinander abgearbeitet werden können,

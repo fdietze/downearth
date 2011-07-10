@@ -14,6 +14,7 @@ import simplex3d.data.float._
 trait Mesh{
 	var vertexBufferObject:Int = 0
 	def genvbo
+	def freevbo
 	def draw
 	def free = glDeleteBuffersARB(vertexBufferObject)
 	def size:Int
@@ -178,12 +179,17 @@ class TextureMesh(data:TextureMeshData) extends Mesh{
 	}
 	
 	def genvbo {
-		if( vertexBufferObject != 0 ) {
-			glDeleteBuffersARB(vertexBufferObject)
-		}
+		freevbo
 		vertexBufferObject = glGenBuffersARB()
 		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
 		glBufferDataARB(GL_ARRAY_BUFFER_ARB, vertices.bindingBuffer, GL_STATIC_COPY_ARB)
 		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
 	}
+	
+	def freevbo {
+		if( vertexBufferObject != 0 ) {
+			glDeleteBuffersARB(vertexBufferObject)
+		}
+	}
 }
+
