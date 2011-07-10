@@ -27,6 +27,7 @@ trait MutableMesh[T <: MeshData] extends Mesh{
 trait MeshData{
 	def size:Int
 }
+
 trait MeshBuilder[T <: MeshData]{
 	def result : T
 }
@@ -51,7 +52,16 @@ case class TextureMeshBuilder(
 					texCoordBuilder.result)
 }
 
-case class Patch[T <: MeshData](pos:Int,size:Int,data:T)
+// A <: B <: MeshData => Patch[A] <: Patch[B]
+case class Patch[+T <: MeshData](pos:Int,size:Int,data:T)
+
+/*
+object EmptyMeshData extends MeshData{
+	override def size = 0
+}
+
+object EmptyPatch extends Patch[Nothing](0,0,null)
+*/
 
 class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with MutableMesh[TextureMeshData]{
 	import data._

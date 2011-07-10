@@ -5,6 +5,9 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
 import Util._
+import org.lwjgl.util.vector.Vector3f
+import collection.Map
+import util.parsing.input.OffsetPosition
 
 case class WorldNodeInfo(pos:Vec3i,size:Int,value:Hexaeder)
 
@@ -28,8 +31,13 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 	}
 	
 	def patchWorld(p:Vec3i,nh:Hexaeder) {
-		val (newroot,_) = root.patchWorld(p,nh,-1,-1, Vec3i(0), rootNodeSize)
-		root = newroot
+		if(Util.indexInRange(p,worldWindowPos,worldWindowSize)){
+			val (newroot,_) = root.patchWorld(p,nh,-1,-1, Vec3i(0), rootNodeSize)
+			root = newroot
+		}
+		else{
+			println("update out of world",p,nh)
+		}
 	}
 
 	override def toString = "Octree("+root.toString+")"
@@ -182,7 +190,7 @@ trait Octant extends Serializable{
 	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder):Int
 	//similar to updated, but this function also generates patches to update the mesh
 	def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : (Octant, Patch[TextureMeshData])
-  def repolyWorld(p:Vec3i, vertpos:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData]
+  def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData]
 	def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int):Octant = {
 		throw new NoSuchMethodException("keine möglichkeit einen Mesh zu speichern")
 	}
@@ -317,15 +325,34 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 	
 	override def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i,nodesize:Int):(Octant, Patch[TextureMeshData]) = {
 		//TODO nachbarn patchen
+		assert(Util.indexInRange(p,nodepos,nodesize))
+
 		val v = indexVec(p,nodepos,nodesize)
 		val index = flat(v)
 		val hsize = nodesize >> 1 // half size
 		data(index).patchWorld(p, nh, -1, -1, nodepos+v*hsize, hsize)
+
+
+
+		val neigbours = ((0 until  6) map (i => {val v = Vec3i(0); v(i/2) = 2*(i&1)-1; p+v} )
+			filter ( n => indexInRange(n,nodepos,nodesize) )
+			map ( n => Pair(n, indexVec(n,nodepos,nodesize) ) )
+			distinctBy( _._2 )
+		)
+
+		print(p)
+		for( (n,nv) <- neigbours if(nv != v) ){
+			val index = flat(nv)
+			
+			print(n,nv,index)
+			data(index).repolyWorld(n,-1,-1, nodepos+nv*hsize, hsize)
+		}
+		println
+
 		(this,null)
 	}
 
 	override def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i,nodesize:Int):Patch[TextureMeshData] = {
-		//TODO nachbarn patchen
 		val v = indexVec(p,nodepos,nodesize)
 		val index = flat(v)
 		val hsize = nodesize >> 1 // half size
@@ -410,7 +437,7 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		val newvertpos = vertpos + voffset.view(0,index).sum
 		val newoffset = voffset(index)
 
-		val patch = data(index).patchWorld(p, newvertpos, newoffset, nodepos+v*hsize, hsize)
+		val patch = data(index).repolyWorld(p, newvertpos, newoffset, nodepos+v*hsize, hsize)
 		//vertexzahl hat sich geändert, und braucht ein update
 		voffset(index) += patch.data.size - patch.size
 
@@ -468,7 +495,7 @@ class InnerNodeWithVertexArray(h:Hexaeder) extends InnerNode(h) {
 			val npos = p.clone
 			npos(i >> 1) += ((i&1) << 1)-1
 			if( inRange(npos) ){
-				patches ::= repolyWorld(npos, 0, mesh.size, nodepos, nodesize)
+				patches ::= super.repolyWorld(npos, 0, mesh.size, nodepos, nodesize)
 			}
 			// TODO nachbarn
 		}
@@ -479,6 +506,14 @@ class InnerNodeWithVertexArray(h:Hexaeder) extends InnerNode(h) {
 		
 		// es wurde schon gepatched, deshalb muss dieser patch nicht mehr mitgeschleppt werden
 		(replacement,null)
+	}
+
+	override def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i,nodesize:Int) = {
+
+		val index = flat(indexVec(p,nodepos,nodesize))
+		// vertpos und offset wird von super.repolyWorld gesetzt
+		mesh patch List(super.repolyWorld(p,0,0,nodepos,nodesize))
+		null
 	}
 }
 
@@ -495,6 +530,9 @@ object DeadInnderNode extends Octant{
 	def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : (Octant, Patch[TextureMeshData]) = {
 		throw new NoSuchMethodException("dead nodes can't be patched")
 	}
+
+	// TODO EmptyPatch
+	def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData] = null
 
 	override def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int) = this
 

@@ -28,6 +28,29 @@ object Util {
 		case 64 => 6
 		case	x =>(log(x)/0.6931471805599453).toInt
 	}
+
+	import scala.collection.IterableLike
+	import scala.collection.generic.CanBuildFrom
+
+	class RichCollection[A, Repr](xs: IterableLike[A, Repr]){
+	  def distinctBy[B, That](f: A => B)(implicit cbf: CanBuildFrom[Repr, A, That]) = {
+	    val builder = cbf(xs.repr)
+	    val i = xs.iterator
+	    var set = Set[B]()
+	    while(i.hasNext) {
+	      val o = i.next
+	      val b = f(o)
+	      if (!set(b)) {
+	        set += b
+	        builder += o
+	      }
+	    }
+	    builder.result
+	  }
+	}
+
+	implicit def toRich[A, Repr](xs: IterableLike[A, Repr]) = new RichCollection(xs)
+
 	
 	class RichVec3i(private[this] val v: inVec3i) { def until(u: inVec3i) = new PermVec3i(v, u) }
 	class PermVec3i(val from: inVec3i, val to: inVec3i) extends Iterable[Vec3i] {
