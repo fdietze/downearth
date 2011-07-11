@@ -117,7 +117,10 @@ object Camera{
 	}
 	
 	def apply() = {
+		//glMatrixMode(GL_PROJECTION)
+		//die nicht invertierte matrix laden und mit der Matrix aus frustum multiplizieren
 		data(0) = Mat4(inverse(Mat3x4 rotate(direction) translate(position)))
 		glLoadMatrix( data.buffer )
+		//glMatrixMode(GL_MODELVIEW)
 	}
 }
