@@ -2,6 +2,8 @@
 #extension GL_EXT_gpu_shader4 : enable
 
 varying vec4 worldpos;
+varying vec3 normal;
+varying vec3 vertex;
 
 int rshift(int x, int y) {return int(float(uint(x)) / pow(2f,float(uint(y))));}
 int lshift(int x, int y) {return int(float(uint(x)) * pow(2f,float(uint(y))));}
@@ -66,7 +68,6 @@ float noise3b(float x, float y, float z) {
 
 void main(){
 	vec4 hashcolor;
-	//float color = (noise3(worldpos.x, worldpos.y, worldpos.z)+1)/2;
 	vec4 source = worldpos;
 	
 	float vn13_noise3v = noise3a(source.x, source.y, source.z);
@@ -74,9 +75,14 @@ void main(){
 	vec4 vn6_matrgb = vec4(0.47f, 0.29f, 0.12f, 1.0f);
 	float vn15_noise3 = noise3b(0f, vn14_sum, 0f);
 	vec4 vn7_matrgb = vec4(1.0f, 0.81f, 0.5f, 1.0f);
-	vec4 vn8_matthreshold = matthreshold(vn7_matrgb, vn15_noise3, vn6_matrgb);
+	vec4 materialcolor = matthreshold(vn7_matrgb, vn15_noise3, vn6_matrgb);
 
-  gl_FragColor = vn8_matthreshold;
+
+	vec3 L = normalize(gl_LightSource[0].position.xyz - vertex);   
+	vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0);  
+	Idiff = clamp(Idiff, 0.0, 1.0); 
+
+	gl_FragColor = materialcolor * Idiff;
 }
 
 

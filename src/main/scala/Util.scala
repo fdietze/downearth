@@ -16,6 +16,26 @@ object MyFont{
 
 object Util {
 	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
+
+	def printLogInfo(obj:Int) {
+		import org.lwjgl.opengl.{
+		  ARBShaderObjects, ARBVertexShader, ARBFragmentShader
+		}
+		val iVal = BufferUtils.createIntBuffer(1)
+		ARBShaderObjects.glGetObjectParameterARB(obj,ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB, iVal);
+
+		val length = iVal.get()
+		if(length > 1) {
+			// We have some info we need to output.
+			val infoLog = BufferUtils.createByteBuffer(length)
+			iVal.flip()
+			ARBShaderObjects.glGetInfoLogARB(obj, iVal, infoLog)
+			val infoBytes = new Array[Byte](length)
+			infoLog.get(infoBytes)
+			val out = new String(infoBytes)
+			println("Info log:\n" + out)
+		}
+    }
 	
 	def isPowerOfTwo(x:Int) = (((x-1) & x) == 0) && x != 0
 	val log2:(Int => Int) = {
