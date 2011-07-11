@@ -133,8 +133,7 @@ object Camera{
 	}
 	
 	def apply() = {
-		data(0) = Mat4( inverse(Mat3x4 rotate(direction) translate(position)) )
+		data(0) = Mat4(inverse(Mat3x4 rotate(direction) translate(position)))
 		glLoadMatrix( data.buffer )
-		
 	}
 }
