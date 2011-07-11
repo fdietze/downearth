@@ -11,6 +11,13 @@ import util.parsing.input.OffsetPosition
 
 case class WorldNodeInfo(pos:Vec3i,size:Int,value:Hexaeder)
 
+object WorldTimers {
+	val subtimer = new Timer
+	val applytimer = new Timer
+	val surfacetimer = new Timer
+}
+import WorldTimers._
+
 class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializable with Iterable[WorldNodeInfo]{
 	var rootNodePos:Vec3i = Vec3i(0)
 	var worldWindowPos:Vec3i = Vec3i(0)
@@ -19,10 +26,11 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 
 	val vsize = Vec3i(worldWindowSize)
 	var root:Octant = new Leaf(EmptyHexaeder)
-
+	
 	def apply(p:Vec3i) = {
+		applytimer.measure{
 		assert(Util.indexInRange(p,worldWindowPos,worldWindowSize))
-		root(p,rootNodePos,rootNodeSize)
+		root(p,rootNodePos,rootNodeSize)}
 	}
 
 	def update(p:Vec3i,h:Hexaeder) {
@@ -70,10 +78,11 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 
 	// Fügt die oberfläche zwischen zwei hexaedern zum meshBuilder hinzu
 	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
+		surfacetimer.start
 		assert(meshBuilder != null)
 	
 		import meshBuilder._
-
+		
 		val axis = dir >> 1
 		val direction = dir & 1
 
@@ -84,7 +93,8 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 				 || !from.planemax(axis,direction)
 				 || !occludes2d(
 				occludee=from.planecoords(axis,direction).toSet,
-				occluder=to.planecoords(axis,1-direction).toSet) ){
+				occluder=to.planecoords(axis,1-direction).toSet)
+			){
 
 			val triangleCoords = from.planetriangles(axis, direction)
 			val (t1,t2) = triangleCoords splitAt 3
@@ -105,6 +115,7 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 				}
 			}
 		}
+		surfacetimer.stop
 		vertexCounter
 	}
 	
@@ -113,8 +124,11 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 	}
 	
 	def genMesh {
-		root = root.genMesh(rootNodePos,rootNodeSize,minMeshNodeSize)
-		root.genPolygons(rootNodePos,rootNodeSize,null)
+		root = time("root.genMesh: "){root.genMesh(rootNodePos,rootNodeSize,minMeshNodeSize)}
+		time("root.genPolygons: "){root.genPolygons(rootNodePos,rootNodeSize,null)}
+		println("genPolygons-subtimer: " + subtimer.read + "s")
+		println("applytimer: " + applytimer.read + "s")
+		println("surfacetimer: " + surfacetimer.read + "s")
 	}
 
 	def move(dir:Vec3i){
@@ -236,22 +250,27 @@ class Leaf(val h:Hexaeder) extends Octant{
 	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder):Int = {
 		assert(meshBuilder != null)
 		var vertexCounter = 0
-		if(nodesize == 1)
+		if(nodesize == 1) {
 			for( i <- (0 to 5) ){
 				val p2 = nodepos.clone
 				p2(i >> 1) += ((i&1)<<1)-1
+				
+		subtimer.start
 				val to = World(p2)
 
 				vertexCounter += World.cube.addSurface(h,to,nodepos,i,meshBuilder)
+		subtimer.stop
 			}
+		}
 		else {
 			if(h == FullHexaeder){
 				for( dir <- (0 to 5) ){
-					val axis = dir/2
+					val axis = dir >> 1
 
 					val axisa = 1-((axis+1) >> 1)
 					val axisb = (2 - (axis >> 1))
 
+					//TODO: Oberfläche eines Octanten als Quadtree abfragen
 					for( spos <- Vec2i(0) until Vec2i(nodesize) ){
 						val p1 = nodepos.clone
 						p1( axisa ) += spos(0)
@@ -259,9 +278,11 @@ class Leaf(val h:Hexaeder) extends Octant{
 						p1( axis )  += (nodesize-1) * (dir&1)
 						val p2 = p1.clone
 						p2( axis ) += ((dir&1)<<1)-1
+					subtimer.start
 						val other = World(p2)
 
 						vertexCounter += World.cube.addSurface(h,other,p1,dir,meshBuilder)
+					subtimer.stop
 					}
 				}
 			}

@@ -121,6 +121,24 @@ object Util {
 	}
 
 	implicit def toRichVec3i(u: Vec3i) = new RichVec3i(u)
+
+	class Timer {
+		var starttime = 0L
+		var passedtime = 0L
+
+		def getTime = System.nanoTime
+
+		def start  { starttime = getTime }
+		def stop   { passedtime += getTime - starttime }
+		def measure[A](function: => A) = {
+			start
+			val returnvalue = function
+			stop
+			returnvalue
+		}
+		def reset  { passedtime = 0 }
+		def read =   passedtime/1000000000.0
+	}
 	
 	def time[A](msg:String)(foo: => A) = {
 		val start = System.nanoTime
