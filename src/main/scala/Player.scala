@@ -95,15 +95,31 @@ object Camera{
 	
 	def makeRelative(v:Vec3) = direction.rotateVector(v)
 	
+	val frustum = {
+		val v = WIDTH.toFloat / HEIGHT.toFloat	
+		
+		val n = 0.05f //near
+		val f = 100   //far
+		val r = v*n   //right
+		val t = n     //top
+		//l = -r; b = -t
+		
+		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
+	}
+	
 	def applyfrustum{
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_LIGHTING)
-		val v = WIDTH.toFloat / HEIGHT.toFloat	
+		
+		// frustum matrix
+		data(0) = frustum
+		
 		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity
-		val f = 0.05f
-		glFrustum(-v*f,v*f,-f,f,f,100)
+		//glLoadIdentity
+		//glFrustum(-r,r,-t,t,n,f)
+		glLoadMatrix( data.buffer )
 		glMatrixMode(GL_MODELVIEW)
+		
 		glDisable(GL_BLEND)
 	}
 	
@@ -117,7 +133,8 @@ object Camera{
 	}
 	
 	def apply() = {
-		data(0) = Mat4(inverse(Mat3x4 rotate(direction) translate(position)))
+		data(0) = Mat4( inverse(Mat3x4 rotate(direction) translate(position)) )
 		glLoadMatrix( data.buffer )
+		
 	}
 }
