@@ -52,22 +52,16 @@ float noise3(float x, float y, float z) {
 /////////////////////////////////////////////////////
 
 float noise3a(float x, float y, float z) {
-	float invexpsize = 0.18946462091101748f;
-	float expoutscale = 5.278030247502791f;
-	float linearoutoffset = 0f;
-	vec3 v = vec3(x,y,z) * invexpsize;
-	return (noise3(v.x,v.y,v.z)+linearoutoffset)*expoutscale;
+	vec3 v = vec3(x,y,z) * 0.18946462091101748f;
+	return (noise3(v.x,v.y,v.z))*5.278030247502791f;
 }
 
 vec4 matthreshold(vec4 x, float t, vec4 y) {return t > 0f ? x : y;}
 
 
 float noise3b(float x, float y, float z) {
-	float invexpsize = 1f;
-	float expoutscale = 1f;
-	float linearoutoffset = -0.19999999f;
-	vec3 v = vec3(x,y,z) * invexpsize;
-	return (noise3(v.x,v.y,v.z)+linearoutoffset)*expoutscale;
+	vec3 v = vec3(x,y,z);
+	return (noise3(v.x,v.y,v.z)-0.19999999f);
 }
 
 void main(){
@@ -82,7 +76,7 @@ void main(){
 	vec4 vn7_matrgb = vec4(1.0f, 0.81f, 0.5f, 1.0f);
 	vec4 vn8_matthreshold = matthreshold(vn7_matrgb, vn15_noise3, vn6_matrgb);
 
-    gl_FragColor = vn8_matthreshold;
+  gl_FragColor = vn8_matthreshold;
 }
 
 
