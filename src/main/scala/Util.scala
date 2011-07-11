@@ -16,6 +16,26 @@ object MyFont{
 
 object Util {
 	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
+
+	def printLogInfo(obj:Int) {
+		import org.lwjgl.opengl.{
+		  ARBShaderObjects, ARBVertexShader, ARBFragmentShader
+		}
+		val iVal = BufferUtils.createIntBuffer(1)
+		ARBShaderObjects.glGetObjectParameterARB(obj,ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB, iVal);
+
+		val length = iVal.get()
+		if(length > 1) {
+			// We have some info we need to output.
+			val infoLog = BufferUtils.createByteBuffer(length)
+			iVal.flip()
+			ARBShaderObjects.glGetInfoLogARB(obj, iVal, infoLog)
+			val infoBytes = new Array[Byte](length)
+			infoLog.get(infoBytes)
+			val out = new String(infoBytes)
+			println("Info log:\n" + out)
+		}
+    }
 	
 	def isPowerOfTwo(x:Int) = (((x-1) & x) == 0) && x != 0
 	val log2:(Int => Int) = {
@@ -101,6 +121,24 @@ object Util {
 	}
 
 	implicit def toRichVec3i(u: Vec3i) = new RichVec3i(u)
+
+	class Timer {
+		var starttime = 0L
+		var passedtime = 0L
+
+		def getTime = System.nanoTime
+
+		def start  { starttime = getTime }
+		def stop   { passedtime += getTime - starttime }
+		def measure[A](function: => A) = {
+			start
+			val returnvalue = function
+			stop
+			returnvalue
+		}
+		def reset  { passedtime = 0 }
+		def read =   passedtime/1000000000.0
+	}
 	
 	def time[A](msg:String)(foo: => A) = {
 		val start = System.nanoTime

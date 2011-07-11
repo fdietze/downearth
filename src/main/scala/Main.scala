@@ -17,6 +17,8 @@ import simplex3d.data._
 import simplex3d.data.float._
 import org.newdawn.slick.Font
 
+import Util._
+
 object Main {
 	import org.lwjgl.BufferUtils
 	import java.nio.FloatBuffer
@@ -87,7 +89,7 @@ object Main {
 		Display.setDisplayMode(displayMode)
 		Display.create()
 
-		// initshaders
+		initshaders
 		
 		glEnable(GL_CULL_FACE)
 
@@ -126,8 +128,11 @@ object Main {
 				ARBShaderObjects.glValidateProgramARB(shader)
 			}
 		}
+		printLogInfo(shader)
+		printLogInfo(vertshader)
+		printLogInfo(fragshader)
 	}
-	
+
 	def terminate{
 		Display.destroy()
 		sys.exit(0)

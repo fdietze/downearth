@@ -2,16 +2,18 @@
 #extension GL_EXT_gpu_shader4 : enable
 
 varying vec4 worldpos;
+varying vec3 normal;
+varying vec3 vertex;
 
-int rshift(int x, int y) {return int(float(uint(x)) / pow(2f,float(uint(y))));}
-int lshift(int x, int y) {return int(float(uint(x)) * pow(2f,float(uint(y))));}
+//int rshift(int x, int y) {return int(float(uint(x)) / pow(2f,float(uint(y))));}
+//int lshift(int x, int y) {return int(float(uint(x)) * pow(2f,float(uint(y))));}
 
 //def hash(k:Int) = (((k*0x12345678) &gt;&gt;&gt; (k*0x87754351))^seed) & 0x7FFFFFFF
 //int hash(int k) { return int(float(k)*12436234f)%1332427; }
-//int hash(int k) { return ((k*int(0x12345678)) >> (  (k*int(0x87754351))&31  ) ) & int(0x7FFFFFFF); }
+int hash(int k) { return ((k*int(0x12345678)) >> (  (k*int(0x87754351))&31  ) ) & int(0x7FFFFFFF); }
 
 // universal hash function:
-int hash(int k) {return ((0x1345452*k) % 1332427) % 0x93564; }
+//int hash(int k) {return ((0x1345452*k) % 1332427) % 0x93564; }
 
 int fastfloor(float x) { return int( x > 0 ? x : x-1); }
 float fade(float t) { return t * t * t * (t * (t * 6 - 15) + 10); }
@@ -64,9 +66,13 @@ float noise3b(float x, float y, float z) {
 	return (noise3(v.x,v.y,v.z)-0.19999999f);
 }
 
+float noise3c(float x, float y, float z) {
+	vec3 v = vec3(x,y,z) * 43.411340200114715f;
+	return noise3(v.x,v.y,v.z)*0.1517743826216342;
+}
+
 void main(){
 	vec4 hashcolor;
-	//float color = (noise3(worldpos.x, worldpos.y, worldpos.z)+1)/2;
 	vec4 source = worldpos;
 	
 	float vn13_noise3v = noise3a(source.x, source.y, source.z);
@@ -74,9 +80,14 @@ void main(){
 	vec4 vn6_matrgb = vec4(0.47f, 0.29f, 0.12f, 1.0f);
 	float vn15_noise3 = noise3b(0f, vn14_sum, 0f);
 	vec4 vn7_matrgb = vec4(1.0f, 0.81f, 0.5f, 1.0f);
-	vec4 vn8_matthreshold = matthreshold(vn7_matrgb, vn15_noise3, vn6_matrgb);
+	vec4 materialcolor = matthreshold(vn7_matrgb, vn15_noise3 + noise3c(source.x, source.y, source.z), vn6_matrgb);
 
-  gl_FragColor = vn8_matthreshold;
+
+	vec3 L = normalize(gl_LightSource[0].position.xyz - vertex);   
+	vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0);  
+	Idiff = clamp(Idiff, 0.0, 1.0); 
+
+	gl_FragColor = materialcolor * Idiff;
 }
 
 
