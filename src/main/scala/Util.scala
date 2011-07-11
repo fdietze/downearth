@@ -135,7 +135,7 @@ object Util {
 	}
 	
 	def lineHexaederIntersect(linestart:Vec3,linedir:Vec3,h:Hexaeder) = {
-		if(h eq EmptyHexaeder)
+		if( (h eq EmptyHexaeder) || (h eq UndefHexaeder) )
 			false
 		else{
 			val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,linedir)) )

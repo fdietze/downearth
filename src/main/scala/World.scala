@@ -93,7 +93,7 @@ object World{
 	}
 	
 	def update(pos:Vec3i,h:Hexaeder){
-		cube.patchWorld(pos,h)
+		cube(pos) = h
 	}
 	
 	def apply(pos:Vec3i) = 
@@ -104,10 +104,12 @@ object World{
 		
 	def draw{
 		
+		cube.makeNodeUpdates
 		cube.draw
 		
 		//raytracer zum Anklicken von Zellen
 		
+		/*
 		val selection = raytracer(Camera.position,Camera.directionVec,false,100)
 		selection match {
 		case Some(v) =>
@@ -124,5 +126,7 @@ object World{
 			glEnable(GL_LIGHTING)
 		case None =>
 		}
+		*/
+		
 	}
 }

@@ -87,7 +87,7 @@ object Main {
 		Display.setDisplayMode(displayMode)
 		Display.create()
 
-		initshaders
+		// initshaders
 		
 		glEnable(GL_CULL_FACE)
 
@@ -120,11 +120,11 @@ object Main {
 			}
 			
 			if(vertshader !=0 && fragshader !=0) {
-		        ARBShaderObjects.glAttachObjectARB(shader, vertshader)
-		        ARBShaderObjects.glAttachObjectARB(shader, fragshader)
-		        ARBShaderObjects.glLinkProgramARB(shader)
-		        ARBShaderObjects.glValidateProgramARB(shader)
-	        }
+				ARBShaderObjects.glAttachObjectARB(shader, vertshader)
+				ARBShaderObjects.glAttachObjectARB(shader, fragshader)
+				ARBShaderObjects.glLinkProgramARB(shader)
+				ARBShaderObjects.glValidateProgramARB(shader)
+			}
 		}
 	}
 	
@@ -149,7 +149,7 @@ object Main {
 	var turbo = false
 	
 	def logic{
-		if(Display.isCloseRequested || isKeyDown(KEY_ESCAPE) )
+		if(Display.isCloseRequested)
 			finished = true;
 		
 		val delta = Vec3(0)
@@ -208,17 +208,22 @@ object Main {
 						Mouse setGrabbed true
 				case KEY_R =>
 					Dingens.resetBallPos			
-//				case KEY_X =>
-//					World.cube.move(Vec3i(1,0,0))
+				case KEY_X =>
+					World.cube.move(Vec3i(1,0,0))
+				case KEY_Y =>
+					World.cube.move(Vec3i(0,1,0))
+				case KEY_Z =>
+					World.cube.move(Vec3i(0,0,1))
 				case KEY_T =>
 					turbo = if(turbo) false else true
+				case KEY_ESCAPE =>
+					finished = true
 				case _ =>
 				}
 			}
 		}
 		
 		// Mouse Event Input
-		
 		
 		if(turbo){
 			if( Mouse isButtonDown 0 )
@@ -249,6 +254,18 @@ object Main {
 			Camera.turn(2f*delta_angle)
 	}
 	
+	def activateShader(foo: => Unit){
+		val useshaders = shader != 0 && vertshader != 0 && fragshader != 0
+		if(useshaders)
+			ARBShaderObjects.glUseProgramObjectARB(shader)
+		
+		foo
+		
+		if(useshaders)
+			ARBShaderObjects.glUseProgramObjectARB(0)
+		
+	}
+	
 	def draw{
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 		
@@ -256,10 +273,10 @@ object Main {
 
 //		Physics.update
 
-		ARBShaderObjects.glUseProgramObjectARB(shader)
-		World.draw
-//		Dingens.draw
-		ARBShaderObjects.glUseProgramObjectARB(0)
+		activateShader{
+			World.draw
+	//		Dingens.draw
+		}
 		
 		glLoadIdentity
 		Camera.applyortho

@@ -32,7 +32,6 @@ object WorldGenerator {
 		for(vi <- Vec3i(0) until size){
 			val npos = nodepos+vi*nodesize
 			data(vi) = genNodeAt(npos,nodesize).genMesh(npos,nodesize,nodesize)
-			data(vi).genPolygons(npos,nodesize,null)
 		}
 		data
 	}

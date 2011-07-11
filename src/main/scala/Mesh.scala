@@ -165,10 +165,12 @@ class TextureMesh(data:TextureMeshData) extends Mesh{
 		texcoords(i) = texcoordsArray(i)
 	}
 	
-	
 	def draw{
 		TextureManager.box.bind
-
+		
+		if(vertexBufferObject == 0)
+			genvbo
+		
 		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
 
 		glEnableClientState(GL_VERTEX_ARRAY)

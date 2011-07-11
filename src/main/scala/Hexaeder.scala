@@ -49,7 +49,7 @@ object UndefHexaeder extends Hexaeder{
 	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
 	def planetriangles(axis:Int, direction:Int) = Nil
 	def normals = Nil
-	override def toString = "[ ]"
+	override def toString = "[~]"
 }
 
 trait Hexaeder{
@@ -191,7 +191,7 @@ class PartialHexaeder extends Hexaeder {
 	
 	def vertices = (0 until 8) map apply
 	
-	def plane(axis:Int, direction:Int) = planelookup(axis<<1|direction)
+	def plane(axis:Int, direction:Int) = planelookup(axis << 1 | direction)
 
 	def planemax(axis:Int, direction:Int) =	{
 		var b = true
@@ -201,7 +201,8 @@ class PartialHexaeder extends Hexaeder {
 		b
 	}
 	
-	//TODO statt planecoords und planetriangles
+	
+	// TODO statt planecoords und planetriangles
 	// planetriangles für polygone 
 	// planetriangles2d für texturkoordinaten und occlusion
 	
