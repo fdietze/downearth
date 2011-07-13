@@ -109,7 +109,7 @@ object World{
 		
 		//raytracer zum Anklicken von Zellen
 		
-		/*
+		
 		val selection = raytracer(Camera.position,Camera.directionVec,false,100)
 		selection match {
 		case Some(v) =>
@@ -126,7 +126,5 @@ object World{
 			glEnable(GL_LIGHTING)
 		case None =>
 		}
-		*/
-		
 	}
 }

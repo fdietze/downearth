@@ -29,8 +29,9 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 	var meshGenerated = false
 
-	def apply(p:Vec3i) = {
-		
+	override def indexInRange(pos:Vec3i) = Util.indexInRange(pos,rootNodePos,rootNodeSize)
+
+	def apply(p:Vec3i) = {		
 		applytimer.measure{
 			//assert(Util.indexInRange(p,worldWindowPos,worldWindowSize))
 			if(Util.indexInRange(p,rootNodePos,rootNodeSize))
