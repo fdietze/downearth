@@ -89,7 +89,7 @@ object Main {
 		Display.setDisplayMode(displayMode)
 		Display.create()
 
-		initshaders
+		//initshaders
 		
 		glEnable(GL_CULL_FACE)
 

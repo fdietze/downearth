@@ -25,9 +25,6 @@ object WorldNodeGenerator {
 			case GenerateSliceAt(slicepos,minMeshNodeSize,slicesize) =>
 				self reply WorldGenerator.genSlice(slicepos, minMeshNodeSize, slicesize)
 			
-			case GenerateNodeAt(nodepos,nodesize) => 
-				self reply WorldGenerator.genNodeAt(nodepos,nodesize)
-			
 		}
 	}
 }

@@ -18,10 +18,8 @@ object WorldTimers {
 }
 import WorldTimers._
 
-class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializable with Iterable[WorldNodeInfo]{
-	
+class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Hexaeder] with Serializable with Iterable[WorldNodeInfo]{
 
-	var rootNodePos:Vec3i = Vec3i(0)
 	var worldWindowPos:Vec3i = Vec3i(0)
 	val worldWindowSize:Int = rootNodeSize
 	val minMeshNodeSize = 32
@@ -32,9 +30,14 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 	var meshGenerated = false
 
 	def apply(p:Vec3i) = {
+		
 		applytimer.measure{
-		assert(Util.indexInRange(p,worldWindowPos,worldWindowSize))
-		root(p,rootNodePos,rootNodeSize)}
+			//assert(Util.indexInRange(p,worldWindowPos,worldWindowSize))
+			if(Util.indexInRange(p,rootNodePos,rootNodeSize))
+				root(p,rootNodePos,rootNodeSize)
+			else
+				UndefHexaeder
+		}
 	}
 
 	def update(p:Vec3i,h:Hexaeder) {
@@ -51,7 +54,7 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 	
 	override def toString = "Octree("+root.toString+")"
 
-	def iterator = new Iterator[WorldNodeInfo]{
+	def iterator = new Iterator[WorldNodeInfo] {
 		case class InnerNodeInfo(pos:Vec3i,size:Int,node:Octant)
 
 		var history = List( InnerNodeInfo(Vec3i(0),vsize.x, root) )
@@ -76,56 +79,13 @@ class WorldOctree(var rootNodeSize:Int) extends Data3D[Hexaeder] with Serializab
 				next
 		}
 	}
-
-	// Fügt die oberfläche zwischen zwei hexaedern zum meshBuilder hinzu
-	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
-		surfacetimer.start
-		assert(meshBuilder != null)
-	
-		import meshBuilder._
-		
-		val axis = dir >> 1
-		val direction = dir & 1
-
-		var vertexCounter = 0
-
-		if(  (to == EmptyHexaeder)
-				 || !to.planemax(axis,1-direction)
-				 || !from.planemax(axis,direction)
-				 || !occludes2d(
-				occludee=from.planecoords(axis,direction).toSet,
-				occluder=to.planecoords(axis,1-direction).toSet)
-			){
-
-			val triangleCoords = from.planetriangles(axis, direction)
-			val (t1,t2) = triangleCoords splitAt 3
-
-			val axisa = 1-((axis+1) >> 1)
-			val axisb = (2 - (axis >> 1))
-
-			for( t @ Seq(v0,v1,v2) <- List( t1, t2 ) ) {
-				if(v0 != v1 && v1 != v2 && v0 != v2){
-
-					for(v <- t){
-						vertexBuilder += (Vec3(pos) + v)
-						texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
-						vertexCounter += 1
-					}
-
-					normalBuilder += normalize(cross(v2-v1,v0-v1))
-				}
-			}
-		}
-		surfacetimer.stop
-		vertexCounter
-	}
 	
 	def draw{
 		root.draw
 	}
 	
 	def genMesh {
-		root = root.genMesh(rootNodePos,rootNodeSize,minMeshNodeSize)
+		root = root.genMesh(rootNodePos,rootNodeSize,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else World(x)}) )
 		meshGenerated = true
 	}
 	
@@ -217,15 +177,15 @@ trait Octant extends Serializable{
 	 * @return number of added vertices
 	 */
 	// creates polygons in subtree and adds them to meshBuilder
-	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder):Int
+	// TODO: Hier weitermachen worldaccess implementieren !!!
+	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)):Int
 	//similar to updated, but this function also generates patches to update the mesh
 	def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : (Octant, Patch[TextureMeshData])
 	//similar to patch, but it does not change anything in the Tree
 	def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData]
 	// adds InnerNodeWithVertexArray into the tree, and creates Meshes inside of them
-	def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int):Octant = {
-		throw new NoSuchMethodException("keine möglichkeit einen Mesh zu speichern")
-	}
+	def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant
+
 	def draw{}
 
 	def insertNode(nodepos:Vec3i, nodesize:Int, insertnode:Octant, insertnodepos:Vec3i, insertnodesize:Int) : Octant
@@ -239,6 +199,7 @@ class Leaf(val h:Hexaeder) extends Octant{
 	def insertNode(nodepos:Vec3i, nodesize:Int, insertnode:Octant, insertnodepos:Vec3i, insertnodesize:Int) = insertnode
 
 	override def apply(p:Vec3i,nodepos:Vec3i,nodesize:Int) = h
+
 	override def updated(p:Vec3i,nh:Hexaeder,nodepos:Vec3i,nodesize:Int) = {
 		if(h == nh)
 			this
@@ -264,8 +225,51 @@ class Leaf(val h:Hexaeder) extends Octant{
 				false
 		}
 	}
+	
+	// Fügt die oberfläche zwischen zwei hexaedern zum meshBuilder hinzu
+	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
+		surfacetimer.start
+		assert(meshBuilder != null)
+	
+		import meshBuilder._
+		
+		val axis = dir >> 1
+		val direction = dir & 1
 
-	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder):Int = {
+		var vertexCounter = 0
+
+		if(  (to == EmptyHexaeder)
+				 || !to.planemax(axis,1-direction)
+				 || !from.planemax(axis,direction)
+				 || !occludes2d(
+				occludee=from.planecoords(axis,direction).toSet,
+				occluder=to.planecoords(axis,1-direction).toSet)
+			){
+
+			val triangleCoords = from.planetriangles(axis, direction)
+			val (t1,t2) = triangleCoords splitAt 3
+
+			val axisa = 1-((axis+1) >> 1)
+			val axisb = (2 - (axis >> 1))
+
+			for( t @ Seq(v0,v1,v2) <- List( t1, t2 ) ) {
+				if(v0 != v1 && v1 != v2 && v0 != v2){
+
+					for(v <- t){
+						vertexBuilder += (Vec3(pos) + v)
+						texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
+						vertexCounter += 1
+					}
+
+					normalBuilder += normalize(cross(v2-v1,v0-v1))
+				}
+			}
+		}
+		surfacetimer.stop
+		vertexCounter
+	}
+	
+	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)):Int = {
 		assert(meshBuilder != null)
 		var vertexCounter = 0
 		if(nodesize == 1) {
@@ -274,9 +278,9 @@ class Leaf(val h:Hexaeder) extends Octant{
 				p2(i >> 1) += ((i&1)<<1)-1
 				
 		subtimer.start
-				val to = World(p2)
+				val to = worldaccess(p2)
 
-				vertexCounter += World.cube.addSurface(h,to,nodepos,i,meshBuilder)
+				vertexCounter += addSurface(h,to,nodepos,i,meshBuilder)
 		subtimer.stop
 			}
 		}
@@ -297,9 +301,9 @@ class Leaf(val h:Hexaeder) extends Octant{
 						val p2 = p1.clone
 						p2( axis ) += ((dir&1)<<1)-1
 					subtimer.start
-						val other = World(p2)
+						val other = worldaccess(p2)
 
-						vertexCounter += World.cube.addSurface(h,other,p1,dir,meshBuilder)
+						vertexCounter += addSurface(h,other,p1,dir,meshBuilder)
 					subtimer.stop
 					}
 				}
@@ -312,15 +316,19 @@ class Leaf(val h:Hexaeder) extends Octant{
 		val replacement = updated(p,nh,nodepos,nodesize)
 
 		val builder = new TextureMeshBuilder
-		replacement.genPolygons(nodepos,nodesize,builder)
+		replacement.genPolygons(nodepos,nodesize,builder,World.apply _)
 		val patch = Patch(vertpos,offset,builder.result)
 		(replacement,patch)
 	}
 
 	override def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData] = {
 		val builder = new TextureMeshBuilder
-		genPolygons(nodepos,nodesize,builder)
+		genPolygons(nodepos,nodesize,builder,World.apply _)
 		Patch(vertpos,offset,builder.result)
+	}
+
+	def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
+		throw new NoSuchMethodException("a Leaf does not contain a Mesh, this should be higher in the Octree")
 	}
 }
 
@@ -361,6 +369,10 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 		else
 			this
 	}
+
+	def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
+		throw new NoSuchMethodException("if InnerNodeOverVertexArray exists then a mesh should already be generated")
+	}
 	
 	override def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i,nodesize:Int):(Octant, Patch[TextureMeshData]) = {
 		//TODO nachbarn patchen
@@ -400,7 +412,8 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 	
 	override def toString = data.mkString("(",",",")")
 	
-	override def genPolygons(nodepos:Vec3i, nodesize:Int, meshBuilder:TextureMeshBuilder):Int = throw new NoSuchMethodException("in root use genMesh instead of genPolygons")
+	override def genPolygons(nodepos:Vec3i, nodesize:Int, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int = 
+		throw new NoSuchMethodException("in root use genMesh instead of genPolygons")
 	
 	def insertNode(nodepos:Vec3i, nodesize:Int, insertnode:Octant, insertnodepos:Vec3i, insertnodesize:Int) = {
 		assert(indexInRange(insertnodepos,nodepos,nodesize))
@@ -420,11 +433,11 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 	val voffset = new Array[Int](8)
 	
-	override def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder) = {
+	override def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)) = {
 		val hsize = nodesize >> 1 // half size
 		for(i <- 0 until 8){
 			val v = Vec3i(i&1, (i&2)>>1, i>>2)
-			voffset(i) = data(i).genPolygons(nodepos+v*hsize,hsize,meshBuilder)
+			voffset(i) = data(i).genPolygons(nodepos+v*hsize,hsize,meshBuilder,worldaccess)
 		}
 		voffset.sum
 	}
@@ -446,7 +459,7 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		if(merge_?){
 			val mb = new TextureMeshBuilder
 			val replacement = new Leaf(nh)
-			replacement.genPolygons(nodepos,nodesize,mb)
+			replacement.genPolygons(nodepos,nodesize,mb, World.apply _)
 			( replacement, Patch(vertpos,offset,mb.result) )
 		}
 		else
@@ -468,19 +481,19 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		patch
 	}
 
-	override def genMesh(nodepos:Vec3i, nodesize:Int, destnodesize:Int) = {
+	override def genMesh(nodepos:Vec3i, nodesize:Int, destnodesize:Int, worldaccess:(Vec3i => Hexaeder)) = {
 		if(nodesize <= destnodesize){
 			val replacement = new InnerNodeWithVertexArray(EmptyHexaeder)
 			for(i <- 0 until 8)
 				replacement.data(i) = data(i)
-			replacement.genMesh(nodepos,nodesize,destnodesize)
+			replacement.genMesh(nodepos,nodesize,destnodesize,worldaccess)
 		}
 		else{
 			val replacement = new InnerNodeOverVertexArray(EmptyHexaeder)
 			for(i <- 0 until  8){
 				val v = index2vec(i)
 				val hsize = nodesize >> 1
-				replacement.data(i) = data(i).genMesh(v*hsize+nodepos, hsize, destnodesize)
+				replacement.data(i) = data(i).genMesh(v*hsize+nodepos, hsize, destnodesize, worldaccess)
 			}
 			replacement
 		}
@@ -490,10 +503,10 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 class InnerNodeWithVertexArray(h:Hexaeder) extends InnerNode(h) {
 	var mesh:MutableTextureMesh = null
 	
-	override def genMesh(nodepos:Vec3i, nodesize:Int, destnodesize:Int) = {
+	override def genMesh(nodepos:Vec3i, nodesize:Int, destnodesize:Int, worldaccess:(Vec3i => Hexaeder)) = {
 		assert(mesh == null)
 		val meshBuilder = new TextureMeshBuilder
-		val result = super.genPolygons(nodepos,nodesize,meshBuilder)
+		val result = super.genPolygons(nodepos, nodesize, meshBuilder, worldaccess)
 		mesh = new MutableTextureMesh(meshBuilder.result)
 		//TODO genvbo sollte hier nicht aufgerufen werden, damit genPolygons auch in anderen Threads als dem render Thread aufgerufen werden kann
 		//mesh.genvbo
@@ -550,7 +563,11 @@ object DeadInnderNode extends Octant{
 	/**generates the polygons for this Octant
 	 * @return number of added vertices
 	 */
-	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder) = -1
+	// diese methode wird nicht gebraucht, da wir uns oberhalb der VBOs befinden, und auch keine Hexaeder definiert sind
+	def genPolygons(nodepos:Vec3i,nodesize:Int,meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)) = {
+		throw new NoSuchMethodException("dead nodes can't generate Polygons")
+	}
+
 	//similar to updated, but this function also generates patches to update the mesh
 	def patchWorld(p:Vec3i, nh:Hexaeder, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : (Octant, Patch[TextureMeshData]) = {
 		throw new NoSuchMethodException("dead nodes can't be patched")
@@ -559,7 +576,7 @@ object DeadInnderNode extends Octant{
 	// TODO EmptyPatch
 	def repolyWorld(p:Vec3i, vertpos:Int, offset:Int, nodepos:Vec3i, nodesize:Int) : Patch[TextureMeshData] = null
 
-	override def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int) = this
+	override def genMesh(nodepos: Vec3i, nodesize: Int, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder)) = this
 
 	def insertNode(nodepos:Vec3i, nodesize:Int, insertnode:Octant, insertnodepos:Vec3i, insertnodesize:Int) = {
 		if(nodesize == insertnodesize)

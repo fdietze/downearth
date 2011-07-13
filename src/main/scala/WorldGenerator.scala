@@ -21,9 +21,7 @@ object WorldGenerator {
 	val densityfunction:(Vec3 => Float) = hyperdangerous _
 	
 	def genWorld:WorldOctree = {
-		val worldoctree = new WorldOctree( cubesize )
-		worldoctree.root = genNodeAt(Vec3i(0),cubesize)
-		worldoctree
+		genWorldAt(Vec3i(0),cubesize)
 	}
 
 	def genSlice(nodepos:Vec3i ,nodesize:Int, size:Vec3i) = {
@@ -31,34 +29,38 @@ object WorldGenerator {
 		val data = new Array3D[Octant](size)
 		for(vi <- Vec3i(0) until size){
 			val npos = nodepos+vi*nodesize
-			data(vi) = genNodeAt(npos,nodesize).genMesh(npos,nodesize,nodesize)
+			val insertion = genWorldAt(npos,nodesize)
+			insertion.genMesh
+			data(vi) = insertion.root
 		}
 		data
 	}
 
-	def genNodeAt(nodepos:Vec3i,nodesize:Int) : Octant = {
+	def genWorldAt(nodepos:Vec3i,nodesize:Int):WorldOctree = {
 		import MarchingHexaeder._
-		val noiseData = new Array3D[Float](Vec3i(nodesize+1))
-		val exactCaseData = new Array3D[Short](Vec3i(nodesize))
+		
+		val noiseData = new Array3D[Float](Vec3i(nodesize+3))
+		//braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
+		val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 		
 		def extractData(pos:Vec3i) = {
 			assert(exactCaseData.indexInRange(pos))
 			offset map (o => noiseData(pos+o))
 		}
 
-		time("noiseData.fill: "){	noiseData.fill(v =>	densityfunction(nodepos+v) ) }
+		time("noiseData.fill: "){	noiseData.fill(v =>	densityfunction(nodepos+v-1) ) }
 		
 		val casecounter = new Array[Int](22)
 
 		time("exactCaseData: "){
-			for( coord <- Vec3i(0) until Vec3i(nodesize) ){
+			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ){
 				val exactCase = dataToCase(extractData(coord))
 				exactCaseData(coord) = exactCase.toShort
 			}
 		}
 		
 		time("caseTypeData, transformToStable: "){
-			for( coord <- Vec3i(0) until Vec3i(nodesize) ) {
+			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
 				val data = extractData(coord)
 				val exactCase = exactCaseData(coord)
 				val caseType = caseTypeLookup(exactCase)
@@ -72,19 +74,17 @@ object WorldGenerator {
 		}
 		
 		def fillfun(v:Vec3i) = {
-			val h = data2hexaeder(extractData(v), exactCaseData(v))
+			val h = data2hexaeder(extractData(v+1), exactCaseData(v+1))
 			if( h.noVolume )
 				EmptyHexaeder
 			else h
 		}
 		
-		val octree = new WorldOctree( nodesize )
-		
+		val octree = new WorldOctree( nodesize, nodepos )
 		time("cube.fill(data2hexaeder): "){
 			octree.fill( fillfun _ )
 		}
-		
-		octree.root
+		octree
 	}
 
 	def sphere(v:Vec3) = { val vt = v - 8; -(vt.x*vt.x + vt.y*vt.y + vt.z*vt.z - 64f) }
