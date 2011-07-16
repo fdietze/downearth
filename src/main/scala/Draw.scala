@@ -36,7 +36,9 @@ object Draw{
 		glEnd
 	}
 	
-	def renderCube{
+	def renderCube(size:Float){
+		glPushMatrix
+		glScalef(size,size,size)
 		glBegin(GL_LINES)
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
 			glVertex3f(i,j,k)
@@ -45,6 +47,7 @@ object Draw{
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
 			glVertex3f(k,i,j)
 		glEnd
+		glPopMatrix
 	}
 	
 	def crossHair{

@@ -72,18 +72,22 @@ object WorldGenerator {
 				}
 			}
 		}
-		
+
+		println("nodepos: " + nodepos)
 		def fillfun(v:Vec3i) = {
-			val h = data2hexaeder(extractData(v+1), exactCaseData(v+1))
+			val arraypos = v + 1 - nodepos
+			val h = data2hexaeder(extractData(arraypos), exactCaseData(arraypos))
 			if( h.noVolume )
 				EmptyHexaeder
 			else h
 		}
 		
-		val octree = new WorldOctree( nodesize, nodepos )
+		val octree = new WorldOctree( nodesize, nodepos.clone )
 		time("cube.fill(data2hexaeder): "){
 			octree.fill( fillfun _ )
 		}
+		assert(octree.rootNodePos == nodepos)
+		assert(octree.rootNodeSize == nodesize)
 		octree
 	}
 

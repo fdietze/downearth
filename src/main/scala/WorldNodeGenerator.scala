@@ -20,11 +20,19 @@ object WorldNodeGenerator {
 		answer.asInstanceOf[Future[Array3D[Octant]]]
 	}
 
+	def generateNodeAt(nodepos:Vec3i,nodesize:Int):Future[WorldOctree] = {
+		val answer = master !!! GenerateNodeAt(nodepos,nodesize)
+		answer.asInstanceOf[Future[WorldOctree]]
+	}
+
 	class Master extends Actor {
 		def receive = {
 			case GenerateSliceAt(slicepos,minMeshNodeSize,slicesize) =>
 				self reply WorldGenerator.genSlice(slicepos, minMeshNodeSize, slicesize)
-			
+			case GenerateNodeAt(nodepos,nodesize) =>
+				val node = WorldGenerator.genWorldAt(nodepos,nodesize)
+				node.genMesh
+				self reply node
 		}
 	}
 }

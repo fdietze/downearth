@@ -135,6 +135,7 @@ object Main {
 
 	def terminate{
 		Display.destroy()
+		WorldSerializer.save(World.octree)
 		sys.exit(0)
 	}
 	
@@ -214,11 +215,11 @@ object Main {
 				case KEY_R =>
 					Dingens.resetBallPos			
 				case KEY_X =>
-					World.cube.move(Vec3i(1,0,0))
+					World.octree.move(Vec3i(1,0,0))
 				case KEY_Y =>
-					World.cube.move(Vec3i(0,1,0))
+					World.octree.move(Vec3i(0,1,0))
 				case KEY_Z =>
-					World.cube.move(Vec3i(0,0,1))
+					World.octree.move(Vec3i(0,0,1))
 				case KEY_T =>
 					turbo = if(turbo) false else true
 				case KEY_ESCAPE =>

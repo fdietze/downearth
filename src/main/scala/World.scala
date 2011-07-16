@@ -10,13 +10,25 @@ import Util._
 import actors.Futures
 
 object World{
-
-	val cube = time("genworld: "){
+	
+	/*
+	val octree = time("genworld: "){
 		WorldGenerator.genWorld
 	}
-
-	time("genmesh: ")(cube.genMesh)
+	time("genmesh: ")(octree.genMesh)
+	*/
 	
+	val octree = {
+		WorldSerializer.load match {
+		case Some(s) => s
+		case None => 
+			val gen = time("genworld: ")(WorldGenerator.genWorld)
+			          time("genmesh: ")(gen.genMesh)
+			gen
+		}
+	}
+	
+
 	Runtime.getRuntime.gc
 
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Float):Option[Vec3i] = {
@@ -93,19 +105,19 @@ object World{
 	}
 	
 	def update(pos:Vec3i,h:Hexaeder){
-		cube(pos) = h
+		octree(pos) = h
 	}
 	
 	def apply(pos:Vec3i) = 
-		if(cube indexInRange pos) 
-			cube(pos)
+		if(octree != null)
+			octree(pos)
 		else
-			EmptyHexaeder
+			UndefHexaeder
 		
 	def draw{
 		
-		cube.makeNodeUpdates
-		cube.draw
+		octree.makeNodeUpdates
+		octree.draw
 		
 		//raytracer zum Anklicken von Zellen
 		
@@ -119,7 +131,7 @@ object World{
 			glDisable(GL_LIGHTING)
 			glPushMatrix
 			glTranslatef(v.x,v.y,v.z)
-			val h = cube(v)
+			val h = octree(v)
 			//Draw.renderCube
 			Draw.renderHexaeder(h)
 			glPopMatrix
