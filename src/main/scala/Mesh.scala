@@ -69,21 +69,20 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 	private var msize = vertexArray.size
 	override def size = msize
 
-	private var zeroed = 0
-	def zeroedVertices = zeroed
-	
 	def patch(patches:Iterable[Patch[TextureMeshData]]){
 		val oldvertices = vertices
 		val oldnormals = normals
-		val oldtexcoords = texcoords
-
+		val orldcoords = texcoords
+		
 		val newsize = (size /: patches)( (sum,p) => sum - p.size + p.data.size )
+		assert(newsize > 0,"patchsize must be greate than 0, is: " + newsize)
+		
 		val t = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec2, RFloat]
 			)( newsize )
-		
+
 		vertices = t._1
 		normals = t._2
 		texcoords = t._3
@@ -124,8 +123,6 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 			val (_ , post) = other.viewsplit(p.size)
 			dataview = (pre ::: View(0,p.data.size,p.data) :: post)
 		}
-		
-//	val destBuffer = vertices.rawBuffer
 
 		var index = 0;
 		for(View(offset,size,data) <- dataview){
@@ -150,14 +147,17 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 
 class TextureMesh(data:TextureMeshData) extends Mesh{
 	import data._
+	
+	
 	private val msize = vertexArray.size
 	def size = msize
+	println("texture mesh size: "+vertexArray.size)
 	
 	var (vertices,normals,texcoords) = interleave(
 		DataSeq[Vec3, RFloat],
 		DataSeq[Vec3, RFloat],
 		DataSeq[Vec2, RFloat]
-		)(vertexArray.size)
+	)(vertexArray.size)
 	
 	for(i <- 0 until vertexArray.size){
 		vertices(i) = vertexArray(i)
@@ -171,35 +171,42 @@ class TextureMesh(data:TextureMeshData) extends Mesh{
 		if(vertexBufferObject == 0)
 			genvbo
 		
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
+		if( size > 0 ) {
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
 
-		glEnableClientState(GL_VERTEX_ARRAY)
-		glEnableClientState(GL_NORMAL_ARRAY)
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+			glEnableClientState(GL_VERTEX_ARRAY)
+			glEnableClientState(GL_NORMAL_ARRAY)
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-		glVertexPointer(vertices.components, vertices.rawType, vertices.byteStride, vertices.byteOffset)
-		glNormalPointer(normals.rawType, normals.byteStride, normals.byteOffset)
-		glTexCoordPointer(texcoords.components, texcoords.rawType, texcoords.byteStride, texcoords.byteOffset)
+			glVertexPointer(vertices.components, vertices.rawType, vertices.byteStride, vertices.byteOffset)
+			glNormalPointer(normals.rawType, normals.byteStride, normals.byteOffset)
+			glTexCoordPointer(texcoords.components, texcoords.rawType, texcoords.byteStride, texcoords.byteOffset)
 
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size)
+			glDrawArrays(GL_TRIANGLES, 0, vertices.size)
 
-		glDisableClientState(GL_VERTEX_ARRAY)
-		glDisableClientState(GL_NORMAL_ARRAY)
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+			glDisableClientState(GL_VERTEX_ARRAY)
+			glDisableClientState(GL_NORMAL_ARRAY)
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+		}
 	}
 	
 	def genvbo {
 		freevbo
-		vertexBufferObject = glGenBuffersARB()
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
-		glBufferDataARB(GL_ARRAY_BUFFER_ARB, vertices.bindingBuffer, GL_STATIC_COPY_ARB)
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+		// es gibt einen Fehler wenn man versucht ein VBO der länge 0 anzulegen
+		if( size > 0 ) {
+			vertexBufferObject = glGenBuffersARB()
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
+			glBufferDataARB(GL_ARRAY_BUFFER_ARB, vertices.bindingBuffer, GL_STATIC_COPY_ARB)
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+		}
+		else
+			vertexBufferObject = -1
 	}
 	
 	def freevbo {
-		if( vertexBufferObject != 0 ) {
+		if( vertexBufferObject > 0 ) {
 			glDeleteBuffersARB(vertexBufferObject)
 		}
 	}

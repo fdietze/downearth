@@ -19,23 +19,25 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	var meshGenerated = false
 
 	override def indexInRange(pos:Vec3i) = Util.indexInRange(pos,rootNodePos,rootNodeSize)
-
+	
+	def rootNodeInfo = NodeInfo(rootNodePos,rootNodeSize)
+	
 	def apply(p:Vec3i) = {
-		if(Util.indexInRange(p,rootNodePos,rootNodeSize))
-			root(p,rootNodePos,rootNodeSize)
+		if(rootNodeInfo.indexInRange(p))
+			root(rootNodeInfo,p)
 		else
 			UndefHexaeder
 	}
 
 	def update(p:Vec3i,h:Hexaeder) {
-		if(Util.indexInRange(p,rootNodePos,rootNodeSize)) {
+		if(rootNodeInfo.indexInRange(p)) {
 			if(meshGenerated)
-				root = root.patchWorld(p,h,-1,-1, rootNodePos, rootNodeSize)._1
+				root = root.patchWorld(rootNodeInfo, p,h,-1,-1)._1
 			else 
-				root = root.updated(p,h,rootNodePos,rootNodeSize)
+				root = root.updated(rootNodeInfo, p,h)
 		}
 		else{
-			printf("update out of world at %s, rootNodePos: %s, rootNodeSize: %s \n",p.toString,rootNodePos.toString,rootNodeSize.toString)
+			printf("update out of world at %s, %s\n",p.toString,rootNodeInfo.toString)
 		}
 	}
 	
@@ -74,7 +76,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
-		glLineWidth(3)
+		
 		glPushMatrix
 		glTranslatef(rootNodePos.x,rootNodePos.y,rootNodePos.z)
 		glColor3f(1,0,0)
@@ -90,7 +92,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	}
 	
 	def genMesh {
-		root = root.genMesh(rootNodePos,rootNodeSize,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else World(x)}) )
+		root = root.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else World(x)}) )
 		meshGenerated = true
 	}
 	
@@ -147,7 +149,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			rootNodeSize *= 2
 		}
 		
-		root = root.insertNode(rootNodePos,rootNodeSize,that,nodepos,nodesize)
+		root = root.insertNode(rootNodeInfo,NodeInfo(nodepos,nodesize), that)
 	}
 	
 	// fügt die im intergrund berechneten Nodes in den Baum ein

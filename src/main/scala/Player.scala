@@ -99,7 +99,7 @@ object Camera{
 		val v = WIDTH.toFloat / HEIGHT.toFloat	
 		
 		val n = 0.05f //near
-		val f = 100   //far
+		val f = 1000   //far
 		val r = v*n   //right
 		val t = n     //top
 		//l = -r; b = -t
