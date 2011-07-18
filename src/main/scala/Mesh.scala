@@ -75,7 +75,7 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 		val orldcoords = texcoords
 		
 		val newsize = (size /: patches)( (sum,p) => sum - p.size + p.data.size )
-		assert(newsize > 0,"patchsize must be greate than 0, is: " + newsize)
+		assert(newsize >= 0,"patchsize must be greater than or equal to 0, is: " + newsize)
 		
 		val t = interleave(
 			DataSeq[Vec3, RFloat],
@@ -83,8 +83,8 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 			DataSeq[Vec2, RFloat]
 			)( newsize )
 
-		vertices = t._1
-		normals = t._2
+		vertices  = t._1
+		normals   = t._2
 		texcoords = t._3
 
 		case class View(offset:Int,size:Int,data:TextureMeshData){
