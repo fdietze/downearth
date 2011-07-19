@@ -380,11 +380,14 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 		var patches = patch :: Nil
 		
 		// Nachbarn die noch innerhalb des Octanten liegen patchen
+		var newsize = mesh.size+patch.sizedifference
 		for(i <- 0 until 6) {
 			val npos = p.clone
 			npos(i >> 1) += ((i&1) << 1)-1
 			if( info.indexInRange(npos) ){
-				patches ::= node.repolyWorld(info, npos, 0, mesh.size)
+				val newpatch = node.repolyWorld(info, npos, 0, newsize)
+				patches ::=  newpatch
+				newsize += newpatch.sizedifference
 			}
 		}
 

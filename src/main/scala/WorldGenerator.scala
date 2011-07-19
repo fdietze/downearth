@@ -17,7 +17,7 @@ final class FloatNoise(source: NoiseSource) {
 
 object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
-	val cubesize = 64
+	val cubesize = 32
 	val densityfunction:(Vec3 => Float) = hyperdangerous _
 	
 	def genWorld:WorldOctree = {

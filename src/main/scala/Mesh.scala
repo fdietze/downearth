@@ -53,7 +53,10 @@ case class TextureMeshBuilder(
 }
 
 // A <: B <: MeshData => Patch[A] <: Patch[B]
-case class Patch[+T <: MeshData](pos:Int,size:Int,data:T)
+case class Patch[+T <: MeshData](pos:Int,size:Int,data:T){
+	//the difference of the size after the patch has been applied
+	def sizedifference = data.size - size
+}
 
 /*
 object EmptyMeshData extends MeshData{
@@ -74,8 +77,11 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 		val oldnormals = normals
 		val orldcoords = texcoords
 		
-		val newsize = (size /: patches)( (sum,p) => sum - p.size + p.data.size )
-		assert(newsize >= 0,"patchsize must be greater than or equal to 0, is: " + newsize)
+		val newsize = size + (patches map (_.sizedifference)).sum
+		def errorstring = {
+			patches map ( p => "replace " + p.size + " with " + p.data.size + "\n" )
+		}
+		assert(newsize >= 0,"newsize must be greater than or equal to 0\n"+errorstring)
 		
 		val t = interleave(
 			DataSeq[Vec3, RFloat],
