@@ -115,8 +115,6 @@ object World{
 			UndefHexaeder
 		
 	def draw{
-		
-		octree.makeNodeUpdates
 		octree.draw
 		
 		//raytracer zum Anklicken von Zellen
@@ -138,5 +136,7 @@ object World{
 			glEnable(GL_LIGHTING)
 		case None =>
 		}
+
+ 		octree stream Player.position
 	}
 }

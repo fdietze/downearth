@@ -11,10 +11,13 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 	var worldWindowPos:Vec3i = rootNodePos.clone
 	val worldWindowSize:Int = rootNodeSize
+	
+	def worldWindowCenter = worldWindowPos + worldWindowSize/2
+	
 	val minMeshNodeSize = 32
 
 	val vsize = Vec3i(worldWindowSize)
-	var root:Octant = new Leaf(EmptyHexaeder)
+	var root:Octant = new Leaf(EmptyHexaeder) // = DeadInnderNode
 
 	var meshGenerated = false
 
@@ -97,29 +100,60 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	}
 	
 	import akka.dispatch.Future
-	var queue:List[Pair[() => Boolean,() => Unit]] = Nil
+
+	def jumpTo(pos:Vec3){
+		val newcenter = (Vec3i(pos)/minMeshNodeSize)*minMeshNodeSize
+		worldWindowPos = newcenter-worldWindowSize/2
+		
+		for(vi <- Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize) ){
+			val nodepos = worldWindowPos + vi*minMeshNodeSize
+			generateNode(nodepos,minMeshNodeSize)
+		}
+	}
+	
+	def generateNode(nodepos:Vec3i,nodesize:Int){
+		insert(nodepos,nodesize,new FutureNode(WorldNodeGenerator.generateNodeAt(nodepos,nodesize)))
+	}
 
 	def move(dir:Vec3i){
 		// checkrange
 		worldWindowPos += dir * minMeshNodeSize
 
-		val slicepos = worldWindowPos + (dir+1)/2*worldWindowSize - abs(dir) * minMeshNodeSize
+		val slicepos = worldWindowPos + (dir+1)/2*worldWindowSize - (dir+1)/2 * minMeshNodeSize
 		val slicesize = (Vec3i(1) - abs(dir)) * (worldWindowSize / minMeshNodeSize) + abs(dir)
 		
 		for(vi <- Vec3i(0) until slicesize){
 			val spos = slicepos + vi*minMeshNodeSize
-			
-			val nodefuture = WorldNodeGenerator.generateNodeAt(spos, minMeshNodeSize)
-			val ready:() => Boolean = nodefuture.isCompleted _
-			val run:() => Unit = ( () => {
-				val node = nodefuture.get.root
-				val nodepos = nodefuture.get.rootNodePos
-				val nodesize = nodefuture.get.rootNodeSize
-				insert(nodepos,nodesize,node)
-			})
-			
-			queue ::= Pair(ready,run)
+			if(!isSet(spos,minMeshNodeSize)){
+				generateNode(spos,minMeshNodeSize)
+			}
 		}
+	}
+	
+	def stream(pos:Vec3){
+		val wpos = Vec3(worldWindowPos)
+		val wsize = worldWindowSize.toFloat
+		val msize = minMeshNodeSize.toFloat
+
+		//while(Util.indexInRange(worldWindowPos,worldWindowSize,Vec3i(pos))
+		
+		assert((worldWindowSize / minMeshNodeSize) % 2 == 0  , "da ist noch was nicht implementiert")
+		
+		val lowerVertex = wpos + wsize/2 - msize/2
+		val upperVertex = wpos + wsize/2 + msize/2
+		
+		if( pos.x < lowerVertex.x )
+			move( Vec3i(-1,0,0) )
+		if( pos.y < lowerVertex.y )
+			move( Vec3i(0,-1,0) )
+		if( pos.z < lowerVertex.z )
+			move( Vec3i(0,0,-1) )
+		if( pos.x > upperVertex.x )
+			move( Vec3i(1,0,0) )
+		if( pos.y > upperVertex.y )
+			move( Vec3i(0,1,0) )
+		if( pos.z > upperVertex.z )
+			move( Vec3i(0,0,1) )
 	}
 	
 	def insert( nodepos:Vec3i, nodesize:Int, that:Octant ) {
@@ -151,20 +185,18 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		
 		root = root.insertNode(rootNodeInfo,NodeInfo(nodepos,nodesize), that)
 	}
-	
-	// fügt die im intergrund berechneten Nodes in den Baum ein
-	def makeNodeUpdates{
-		val (set,unset) = queue.partition( _._1() )
-		
-		for( (_,run) <- set )
-			run()
-		
-		queue = unset
-	}
 
 	override def fill( foo: Vec3i => Hexaeder ){
 		for( v <- rootNodePos until rootNodePos + rootNodeSize ) {
 			this(v) = foo(v)
 		}
+	}
+	
+	def isSet(nodepos:Vec3i,nodesize:Int) = {
+		val info = NodeInfo(nodepos,nodesize)
+		if(rootNodeInfo indexInRange info)
+			root.isSet(rootNodeInfo,info)
+		else
+			false
 	}
 }

@@ -33,6 +33,10 @@ case class NodeInfo(pos:Vec3i,size:Int){
 		NodeInfo(pos+v*hsize,hsize)
 	}
 	
+	def isSet(pos:NodeInfo) = {
+		
+	}
+	
 	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
@@ -45,6 +49,7 @@ trait Octant extends Serializable{
 	/**generates the polygons for this Octant
 	 * @return number of added vertices
 	 */
+	def isSet(info:NodeInfo,pos:NodeInfo):Boolean
 	// creates polygons in subtree and adds them to meshBuilder
 	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int
 	//similar to updated, but this function also generates patches to update the mesh
@@ -58,6 +63,9 @@ trait Octant extends Serializable{
 }
 
 class Leaf(val h:Hexaeder) extends Octant{
+	// a leaf is always defined
+	def isSet(info:NodeInfo,pos:NodeInfo) = true
+	
 	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) = insertnode
 
 	override def apply(info:NodeInfo, p:Vec3i) = h
@@ -198,6 +206,16 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 		data(fidx) = new Leaf(h)
 	}
 	
+	def isSet(info:NodeInfo,pos:NodeInfo) = {
+		assert(info indexInRange pos,"Not in range: "+info+pos)
+		if(info == pos)
+			true
+		else{
+			val (index,nodeinfo) = info(pos.pos)
+			data(index).isSet(nodeinfo,pos)
+		}
+	}
+	
 	def apply(info:NodeInfo, p:Vec3i) = {
 		val (index,nodeinfo) = info(p)
 		data(index)(nodeinfo,p)
@@ -281,6 +299,9 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 }
 
 class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
+	// this node is under the vertex array, and may not have unset nodes
+	override def isSet(info:NodeInfo,pos:NodeInfo) = true
+	
 	val vvertcount = new Array[Int](8)
 	
 	override def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)) = {
@@ -339,6 +360,8 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 
 //decorator pattern
 class InnerNodeWithVertexArray(var node:Octant) extends Octant {
+	// Nodes under the vertex Array must be set
+	def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
 	def insertNode(info: NodeInfo, insertinfo: NodeInfo, insertnode: Octant) = {
 		throw new NoSuchMethodException("no nodes can be inserted inside of inner nodes with vertex arrays")
@@ -409,6 +432,7 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 }
 
 object DeadInnderNode extends Octant{
+	def isSet(info:NodeInfo,pos:NodeInfo) = false
 	def apply(info:NodeInfo, p:Vec3i) = EmptyHexaeder
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
 		println("update out of World")
@@ -452,3 +476,61 @@ object DeadInnderNode extends Octant{
 	
 	def draw{}
 }
+
+class FutureNode( node:akka.dispatch.Future[Octant] ) extends Octant{
+	def apply(info:NodeInfo, p:Vec3i) = if(node.isCompleted) node.get(info,p) else EmptyHexaeder
+	
+	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
+		if(node.isCompleted)
+			node.get.updated(info,p,nh)
+		else{
+			println("update in ungenerated space")
+			this
+		}
+	}
+	
+	def isSet(info:NodeInfo,pos:NodeInfo) = true
+	// creates polygons in subtree and adds them to meshBuilder
+	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int = {
+		throw new NoSuchMethodException("Future Nodes should not generate polygons")
+	}
+	
+	//similar to updated, but this function also generates patches to update the mesh
+	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Patch[TextureMeshData]) = {
+		if(node.isCompleted)
+			node.get.patchWorld(info,p,nh,vertpos,vertcount)
+		else{
+			println("future nodes can't be patched")
+			(this,null)
+		}
+	}
+	//similar to patch, but it does not change anything in the Tree
+	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Patch[TextureMeshData] = {
+		if(node.isCompleted)
+			node.get.repolyWorld(info,p,vertpos,vertcount)
+		else
+			null
+	}
+	// adds InnerNodeWithVertexArray into the tree, and creates Meshes inside of them
+	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
+		if(node.isCompleted)
+			node.get.genMesh(info,dstnodesize,worldaccess)
+		else
+			this
+	}
+	
+	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) : Octant = {
+		if(info == insertinfo)
+			insertnode
+		else if(node.isCompleted)
+			node.get.insertNode(info,insertinfo,insertnode)
+		else
+			throw new Exception("insertNode inside of uncompleted Future Node is not implemented yet")
+	}
+	
+	def draw{
+		if(node.isCompleted)
+			node.get.draw
+	}
+}
+

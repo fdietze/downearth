@@ -17,11 +17,11 @@ final class FloatNoise(source: NoiseSource) {
 
 object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
-	val cubesize = 32
+	val cubesize = 64
 	val densityfunction:(Vec3 => Float) = hyperdangerous _
 	
 	def genWorld:WorldOctree = {
-		genWorldAt(Vec3i(0),cubesize)
+		genWorldAt(Vec3i(-cubesize/2),cubesize)
 	}
 
 	def genSlice(nodepos:Vec3i ,nodesize:Int, size:Vec3i) = {

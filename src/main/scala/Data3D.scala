@@ -4,7 +4,7 @@ import simplex3d.math.Vec3i
 import simplex3d.math.float.functions.{lessThan,lessThanEqual,greaterThanEqual}
 import simplex3d.math.{all}
 /******************************************************************************/
-/******* assert(x<sx && y < sy && z < sz && 0 <= x && 0 <= y && 0 <= z) *******/
+/* assert(x<sx && y < sy && z < sz && 0 <= x && 0 <= y && 0 <= z) */
 /******* @specialized(Byte,Short,Float,Double)                          *******/
 /******************************************************************************/
 

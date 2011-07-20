@@ -189,9 +189,9 @@ object Main {
 			dingensdelta.x -= 1
 		if(isKeyDown(KEY_L))
 			dingensdelta.x += 1
-		if(isKeyDown(KEY_PRIOR))
+		if(isKeyDown(KEY_HOME))
 			dingensdelta.z += 1
-		if(isKeyDown(KEY_NEXT))
+		if(isKeyDown(KEY_END))
 			dingensdelta.z -= 1
 		
 		if(isKeyDown(KEY_F)){
@@ -214,12 +214,18 @@ object Main {
 						Mouse setGrabbed true
 				case KEY_R =>
 					Dingens.resetBallPos			
-				case KEY_X =>
-					World.octree.move(Vec3i(1,0,0))
-				case KEY_Y =>
-					World.octree.move(Vec3i(0,1,0))
-				case KEY_Z =>
-					World.octree.move(Vec3i(0,0,1))
+				case KEY_RIGHT =>
+					World.octree.move(Vec3i( 1,0,0))
+				case KEY_LEFT =>
+					World.octree.move(Vec3i(-1,0,0))
+				case KEY_UP =>
+					World.octree.move(Vec3i(0, 1,0))
+				case KEY_DOWN =>
+					World.octree.move(Vec3i(0,-1,0))
+				case KEY_PRIOR =>
+					World.octree.move(Vec3i(0,0, 1))
+				case KEY_NEXT =>
+					World.octree.move(Vec3i(0,0,-1))
 				case KEY_T =>
 					turbo = if(turbo) false else true
 				case KEY_ESCAPE =>
