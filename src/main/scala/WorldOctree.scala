@@ -29,7 +29,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		if(rootNodeInfo.indexInRange(p))
 			root(rootNodeInfo,p)
 		else
-			UndefHexaeder
+			FullHexaeder //UndefHexaeder
 	}
 
 	def update(p:Vec3i,h:Hexaeder) {

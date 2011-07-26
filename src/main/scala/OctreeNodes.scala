@@ -433,7 +433,7 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 
 object DeadInnderNode extends Octant{
 	def isSet(info:NodeInfo,pos:NodeInfo) = false
-	def apply(info:NodeInfo, p:Vec3i) = EmptyHexaeder
+	def apply(info:NodeInfo, p:Vec3i) = FullHexaeder //UndefHexaeder
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
 		println("update out of World")
 		this
@@ -478,7 +478,7 @@ object DeadInnderNode extends Octant{
 }
 
 class FutureNode( node:akka.dispatch.Future[Octant] ) extends Octant{
-	def apply(info:NodeInfo, p:Vec3i) = if(node.isCompleted) node.get(info,p) else EmptyHexaeder
+	def apply(info:NodeInfo, p:Vec3i) = if(node.isCompleted) node.get(info,p) else FullHexaeder //UndefHexaeder
 	
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
 		if(node.isCompleted)
