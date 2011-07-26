@@ -99,38 +99,55 @@ class Leaf(val h:Hexaeder) extends Octant{
 	// Fügt die oberfläche zwischen zwei hexaedern zum meshBuilder hinzu
 	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
 		assert(meshBuilder != null)
-	
+		assert(from != EmptyHexaeder)
+
 		import meshBuilder._
-		
+	
 		val axis = dir >> 1
 		val direction = dir & 1
+		
+		//die beiden achsesen, die nicht axis sind
+		val axisa = 1-((axis+1) >> 1)
+		val axisb = (2 - (axis >> 1))
+		
 
 		var vertexCounter = 0
-
-		if(  (to == EmptyHexaeder)
-				 || !to.planemax(axis,1-direction)
-				 || !from.planemax(axis,direction)
-				 || !occludes2d(
-				occludee=from.planecoords(axis,direction).toSet,
-				occluder=to.planecoords(axis,1-direction).toSet)
-			){
-
-			val triangleCoords = from.planetriangles(axis, direction)
-			val (t1,t2) = triangleCoords splitAt 3
-
-			val axisa = 1-((axis+1) >> 1)
-			val axisb = (2 - (axis >> 1))
-
-			for( t @ Seq(v0,v1,v2) <- List( t1, t2 ) ) {
-				if(v0 != v1 && v1 != v2 && v0 != v2){
-
-					for(v <- t){
-						vertexBuilder += (Vec3(pos) + v)
-						texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
-						vertexCounter += 1
+	
+		val triangleCoords = from.planetriangles(axis, direction)
+		val occludingCoords = to.planetriangles(axis,1-direction).filter(v => v(axis) == 1-direction) map
+				(v => Vec2(v(axisa),v(axisb))) toSet
+	
+		val (t1,t2) = triangleCoords splitAt 3
+	
+		def triangleMax( s:Seq[Vec3] ) = {
+			var isMax = true
+			for( v <- s ){
+				isMax = isMax && (v(axis) == direction)
+			}
+			isMax
+		}
+		
+		def addVertices(t:Seq[Vec3]){
+			for(v <- t){
+				vertexBuilder += (Vec3(pos) + v)
+				texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
+				vertexCounter += 1
+			}
+			normalBuilder += normalize(cross(t(2)-t(1),t(0)-t(1)))
+		}
+		
+		for( t <- List( t1, t2 ) ) {
+		
+			// liegen zwei vertices eines polygons zusammen, hat das polygon keine oberfläche und muss nicht
+			// gezeichnet werden
+			if(t(0) != t(1) && t(1) != t(2) && t(0) != t(2)){
+				if(to == EmptyHexaeder || !triangleMax(t))
+					addVertices(t)
+				else{
+					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb))) toSet ;
+					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ){
+						addVertices(t)
 					}
-
-					normalBuilder += normalize(cross(v2-v1,v0-v1))
 				}
 			}
 		}
@@ -141,14 +158,17 @@ class Leaf(val h:Hexaeder) extends Octant{
 		import info.{pos => nodepos, size => nodesize}
 		assert(meshBuilder != null)
 		var vertexCounter = 0
+		
 		if(nodesize == 1) {
-			for( i <- (0 to 5) ){
-				val p2 = nodepos.clone
-				p2(i >> 1) += ((i&1)<<1)-1
+			if( h != EmptyHexaeder ){
+				for( i <- (0 to 5) ){
+					val p2 = nodepos.clone
+					p2(i >> 1) += ((i&1)<<1)-1
 				
-				val to = worldaccess(p2)
+					val to = worldaccess(p2)
 
-				vertexCounter += addSurface(h,to,info.pos,i,meshBuilder)
+					vertexCounter += addSurface(h,to,info.pos,i,meshBuilder)
+				}
 			}
 		}
 		else {
@@ -477,12 +497,12 @@ object DeadInnderNode extends Octant{
 	def draw{}
 }
 
-class FutureNode( node:akka.dispatch.Future[Octant] ) extends Octant{
-	def apply(info:NodeInfo, p:Vec3i) = if(node.isCompleted) node.get(info,p) else FullHexaeder //UndefHexaeder
+class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
+	def apply(info:NodeInfo, p:Vec3i) = if(node.isSet) node().apply(info,p) else FullHexaeder
 	
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
-		if(node.isCompleted)
-			node.get.updated(info,p,nh)
+		if(node.isSet)
+			node.apply.updated(info,p,nh)
 		else{
 			println("update in ungenerated space")
 			this
@@ -497,8 +517,8 @@ class FutureNode( node:akka.dispatch.Future[Octant] ) extends Octant{
 	
 	//similar to updated, but this function also generates patches to update the mesh
 	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Patch[TextureMeshData]) = {
-		if(node.isCompleted)
-			node.get.patchWorld(info,p,nh,vertpos,vertcount)
+		if(node.isSet)
+			node.apply.patchWorld(info,p,nh,vertpos,vertcount)
 		else{
 			println("future nodes can't be patched")
 			(this,null)
@@ -506,15 +526,15 @@ class FutureNode( node:akka.dispatch.Future[Octant] ) extends Octant{
 	}
 	//similar to patch, but it does not change anything in the Tree
 	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Patch[TextureMeshData] = {
-		if(node.isCompleted)
-			node.get.repolyWorld(info,p,vertpos,vertcount)
+		if(node.isSet)
+			node.apply.repolyWorld(info,p,vertpos,vertcount)
 		else
 			null
 	}
 	// adds InnerNodeWithVertexArray into the tree, and creates Meshes inside of them
 	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
-		if(node.isCompleted)
-			node.get.genMesh(info,dstnodesize,worldaccess)
+		if(node.isSet)
+			node.apply.genMesh(info,dstnodesize,worldaccess)
 		else
 			this
 	}
@@ -522,15 +542,15 @@ class FutureNode( node:akka.dispatch.Future[Octant] ) extends Octant{
 	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) : Octant = {
 		if(info == insertinfo)
 			insertnode
-		else if(node.isCompleted)
-			node.get.insertNode(info,insertinfo,insertnode)
+		else if(node.isSet)
+			node.apply.insertNode(info,insertinfo,insertnode)
 		else
 			throw new Exception("insertNode inside of uncompleted Future Node is not implemented yet")
 	}
 	
 	def draw{
-		if(node.isCompleted)
-			node.get.draw
+		if(node.isSet)
+			node.apply.draw
 	}
 }
 

@@ -99,7 +99,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		meshGenerated = true
 	}
 	
-	import akka.dispatch.Future
+	import scala.actors.Future
 
 	def jumpTo(pos:Vec3){
 		val newcenter = (Vec3i(pos)/minMeshNodeSize)*minMeshNodeSize
