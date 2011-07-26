@@ -18,7 +18,7 @@ final class FloatNoise(source: NoiseSource) {
 object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
 	val cubesize = 64
-	val densityfunction:(Vec3 => Float) = hyperdangerous _
+	val densityfunction:(Vec3 => Float) = hypermegadangerous _
 	
 	def genWorld:WorldOctree = {
 		genWorldAt(Vec3i(-cubesize/2),cubesize)
@@ -296,6 +296,30 @@ object WorldGenerator {
 		val vn3_fnoise_1308761766 = fnoise_1308761766(Seq(vn5_fsrcv), Nil, Seq(vn4_fnoise_1308761766), Nil, Seq(vn5_fsrcy), Nil, 0.77f, 0.77f, 0.5f)
 		
 		vn3_fnoise_1308761766
+	}
+
+	def hypermegadangerous(originalsource:Vec3) = {
+		val source = (originalsource.xzy - cubesize) * Vec3(1,-1,1)
+
+		def noise3v(v:Vec3=Vec3(0), size:Float, scale:Float, offset:Float) = {(noise1(v*size)+offset)*scale/size}
+		def srcxyzz() = {source.z}
+		def richnoise3(v:Seq[Vec3], x:Seq[Float], y:Seq[Float], z:Seq[Float], add:Seq[Float], sub:Seq[Float], size:Float, scale:Float, offset:Float) = {
+					val sumv = v.fold[Vec3](Vec3(0))( (a,b) => a+b ) + Vec3(x.sum,y.sum,z.sum)
+					(noise1(sumv*size)+offset)*scale/size + add.sum - sub.sum
+					}
+		def srcxyzy() = {source.y}
+		def srcv() = {source}
+		def srcxyzx() = {source.x}
+
+		val vn6_srcxyzz = srcxyzz()
+		val vn6_srcxyzy = srcxyzy()
+		val vn6_srcxyzx = srcxyzx()
+		val vn6_srcv = srcv()
+		val vn11_noise3v = noise3v(vn6_srcv, 0.008490115f, 2.4283893f, 0.0f)
+		val vn8_richnoise3 = richnoise3(Seq(vn6_srcv), Nil, Nil, Nil, Nil, Nil, 0.03589682f, 10.267405f, 0.0f)
+		val vn7_richnoise3 = richnoise3(Seq(vn6_srcv), Nil, Seq(vn8_richnoise3), Nil, Seq(vn6_srcxyzy, vn11_noise3v), Nil, 0.007598867f, 0.5743491f, 0.0f)
+
+		vn7_richnoise3
 	}
 
 	// NoiseSum
