@@ -24,6 +24,7 @@ object FullHexaeder extends PartialHexaeder{
 	private val m_normals = Array(Vec3( 1,0,0),Vec3(0, 1,0),Vec3(0,0, 1),Vec3(-1,0,0),Vec3(0,-1,0),Vec3(0,0,-1))
 	override def normals = m_normals
 	override def planemax(axis:Int, direction:Int) = true
+	
 }
 
 object EmptyHexaeder extends Hexaeder{
@@ -36,7 +37,7 @@ object EmptyHexaeder extends Hexaeder{
 	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
 	def planetriangles(axis:Int, direction:Int) = Nil
 	def normals = Nil
-
+	
 	override def toString = "[ ]"
 }
 

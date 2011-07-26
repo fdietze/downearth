@@ -1,1 +1,3 @@
-libraryDependencies += "com.github.philcali" %% "sbt-lwjgl-plugin" % "3.0.2"
+libraryDependencies <+= (sbtVersion) { sv => 
+  "com.github.philcali" %% "sbt-lwjgl-plugin" % ("sbt" + sv + "_3.0.4")
+}
