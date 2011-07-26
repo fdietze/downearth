@@ -98,84 +98,77 @@ class Leaf(val h:Hexaeder) extends Octant{
 	
 	// Fügt die oberfläche zwischen zwei hexaedern zum meshBuilder hinzu
 	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
-		if(from == EmptyHexaeder)
-			0
-		else{
-			assert(meshBuilder != null)
-	
-			import meshBuilder._
-		
-			val axis = dir >> 1
-			val direction = dir & 1
-		
-		
-			val axisa = 1-((axis+1) >> 1)
-			val axisb = (2 - (axis >> 1))
-			//die beiden achsesen, die nicht axis sind
+		assert(meshBuilder != null)
+		assert(from != EmptyHexaeder)
 
-			var vertexCounter = 0
+		import meshBuilder._
+	
+		val axis = dir >> 1
+		val direction = dir & 1
 		
-			val triangleCoords = from.planetriangles(axis, direction)
-			val occludingCoords = to.planetriangles(axis,1-direction).filter(v => v(axis) == 1-direction) map
-					(v => Vec2(v(axisa),v(axisb))) toSet
+		//die beiden achsesen, die nicht axis sind
+		val axisa = 1-((axis+1) >> 1)
+		val axisb = (2 - (axis >> 1))
 		
-			val (t1,t2) = triangleCoords splitAt 3
-		
-					/*
-					 || !to.planemax(axis,1-direction)
-					 || !from.planemax(axis,direction)
-					 || !occludes2d(
-					occludee=from.planecoords(axis,direction).toSet,
-					occluder=to.planecoords(axis,1-direction).toSet)
-					*/
-		
-			def triangleMax( s:Seq[Vec3] ) = {
-				var isMax = true
-				for( v <- s ){
-					isMax = isMax && (v(axis) == direction)
-				}
-				isMax
+
+		var vertexCounter = 0
+	
+		val triangleCoords = from.planetriangles(axis, direction)
+		val occludingCoords = to.planetriangles(axis,1-direction).filter(v => v(axis) == 1-direction) map
+				(v => Vec2(v(axisa),v(axisb))) toSet
+	
+		val (t1,t2) = triangleCoords splitAt 3
+	
+		def triangleMax( s:Seq[Vec3] ) = {
+			var isMax = true
+			for( v <- s ){
+				isMax = isMax && (v(axis) == direction)
 			}
-		
-			for( t <- List( t1, t2 ) ) {
-				if(t(0) != t(1) && t(1) != t(2) && t(0) != t(2)){
-					if(to == EmptyHexaeder)
-						foo
-					else if(triangleMax(t)){
-						val flatTriangle = t map (v => Vec2(v(axisa),v(axisb))) toSet ;
-						if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ){
-							foo
-						}
-					}
-					else
-						foo
-				
-					def foo{
-						for(v <- t){
-							vertexBuilder += (Vec3(pos) + v)
-							texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
-							vertexCounter += 1
-						}
-						normalBuilder += normalize(cross(t(2)-t(1),t(0)-t(1)))
-					}
-				}
-			}
-			vertexCounter
+			isMax
 		}
+		
+		def addVertices(t:Seq[Vec3]){
+			for(v <- t){
+				vertexBuilder += (Vec3(pos) + v)
+				texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
+				vertexCounter += 1
+			}
+			normalBuilder += normalize(cross(t(2)-t(1),t(0)-t(1)))
+		}
+		
+		for( t <- List( t1, t2 ) ) {
+		
+			// liegen zwei vertices eines polygons zusammen, hat das polygon keine oberfläche und muss nicht
+			// gezeichnet werden
+			if(t(0) != t(1) && t(1) != t(2) && t(0) != t(2)){
+				if(to == EmptyHexaeder || !triangleMax(t))
+					addVertices(t)
+				else{
+					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb))) toSet ;
+					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ){
+						addVertices(t)
+					}
+				}
+			}
+		}
+		vertexCounter
 	}
 	
 	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)):Int = {
 		import info.{pos => nodepos, size => nodesize}
 		assert(meshBuilder != null)
 		var vertexCounter = 0
+		
 		if(nodesize == 1) {
-			for( i <- (0 to 5) ){
-				val p2 = nodepos.clone
-				p2(i >> 1) += ((i&1)<<1)-1
+			if( h != EmptyHexaeder ){
+				for( i <- (0 to 5) ){
+					val p2 = nodepos.clone
+					p2(i >> 1) += ((i&1)<<1)-1
 				
-				val to = worldaccess(p2)
+					val to = worldaccess(p2)
 
-				vertexCounter += addSurface(h,to,info.pos,i,meshBuilder)
+					vertexCounter += addSurface(h,to,info.pos,i,meshBuilder)
+				}
 			}
 		}
 		else {
