@@ -14,21 +14,31 @@ import javax.vecmath.Vector3f
 import com.bulletphysics.linearmath.Transform
 
 
-object Dingens {
+object ExampleBall {
 
 	import org.lwjgl.util.glu._
 	import GLU._
 
 	val radius = 0.25f
-
-
-	
 	val startpos = Vec3(6,-4,3)
+	val body = BulletPhysics.addBall(startpos,radius)
+	val glMatrix = DataBuffer[Mat4,RFloat](1)
 	
-	val body = BulletPhysics.addBall(radius)
+	
+	val startTransform = new Transform
+	startTransform.setIdentity
+	
+	
 	
 	def resetBallPos {
-		body.
+		val v = new Vector3f
+		body setLinearVelocity v
+		body getCenterOfMassPosition v
+		v.negate
+		v.x += startpos.x
+		v.y += startpos.y
+		v.z += startpos.z
+		body translate v
 	}
 	
 	
@@ -36,15 +46,27 @@ object Dingens {
 	sphere.setNormals(GLU_SMOOTH)
 	sphere.setDrawStyle(GLU_FILL)
 	
+	
+	
 	def draw{
 		glColor4f(1,1,1,1)
 		
-		for(b <- body){
-			glPushMatrix
-			b.multMatrix
-			sphere.draw(radius, 18, 9)
-			glPopMatrix
-		}
+	
+		glPushMatrix
+		//TODO load matrix and multMatrix
+		val motionState = body.getMotionState
+		val transform = new Transform
+		motionState.getWorldTransform(transform)
+		val matrixAsArray = new Array[Float](16)
+		transform.getOpenGLMatrix(matrixAsArray)
+		val matrixAsBuffer = org.lwjgl.BufferUtils.createFloatBuffer(16)
+		matrixAsBuffer put matrixAsArray
+		matrixAsBuffer.flip
+		
+		glMultMatrix(matrixAsBuffer)
+		
+		sphere.draw(radius, 18, 9)
+		glPopMatrix
 	}
 }
 
@@ -52,6 +74,15 @@ object Dingens {
 object Player{
 	def position = Camera.position
 	def direction = Camera.directionVec
+	
+	def foo{
+		val mousedest = World.raytracer(position,direction,false,100)
+		mousedest match {
+			case Some(pos) =>
+				println(World.octree getPolygons pos)
+			case _ =>
+		}
+	}
 	
 	def build{
 		val mousedest = World.raytracer(position,direction,true,100)

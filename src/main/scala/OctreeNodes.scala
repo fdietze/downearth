@@ -60,6 +60,9 @@ trait Octant extends Serializable{
 	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant
 	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) : Octant
 	def draw
+	
+	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] //return slice applied on the vertices
+	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) //return slice
 }
 
 class Leaf(val h:Hexaeder) extends Octant{
@@ -207,8 +210,8 @@ class Leaf(val h:Hexaeder) extends Octant{
 	}
 
 	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Patch[TextureMeshData] = {
-		val builder = new TextureMeshBuilder
-		genPolygons(info,builder,World.apply _)
+		val builder = new TextureMeshBuilder 
+		genPolygons(info, builder, World.apply _ )
 		Patch(vertpos,vertcount,builder.result)
 	}
 
@@ -217,6 +220,14 @@ class Leaf(val h:Hexaeder) extends Octant{
 	}
 	
 	def draw{}
+	
+	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+		throw new NoSuchMethodException("dont call this in Leaf")
+	}
+	
+	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+		(from,to)
+	}
 }
 
 class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
@@ -316,6 +327,15 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 		}
 		// TODO merge?
 	}
+	
+	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+		val (index,nodeinfo) = info(pos)
+		data(index).getPolygonsOverVertexArray( nodeinfo,pos )
+	}
+	
+	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+		throw new NoSuchMethodException("dont call this over Vertex Array")
+	}
 }
 
 class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
@@ -375,6 +395,17 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 				replacement.data(i) = data(i).genMesh(info(i), destnodesize, worldaccess)
 			replacement
 		}
+	}
+	
+	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+		throw new NoSuchMethodException("dont call this under Vertex Array")
+	}
+	
+	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+		val (index,nodeinfo) = info(pos)
+		val newfrom = from+vvertcount.view(0,index).sum
+		val newto = newfrom + vvertcount(index)
+		data(index).getPolygonsUnderVertexArray( nodeinfo,pos, newfrom, newto )
 	}
 }
 
@@ -449,6 +480,15 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 		mesh patch List(node.repolyWorld(info,p,0,mesh.size))
 		null 
 	}
+	
+	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+		val (from,to) = node.getPolygonsUnderVertexArray( info, pos, 0, mesh.size )
+		(from until to) map mesh.vertices
+	}
+	
+	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+		throw new NoSuchMethodException("dont call this over Vertex Array")
+	}
 }
 
 object DeadInnderNode extends Octant{
@@ -495,6 +535,12 @@ object DeadInnderNode extends Octant{
 	}
 	
 	def draw{}
+	
+	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = Nil
+	
+	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+		throw new NoSuchMethodException("dont call this over Vertex Array")
+	}
 }
 
 class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
@@ -551,6 +597,17 @@ class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
 	def draw{
 		if(node.isSet)
 			node.apply.draw
+	}
+	
+	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+		if(node.isSet)
+			node.apply.getPolygonsOverVertexArray( info,pos )
+		else
+			Nil
+	}
+	
+	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
 }
 

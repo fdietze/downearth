@@ -199,4 +199,8 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		else
 			false
 	}
+	
+	def getPolygons(pos:Vec3i) = {
+		root.getPolygonsOverVertexArray(rootNodeInfo,pos)
+	}
 }

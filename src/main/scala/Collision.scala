@@ -5,7 +5,7 @@ import broadphase.DbvtBroadphase
 import com.bulletphysics.dynamics._
 import com.bulletphysics.util.ObjectArrayList
 import constraintsolver.SequentialImpulseConstraintSolver
-import dispatch.{CollisionDispatcher, DefaultCollisionConfiguration}
+import dispatch.{CollisionFlags, CollisionDispatcher, DefaultCollisionConfiguration}
 import javax.vecmath.Vector3f
 import shapes._
 import simplex3d.math.float.functions._
@@ -19,6 +19,9 @@ import com.bulletphysics.linearmath.{DefaultMotionState, Transform}
 import org.lwjgl.opengl.GL11._
 import com.bulletphysics.util.ObjectArrayList._
 
+import simplex3d.data._
+import simplex3d.data.float._
+
 object BulletPhysics{
 	val broadPhase = new DbvtBroadphase
 	val collisionConfig = new DefaultCollisionConfiguration()
@@ -28,107 +31,54 @@ object BulletPhysics{
 
 	dynamicsWorld.setGravity(new Vector3f(0,0,-1))
 	dynamicsWorld.setDebugDrawer(DirectDrawer)
-
-	def addSector(worldpos:Vec3i, sector:WorldOctree){
-
-		println("Adding sector to Physics")
-
-		val transform = new Transform
-		transform.setIdentity
-		val vertices = new ObjectArrayList[Vector3f]
-		for(i <- 0 until 6)
-			vertices add new Vector3f(0,0,0)
-
-		for( WorldNodeInfo(pos,size,hexa) <- sector if(hexa ne EmptyHexaeder)) {
-			for(i <- 0 until 6){
-				val w = hexa(i) * size
-				vertices.get(i).set(w.x,w.y,w.z)
-			}
-
-			val shape = new ConvexHullShape(vertices)
-			transform.origin.set(pos.x,pos.y,pos.z)
-			val myMotionState = new DefaultMotionState(transform)
-			val rbInfo = new RigidBodyConstructionInfo(0,myMotionState,shape,new Vector3f(0,0,0))
-			val body = new RigidBody(rbInfo)
-
-			dynamicsWorld addRigidBody body
-		}
-	}
-	/*
-	def addSector(pos:Vec3i, sector:Data3D[Hexaeder]){
-		val transform = new Transform
-
-		val vertices = new ObjectArrayList[Vector3f](6)
-		transform.setIdentity
-		var bodycounter = 0
-		for(i <- 0 until 6)
-			vertices add new Vector3f(0,0,0)
-
-		for(v <- Vec3i(0) until Vec3i(cubesize)){
-			val h = sector(v)
-			if( (h ne EmptyHexaeder) /* && (h.vertexCount != 0) */ ){
-				bodycounter += 1
-				for(i <- 0 until 6){
-					val w = h(i)
-					vertices.get(i).set(w.x, w.y, w.z)
-				}
-
-				val shape = new ConvexHullShape(vertices)
-				transform.origin.set(v.x,v.y,v.z)
-
-				val myMotionState = new DefaultMotionState(transform);
-				val rbInfo = new RigidBodyConstructionInfo(0, myMotionState, shape, new Vector3f(0,0,0));
-				val body = new RigidBody(rbInfo)
-
-				// add the body to the dynamics world
-				dynamicsWorld addRigidBody body
-			}
-		}
-
-		println("added " + bodycounter + " bodies")
-	}
-	*/
 	
+	val startTransform = new Transform
+	startTransform.setIdentity
+	startTransform.origin.set(0f, 0f, 0f)
+		
 	
-	/*
-	def addPolygonSector(sector:WorldOctree){
-		val shape = new BvhTriangleMeshShape()
-		val vertices = sector.mesh.vertices
-		val gVertices = vertices.bindingBuffer
-		val totalVerts = vertices.size
-		val totalTriangles = totalVerts / 3
-		val vertStride = vertices.stride
-		val indexStride = 3*4
+	def makeStaticMesh(triangleverts:Seq[ConstVec3]) = {
+	
+		val vertices = DataBuffer[Vec3, RFloat](triangleverts.size)
+		val indices = DataBuffer[SInt,SInt](triangleverts.size)
 		
-		val transform = new Transform
-		transform.setIdentity
-		val myMotionState = new DefaultMotionState(transform)
-
-		val indices = ByteBuffer.allocateDirect(totalTriangles * 3 * 4).order(ByteOrder.nativeOrder)
-
-		(0 until totalVerts).foreach( indices.putInt _ )
-		indices.flip();
-
-		val indexVertexArrays = new TriangleIndexVertexArray(totalTriangles,
-				indices,
-				indexStride,
-				totalVerts, gVertices, vertStride)
+		for(i <- 0 until triangleverts.size){
+			vertices(i) = triangleverts(i)
+			indices(i) = i
+		}
 		
-		val useQuantizedAabbCompression = false
-		val trimeshShape = new BvhTriangleMeshShape(indexVertexArrays, useQuantizedAabbCompression)
-
-		val rbInfo = new RigidBodyConstructionInfo(0,myMotionState,trimeshShape,new Vector3f(0,0,0))
-		val body = new RigidBody(rbInfo)
-
-		dynamicsWorld addRigidBody body
+		val indexVertexArray = new TriangleIndexVertexArray(
+			triangleverts.size/3, //numTriangles
+			indices.bindingBuffer, //triangleIndexBase
+			indices.stride, //triangleIndexStride
+			triangleverts.size, //numVertices
+			vertices.bindingBuffer, //vertexBase
+			vertices.stride //vertexStride
+		)
+		
+		val groundShape = new BvhTriangleMeshShape(indexVertexArray, false);
+		
+		val myMotionState = new DefaultMotionState(startTransform);
+		
+		val cInfo = new RigidBodyConstructionInfo(0, myMotionState, groundShape, new Vector3f(0,0,0) );
+		
+		val staticBody = new RigidBody(cInfo);
+		
+		staticBody.setCollisionFlags( staticBody.getCollisionFlags | CollisionFlags.STATIC_OBJECT )
+		
+		staticBody
 	}
-	*/
-
+	
+	case class Ball(body:RigidBody,radius:Float)
+	
+	var balls:List[Ball] = Nil
+	var groundBody:RigidBody = null
+	
 	def addBall(pos:Vec3,radius:Float) = {
 		val mass = 1f;
 		val colShape = new SphereShape(radius)
 		val startTransform = new Transform();
-		startTransform.setIdentity();
+		startTransform.setIdentity
 		startTransform.origin.set(pos.x,pos.y,pos.z)
 
 		val localInertia = new Vector3f(0, 0, 1)
@@ -139,7 +89,30 @@ object BulletPhysics{
 		val rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape, localInertia)
 		val body = new RigidBody(rbInfo)
 		dynamicsWorld addRigidBody body
+		
+		balls ::= Ball(body,radius)
+		
 		body
+	}
+	
+	def prepareGroundMesh{
+		//TODO Überlappende polygone
+		val triangleVertices =
+		for( Ball(body,radius) <- balls ) yield {
+			val tmp = new Vector3f
+			body getCenterOfMassPosition tmp
+			val pos = Vec3(tmp.x,tmp.y,tmp.z)
+			val lower = Vec3i(floor(pos - radius))
+			val upper = Vec3i(ceil(pos + radius))
+			
+			(lower until upper) flatMap World.octree.getPolygons
+		}
+		groundBody = makeStaticMesh(triangleVertices.flatten)
+		dynamicsWorld addRigidBody groundBody
+	}
+	
+	def removeGroundMesh{
+		dynamicsWorld removeRigidBody groundBody
 	}
 
 	def getTime = System.nanoTime / 1000000000.0
@@ -149,7 +122,9 @@ object BulletPhysics{
 	def update{
 		val currentTime = getTime
 		while(simtime < currentTime){
+			//prepareGroundMesh
 			dynamicsWorld stepSimulation timestep
+			//removeGroundMesh
 			simtime += timestep
 		}
 	}

@@ -212,8 +212,8 @@ object Main {
 						Mouse setGrabbed false
 					else
 						Mouse setGrabbed true
-//				case KEY_R =>
-//					Dingens.resetBallPos			
+				case KEY_R =>
+					ExampleBall.resetBallPos			
 				case KEY_RIGHT =>
 					World.octree.move(Vec3i( 1,0,0))
 				case KEY_LEFT =>
@@ -252,6 +252,7 @@ object Main {
 					case 0 =>
 						Player.remove
 					case _ =>
+						Player.foo
 					}
 				}
 			}
@@ -283,11 +284,11 @@ object Main {
 		
 		Camera.applyfrustum
 
-//		Physics.update
+		BulletPhysics.update
 
 		activateShader{
 			World.draw
-	//		Dingens.draw
+			ExampleBall.draw
 		}
 		
 		glLoadIdentity
