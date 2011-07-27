@@ -70,8 +70,12 @@ class QuickHull
 		p(j)=t
 	}
 	
-	//TODO implementieren
-	def area(p:Vec2,l:Line) = 0.0
+	def area(p:Vec2,l:Line) = {
+		val Vec2(x1,y1) = p
+		val Line(Vec2(x2,y2),Vec2(x3,y3)) = l
+		
+		0.5 * ( x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2) )
+	}
 
 	def indexOfFurthestPoint(g:Line, lo:Int, hi:Int):Int =
 	{
