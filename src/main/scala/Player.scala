@@ -13,6 +13,7 @@ import xöpäx.Util.multMatrixOfBody
 import javax.vecmath.Vector3f
 import com.bulletphysics.linearmath.Transform
 
+/*
 object Dingens {
 
 	import org.lwjgl.util.glu._
@@ -47,9 +48,10 @@ object Dingens {
 		}
 	}
 }
+*/
 
 object Player{
-	def position = Camera.position
+	def position = Vec3(22,-17,90)
 	def direction = Camera.directionVec
 	
 	def build{
@@ -74,7 +76,7 @@ object Player{
 object Camera{
 	val UP = Vec3.UnitZ
 	
-	val position = Dingens.startpos-Vec3(3)
+	val position = Player.position
 	val direction = quaternion(lookAt(Vec3(1,1,0),UP))
 	def directionVec = direction.rotateVector(-UP)
 	

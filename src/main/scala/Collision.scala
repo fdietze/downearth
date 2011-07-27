@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL11._
 
 import Util._
 
-
 object Physics{
 	val starttime = System.currentTimeMillis / 1000.0
 	var simulationTime = starttime

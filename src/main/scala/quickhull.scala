@@ -1,16 +1,27 @@
-import simplex3d.math.double.Vec2
+package xöpäx
 
-class QuickHull
+import simplex3d.math.float.Vec2
+
+object QuickHull
 {
+	def cross2d(a:Vec2,b:Vec2) = {
+		a.x*b.y-a.y*b.x
+	}
+
 	case class Line(p0:Vec2,p1:Vec2){
 		//TODO implementieren
-		def isRight(p:Vec2) = false
+		
+		def isRight(p:Vec2) = {
+			val v1 = p1-p0
+			val v2 = p-p1
+			cross2d(v1,v2) < 0
+		}
 	}
 
 	var p = Array[Vec2]()
 	var n = 0
 	var h = 0
-	val eps=1e-3
+	val eps=1e-3f
 
 	def computeHull( p_ : Array[Vec2] ):Int = {
 		p=p_
@@ -74,7 +85,7 @@ class QuickHull
 		val Vec2(x1,y1) = p
 		val Line(Vec2(x2,y2),Vec2(x3,y3)) = l
 		
-		0.5 * ( x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2) )
+		0.5f * ( x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2) )
 	}
 
 	def indexOfFurthestPoint(g:Line, lo:Int, hi:Int):Int =
@@ -82,8 +93,8 @@ class QuickHull
 		var i = lo
 		var f = lo
 
-		var d  = 0.0
-		var mx = 0.0
+		var d  = 0.0f
+		var mx = 0.0f
 		
 		for( i <- lo until hi )
 		{

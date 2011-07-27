@@ -35,7 +35,7 @@ object WorldNodeGenerator {
 						reply(WorldGenerator.genSlice(slicepos, minMeshNodeSize, slicesize))
 					case GenerateNodeAt(nodepos,nodesize) =>
 						val node = WorldGenerator.genWorldAt(nodepos,nodesize)
-						node.genMesh
+						Util.time("genmesh: ")(node.genMesh)
 						reply(node.root)
 				}
 			}

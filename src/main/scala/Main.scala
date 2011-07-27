@@ -212,8 +212,8 @@ object Main {
 						Mouse setGrabbed false
 					else
 						Mouse setGrabbed true
-				case KEY_R =>
-					Dingens.resetBallPos			
+//				case KEY_R =>
+//					Dingens.resetBallPos			
 				case KEY_RIGHT =>
 					World.octree.move(Vec3i( 1,0,0))
 				case KEY_LEFT =>

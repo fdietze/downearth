@@ -190,12 +190,13 @@ object Util {
 		}
 	}
 	
-	def occludes2d(occluder:Set[Vec2], occludee:Set[Vec2]):Boolean = {
+	def occludes2d(occluder:Seq[Vec2], occludee:Seq[Vec2]):Boolean = {
 		if( occluder == occludee )
 			true
 		else {
-			val convexHull = convexHull2d((occluder ++ occludee).toList).toSet
-			if( convexHull == occluder ) // complete occlusion
+			val vertices = (occluder ++ occludee).toArray
+			val convexHull = vertices.view(0,QuickHull.computeHull(vertices))
+			if( convexHull.toSet == occluder.toSet ) // complete occlusion
 				true
 			else
 				false

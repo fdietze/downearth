@@ -115,7 +115,7 @@ class Leaf(val h:Hexaeder) extends Octant{
 	
 		val triangleCoords = from.planetriangles(axis, direction)
 		val occludingCoords = to.planetriangles(axis,1-direction).filter(v => v(axis) == 1-direction) map
-				(v => Vec2(v(axisa),v(axisb))) toSet
+				(v => Vec2(v(axisa),v(axisb)))
 	
 		val (t1,t2) = triangleCoords splitAt 3
 	
@@ -144,7 +144,7 @@ class Leaf(val h:Hexaeder) extends Octant{
 				if(to == EmptyHexaeder || !triangleMax(t))
 					addVertices(t)
 				else{
-					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb))) toSet ;
+					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb)));
 					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ){
 						addVertices(t)
 					}
