@@ -136,7 +136,6 @@ object World{
 			glEnable(GL_LIGHTING)
 		case None =>
 		}
-
- 		octree stream Player.position
+		// octree stream Player.position
 	}
 }

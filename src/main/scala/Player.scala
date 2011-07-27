@@ -13,25 +13,24 @@ import xöpäx.Util.multMatrixOfBody
 import javax.vecmath.Vector3f
 import com.bulletphysics.linearmath.Transform
 
-/*
+
 object Dingens {
 
 	import org.lwjgl.util.glu._
 	import GLU._
 
-	val radius = 0.75f
+	val radius = 0.25f
 
 
-	val p = WorldGenerator.cubesize
-	val startpos = Vec3(p/2,p/4,p+4)
-	val body = 
-	for(i <- 0 until 5; j <- 0 until 5) yield
-		Physics.addBall(startpos+Vec3(2*i,2*j,0), radius)
 	
-	def resetBallPos{
-		for((b,i) <- body zipWithIndex)
-			b.pos = startpos+Vec3(2*(i%5),2*(i/5),0)
+	val startpos = Vec3(6,-4,3)
+	
+	val body = BulletPhysics.addBall(radius)
+	
+	def resetBallPos {
+		body.
 	}
+	
 	
 	val sphere:Sphere = new Sphere
 	sphere.setNormals(GLU_SMOOTH)
@@ -48,16 +47,17 @@ object Dingens {
 		}
 	}
 }
-*/
+
 
 object Player{
-	def position = Vec3(22,-17,90)
+	def position = Camera.position
 	def direction = Camera.directionVec
 	
 	def build{
 		val mousedest = World.raytracer(position,direction,true,100)
 		mousedest match {
 			case Some(pos) => 
+				println("build at "+pos)
 				World(pos) = FullHexaeder
 			case _ =>
 		}
@@ -76,7 +76,7 @@ object Player{
 object Camera{
 	val UP = Vec3.UnitZ
 	
-	val position = Player.position
+	val position = Vec3(0) //Vec3(22,-17,90)
 	val direction = quaternion(lookAt(Vec3(1,1,0),UP))
 	def directionVec = direction.rotateVector(-UP)
 	

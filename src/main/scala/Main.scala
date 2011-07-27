@@ -30,7 +30,7 @@ object Main {
 		buffer
 	}
 	
-	val FRAMERATE = 6000
+	val FRAMERATE = 60
 	var finished = false
 	
 	var textCache:List[(Vec2i,String)] = Nil
@@ -248,7 +248,7 @@ object Main {
 				if( getEventButtonState ) {
 					getEventButton match {
 					case 1 =>
-							Player.build
+						Player.build
 					case 0 =>
 						Player.remove
 					case _ =>
