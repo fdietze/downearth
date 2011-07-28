@@ -230,6 +230,8 @@ object Main {
 					turbo = if(turbo) false else true
 				case KEY_ESCAPE =>
 					finished = true
+				case KEY_P | KEY_PAUSE =>
+					BulletPhysics.togglePause
 				case _ =>
 				}
 			}
@@ -258,10 +260,8 @@ object Main {
 			}
 		}
 		
-		//Dingens.move(4*dingensdelta*timestep)
 		val factor = if(turbo) 16f else 4f
 		Camera.move(factor*(delta/max(1,length(delta)))*timestep)
-		//Dingens.force = Camera.makeRelative( delta/max(1,length(delta) ) )
 		
 		if(Mouse.isGrabbed) 
 			Camera.turn(2f*delta_angle)
@@ -283,9 +283,13 @@ object Main {
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 		
 		Camera.applyfrustum
-
+		
+		Camera()
+		
 		BulletPhysics.update
-
+		
+		BulletPhysics.debugDrawWorld
+		
 		activateShader{
 			World.draw
 			ExampleBall.draw

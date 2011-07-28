@@ -5,10 +5,12 @@ import com.bulletphysics.linearmath.IDebugDraw;
 import javax.vecmath.Vector3f
 import collection.mutable.ArrayBuilder
 
+import DebugDrawModes._
+
 object VertexArrayDrawer extends IDebugDraw{
 
 	private val DEBUG_NORMALS = false;
-	private var debugMode:Int = DebugDrawModes.DRAW_WIREFRAME;
+	private var debugMode:Int = DRAW_WIREFRAME | NO_DEACTIVATION
 	private val tmpVec = new Vector3f();
 
 	private var vertices = ArrayBuilder.make[Float]
@@ -111,6 +113,28 @@ object DirectDrawer extends IDebugDraw{
 	
 	override def reportErrorWarning(warningString:String){
 		println(warningString)
+	}
+	
+	override def drawTriangle(v0:Vector3f, v1:Vector3f, v2:Vector3f, color:Vector3f, alpha:Float){
+		glColor4f(color.x,color.y,color.z,alpha)
+		glBegin(GL_TRIANGLES)
+		glVertex3f(v0.x, v0.y, v0.z)
+		glVertex3f(v1.x, v1.y, v1.z)
+		glVertex3f(v2.x, v2.y, v2.z)
+		glEnd
+	}
+	
+	override def drawTriangle(v0:Vector3f, v1:Vector3f, v2:Vector3f, n0:Vector3f, n1:Vector3f, n2:Vector3f, color:Vector3f, alpha:Float ) {
+		glColor4f(color.x,color.y,color.z,alpha)
+		
+		glBegin(GL_TRIANGLES)
+		glNormal3f(n0.x, n0.y, n0.z)
+		glVertex3f(v0.x, v0.y, v0.z)
+		glNormal3f(n1.x, n1.y, n0.z)
+		glVertex3f(v1.x, v1.y, v1.z)
+		glNormal3f(n2.x, n2.y, n0.z)
+		glVertex3f(v2.x, v2.y, v2.z)
+		glEnd
 	}
 	
 	import simplex3d.math.float.Vec3

@@ -107,8 +107,8 @@ object Player{
 object Camera{
 	val UP = Vec3.UnitZ
 	
-	val position = Vec3(0) //Vec3(22,-17,90)
-	val direction = quaternion(lookAt(Vec3(1,1,0),UP))
+	val position = Vec3(3,1,0) //Vec3(22,-17,90)
+	val direction = quaternion(lookAt(Vec3(-0.26f,0.05f,-0.14f),UP))
 	def directionVec = direction.rotateVector(-UP)
 	
 	val WIDTH = 1024

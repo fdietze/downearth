@@ -33,10 +33,6 @@ case class NodeInfo(pos:Vec3i,size:Int){
 		NodeInfo(pos+v*hsize,hsize)
 	}
 	
-	def isSet(pos:NodeInfo) = {
-		
-	}
-	
 	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
