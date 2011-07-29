@@ -12,23 +12,19 @@ import org.lwjgl.opengl.GL11._
 import xöpäx.Util.multMatrixOfBody
 import javax.vecmath.Vector3f
 import com.bulletphysics.linearmath.Transform
-
+import com.bulletphysics.collision.shapes.SphereShape
 
 object ExampleBall {
-
 	import org.lwjgl.util.glu._
 	import GLU._
 
 	val radius = 0.25f
 	val startpos = Vec3(6,-4,3)
-	val body = BulletPhysics.addBall(startpos,radius)
+	val body = BulletPhysics.addShape(1,startpos,new SphereShape(radius))
 	val glMatrix = DataBuffer[Mat4,RFloat](1)
-	
 	
 	val startTransform = new Transform
 	startTransform.setIdentity
-	
-	
 	
 	def resetBallPos {
 		val v = new Vector3f
@@ -41,12 +37,9 @@ object ExampleBall {
 		body translate v
 	}
 	
-	
 	val sphere:Sphere = new Sphere
 	sphere.setNormals(GLU_SMOOTH)
 	sphere.setDrawStyle(GLU_FILL)
-	
-	
 	
 	def draw{
 		glColor4f(1,1,1,1)
@@ -72,8 +65,8 @@ object ExampleBall {
 
 
 object Player{
-	def position = Camera.position
-	def direction = Camera.directionVec
+	def position = FreeCamera.position
+	def direction = FreeCamera.directionVec
 	
 	def foo{
 		val mousedest = World.raytracer(position,direction,false,100)
@@ -104,7 +97,17 @@ object Player{
 	}
 }
 
+/*
 object Camera{
+
+}
+
+class Camera{
+
+}
+*/
+
+object FreeCamera{
 	val UP = Vec3.UnitZ
 	
 	val position = Vec3(3,1,0) //Vec3(22,-17,90)

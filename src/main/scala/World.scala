@@ -106,6 +106,7 @@ object World{
 	
 	def update(pos:Vec3i,h:Hexaeder){
 		octree(pos) = h
+		BulletPhysics.worldChange(pos)
 	}
 	
 	def apply(pos:Vec3i) = 
@@ -119,8 +120,7 @@ object World{
 		
 		//raytracer zum Anklicken von Zellen
 		
-		
-		val selection = raytracer(Camera.position,Camera.directionVec,false,100)
+		val selection = raytracer(FreeCamera.position,FreeCamera.directionVec,false,100)
 		selection match {
 		case Some(v) =>
 			Draw.addText("Position: (" + v.x.toInt + ", " + v.y.toInt + ", " + v.z.toInt + ")")

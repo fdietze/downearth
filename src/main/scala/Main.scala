@@ -74,7 +74,7 @@ object Main {
 	def main(args:Array[String]){
 		while(!finished){
 			logic
-			Camera.apply
+			FreeCamera.apply
 			lighting
 			draw
 			
@@ -84,7 +84,7 @@ object Main {
 	}
 
 	def init{
-		val displayMode = new DisplayMode(Camera.WIDTH, Camera.HEIGHT)
+		val displayMode = new DisplayMode(FreeCamera.WIDTH, FreeCamera.HEIGHT)
 		Display.setTitle("Worldgen")
 		Display.setDisplayMode(displayMode)
 		Display.create()
@@ -145,7 +145,7 @@ object Main {
 	
 		//Add positioned light
 
-		glLight(GL_LIGHT0, GL_POSITION, Seq(Camera.position.x, Camera.position.y, Camera.position.z, 1.0f));
+		glLight(GL_LIGHT0, GL_POSITION, Seq(FreeCamera.position.x, FreeCamera.position.y, FreeCamera.position.z, 1.0f));
 
 		//Add directed light
 //		glLight(GL_LIGHT1, GL_DIFFUSE, Seq(0.5f, 0.2f, 0.2f, 1.0f));
@@ -232,6 +232,8 @@ object Main {
 					finished = true
 				case KEY_P | KEY_PAUSE =>
 					BulletPhysics.togglePause
+				case KEY_F1 =>
+					BulletPhysics.toggleDebugDraw
 				case _ =>
 				}
 			}
@@ -261,10 +263,10 @@ object Main {
 		}
 		
 		val factor = if(turbo) 16f else 4f
-		Camera.move(factor*(delta/max(1,length(delta)))*timestep)
+		FreeCamera.move(factor*(delta/max(1,length(delta)))*timestep)
 		
 		if(Mouse.isGrabbed) 
-			Camera.turn(2f*delta_angle)
+			FreeCamera.turn(2f*delta_angle)
 	}
 	
 	def activateShader(foo: => Unit){
@@ -282,9 +284,9 @@ object Main {
 	def draw{
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 		
-		Camera.applyfrustum
+		FreeCamera.applyfrustum
 		
-		Camera()
+		FreeCamera()
 		
 		BulletPhysics.update
 		
@@ -296,10 +298,10 @@ object Main {
 		}
 		
 		glLoadIdentity
-		Camera.applyortho
+		FreeCamera.applyortho
 		showfps
 		Draw.drawTexts
-		glTranslatef(Camera.WIDTH/2,Camera.HEIGHT/2,0)
+		glTranslatef(FreeCamera.WIDTH/2,FreeCamera.HEIGHT/2,0)
 		Draw.crossHair
 	}
 }
