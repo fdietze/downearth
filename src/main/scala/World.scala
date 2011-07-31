@@ -30,7 +30,8 @@ object World{
 	
 
 	Runtime.getRuntime.gc
-
+	
+	//raytracer zum anclicken von Zellen
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Float):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
 		for(i <- 0 until 3){
@@ -118,9 +119,7 @@ object World{
 	def draw{
 		octree.draw
 		
-		//raytracer zum Anklicken von Zellen
-		
-		val selection = raytracer(FreeCamera.position,FreeCamera.directionVec,false,100)
+		val selection = raytracer(Controller.current.position,Controller.current.direction,false,100)
 		selection match {
 		case Some(v) =>
 			Draw.addText("Position: (" + v.x.toInt + ", " + v.y.toInt + ", " + v.z.toInt + ")")

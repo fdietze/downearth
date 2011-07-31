@@ -84,7 +84,7 @@ object Main {
 	}
 
 	def init{
-		val displayMode = new DisplayMode(FreeCamera.WIDTH, FreeCamera.HEIGHT)
+		val displayMode = new DisplayMode(Camera.WIDTH, Camera.HEIGHT)
 		Display.setTitle("Worldgen")
 		Display.setDisplayMode(displayMode)
 		Display.create()
@@ -213,7 +213,8 @@ object Main {
 					else
 						Mouse setGrabbed true
 				case KEY_R =>
-					ExampleBall.resetBallPos			
+					Balls.resetBallPos
+					Player.resetPos
 				case KEY_RIGHT =>
 					World.octree.move(Vec3i( 1,0,0))
 				case KEY_LEFT =>
@@ -234,6 +235,8 @@ object Main {
 					BulletPhysics.togglePause
 				case KEY_F1 =>
 					BulletPhysics.toggleDebugDraw
+				case KEY_TAB =>
+					Controller.rotateObjects
 				case _ =>
 				}
 			}
@@ -243,20 +246,19 @@ object Main {
 		
 		if(turbo){
 			if( Mouse isButtonDown 0 )
-				Player.remove
+				Controller.remove
 			if( Mouse isButtonDown 1 )
-				Player.build
+				Controller.build
 		}
 		else {
 			while( Mouse.next ) {
 				if( getEventButtonState ) {
 					getEventButton match {
 					case 1 =>
-						Player.build
+						Controller.build
 					case 0 =>
-						Player.remove
-					case _ =>
-						Player.foo
+						Controller.remove
+					case _ => 
 					}
 				}
 			}
@@ -284,25 +286,14 @@ object Main {
 	def draw{
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 		
-		FreeCamera.applyfrustum
-		
-		FreeCamera()
-		
+		// the active Camera
 		BulletPhysics.update
 		
-		BulletPhysics.debugDrawWorld
-		
 		activateShader{
-			World.draw
-			ExampleBall.draw
+			Controller.current.camera.renderScene
 		}
 		
-		glLoadIdentity
-		FreeCamera.applyortho
-		showfps
-		Draw.drawTexts
-		glTranslatef(FreeCamera.WIDTH/2,FreeCamera.HEIGHT/2,0)
-		Draw.crossHair
+		GUI.renderScene
 	}
 }
 

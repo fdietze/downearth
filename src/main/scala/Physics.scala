@@ -27,7 +27,6 @@ import simplex3d.data._
 import simplex3d.data.float._
 
 object BulletPhysics{
-	implicit def v2v(in:Vec3) = new Vector3f(in.x,in.y,in.z) 
 	
 	val broadPhase = new DbvtBroadphase
 	val collisionConfig = new DefaultCollisionConfiguration()

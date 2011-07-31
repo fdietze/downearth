@@ -7,7 +7,9 @@ import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11.glMultMatrix
-  
+import org.lwjgl.opengl.{ARBShaderObjects, ARBVertexShader, ARBFragmentShader}
+import javax.vecmath.Vector3f
+
 object MyFont{
 	import org.newdawn.slick.TrueTypeFont;
 	import java.awt.Font;
@@ -15,12 +17,13 @@ object MyFont{
 }
 
 object Util {
+	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x,in.y,in.z)
+	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
+
 	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
 
 	def printLogInfo(obj:Int) {
-		import org.lwjgl.opengl.{
-		  ARBShaderObjects, ARBVertexShader, ARBFragmentShader
-		}
+		
 		val iVal = BufferUtils.createIntBuffer(1)
 		ARBShaderObjects.glGetObjectParameterARB(obj,ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB, iVal);
 
@@ -35,7 +38,7 @@ object Util {
 			val out = new String(infoBytes)
 			println("Info log:\n" + out)
 		}
-    }
+	}
 	
 	def isPowerOfTwo(x:Int) = (((x-1) & x) == 0) && x != 0
 	val log2:(Int => Int) = {
