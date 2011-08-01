@@ -25,20 +25,11 @@ object Player extends ControlInterface{
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
 	def camera = {
-		
-		val transform = new Transform
-		val quat = new Quat4f
-		
-		body getCenterOfMassTransform transform
-		transform getRotation quat
-		
-		m_camera.position = transform.origin
-		m_camera.directionQuat = Quat4(quat.w,quat.x,quat.y,quat.z)
-		
+		m_camera.position = position
 		m_camera
 	}
 	
-	def position:Vec3 = body.getCenterOfMassTransform(new Transform).origin
+	def position:Vec3 = body.getCenterOfMassTransform(new Transform).origin + Vec3(0,0,0.8f)
 	def direction:Vec3 = camera.direction
 	
 	def resetPos {
@@ -60,11 +51,12 @@ object Player extends ControlInterface{
 	def move(dir:Vec3){
 		//body.clearForces
 		println("move "+dir)
-		body.applyCentralForce(dir.xzy*50000)
+		body.applyCentralForce((m_camera makeRelative dir)*50000)
+		
 	}
 	
-	def rotate(rot:Vec2){
-		
+	def rotate(rot:Vec3){
+		m_camera rotate rot
 	}
 }
 
@@ -73,7 +65,7 @@ trait ControlInterface{
 	def direction:Vec3
 	def camera:Camera3D
 	def move(dir:Vec3)
-	def rotate(rot:Vec2)
+	def rotate(rot:Vec3)
 }
 
 object Controller{
@@ -109,7 +101,7 @@ object Controller{
 		current move dir
 	}
 	
-	def rotate(rot:Vec2){
+	def rotate(rot:Vec3){
 		current rotate rot
 	}
 	

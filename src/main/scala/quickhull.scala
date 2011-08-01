@@ -27,7 +27,13 @@ object QuickHull
 		p=p_
 		n=p.length
 		h=0
-		quickHull
+		try{
+			quickHull
+		}
+		catch{
+			case e:Exception =>
+				assert(false, p.toSeq.toString)
+		}
 		h
 	}
 
@@ -76,7 +82,7 @@ object QuickHull
 
 	def exchange( i:Int, j:Int )
 	{
-		val t=p(i)
+		val t=p(i)  // <---- TODO hier ist eine IndexOutOfBoundsException (8) aufgetreten
 		p(i)=p(j)
 		p(j)=t
 	}

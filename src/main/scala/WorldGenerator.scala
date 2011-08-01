@@ -17,7 +17,7 @@ final class FloatNoise(source: NoiseSource) {
 
 object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
-	val cubesize = 32
+	val cubesize = Config.worldWindowSize
 	
 	val densityfunction:(Vec3 => Float) = smooth _
 	

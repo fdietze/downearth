@@ -182,7 +182,7 @@ object Main {
 		Controller.move(factor*(delta/max(1,length(delta)))*timestep)
 		
 		if(Mouse.isGrabbed) 
-			FreeCamera.turn(2f*delta_angle)
+			Controller.rotate(2f*delta_angle)
 		
 		/*
 		val dingensdelta = Vec3(0)

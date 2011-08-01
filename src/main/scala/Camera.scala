@@ -86,11 +86,10 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 		position += makeRelative(delta)
 	}
 	
-	def rotate(rot:Vec2) = turn(Vec3(rot,0))
-	
-	def turn(delta:Vec3) {
-		directionQuat *= Quat4 rotateX(delta.x) rotateY(delta.y) rotateZ(delta.z)
+	def rotate(rot:Vec3){
+		directionQuat *= Quat4 rotateX(rot.x) rotateY(rot.y) rotateZ(rot.z)
 	}
+	
 }
 
 // 2D Kamera für die GUI
