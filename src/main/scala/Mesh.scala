@@ -11,7 +11,7 @@ import simplex3d.math.Vec3i
 import simplex3d.data._
 import simplex3d.data.float._
 
-trait Mesh{
+trait Mesh extends Serializable{
 	var vertexBufferObject:Int = 0
 	def genvbo
 	def freevbo

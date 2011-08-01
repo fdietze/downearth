@@ -12,8 +12,9 @@ object WorldSerializer{
 			oos writeObject src
 		}
 		catch{
-		case exeption =>
+		case e:Exception =>
 			println("couldn't save file: "+file)
+			e.printStackTrace
 		}
 	}
 	

@@ -38,8 +38,8 @@ object Player extends ControlInterface{
 		m_camera
 	}
 	
-	def position = camera.position
-	def direction = camera.direction
+	def position:Vec3 = body.getCenterOfMassTransform(new Transform).origin
+	def direction:Vec3 = camera.direction
 	
 	def resetPos {
 		val v = new Vector3f
@@ -53,13 +53,27 @@ object Player extends ControlInterface{
 	}
 	
 	// CapsuleShape(0.3f,1.2f)
-	val body = BulletPhysics.addShape( 80,startpos.clone,new SphereShape(0.3f) )
+	val body = BulletPhysics.addShape( 80,startpos.clone,new CapsuleShape(0.3f,1.2f) )
+	
+	body setAngularFactor 0
+	
+	def move(dir:Vec3){
+		//body.clearForces
+		println("move "+dir)
+		body.applyCentralForce(dir.xzy*50000)
+	}
+	
+	def rotate(rot:Vec2){
+		
+	}
 }
 
 trait ControlInterface{
 	def position:Vec3
 	def direction:Vec3
 	def camera:Camera3D
+	def move(dir:Vec3)
+	def rotate(rot:Vec2)
 }
 
 object Controller{
@@ -91,5 +105,16 @@ object Controller{
 		}
 	}
 	
+	def move(dir:Vec3){
+		current move dir
+	}
+	
+	def rotate(rot:Vec2){
+		current rotate rot
+	}
+	
+	def jump{
+		println("springen noch nicht implementiert")
+	}
 }
 

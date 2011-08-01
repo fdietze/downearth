@@ -8,7 +8,7 @@ import com.bulletphysics.linearmath.Transform
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11.glMultMatrix
 import org.lwjgl.opengl.{ARBShaderObjects, ARBVertexShader, ARBFragmentShader}
-import javax.vecmath.Vector3f
+import javax.vecmath.{Vector3f,Quat4f}
 
 object MyFont{
 	import org.newdawn.slick.TrueTypeFont;
@@ -19,7 +19,8 @@ object MyFont{
 object Util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x,in.y,in.z)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
-
+	implicit def q2qf(in:Quat4) = new Quat4f(in.a,in.b,in.c,in.d)
+	implicit def qf2q(in:Quat4f) = Quat4(in.w,in.x,in.y,in.z)
 	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
 
 	def printLogInfo(obj:Int) {

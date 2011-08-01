@@ -92,7 +92,6 @@ object Main {
 		//initshaders
 		
 		glEnable(GL_CULL_FACE)
-
 		glEnable(GL_LIGHTING)
 		glEnable(GL_COLOR_MATERIAL)
 		glEnable(GL_LIGHT0)
@@ -179,6 +178,13 @@ object Main {
 		if(isKeyDown(KEY_D))
 			delta.x += 1
 		
+		val factor = if(turbo) 16f else 4f
+		Controller.move(factor*(delta/max(1,length(delta)))*timestep)
+		
+		if(Mouse.isGrabbed) 
+			FreeCamera.turn(2f*delta_angle)
+		
+		/*
 		val dingensdelta = Vec3(0)
 		
 		if(isKeyDown(KEY_I))
@@ -193,6 +199,7 @@ object Main {
 			dingensdelta.z += 1
 		if(isKeyDown(KEY_END))
 			dingensdelta.z -= 1
+		*/
 		
 		if(isKeyDown(KEY_F)){
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
@@ -263,12 +270,6 @@ object Main {
 				}
 			}
 		}
-		
-		val factor = if(turbo) 16f else 4f
-		FreeCamera.move(factor*(delta/max(1,length(delta)))*timestep)
-		
-		if(Mouse.isGrabbed) 
-			FreeCamera.turn(2f*delta_angle)
 	}
 	
 	def activateShader(foo: => Unit){

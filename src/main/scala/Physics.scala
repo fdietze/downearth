@@ -79,8 +79,10 @@ object BulletPhysics{
 		startTransform.origin.set(pos.x,pos.y,pos.z)
 
 		val localInertia = new Vector3f(0, 0, 1)
-		if (mass != 0f)
+		if (mass != 0f){
 			colShape.calculateLocalInertia(mass, localInertia)
+			startTransform.setRotation( Quat4 rotateZ Pi/2 )
+		}
 
 		val myMotionState = new DefaultMotionState(startTransform)
 		val rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape, localInertia)

@@ -46,14 +46,14 @@ class ExampleBall(startpos:Vec3, val radius:Float){
 }
 
 object Balls{
-	val exampleballs = (-1 to 1) map (i => new ExampleBall( Vec3(6+i,-4+i,3) , 0.25f))
+	//val exampleballs = (-1 to 1) map (i => new ExampleBall( Vec3(6+i,-4+i,3) , 0.25f))
 	
 	def draw{
-		for(b <- exampleballs) b.draw
+		//for(b <- exampleballs) b.draw
 	}
 	
 	def resetBallPos{
-		for(b <- exampleballs) b.resetBallPos
+		//for(b <- exampleballs) b.resetBallPos
 	}
 }
 
