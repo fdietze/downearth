@@ -19,7 +19,7 @@ object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
 	val cubesize = Config.worldWindowSize
 	
-	val densityfunction:(Vec3 => Float) = smooth _
+	val densityfunction:(Vec3 => Float) = hypermegadangerous _
 	
 	def genWorld:WorldOctree = {
 		genWorldAt(Vec3i(-cubesize/2),cubesize)

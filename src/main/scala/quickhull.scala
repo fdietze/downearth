@@ -2,7 +2,14 @@ package xöpäx
 
 import simplex3d.math.float.Vec2
 
-object QuickHull
+object QuickHull{
+	def computeHull( p:Array[Vec2] ):Int = {
+		val qh = new QuickHull
+		qh.computeHull(p)
+	}
+}
+
+class QuickHull
 {
 	def cross2d(a:Vec2,b:Vec2) = {
 		a.x*b.y-a.y*b.x
