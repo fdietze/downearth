@@ -34,7 +34,7 @@ object BulletPhysics{
 
 	val sol = new SequentialImpulseConstraintSolver
 	val dynamicsWorld = new DiscreteDynamicsWorld(dispatcher,broadPhase,sol,collisionConfig)
-	
+
 	val tickCallback = new InternalTickCallback{
 		override def internalTick( world:DynamicsWorld, timeStep:Float){
 			prepareGroundMesh2
@@ -46,7 +46,7 @@ object BulletPhysics{
 	dynamicsWorld.setDebugDrawer(DirectDrawer)
 	
 	var pause = false
-	var debugDraw = true
+	var debugDraw = false
 	
 	def togglePause{
 		if(pause){
@@ -73,7 +73,7 @@ object BulletPhysics{
 		}
 	}
 	
-	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape) = {
+	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape):RigidBody = {
 		val startTransform = new Transform();
 		startTransform.setIdentity
 		startTransform.origin.set(pos.x,pos.y,pos.z)
@@ -86,6 +86,10 @@ object BulletPhysics{
 
 		val myMotionState = new DefaultMotionState(startTransform)
 		val rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape, localInertia)
+		
+		//rbInfo.friction = 0.5f
+		rbInfo.linearDamping = 0.9f
+
 		val body = new RigidBody(rbInfo)
 		dynamicsWorld.addRigidBody(body,1,-1)
 		

@@ -46,17 +46,24 @@ object Player extends ControlInterface{
 	// CapsuleShape(0.3f,1.2f)
 	val body = BulletPhysics.addShape( 80,startpos.clone,new CapsuleShape(0.3f,1.2f) )
 	
+	
 	body setAngularFactor 0
 	
 	def move(dir:Vec3){
-		//body.clearForces
-		println("move "+dir)
-		body.applyCentralForce((m_camera makeRelative dir)*50000)
-		
+		body.applyCentralImpulse((m_camera makeRelative dir)*500)
 	}
 	
+	var dir = Vec2(Pi/2)
+	
 	def rotate(rot:Vec3){
-		m_camera rotate rot
+		dir += rot.xy
+		dir.x = clamp( dir.x, 0, Pi )
+		dir.y = ( dir.y + 2*Pi ) % (2*Pi)
+		m_camera.directionQuat = Quat4 rotateX dir.x rotateZ dir.y
+	}
+	
+	def jump{
+		body.applyCentralImpulse(new Vector3f(0,0,1000))
 	}
 }
 
@@ -106,7 +113,9 @@ object Controller{
 	}
 	
 	def jump{
-		println("springen noch nicht implementiert")
+		if(current == Player){
+			Player.jump
+		}
 	}
 }
 

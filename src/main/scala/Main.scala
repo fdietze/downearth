@@ -30,7 +30,7 @@ object Main {
 		buffer
 	}
 	
-	val FRAMERATE = 60
+	val FRAMERATE = 6000
 	var finished = false
 	
 	var textCache:List[(Vec2i,String)] = Nil
@@ -88,8 +88,9 @@ object Main {
 		Display.setTitle("Worldgen")
 		Display.setDisplayMode(displayMode)
 		Display.create()
-
-		//initshaders
+		
+		if(Config.useshaders)
+			initshaders
 		
 		glEnable(GL_CULL_FACE)
 		glEnable(GL_LIGHTING)
@@ -244,6 +245,8 @@ object Main {
 					BulletPhysics.toggleDebugDraw
 				case KEY_TAB =>
 					Controller.rotateObjects
+				case KEY_SPACE =>
+					Controller.jump
 				case _ =>
 				}
 			}
