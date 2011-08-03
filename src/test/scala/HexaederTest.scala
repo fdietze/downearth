@@ -32,9 +32,9 @@ class HexaederTest extends FunSuite{
 	}*/
 	
 	test("noch n hexaedertest"){
-		val h1 = new Hexaeder
-		val h2 = new Hexaeder
-		val h3 = new Hexaeder
+		val h1 = new PartialHexaeder
+		val h2 = new PartialHexaeder
+		val h3 = new PartialHexaeder
 		
 		for( i <- 0 until 8 ){
 			h3(i) = h2(i)
@@ -53,9 +53,6 @@ class HexaederTest extends FunSuite{
 		
 		assert( h1 === h2 )
 		
-		h2(0) = Vec3i(1,2,3)
-		
-
 	}
 }
 

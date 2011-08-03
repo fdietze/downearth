@@ -2,8 +2,20 @@ package xöpäx
 
 import simplex3d.math.float.Vec2
 
-object QuickHull
+object QuickHull{
+	def computeHull( p : Array[Vec2] ):Int = {
+		val qh = new QuickHull(p)
+		qh.quickHull
+		qh.h
+	}
+}
+
+class QuickHull(p:Array[Vec2])
 {
+	var n = p.length
+	var h = 0
+	val eps=1e-3f
+	
 	def cross2d(a:Vec2,b:Vec2) = {
 		a.x*b.y-a.y*b.x
 	}
@@ -18,24 +30,6 @@ object QuickHull
 		}
 	}
 
-	var p = Array[Vec2]()
-	var n = 0
-	var h = 0
-	val eps=1e-3f
-
-	def computeHull( p_ : Array[Vec2] ):Int = {
-		p=p_
-		n=p.length
-		h=0
-		try{
-			quickHull
-		}
-		catch{
-			case e:Exception =>
-				assert(false, p.toSeq.toString)
-		}
-		h
-	}
 
 	def quickHull {
 		exchange(0, indexOfLowestPoint)
