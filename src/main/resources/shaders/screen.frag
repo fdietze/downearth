@@ -1,28 +1,42 @@
 #version 120
 #extension GL_EXT_gpu_shader4 : enable
+//#extension GL_ARB_gpu_shader_fp64 : enable
 
-varying vec4 worldpos;
-varying vec3 normal;
 varying vec3 vertex;
+varying vec3 normal;
+varying vec4 world;
 
-//int rshift(int x, int y) {return int(float(uint(x)) / pow(2f,float(uint(y))));}
-//int lshift(int x, int y) {return int(float(uint(x)) * pow(2f,float(uint(y))));}
+/*
+possible vertex shader:
+#version 120
 
-//def hash(k:Int) = (((k*0x12345678) &gt;&gt;&gt; (k*0x87754351))^seed) & 0x7FFFFFFF
-//int hash(int k) { return int(float(k)*12436234f)%1332427; }
-int hash(int k) { return ((k*int(0x12345678)) >> (  (k*int(0x87754351))&31  ) ) & int(0x7FFFFFFF); }
+varying vec3 vertex;
+varying vec3 normal;
+varying vec4 world;
 
-// universal hash function:
-//int hash(int k) {return ((0x1345452*k) % 1332427) % 0x93564; }
+void main () {
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+
+	vertex = vec3(gl_ModelViewMatrix * gl_Vertex);       
+	normal = normalize(gl_NormalMatrix * gl_Normal);
+    world  = gl_Vertex;
+}
+*/
+
+int seed = 0;
+int a = (seed ^ int(0xB5C18E6A)) | ((1 << 16) + 1);
+int c = seed ^ int(0xF292D0B2);
+int hash(int x){ return (a*(x ^ c)) >> 16; }
 
 int fastfloor(float x) { return int( x > 0 ? x : x-1); }
 float fade(float t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 float lerp(float t, float a, float b) { return a + t * (b - a); }
+
 float grad(int hash, float x, float y, float z) {
-      int h = hash % 16;
+      int h = hash & 0xF;
       float u = h<8 ? x : y,
              v = h<4 ? y : h==12||h==14 ? x : z;
-      return ((h%2) == 0 ? u : -u) + ((h%4-h%2) == 0 ? v : -v);
+      return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
 
 float noise3(float x, float y, float z) {
@@ -51,41 +65,44 @@ float noise3(float x, float y, float z) {
 									grad(hash(BB+1), relx-1, rely-1, relz-1 ))));
 }
 
+float noise3(vec3 v) {return noise3(v.x, v.y, v.z);}
+
 /////////////////////////////////////////////////////
 
-float noise3a(float x, float y, float z) {
-	vec3 v = vec3(x,y,z) * 0.18946462091101748f;
-	return (noise3(v.x,v.y,v.z))*5.278030247502791f;
-}
+vec4 result(float d, vec4 m) {return m;}
+vec3 scalesrcv(float scale) {return world.xzy * scale;}
+vec4 matthreshold(vec4 m1, float t, vec4 m2) {return t > 0 ? m1 : m2;}
+float summedinputnoise3(vec3 v, float x, float y, float z, float add, float sub, float size, float scale, float offset) {return (noise3((v + vec3(x,y,z))*size)+offset)*scale/size + add - sub;}
+float scalesrcy(float scale) {return (world.z - 150) * scale;}
+vec4 matgold() {return vec4(0.98, 0.71, 0.08, 0.0);}
+vec4 matstone() {return vec4(0.56, 0.56, 0.56, 0.0);}
+vec4 matgravel() {return vec4(0.31, 0.31, 0.31, 0.0);}
+vec4 matearth() {return vec4(0.35, 0.22, 0.06, 0.0);}
 
-vec4 matthreshold(vec4 x, float t, vec4 y) {return t > 0f ? x : y;}
 
-
-float noise3b(float x, float y, float z) {
-	vec3 v = vec3(x,y,z);
-	return (noise3(v.x,v.y,v.z)-0.19999999f);
-}
-
-float noise3c(float x, float y, float z) {
-	vec3 v = vec3(x,y,z) * 43.411340200114715f;
-	return noise3(v.x,v.y,v.z)*0.1517743826216342;
-}
 
 void main(){
-	vec4 hashcolor;
-	vec4 source = worldpos;
+vec3 vn9_scalesrcv = scalesrcv(0.895);
+float vn16_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.16957554093095892, 3.0314331330207955, 0.0);
+vec4 vn6_matstone = matstone();
+float vn13_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1517743605493808, 1.248330548901612, -0.18000000000000005);
+vec4 vn7_matgravel = matgravel();
+vec4 vn4_matgold = matgold();
+float vn15_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, vn16_summedinputnoise3, vn16_summedinputnoise3, vn16_summedinputnoise3, 0.0, 0.0, 0.05593906693299827, 1.0, 0.6200000000000001);
+vec4 vn12_matthreshold = matthreshold(vn7_matgravel, vn13_summedinputnoise3, vn6_matstone);
+float vn9_scalesrcy = scalesrcy(3.7842305869023836);
+float vn11_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.12158186842653576, 3.7842305869023836, 0.0);
+vec4 vn14_matthreshold = matthreshold(vn12_matthreshold, vn15_summedinputnoise3, vn4_matgold);
+float vn10_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, vn11_summedinputnoise3, vn11_summedinputnoise3, vn11_summedinputnoise3, vn9_scalesrcy, 0.0, 0.025737219289611674, 8.224910613248527, 0.0);
+vec4 vn8_matearth = matearth();
+vec4 vn3_matthreshold = matthreshold(vn8_matearth, vn10_summedinputnoise3, vn14_matthreshold);
+vec4 vn1_result = result(0.0, vn3_matthreshold);
+
+
+	vec4 materialcolor = vn1_result;
 	
-	float vn13_noise3v = noise3a(source.x, source.y, source.z);
-	float vn14_sum = vn13_noise3v + source.y;
-	vec4 vn6_matrgb = vec4(0.47f, 0.29f, 0.12f, 1.0f);
-	float vn15_noise3 = noise3b(0f, vn14_sum, 0f);
-	vec4 vn7_matrgb = vec4(1.0f, 0.81f, 0.5f, 1.0f);
-	vec4 materialcolor = matthreshold(vn7_matrgb, vn15_noise3 + noise3c(source.x, source.y, source.z), vn6_matrgb);
-
-
 	vec3 L = normalize(gl_LightSource[0].position.xyz - vertex);   
-	vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0);  
-	Idiff = clamp(Idiff, 0.0, 1.0); 
+	vec4 Idiff = clamp(gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0), 0.0, 1.0);  
 
 	gl_FragColor = materialcolor * Idiff;
 }
