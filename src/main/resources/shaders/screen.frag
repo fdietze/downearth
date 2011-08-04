@@ -69,30 +69,34 @@ float noise3(vec3 v) {return noise3(v.x, v.y, v.z);}
 
 /////////////////////////////////////////////////////
 
-vec4 matgravel() {return vec4(0.31, 0.31, 0.31, 0.0);}
-vec4 matearth() {return vec4(0.35, 0.22, 0.06, 0.0);}
 vec4 result(float d, vec4 m) {return m;}
-vec4 matstone() {return vec4(0.56, 0.56, 0.56, 0.0);}
-vec3 scalesrcv(float scale) {return world.xyz * scale;}
+vec3 scalesrcv(float scale) {return world.xzy * scale;}
 vec4 matthreshold(vec4 m1, float t, vec4 m2) {return t > 0 ? m1 : m2;}
 float summedinputnoise3(vec3 v, float x, float y, float z, float add, float sub, float size, float scale, float offset) {return (noise3((v + vec3(x,y,z))*size)+offset)*scale/size + add - sub;}
+float scalesrcy(float scale) {return (world.z - 150) * scale;}
 vec4 matgold() {return vec4(0.98, 0.71, 0.08, 0.0);}
+vec4 matstone() {return vec4(0.56, 0.56, 0.56, 0.0);}
+vec4 matgravel() {return vec4(0.31, 0.31, 0.31, 0.0);}
+vec4 matearth() {return vec4(0.35, 0.22, 0.06, 0.0);}
 
 
 
 void main(){
-vec3 vn2_scalesrcv = scalesrcv(0.12158186842653576);
-vec4 vn11_matearth = matearth();
-float vn8_summedinputnoise3 = summedinputnoise3(vn2_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4600938253124378, 1.0, 0.17999999999999994);
-vec4 vn10_matgravel = matgravel();
-vec4 vn7_matstone = matstone();
-float vn3_summedinputnoise3 = summedinputnoise3(vn2_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, -0.42000000000000004);
-vec4 vn5_matgold = matgold();
-vec4 vn12_matthreshold = matthreshold(vn10_matgravel, vn8_summedinputnoise3, vn11_matearth);
-float vn14_summedinputnoise3 = summedinputnoise3(vn2_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5140569133280329, 1.0, 0.040000000000000036);
-vec4 vn4_matthreshold = matthreshold(vn5_matgold, vn3_summedinputnoise3, vn7_matstone);
-vec4 vn13_matthreshold = matthreshold(vn4_matthreshold, vn14_summedinputnoise3, vn12_matthreshold);
-vec4 vn1_result = result(0.0, vn13_matthreshold);
+vec3 vn9_scalesrcv = scalesrcv(0.895);
+float vn16_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.16957554093095892, 3.0314331330207955, 0.0);
+vec4 vn6_matstone = matstone();
+float vn13_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1517743605493808, 1.248330548901612, -0.18000000000000005);
+vec4 vn7_matgravel = matgravel();
+vec4 vn4_matgold = matgold();
+float vn15_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, vn16_summedinputnoise3, vn16_summedinputnoise3, vn16_summedinputnoise3, 0.0, 0.0, 0.05593906693299827, 1.0, 0.6200000000000001);
+vec4 vn12_matthreshold = matthreshold(vn7_matgravel, vn13_summedinputnoise3, vn6_matstone);
+float vn9_scalesrcy = scalesrcy(3.7842305869023836);
+float vn11_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.12158186842653576, 3.7842305869023836, 0.0);
+vec4 vn14_matthreshold = matthreshold(vn12_matthreshold, vn15_summedinputnoise3, vn4_matgold);
+float vn10_summedinputnoise3 = summedinputnoise3(vn9_scalesrcv, vn11_summedinputnoise3, vn11_summedinputnoise3, vn11_summedinputnoise3, vn9_scalesrcy, 0.0, 0.025737219289611674, 8.224910613248527, 0.0);
+vec4 vn8_matearth = matearth();
+vec4 vn3_matthreshold = matthreshold(vn8_matearth, vn10_summedinputnoise3, vn14_matthreshold);
+vec4 vn1_result = result(0.0, vn3_matthreshold);
 
 
 	vec4 materialcolor = vn1_result;
@@ -102,3 +106,5 @@ vec4 vn1_result = result(0.0, vn13_matthreshold);
 
 	gl_FragColor = materialcolor * Idiff;
 }
+
+
