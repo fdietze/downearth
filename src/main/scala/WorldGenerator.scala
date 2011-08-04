@@ -19,7 +19,7 @@ object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
 	val cubesize = Config.worldWindowSize
 	
-	val densityfunction:(Vec3 => Float) = hypermegadangerous _
+	import Config.densityfunction
 	
 	def genWorld:WorldOctree = {
 		genWorldAt(Vec3i(-cubesize/2),cubesize)
@@ -120,6 +120,7 @@ object WorldGenerator {
 		vn7_richnoise3
 	}
 
+
 	// NoiseSum
 	def noiseSum(v:Vec3) = {
 		val octaves = 6
@@ -147,82 +148,6 @@ object WorldGenerator {
 	
 	def surface(v:Vec3) = noiseSum(v) + (cubesize - 2 * v.z)/(cubesize)
 	
-	def fastgen = {
-		def nextFloat = util.Random.nextFloat*2-1
-	
-		val noiseData = new Array3D[Float](Vec3i(cubesize+1))
-		val exactCaseData = new Array3D[Short](Vec3i(cubesize))
-		val cube = new Array3D[Hexaeder](Vec3i(cubesize))
-		
-		var distance = cubesize
-		var pos = Vec3i(0)
-		var depth = 0
-		
-		println("ecken");
-		for(offset <- Vec3i(0) until Vec3i(2)){
-			val coord = pos+offset*cubesize
-			noiseData(coord) = 0.5f-offset.z
-		}
-		
-		val unitVectors = Array(Vec3i(1,0,0),Vec3i(0,1,0),Vec3i(0,0,1))
 
-		dostep(cubesize,Vec3i(0),1)
-		
-		def dostep(distance:Int,pos:Vec3i,depth:Int){
-			// interpolieren
-			// auf allen Kanten interpolieren
-			for( offset <- Vec3i(0) until Vec3i(2) ){
-				for( axis <- Seq(0,1,2) ){
-					if( offset(axis) == 0 ){
-						val a = noiseData(pos + offset * distance)
-						val b = noiseData(pos + offset * distance + unitVectors(axis) * distance)
-						val result = (a+b)/2 + nextFloat / pow(2,depth)
-						val coord  = pos + offset*distance + unitVectors(axis) * distance/2
-//						println(coord)
-						if(noiseData(coord) == 0)
-							noiseData(coord) = result
-					}
-				}
-			}
-		
-			var sumb = 0f
-		
-			// auf allen Seitenflächen interpolieren
-			for( axisa <- 0 to 2; dira <- Seq(0,1)){
-				var sum = 0f
-				for(axisb <- Set(0,1,2)-axisa; dirb <- Seq(0,1) ){
-					val coorda = Vec3i(1)
-					coorda(axisa) = dira*2
-					coorda(axisb) = dirb*2
-					coorda *= distance/2
-					coorda += pos
-					sum += noiseData(coorda)
-				}
-				val coordb = Vec3i(1)
-				coordb(axisa) = dira*2
-				coordb *= distance/2
-				coordb += pos
-				val result = sum/4 + nextFloat / pow(2,depth)
-//				println(coord)
-				if(noiseData(coordb) == 0){
-					noiseData(coordb) = result
-					sumb += result
-				}
-				else
-					sumb += noiseData(coordb)
-				
-			}
-
-			noiseData(pos + Vec3i(distance/2)) = sumb/6 + nextFloat / pow(2,depth)
-			
-			if( distance > 2 ){
-				for(offset <- Vec3i(0) until Vec3i(2)){
-					dostep(distance/2,pos+offset*(distance/2),depth+1)
-				}
-			}
-		}
-		
-		noiseData
-	}
 }
 
