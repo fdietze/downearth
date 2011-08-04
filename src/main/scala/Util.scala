@@ -38,6 +38,7 @@ object Util {
 			infoLog.get(infoBytes)
 			val out = new String(infoBytes)
 			println("Info log:\n" + out)
+			System.exit(0)
 		}
 	}
 	

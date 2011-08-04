@@ -2,8 +2,8 @@ package xöpäx
 
 object Config{
 	val minMeshNodeSize = 32
-	val worldWindowSize = 64
-	val useshaders = false
+	val worldWindowSize = 128
+	val useshaders = true
 	val ungeneratedDefault = FullHexaeder
 	
 	assert(worldWindowSize >= minMeshNodeSize)
