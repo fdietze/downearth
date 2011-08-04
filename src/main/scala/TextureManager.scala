@@ -21,5 +21,6 @@ object TextureManager{
 	}
 	
 	val box = loadImage("box2.png")
+	val skybox = loadImage("stormydays_rearrange.jpg")
 }
 

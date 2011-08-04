@@ -55,9 +55,6 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 	}
 	
 	def applyfrustum{
-		glEnable(GL_DEPTH_TEST)
-		glEnable(GL_LIGHTING)
-		
 		// frustum matrix
 		// temporary storage for Matrices
 		val data = DataBuffer[Mat4,RFloat](1)
@@ -67,12 +64,17 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 		//glFrustum(-r,r,-t,t,n,f)
 		glLoadMatrix( data.buffer )
 		glMatrixMode(GL_MODELVIEW)
-		
 		glDisable(GL_BLEND)
+		
 	}
 	
 	def apply = {
 		val data = DataBuffer[Mat4,RFloat](1)
+		data(0) = Mat4(inverse(Mat3x4 rotate(directionQuat)))
+		glLoadMatrix( data.buffer )
+		glDisable(GL_DEPTH_TEST)
+		glDisable(GL_LIGHTING)
+		Skybox.render
 		data(0) = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
 		glLoadMatrix( data.buffer )
 	}
@@ -81,7 +83,13 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 		applyfrustum
 		apply
 		
-		World.draw
+		glEnable(GL_DEPTH_TEST)
+		glEnable(GL_LIGHTING)
+		
+		Main.activateShader{
+			World.draw
+		}
+		
 		if(Config.debugDraw)
 			BulletPhysics.debugDrawWorld
 	}

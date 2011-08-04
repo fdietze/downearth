@@ -43,13 +43,13 @@ object Player extends ControlInterface{
 	}
 	
 	// CapsuleShape(0.3f,1.2f)
-	val body = BulletPhysics.addShape( 80,startpos.clone,new CapsuleShape(0.3f,1.2f) )
+	val body = BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )
 	
 	
 	body setAngularFactor 0
 	
 	def move(dir:Vec3){
-		body.applyCentralImpulse((m_camera makeRelative dir)*500)
+		body.applyCentralImpulse((m_camera makeRelative dir)*5)
 	}
 	
 	var dir = Vec2(Pi/2)
@@ -67,7 +67,7 @@ object Player extends ControlInterface{
 	}
 	
 	def jump{
-		body.applyCentralImpulse(new Vector3f(0,0,1000))
+		body.applyCentralImpulse(new Vector3f(0,0,10))
 	}
 }
 

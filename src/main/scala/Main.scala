@@ -294,9 +294,7 @@ object Main {
 		// the active Camera
 		BulletPhysics.update
 		
-		activateShader{
-			Controller.current.camera.renderScene
-		}
+		Controller.current.camera.renderScene
 		
 		GUI.renderScene
 	}

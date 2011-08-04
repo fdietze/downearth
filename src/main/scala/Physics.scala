@@ -82,8 +82,8 @@ object BulletPhysics{
 		val myMotionState = new DefaultMotionState(startTransform)
 		val rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape, localInertia)
 		
-		//rbInfo.friction = 0.5f
-		rbInfo.linearDamping = 0.9f
+		rbInfo.friction = 0.45f
+		rbInfo.linearDamping = 0.05f
 
 		val body = new RigidBody(rbInfo)
 		dynamicsWorld.addRigidBody(body,1,-1)
