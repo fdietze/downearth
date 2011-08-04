@@ -13,5 +13,8 @@ object Config{
 	assert(worldWindowSize >= minMeshNodeSize)
 	assert(worldWindowSize % minMeshNodeSize  == 0)
 	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
+	
+	// changeable at runtime
+	var debugDraw = false
 }
 

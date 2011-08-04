@@ -243,7 +243,7 @@ object Main {
 				case KEY_P | KEY_PAUSE =>
 					BulletPhysics.togglePause
 				case KEY_F1 =>
-					BulletPhysics.toggleDebugDraw
+					Config.debugDraw = !Config.debugDraw
 				case KEY_TAB =>
 					Controller.rotateObjects
 				case KEY_SPACE =>

@@ -81,21 +81,22 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		glColor3f(1,1,1)
 		root.draw
 		
-		glDisable(GL_LIGHTING)
-		glDisable(GL_TEXTURE_2D)
+		if(Config.debugDraw){
+			glDisable(GL_LIGHTING)
+			glDisable(GL_TEXTURE_2D)
 		
-		glPushMatrix
-		glTranslatef(rootNodePos.x,rootNodePos.y,rootNodePos.z)
-		glColor3f(1,0,0)
-		Draw.renderCube(rootNodeSize)
-		glPopMatrix
+			glPushMatrix
+			glTranslatef(rootNodePos.x,rootNodePos.y,rootNodePos.z)
+			glColor3f(1,0,0)
+			Draw.renderCube(rootNodeSize)
+			glPopMatrix
 		
-		glPushMatrix
-		glTranslatef(worldWindowPos.x,worldWindowPos.y,worldWindowPos.z)
-		glColor3f(0,1,0)
-		Draw.renderCube(worldWindowSize)
-		glPopMatrix
-		glLineWidth(1)
+			glPushMatrix
+			glTranslatef(worldWindowPos.x,worldWindowPos.y,worldWindowPos.z)
+			glColor3f(0,1,0)
+			Draw.renderCube(worldWindowSize)
+			glPopMatrix
+		}
 	}
 	
 	def genMesh {

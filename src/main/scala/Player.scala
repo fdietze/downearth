@@ -55,10 +55,15 @@ object Player extends ControlInterface{
 	var dir = Vec2(Pi/2)
 	
 	def rotate(rot:Vec3){
+		m_camera.rotate(rot)
+		
+		m_camera.lerpUp(1-m_camera.direction.z.abs)
+		/*
 		dir += rot.xy
 		dir.x = clamp( dir.x, 0, Pi )
 		dir.y = ( dir.y + 2*Pi ) % (2*Pi)
 		m_camera.directionQuat = Quat4 rotateX dir.x rotateZ dir.y
+		*/
 	}
 	
 	def jump{

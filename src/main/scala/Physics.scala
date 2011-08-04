@@ -46,7 +46,6 @@ object BulletPhysics{
 	dynamicsWorld.setDebugDrawer(DirectDrawer)
 	
 	var pause = false
-	var debugDraw = false
 	
 	def togglePause{
 		if(pause){
@@ -55,10 +54,6 @@ object BulletPhysics{
 		}
 		else
 			pause = true
-	}
-	
-	def toggleDebugDraw{
-		debugDraw = !debugDraw
 	}
 	
 	case class Body[T](body:RigidBody,radius:Float,stream:StreamingBox[T])
@@ -255,13 +250,11 @@ object BulletPhysics{
 	}
 	
 	def debugDrawWorld{
-		if(debugDraw){
-			glPushMatrix
-			glDisable(GL_LIGHTING)
-			dynamicsWorld.debugDrawWorld
-			glColor3b(127,127,127)
-			glEnable(GL_LIGHTING)
-			glPopMatrix
-		}
+		glPushMatrix
+		glDisable(GL_LIGHTING)
+		dynamicsWorld.debugDrawWorld
+		glColor3b(127,127,127)
+		glEnable(GL_LIGHTING)
+		glPopMatrix
 	}
 }

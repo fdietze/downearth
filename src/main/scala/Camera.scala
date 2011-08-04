@@ -36,6 +36,11 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 	
 	def direction = directionQuat.rotateVector(-UP)
 	
+	// rotates the camera to have a correct upwards vector
+	def lerpUp(factor:Float){
+		val dest = quaternion(lookAt(-direction,Camera.UP))
+		directionQuat = slerp(directionQuat,dest,factor)
+	}
 	
 	val frustum = {
 		val v = WIDTH.toFloat / HEIGHT.toFloat	
@@ -77,7 +82,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 		apply
 		
 		World.draw
-		BulletPhysics.debugDrawWorld
+		if(Config.debugDraw)
+			BulletPhysics.debugDrawWorld
 	}
 	
 	def makeRelative(v:Vec3) = directionQuat.rotateVector(v)
