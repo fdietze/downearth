@@ -489,7 +489,7 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 
 object DeadInnderNode extends Octant{
 	def isSet(info:NodeInfo,pos:NodeInfo) = false
-	def apply(info:NodeInfo, p:Vec3i) = FullHexaeder //UndefHexaeder
+	def apply(info:NodeInfo, p:Vec3i) = Config.ungeneratedDefault
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
 		println("update out of World")
 		this
@@ -540,7 +540,7 @@ object DeadInnderNode extends Octant{
 }
 
 class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
-	def apply(info:NodeInfo, p:Vec3i) = if(node.isSet) node().apply(info,p) else FullHexaeder
+	def apply(info:NodeInfo, p:Vec3i) = if(node.isSet) node().apply(info,p) else Config.ungeneratedDefault
 	
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
 		if(node.isSet)

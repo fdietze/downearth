@@ -19,7 +19,7 @@ object LookupTables{
 import scala.collection.mutable.WrappedArray
 
 // TODO eigener hexaeder der nicht geändert werden kann
-object FullHexaeder extends PartialHexaeder{
+case object FullHexaeder extends PartialHexaeder{
 	override def toString = "[X]"
 	private val m_normals = Array(Vec3( 1,0,0),Vec3(0, 1,0),Vec3(0,0, 1),Vec3(-1,0,0),Vec3(0,-1,0),Vec3(0,0,-1))
 	override def normals = m_normals
@@ -27,7 +27,7 @@ object FullHexaeder extends PartialHexaeder{
 	
 }
 
-object EmptyHexaeder extends Hexaeder{
+case object EmptyHexaeder extends Hexaeder{
 	def apply(p:Int, axis:Int) = 0
 	def apply(p:Int) = Vec3(0)
 	def vertices = Nil
@@ -41,7 +41,7 @@ object EmptyHexaeder extends Hexaeder{
 	override def toString = "[ ]"
 }
 
-object UndefHexaeder extends Hexaeder{
+case object UndefHexaeder extends Hexaeder{
 	def apply(p:Int, axis:Int) = 0
 	def apply(p:Int) = Vec3(0)
 	def vertices = Nil
@@ -53,7 +53,7 @@ object UndefHexaeder extends Hexaeder{
 	override def toString = "[~]"
 }
 
-trait Hexaeder{
+trait Hexaeder extends Serializable{
 	def apply(p:Int,axis:Int):Float
 	def apply(p:Int):Vec3
 	def vertices:Seq[Vec3]
