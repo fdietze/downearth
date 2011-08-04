@@ -18,6 +18,7 @@ import simplex3d.data.float._
 import org.newdawn.slick.Font
 
 import Util._
+import Config.FPS_LIMIT
 
 object Main {
 	import org.lwjgl.BufferUtils
@@ -30,7 +31,6 @@ object Main {
 		buffer
 	}
 	
-	val FRAMERATE = 6000
 	var finished = false
 	
 	var textCache:List[(Vec2i,String)] = Nil
@@ -67,7 +67,7 @@ object Main {
 		timestep = (uptime - lastframe)/1000f
 		lastframe = uptime
 		
-		Display.sync(FRAMERATE)
+		Display.sync(FPS_LIMIT)
 		Display.update
 	}
 	
@@ -135,6 +135,7 @@ object Main {
 
 	def terminate{
 		Display.destroy()
+		World.octree.cleanFutures
 		WorldSerializer.save(World.octree)
 		sys.exit(0)
 	}
@@ -236,7 +237,7 @@ object Main {
 				case KEY_NEXT =>
 					World.octree.move(Vec3i(0,0,-1))
 				case KEY_T =>
-					turbo = if(turbo) false else true
+					turbo = ! turbo
 				case KEY_ESCAPE =>
 					finished = true
 				case KEY_P | KEY_PAUSE =>
@@ -254,7 +255,7 @@ object Main {
 		
 		// Mouse Event Input
 		
-		if(turbo){
+		if(turbo) {
 			if( Mouse isButtonDown 0 )
 				Controller.remove
 			if( Mouse isButtonDown 1 )
@@ -300,5 +301,4 @@ object Main {
 		GUI.renderScene
 	}
 }
-
 

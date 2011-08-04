@@ -59,6 +59,9 @@ trait Octant extends Serializable{
 	
 	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] //return slice applied on the vertices
 	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) //return slice
+	
+	// removes all Futures
+	def cleanFutures(info:NodeInfo):Octant
 }
 
 class Leaf(val h:Hexaeder) extends Octant{
@@ -179,13 +182,14 @@ class Leaf(val h:Hexaeder) extends Octant{
 					val axisb = (2 - (axis >> 1))
 
 					//TODO: Oberfläche eines Octanten als Quadtree abfragen
+					
 					for( spos <- Vec2i(0) until Vec2i(info.size) ){
 						val p1 = nodepos.clone
 						p1( axisa ) += spos(0)
 						p1( axisb ) += spos(1)
 						p1( axis )  += (nodesize-1) * (dir&1)
 						val p2 = p1.clone
-						p2( axis ) += ((dir&1)<<1)-1
+						p2( axis ) += ((dir & 1) << 1)-1
 						val other = worldaccess(p2)
 
 						vertexCounter += addSurface(h,other,p1,dir,meshBuilder)
@@ -221,8 +225,12 @@ class Leaf(val h:Hexaeder) extends Octant{
 		throw new NoSuchMethodException("dont call this in Leaf")
 	}
 	
-	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
 		(from,to)
+	}
+	
+	def cleanFutures(info:NodeInfo):Octant = {
+		throw new NoSuchMethodException("dont call this in Leaf, Here shouldn't be a FutureNode")
 	}
 }
 
@@ -332,6 +340,13 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
+	
+	def cleanFutures(info:NodeInfo):Octant = {
+		for(i <- 0 until 8){
+			data(i) = data(i).cleanFutures( info(i) )
+		}
+		this
+	}
 }
 
 class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
@@ -402,6 +417,10 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		val newfrom = from+vvertcount.view(0,index).sum
 		val newto = newfrom + vvertcount(index)
 		data(index).getPolygonsUnderVertexArray( nodeinfo,pos, newfrom, newto )
+	}
+	
+	override def cleanFutures(info:NodeInfo):Octant = {
+		throw new NoSuchMethodException("FutureNodes shouldn exist under Vertex Array")
 	}
 }
 
@@ -485,6 +504,8 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
+	
+	def cleanFutures(info:NodeInfo):Octant = this
 }
 
 object DeadInnderNode extends Octant{
@@ -537,6 +558,8 @@ object DeadInnderNode extends Octant{
 	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
+	
+	def cleanFutures(info:NodeInfo):Octant = this
 }
 
 class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
@@ -605,5 +628,7 @@ class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
 	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
+	
+	def cleanFutures(info:NodeInfo):Octant = if( node.isSet ) node() else DeadInnderNode
 }
 

@@ -151,14 +151,14 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 	}
 }
 
-class TextureMesh(data:TextureMeshData) extends Mesh /*with Serializable*/{
+class TextureMesh(data:TextureMeshData) extends Mesh with Serializable {
 	import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
 	
-	/*
+	
 	@throws(classOf[IOException])
-	private[this] def writeObject(out:ObjectOutputStream) { 
-		out.writeObject(new InterleavedData(vertices,normals,texcoords))
+	private[this] def writeObject(out:ObjectOutputStream) {
 		out.writeInt(msize)
+		out.writeObject(new InterleavedData(vertices,normals,texcoords))
 	}
 	
 	@throws(classOf[IOException]) @throws(classOf[ClassNotFoundException])
@@ -169,16 +169,16 @@ class TextureMesh(data:TextureMeshData) extends Mesh /*with Serializable*/{
 		normals  = data(1).asInstanceOf[DataView[Vec3,RFloat]]
 		texcoords= data(2).asInstanceOf[DataView[Vec2,RFloat]]
 	}
-	*/
+	
 	import data._
 	
-	/*@transient*/ var (vertices,normals,texcoords) = interleave(
+	@transient var (vertices,normals,texcoords) = interleave(
 		DataSeq[Vec3, RFloat],
 		DataSeq[Vec3, RFloat],
 		DataSeq[Vec2, RFloat]
 	)(vertexArray.size)
 	
-	/*@transient*/ private var msize = vertexArray.size
+	@transient private var msize = vertexArray.size
 	def size = msize
 	println("texture mesh size: "+vertexArray.size)
 	

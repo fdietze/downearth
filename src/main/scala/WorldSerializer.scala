@@ -24,9 +24,10 @@ object WorldSerializer{
 			val ois = new ObjectInputStream(fis)
 			Some(ois.readObject.asInstanceOf[WorldOctree])
 		}
-		catch {
-		case exeption =>
+		catch{
+		case e:Exception =>
 			println("couldn't open file: "+file)
+			e.printStackTrace
 			None
 		}
 	}

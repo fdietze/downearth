@@ -71,10 +71,14 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 				next
 		}
 	}
+	// removes all ungenerated Futures
+	def cleanFutures{
+		root = root.cleanFutures(rootNodeInfo)
+	}
 	
 	def draw{
 		import org.lwjgl.opengl.GL11._
-		
+		glColor3f(1,1,1)
 		root.draw
 		
 		glDisable(GL_LIGHTING)
@@ -112,7 +116,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	}
 	
 	def generateNode(nodepos:Vec3i,nodesize:Int){
-		insert(nodepos,nodesize,new FutureNode(WorldNodeGenerator.generateNodeAt(nodepos,nodesize)))
+		insert(nodepos,nodesize, WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize))
 	}
 
 	def move(dir:Vec3i){
