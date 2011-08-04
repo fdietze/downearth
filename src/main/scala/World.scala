@@ -124,12 +124,11 @@ object World{
 		case Some(v) =>
 			Draw.addText("Position: (" + v.x.toInt + ", " + v.y.toInt + ", " + v.z.toInt + ")")
 			// malt die Markierung der angewählten Zelle
-			glColor3f(1,1,1)
 			glDisable(GL_LIGHTING)
 			glPushMatrix
 			glTranslatef(v.x,v.y,v.z)
 			val h = octree(v)
-			//Draw.renderCube
+			glColor3f(1,1,1)
 			Draw.renderHexaeder(h)
 			glPopMatrix
 			glEnable(GL_LIGHTING)

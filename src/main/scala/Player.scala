@@ -18,8 +18,7 @@ import com.bulletphysics.collision.shapes._
 import Util._
 
 object Player extends ControlInterface{
-	val startpos = Vec3(6,-4,3)
-	
+	import Config.startpos
 	
 	//val camera = new Camera3D(startpos,Vec3(1,0,0))
 	
