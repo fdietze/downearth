@@ -630,5 +630,7 @@ class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
 	}
 	
 	def cleanFutures(info:NodeInfo):Octant = if( node.isSet ) node() else DeadInnderNode
+	
+	override def toString = "[Future]"
 }
 

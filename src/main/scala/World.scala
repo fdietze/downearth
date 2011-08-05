@@ -23,7 +23,7 @@ object World{
 		case Some(s) => s
 		case None => 
 			val gen = time("genworld: ")(WorldGenerator.genWorld)
-			          time("genmesh: ")(gen.genMesh)
+//			          time("genmesh: ")(gen.genMesh)
 			gen
 		}
 	}
@@ -135,6 +135,7 @@ object World{
 		case None =>
 		}
 		
-		octree stream Controller.current.position
+		if(Config.streamWorld)
+			octree stream Controller.current.position
 	}
 }

@@ -7,6 +7,9 @@ import simplex3d.math.float.functions._
 import simplex3d.noise._
 
 import Util._
+import Config._
+
+import WorldNodeGenerator.generateFutureNodeAt
 
 final class FloatNoise(source: NoiseSource) {
 	def apply(x: Double) :Float = source(x).toFloat
@@ -19,10 +22,27 @@ object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
 	val cubesize = Config.worldWindowSize
 	
-	import Config.densityfunction
-	
 	def genWorld:WorldOctree = {
-		genWorldAt(Vec3i(-cubesize/2),cubesize)
+		val octree = new WorldOctree(cubesize,Vec3i(-cubesize/2))
+		octree.root = DeadInnderNode
+		try{
+			val start = Vec3i(-cubesize/2)
+			val size = minMeshNodeSize
+			for(vi <- Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize)){
+				val pos = start+vi*minMeshNodeSize
+
+				println( pos,size)
+				octree.insert(pos, size, generateFutureNodeAt(pos,size) )
+			}
+		}
+		catch{
+			case e =>
+				println(octree)
+				throw e
+		}
+		octree.meshGenerated = true
+		
+		octree
 	}
 
 	def genSlice(nodepos:Vec3i ,nodesize:Int, size:Vec3i) = {
@@ -40,55 +60,69 @@ object WorldGenerator {
 	def genWorldAt(nodepos:Vec3i,nodesize:Int):WorldOctree = {
 		import MarchingHexaeder._
 		
-		val noiseData = new Array3D[Float](Vec3i(nodesize+3))
-		//braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
-		val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
+		val octree = new WorldOctree( nodesize, nodepos.clone )
 		
-		def extractData(pos:Vec3i) = {
-			assert(exactCaseData.indexInRange(pos))
-			offset map (o => noiseData(pos+o))
+		val interval = time("prediction: "){
+			prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
 		}
-
-		time("noiseData.fill: "){	noiseData.fill(v =>	densityfunction(nodepos+v-1) ) }
 		
-		val casecounter = new Array[Int](22)
+		if(interval.isPositive){
+			println("yay full")
+			octree.root = new Leaf(FullHexaeder)
+		}
+		else if(interval.isNegative){
+			println("yay Empty")
+			octree.root = new Leaf(EmptyHexaeder)
+		}
+		
+		/* if(false){} */
+		else{
+			val noiseData = new Array3D[Float](Vec3i(nodesize+3))
+			//braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
+			val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
+		
+			def extractData(pos:Vec3i) = {
+				assert(exactCaseData.indexInRange(pos))
+				offset map (o => noiseData(pos+o))
+			}
 
-		time("exactCaseData: "){
+			noiseData.fill(v =>	densityfunction(nodepos+v-1) )
+		
+			val casecounter = new Array[Int](22)
+
+			
 			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ){
 				val exactCase = dataToCase(extractData(coord))
 				exactCaseData(coord) = exactCase.toShort
 			}
-		}
 		
-		time("caseTypeData, transformToStable: "){
+			
 			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
 				val data = extractData(coord)
 				val exactCase = exactCaseData(coord)
 				val caseType = caseTypeLookup(exactCase)
-			
+		
 				if( !isStableCase(caseType) ) {
 					val (newData, newCase) = transformToStable(data,exactCase)
 					noiseData(coord) = newData
 					exactCaseData(coord) = newCase.toShort		
 				}
 			}
-		}
 
-		println("nodepos: " + nodepos)
-		def fillfun(v:Vec3i) = {
-			val arraypos = v + 1 - nodepos
-			val h = data2hexaeder(extractData(arraypos), exactCaseData(arraypos))
-			if( h.noVolume )
-				EmptyHexaeder
-			else h
+			def fillfun(v:Vec3i) = {
+				val arraypos = v + 1 - nodepos
+				val h = data2hexaeder(extractData(arraypos), exactCaseData(arraypos))
+				if( h.noVolume )
+					EmptyHexaeder
+				else h
+			}
+			
+			octree.fill( fillfun _ )
+			
+			assert(octree.rootNodePos == nodepos)
+			assert(octree.rootNodeSize == nodesize)
 		}
 		
-		val octree = new WorldOctree( nodesize, nodepos.clone )
-		time("cube.fill(data2hexaeder): "){
-			octree.fill( fillfun _ )
-		}
-		assert(octree.rootNodePos == nodepos)
-		assert(octree.rootNodeSize == nodesize)
 		octree
 	}
 

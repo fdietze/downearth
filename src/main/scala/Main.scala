@@ -236,6 +236,8 @@ object Main {
 					World.octree.move(Vec3i(0,0, 1))
 				case KEY_NEXT =>
 					World.octree.move(Vec3i(0,0,-1))
+				case KEY_F7 =>
+					Config.streamWorld = !Config.streamWorld
 				case KEY_T =>
 					turbo = ! turbo
 				case KEY_ESCAPE =>

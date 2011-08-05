@@ -1,34 +1,40 @@
 package xöpäx
 
 import java.io._
+import Config.saveWorld
 
 object WorldSerializer{
 	val file = new File("worldoctree")
 	
 	def save(src:WorldOctree){
-		try{
-			val fos = new FileOutputStream(file)
-			val oos = new ObjectOutputStream(fos)
-			oos writeObject src
-		}
-		catch{
-		case e:Exception =>
-			println("couldn't save file: "+file)
-			e.printStackTrace
+		if(saveWorld){
+			try{
+				val fos = new FileOutputStream(file)
+				val oos = new ObjectOutputStream(fos)
+				oos writeObject src
+			}
+			catch{
+			case e:Exception =>
+				println("couldn't save file: "+file)
+			}
 		}
 	}
 	
 	def load:Option[WorldOctree] = {
-		try {
-			val fis = new FileInputStream(file)
-			val ois = new ObjectInputStream(fis)
-			Some(ois.readObject.asInstanceOf[WorldOctree])
+		if(saveWorld){
+			try {
+				val fis = new FileInputStream(file)
+				val ois = new ObjectInputStream(fis)
+				Some(ois.readObject.asInstanceOf[WorldOctree])
+			}
+			catch{
+			case e:Exception =>
+				println("couldn't open file: "+file)
+				None
+			}
 		}
-		catch{
-		case e:Exception =>
-			println("couldn't open file: "+file)
-			e.printStackTrace
+		else
 			None
-		}
 	}
 }
+

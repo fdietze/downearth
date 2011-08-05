@@ -69,11 +69,17 @@ object Draw{
 		
 		val indices = Seq(0,1,2,3,4,5,6,7,0,2,1,3,4,6,5,7,0,4,1,5,2,6,3,7)
 		
-		glBegin(GL_LINES)
-		for(v <- indices map verts)
-			glVertex3f(v.x,v.y,v.z)
-		glEnd
-		
+		try{
+			glBegin(GL_LINES)
+			for(v <- indices map verts)
+				glVertex3f(v.x,v.y,v.z)
+			glEnd
+		}
+		catch{
+			case e:Exception => 
+				println("cant draw Hexaeder: " + h + "\nvertices: " + h.vertices)
+				throw e
+		}
 	}
 	
 	var textCache:List[String] = Nil

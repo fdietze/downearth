@@ -22,7 +22,7 @@ object WorldNodeGenerator {
 	
 	object Master extends Actor {
 		def act = {
-			loop{ 
+			loop{
 				react{
 					case GenerateSliceAt(slicepos,minMeshNodeSize,slicesize) =>
 						reply(WorldGenerator.genSlice(slicepos, minMeshNodeSize, slicesize))

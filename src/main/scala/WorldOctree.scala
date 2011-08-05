@@ -17,7 +17,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	def worldWindowCenter = worldWindowPos + worldWindowSize/2
 	
 	val vsize = Vec3i(worldWindowSize)
-	var root:Octant = new Leaf(EmptyHexaeder) // = DeadInnderNode
+	var root:Octant = new Leaf(EmptyHexaeder) // DeadInnderNode
 
 	var meshGenerated = false
 
