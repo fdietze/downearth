@@ -1,5 +1,7 @@
 package noise
 
+import intervals._
+
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
@@ -16,7 +18,8 @@ object Noise {
 	val a = (seed ^ 0xB5C18E6A) | ((1 << 16) + 1)
 	val c = seed ^ 0xF292D0B2
 	def hash(x: Int) :Int = (a*(x ^ c)) >>> 16*/
-	def hash(k:Int) = ((k*0x12345678) >> (k*0x87754351)) & 0x7FFFFFFF
+	//def hash(k:Int) = ((k*0x12345678) >> (k*0x87754351)) & 0x7FFFFFFF
+	def hash(k:Int) = mod(((k*34)+1)*k, 289).toInt
 
 	// Split Bezier Curves
 	def splitleft(h:Array[Double],t:Double):Array[Double] = {
@@ -79,15 +82,6 @@ object Noise {
 
 	def gradientat3(X:Int, Y:Int, Z:Int) = {
 		gradients3(hash(hash(hash(X)+Y)+Z) & 15)
-	}
-	
-	case class Interval (min:Double, max:Double){
-		assert(min < max)
-		//def + (that:Interval) = Interval(min+that.min,max+that.max)
-		def hasZero = !isPositive && !isNegative
-		def isPositive = min >= 0 
-		def isNegative = max <= 0
-		def apply(value:Double) = min <= value && value <= max
 	}
 	
 	def noise3_prediction(x0:Double, y0:Double, z0:Double, x1:Double, y1:Double, z1:Double):Interval = {
