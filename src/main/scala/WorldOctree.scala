@@ -9,7 +9,7 @@ import collection.Map
 
 import Config.minMeshNodeSize
 
-class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Hexaeder] with Serializable with Iterable[WorldNodeInfo]{
+class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Hexaeder] with Serializable{
 
 	var worldWindowPos:Vec3i = rootNodePos.clone
 	val worldWindowSize:Int = rootNodeSize
@@ -45,32 +45,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	}
 	
 	override def toString = "Octree("+root.toString+")"
-
-	def iterator = new Iterator[WorldNodeInfo] {
-		case class InnerNodeInfo(pos:Vec3i,size:Int,node:Octant)
-
-		var history = List( InnerNodeInfo(Vec3i(0),vsize.x, root) )
-		var height = Util.log2(rootNodeSize)
-
-		def hasNext = history != Nil
-		def next = history.head match{
-			case InnerNodeInfo(pos,size, n:Leaf) =>
-				history = history.tail
-				WorldNodeInfo(pos, size, n.h)
-
-			case InnerNodeInfo(pos, size, n:InnerNode) =>
-				val hsize = size >> 1
-				// Vec3i(0) until Vec3i(2)
-				val ndata =
-				for(i <- 0 until 8) yield {
-					val offset = Vec3i(i&1,(i&2)>>1,(i&4)>>2)
-					InnerNodeInfo( pos + offset*hsize, hsize, n.data(i) )
-				}
-
-				history = ndata ++: history.tail
-				next
-		}
-	}
+	
 	// removes all ungenerated Futures
 	def cleanFutures{
 		root = root.cleanFutures(rootNodeInfo)

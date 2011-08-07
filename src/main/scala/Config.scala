@@ -16,7 +16,7 @@ object Config{
 	val scale = 1/256.0
 	val densityfunction:(Vec3 => Float) = v => noise3(Vec3d(v)*scale).toFloat
 	val prediction:( (Vec3,Vec3) => Interval ) = (v,w) => noise3_prediction(v.x*scale,v.y*scale,v.z*scale,w.x*scale,w.y*scale,w.z*scale)
-	val saveWorld = false
+	val saveWorld = true
 	
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )

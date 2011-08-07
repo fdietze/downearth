@@ -33,6 +33,15 @@ case class NodeInfo(pos:Vec3i,size:Int){
 		NodeInfo(pos+v*hsize,hsize)
 	}
 	
+	def direction(dir:Int) = dir match {
+		case 0 => List(0,2,4,6)
+		case 1 => List(1,3,5,7)
+		case 2 => List(0,1,4,5)
+		case 3 => List(2,3,6,7)
+		case 4 => List(0,1,2,3)
+		case 5 => List(4,5,6,7)
+	}
+	
 	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
@@ -62,9 +71,15 @@ trait Octant extends Serializable{
 	
 	// removes all Futures
 	def cleanFutures(info:NodeInfo):Octant
+	
+	// pateches one side of a Node
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]]
 }
 
-class Leaf(val h:Hexaeder) extends Octant{
+abstract class OctantOverVertexArray extends Octant
+abstract class OctantUnterVertexArray extends Octant
+
+class Leaf(val h:Hexaeder) extends OctantUnterVertexArray{
 	// a leaf is always defined
 	def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
@@ -82,7 +97,7 @@ class Leaf(val h:Hexaeder) extends Octant{
 				replacement.updated(info,p,nh)
 			}
 			else {
-				new Leaf(nh)
+				Leaf(nh)
 			}
 		}
 	}
@@ -104,7 +119,7 @@ class Leaf(val h:Hexaeder) extends Octant{
 		assert(from != EmptyHexaeder)
 
 		import meshBuilder._
-	
+		
 		val axis = dir >> 1
 		val direction = dir & 1
 		
@@ -232,13 +247,28 @@ class Leaf(val h:Hexaeder) extends Octant{
 	def cleanFutures(info:NodeInfo):Octant = {
 		throw new NoSuchMethodException("dont call this in Leaf, Here shouldn't be a FutureNode")
 	}
+	
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = List(repolyWorld(info,dstinfo.pos, vertpos, vertcount))
 }
 
-class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
+object Leaf{
+	def apply(h:Hexaeder) = {
+		h match{
+			case EmptyHexaeder => EmptyLeaf
+			case FullHexaeder => FullLeaf
+			case _ => new Leaf(h)
+		}
+	}
+}
+
+case object EmptyLeaf extends Leaf(EmptyHexaeder)
+case object FullLeaf extends Leaf(FullHexaeder)
+
+class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 	val data = new Array[Octant](8)
 	//initiali the 8 child nodes
 	for(fidx <- 0 until 8) {
-		data(fidx) = new Leaf(h)
+		data(fidx) = Leaf(h)
 	}
 	
 	def isSet(info:NodeInfo,pos:NodeInfo) = {
@@ -270,7 +300,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 		data(index) = data(index).updated(childinfo,p,h)
 
 		if(merge_?)
-			new Leaf(h)
+			Leaf(h)
 		else
 			this
 	}
@@ -347,6 +377,22 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends Octant {
 		}
 		this
 	}
+	
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
+		if(dstinfo indexInRange info){ // info <= dstinfo
+			val indices = info.direction(dir)
+			for(i <- indices) yield {
+				data(i).patchSurface(info(i),dstinfo, dir, vertpos, vertcount)
+			}
+			// there are no patches over vertexArray
+			Nil
+		}
+		else{
+			val (index,nodeinfo) = info(dstinfo.pos)
+			assert(nodeinfo indexInRange dstinfo)
+			data(index).patchSurface(nodeinfo,dstinfo,dir,vertpos,vertcount)
+		}
+	}
 }
 
 class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
@@ -375,7 +421,7 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 
 		if(merge_?){
 			val mb = new TextureMeshBuilder
-			val replacement = new Leaf(nh)
+			val replacement = Leaf(nh)
 			replacement.genPolygons(info,mb, World.apply _)
 			( replacement, Patch(vertpos,vertcount,mb.result) )
 		}
@@ -422,6 +468,24 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 	override def cleanFutures(info:NodeInfo):Octant = {
 		throw new NoSuchMethodException("FutureNodes shouldn exist under Vertex Array")
 	}
+	
+	// TODO vertexArray updated
+	/*
+	override def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
+		
+		if(dstinfo indexInRange info){ // info <= dstinfo
+			val indices = info.direction(dir)
+			for(i <- indices) yield {
+				data(i).patchSurface(info(i),dstinfo, dir, vertpos, vertcount)
+			}
+		}
+		else{
+			val (index,nodeinfo) = info(dstinfo.pos)
+			assert(nodeinfo indexInRange dstinfo)
+			data(index).patchSurface(nodeinfo,dstinfo,dir,vertpos,vertcount)
+		}
+	}
+	*/
 }
 
 //decorator pattern
