@@ -88,20 +88,19 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	var generatingNodes:List[(NodeInfo,Future[Octant])] = Nil
+	// var generatingNodes:List[(NodeInfo,Future[Octant])] = Nil
 	
 	def generateNode(nodepos:Vec3i,nodesize:Int){
 		// generatingNodes ::= ( NodeInfo(nodepos, nodesize), WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize) ) 
-		jobqueue enqueue NodeInfo(nodepos,nodesize)
+		WorldNodeGenerator.Master ! NodeInfo(nodepos,nodesize)
 	}
 	
 	def makeUpdates = {
-		val (ready,notReady) = generatingNodes.partition( _._2.isSet )
-		for( ( nodeinfo, futureNode) <- ready ) {
-			insert( nodeinfo, futureNode.apply )
+		while( ! WorldNodeGenerator.Master.done.isEmpty ){
+			val ( nodeinfo, node) = WorldNodeGenerator.Master.done.dequeue
+			insert( nodeinfo, node )
 			BulletPhysics.worldChange(nodeinfo)
 		}
-		generatingNodes = notReady
 	}
 
 	def move(dir:Vec3i){
@@ -176,12 +175,14 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		root = root.insertNode(rootNodeInfo, nodeinfo, that)
 		
 		// nachbarn patchen
-		for(dir <- 0 until 6){
-			val dirvec = Vec3i(0)
-			dirvec(dir >> 1) = (dir & 1)*2-1
-			val patchNodeInfo = NodeInfo(nodepos - dirvec*nodesize,nodesize)
-			if(rootNodeInfo indexInRange patchNodeInfo)
-				root.patchSurface(rootNodeInfo, patchNodeInfo, dir, 0, 0)
+		if(Config.patchAtNodeInsert) {
+			for(dir <- 0 until 6){
+				val dirvec = Vec3i(0)
+				dirvec(dir >> 1) = (dir & 1)*2-1
+				val patchNodeInfo = NodeInfo(nodepos - dirvec*nodesize,nodesize)
+				if(rootNodeInfo indexInRange patchNodeInfo)
+					root.patchSurface(rootNodeInfo, patchNodeInfo, dir, 0, 0)
+			}
 		}
 	}
 
@@ -194,9 +195,12 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	def isSet(nodepos:Vec3i,nodesize:Int):Boolean = {
 		val info = NodeInfo(nodepos,nodesize)
 		
-		var isGenerating = false
-		for( (nodeinfo,node) <- generatingNodes ){
-			if(nodeinfo indexInRange info)
+		for( job <- WorldNodeGenerator.Master.activeJobs ){
+			if(job indexInRange info)
+				return true
+		}
+		for( (job,_) <- WorldNodeGenerator.Master.done ){
+			if(job indexInRange info)
 				return true
 		}
 		

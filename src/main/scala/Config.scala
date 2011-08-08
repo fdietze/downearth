@@ -9,10 +9,12 @@ object Config{
 	val minMeshNodeSize = 16
 	val worldWindowSize = 64
 	val useshaders = false
-	val ungeneratedDefault = UndefHexaeder
+	val ungeneratedDefault = FullHexaeder // UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
 	val FPS_LIMIT = 6000
 	val maxMeshVertexCount = 12345
+	val numWorkingThreads = 4
+	val patchAtNodeInsert = false
 	
 	val scale = 1/20.0f
 	val densityfunction:(Vec3 => Float) = v => (noise3(Vec3d(v)*scale)/scale - v.z).toFloat //noise3(Vec3d(v)*scale).toFloat//gen.proceduralworld(v)._1.toFloat//
@@ -33,6 +35,6 @@ object Config{
 	
 	// changeable at runtime
 	var debugDraw = false
-	var streamWorld = false
+	var streamWorld = true
 }
 

@@ -9,8 +9,6 @@ import simplex3d.noise._
 import Util._
 import Config._
 
-import WorldNodeGenerator.generateFutureNodeAt
-
 final class FloatNoise(source: NoiseSource) {
 	def apply(x: Double) :Float = source(x).toFloat
 	def apply(u: inVec2) :Float = source(u.x, u.y).toFloat

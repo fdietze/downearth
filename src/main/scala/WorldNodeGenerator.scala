@@ -4,56 +4,72 @@ package xöpäx
 //import Actor._
 //import akka.dispatch.Future
 
-import scala.actors.{Actor,Future}
+import scala.actors.{DaemonActor, OutputChannel, Actor, Future}
 
 import simplex3d.math.Vec3i
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 
+case object PoisonPill
+
 object WorldNodeGenerator {
 	
-	Master.start
-	
-	def generateFutureNodeAt(nodeinfo : NodeInfo):Future[Octant] = {
-		val answer = Master !! nodeinfo
-		answer.asInstanceOf[Future[Octant]]
-	}
-	
-	object Master extends Actor {
+	object Master extends DaemonActor {
 		val jobqueue = new SynchronizedQueue[NodeInfo]
 		val done  = new SynchronizedQueue[(NodeInfo,Octant)]
 		val activeJobs = new HashSet[NodeInfo] with SynchronizedSet[NodeInfo]
 		
-		val workers = (1 to 6) map (new Worker)
+		val workers = (1 to Config.numWorkingThreads) map (i => new Worker)
+		workers.foreach(_.start)
 		
-		val activeWorkers = HashSet[Worker]()
-		val idlingWorkers = Queue(workers:_*)
+		val idlingWorkers = Queue[OutputChannel[NodeInfo]](workers:_*)
 		
 		def act = {
 			loop{
 				react{
-					case nodeinfo:NodeInfo =>
-						// TODO worker beauftragen falls verfügbar, sonst in die jobqueue
-						if(idlingWorkers.isEmpty)
+				case nodeinfo:NodeInfo =>
+					activeJobs += nodeinfo
+					// worker beauftragen falls verfügbar, sonst in die jobqueue
+					if(idlingWorkers.isEmpty){
 						jobqueue enqueue nodeinfo
-					case tuple:Tuple2[NodeInfo,Octant] =>
-						// TODO neuen Job vergeben falls verfügbar, sonst worker zu idlingWorkers hinzufügen
-						done += tuple
+					}
+					else{
+						val worker = idlingWorkers.dequeue
+						worker ! nodeinfo
+					}
+				case ( oldjob : NodeInfo, node : Octant ) =>
+					// neuen Job vergeben falls verfügbar, sonst worker zu idlingWorkers hinzufügen
+					done enqueue (oldjob->node)
+					activeJobs -= oldjob
+					
+					if(jobqueue.isEmpty){
+						idlingWorkers enqueue sender
+					}
+					else{
 						val job = jobqueue.dequeue
+						sender ! job
 						activeJobs += job
+					}
+				case PoisonPill =>
+					for( worker <- workers )
+						worker ! PoisonPill
 				}
 			}
 		}
+		start
 	}
 	
 	class Worker extends Actor {
+		var alive = true
 		def act = {
-			loop{
-				react{
+			while(alive){
+				receive {
 					case nodeinfo:NodeInfo =>
 						val node = WorldGenerator genWorldAt nodeinfo
 						node.genMesh
-						Master ! Tuple2(nodeinfo,node)
+						Master ! Tuple2(nodeinfo,node.root)
+					case PoisonPill => 
+						alive = false
 				}
 			}
 		}
