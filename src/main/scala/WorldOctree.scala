@@ -82,7 +82,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		val newcenter = (Vec3i(pos)/minMeshNodeSize)*minMeshNodeSize
 		worldWindowPos = newcenter-worldWindowSize/2
 		
-		for(vi <- Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize) ){
+		for(vi <- (Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize)).toSeq.sortBy(v => length(v-worldWindowSize/minMeshNodeSize/2)) ){
 			val nodepos = worldWindowPos + vi*minMeshNodeSize
 			generateNode(nodepos,minMeshNodeSize)
 		}
@@ -173,6 +173,15 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 		
 		root = root.insertNode(rootNodeInfo, nodeinfo, that)
+		
+		// nachbarn patchen
+		for(dir <- 0 until 6){
+			val dirvec = Vec3i(0)
+			dirvec(dir >> 1) = (dir & 1)*2-1
+			val patchNodeInfo = NodeInfo(nodepos - dirvec*nodesize,nodesize)
+			if(rootNodeInfo indexInRange patchNodeInfo)
+				root.patchSurface(rootNodeInfo, patchNodeInfo, dir, 0, 0)
+		}
 	}
 
 	override def fill( foo: Vec3i => Hexaeder ){

@@ -258,7 +258,9 @@ class Leaf(val h:Hexaeder) extends OctantUnterVertexArray{
 		throw new NoSuchMethodException("dont call this in Leaf, Here shouldn't be a FutureNode")
 	}
 	
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = List(repolyWorld(info,dstinfo.pos, vertpos, vertcount))
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
+		List(repolyWorld(info,dstinfo.pos, vertpos, vertcount))
+	}
 }
 
 object Leaf{
@@ -392,7 +394,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 		if(dstinfo indexInRange info){ // info <= dstinfo
 			val indices = info.direction(dir)
 			for(i <- indices) yield {
-				data(i).patchSurface(info(i),dstinfo, dir, vertpos, vertcount)
+				data(i).patchSurface(info(i),dstinfo, dir, 0, 0)
 			}
 			// there are no patches over vertexArray
 			Nil
@@ -400,7 +402,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 		else{
 			val (index,nodeinfo) = info(dstinfo.pos)
 			assert(nodeinfo indexInRange dstinfo)
-			data(index).patchSurface(nodeinfo,dstinfo,dir,vertpos,vertcount)
+			data(index).patchSurface(nodeinfo,dstinfo,dir,0,0)
 		}
 	}
 }
@@ -480,11 +482,14 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 	}
 	
 	override def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
+		assert(vvertcount.sum == vertcount)
+		
 		if(dstinfo indexInRange info){ // info <= dstinfo
 			val indices = info.direction(dir)
 			var patches:List[Patch[TextureMeshData]] = Nil
 			for(i <- indices) {
-				val childpatches = data(i).patchSurface(info(i),dstinfo, dir, vvertcount.view(0,i).sum, vvertcount(i))
+				val newvertpos = vertpos + vvertcount.view(0,i).sum
+				val childpatches = data(i).patchSurface(info(i),dstinfo, dir, newvertpos , vvertcount(i))
 				val sizedifference = childpatches.map(_.sizedifference).sum
 				vvertcount(i) += sizedifference
 				patches :::= childpatches
@@ -494,7 +499,8 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		else{
 			val (index,nodeinfo) = info(dstinfo.pos)
 			assert(nodeinfo indexInRange dstinfo)
-			data(index).patchSurface(nodeinfo,dstinfo,dir,vvertcount.view(0,index).sum,vvertcount(index))
+			val newvertpos = vertpos + vvertcount.view(0,index).sum
+			data(index).patchSurface(nodeinfo,dstinfo,dir,newvertpos,vvertcount(index))
 		}
 	}
 }
