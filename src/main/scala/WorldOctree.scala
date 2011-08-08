@@ -46,11 +46,6 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	override def toString = "Octree("+root.toString+")"
 	
-	// removes all ungenerated Futures
-	def cleanFutures{
-		root = root.cleanFutures(rootNodeInfo)
-	}
-	
 	def draw{
 		makeUpdates
 	
@@ -93,16 +88,18 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	var generatingNodes:List[(NodeInfo,FutureNode)] = Nil
+	var generatingNodes:List[(NodeInfo,Future[Octant])] = Nil
 	
 	def generateNode(nodepos:Vec3i,nodesize:Int){
 		generatingNodes ::= ( NodeInfo(nodepos, nodesize), WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize) )
 	}
 	
 	def makeUpdates = {
-		val (ready,notReady) = generatingNodes.partition( _._2.node.isSet )
-		for( ( NodeInfo(nodepos,nodesize), futureNode) <- ready )
-			insert( nodepos,nodesize, futureNode.node.apply )
+		val (ready,notReady) = generatingNodes.partition( _._2.isSet )
+		for( ( nodeinfo, futureNode) <- ready ) {
+			insert( nodeinfo, futureNode.apply )
+			BulletPhysics.worldChange(nodeinfo)
+		}
 		generatingNodes = notReady
 	}
 
@@ -147,10 +144,11 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			move( Vec3i(0,0,1) )
 	}
 	
-	def insert( nodepos:Vec3i, nodesize:Int, that:Octant ) {
-		printf("insert node at pos: %s size: %s, rootpos: %s, rootsize: %s\n",nodepos,nodesize,rootNodePos,rootNodeSize)
+	def insert( nodeinfo:NodeInfo, that:Octant ) {
+		val NodeInfo(nodepos,nodesize) = nodeinfo
+		
 		if(any(lessThan(nodepos, rootNodePos))) {
-			println("World gets bigger-")
+			// Welt wird in (+1,+1,+1) vergrößert
 			val newroot = new InnerNodeOverVertexArray(EmptyHexaeder)
 			for(i <- 0 until 7)
 				newroot.data(i) = DeadInnderNode
@@ -163,7 +161,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 
 		else if(any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize))) {
-			println("World gets bigger+")
+			// Welt wird in (-1,-1,-1) vergrößert
 			val newroot = new InnerNodeOverVertexArray(EmptyHexaeder)
 			for(i <- 1 until 8)
 				newroot.data(i) = DeadInnderNode
@@ -174,7 +172,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			rootNodeSize *= 2
 		}
 		
-		root = root.insertNode(rootNodeInfo,NodeInfo(nodepos,nodesize), that)
+		root = root.insertNode(rootNodeInfo, nodeinfo, that)
 	}
 
 	override def fill( foo: Vec3i => Hexaeder ){

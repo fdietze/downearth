@@ -15,9 +15,9 @@ object WorldNodeGenerator {
 	
 	Master.start
 	
-	def generateFutureNodeAt(nodepos:Vec3i,nodesize:Int):FutureNode = {
+	def generateFutureNodeAt(nodepos:Vec3i,nodesize:Int):Future[Octant] = {
 		val answer = Master !! GenerateNodeAt(nodepos,nodesize)
-		new FutureNode(answer.asInstanceOf[Future[Octant]])
+		answer.asInstanceOf[Future[Octant]]
 	}
 	
 	object Master extends Actor {
@@ -28,7 +28,7 @@ object WorldNodeGenerator {
 						reply(WorldGenerator.genSlice(slicepos, minMeshNodeSize, slicesize))
 					case GenerateNodeAt(nodepos,nodesize) =>
 						val node = WorldGenerator.genWorldAt(nodepos,nodesize)
-						Util.time("genmesh: ")(node.genMesh)
+						node.genMesh
 						reply(node.root)
 				}
 			}

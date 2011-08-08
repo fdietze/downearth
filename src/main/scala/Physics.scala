@@ -62,9 +62,17 @@ object BulletPhysics{
 	//var groundBody:Option[RigidBody] = None
 	var groundBodies:Seq[RigidBody] = Nil
 	
-	def worldChange(pos:Vec3i){
+	def worldChange(pos:Vec3i) {
 		for( Body( _ , _ , stream ) <- bodies ){
 			stream reloadAt pos
+		}
+	}
+	
+	def worldChange(nodeinfo:NodeInfo) {
+		for( Body( _ , _ , stream ) <- bodies ){
+			for(pos <- nodeinfo intersection stream.nodeinfo) {
+				stream reloadAt pos
+			}
 		}
 	}
 	
@@ -102,6 +110,8 @@ object BulletPhysics{
 	abstract class StreamingBox[T:Manifest](centerpos:Vec3i,radius:Int){
 		val pos = centerpos - radius
 		val size = 2*radius
+		
+		def nodeinfo = NodeInfo(pos,size)
 		
 		val bodies = new Array3D[T](Vec3i(size))
 		bodies fill fillfunc

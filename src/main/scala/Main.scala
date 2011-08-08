@@ -135,7 +135,6 @@ object Main {
 
 	def terminate{
 		Display.destroy()
-		World.octree.cleanFutures
 		WorldSerializer.save(World.octree)
 		sys.exit(0)
 	}
@@ -185,23 +184,6 @@ object Main {
 		
 		if(Mouse.isGrabbed) 
 			Controller.rotate(2f*delta_angle)
-		
-		/*
-		val dingensdelta = Vec3(0)
-		
-		if(isKeyDown(KEY_I))
-			dingensdelta.y += 1
-		if(isKeyDown(KEY_K))
-			dingensdelta.y -= 1
-		if(isKeyDown(KEY_J))
-			dingensdelta.x -= 1
-		if(isKeyDown(KEY_L))
-			dingensdelta.x += 1
-		if(isKeyDown(KEY_HOME))
-			dingensdelta.z += 1
-		if(isKeyDown(KEY_END))
-			dingensdelta.z -= 1
-		*/
 		
 		if(isKeyDown(KEY_F)){
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
@@ -287,7 +269,6 @@ object Main {
 		
 		if(useshaders)
 			ARBShaderObjects.glUseProgramObjectARB(0)
-		
 	}
 	
 	def draw{

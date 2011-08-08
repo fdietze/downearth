@@ -25,21 +25,7 @@ object WorldGenerator {
 	def genWorld:WorldOctree = {
 		val octree = new WorldOctree(cubesize,Vec3i(-cubesize/2))
 		octree.root = DeadInnderNode
-		try{
-			val start = Vec3i(-cubesize/2)
-			val size = minMeshNodeSize
-			for(vi <- Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize)){
-				val pos = start+vi*minMeshNodeSize
-
-				println( pos,size)
-				octree.insert(pos, size, generateFutureNodeAt(pos,size) )
-			}
-		}
-		catch{
-			case e =>
-				println(octree)
-				throw e
-		}
+		octree.jumpTo(Vec3i(0))
 		octree.meshGenerated = true
 		
 		octree
@@ -62,20 +48,16 @@ object WorldGenerator {
 		
 		val octree = new WorldOctree( nodesize, nodepos.clone )
 		
-		val interval = time("prediction: "){
-			prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
-		}
+		val interval = prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
 		
 		if(interval.isPositive){
-			println("yay full")
 			octree.root = new Leaf(FullHexaeder)
 		}
+		
 		else if(interval.isNegative){
-			println("yay Empty")
 			octree.root = new Leaf(EmptyHexaeder)
 		}
 		
-		/* if(false){} */
 		else{
 			val noiseData = new Array3D[Float](Vec3i(nodesize+3))
 			//braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
@@ -122,7 +104,6 @@ object WorldGenerator {
 			assert(octree.rootNodePos == nodepos)
 			assert(octree.rootNodeSize == nodesize)
 		}
-		
 		octree
 	}
 
@@ -179,9 +160,6 @@ object WorldGenerator {
 		
 		noiseSum(v/16)
 	}
-	
 	def surface(v:Vec3) = noiseSum(v) + (cubesize - 2 * v.z)/(cubesize)
-	
-
 }
 

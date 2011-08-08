@@ -11,6 +11,7 @@ import collection.Map
 case class WorldNodeInfo(pos:Vec3i,size:Int,value:Hexaeder)
 
 case class NodeInfo(pos:Vec3i,size:Int){
+	def upperPos = pos+size
 	// wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die Berechnung ihres index
 	def indexVec(p:Vec3i,nodepos:Vec3i = pos,nodesize:Int = size) = ((p-nodepos)*2)/nodesize
 	// macht aus dem Vec3i index einen flachen index, der auf ein array angewendet werden kann
@@ -45,6 +46,15 @@ case class NodeInfo(pos:Vec3i,size:Int){
 	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
+	
+	// currently nodeInfo does not support renctangular spaces
+	// so the return has to be a Seq
+	def intersection(that:NodeInfo):Iterable[Vec3i] = {
+		val pos1 = max(pos,that.pos)
+		val pos2 = min(upperPos,that.upperPos)
+		pos1 until pos2
+	}
+	
 }
 
 trait Octant extends Serializable{
@@ -636,84 +646,5 @@ object DeadInnderNode extends Octant{
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
 		Nil
 	}
-}
-
-class FutureNode( val node:scala.actors.Future[Octant] ) extends Octant{
-	def apply(info:NodeInfo, p:Vec3i) = if(node.isSet) node().apply(info,p) else Config.ungeneratedDefault
-	
-	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
-		if(node.isSet)
-			node.apply.updated(info,p,nh)
-		else{
-			println("update in ungenerated space")
-			this
-		}
-	}
-	
-	def isSet(info:NodeInfo,pos:NodeInfo) = true
-	// creates polygons in subtree and adds them to meshBuilder
-	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int = {
-		throw new NoSuchMethodException("Future Nodes should not generate polygons")
-	}
-	
-	//similar to updated, but this function also generates patches to update the mesh
-	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Patch[TextureMeshData]) = {
-		if(node.isSet)
-			node.apply.patchWorld(info,p,nh,vertpos,vertcount)
-		else{
-			println("future nodes can't be patched")
-			(this,null)
-		}
-	}
-	//similar to patch, but it does not change anything in the Tree
-	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Patch[TextureMeshData] = {
-		if(node.isSet)
-			node.apply.repolyWorld(info,p,vertpos,vertcount)
-		else
-			null
-	}
-	// adds InnerNodeWithVertexArray into the tree, and creates Meshes inside of them
-	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
-		if(node.isSet)
-			node.apply.genMesh(info,dstnodesize,worldaccess)
-		else
-			this
-	}
-	
-	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) : Octant = {
-		if(info == insertinfo)
-			insertnode
-		else if(node.isSet)
-			node.apply.insertNode(info,insertinfo,insertnode)
-		else
-			throw new Exception("insertNode inside of uncompleted Future Node is not implemented yet")
-	}
-	
-	def draw{
-		if(node.isSet)
-			node.apply.draw
-	}
-	
-	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
-		if(node.isSet)
-			node.apply.getPolygonsOverVertexArray( info,pos )
-		else
-			Nil
-	}
-	
-	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
-		throw new NoSuchMethodException("dont call this over Vertex Array")
-	}
-	
-	def cleanFutures(info:NodeInfo):Octant = if( node.isSet ) node() else DeadInnderNode
-	
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
-		if(node.isSet)
-			node.apply.patchSurface(info,dstinfo,dir,vertpos,vertcount)
-		else
-			Nil
-	}
-	
-	override def toString = "[Future]"
 }
 

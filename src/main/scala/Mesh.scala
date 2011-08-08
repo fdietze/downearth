@@ -151,6 +151,28 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 	}
 }
 
+object TextureMesh{
+	def apply(data:TextureMeshData) = new TextureMesh(data)
+	def apply(meshes:Array[TextureMesh]) = {
+		val size = meshes.map(_.size).sum
+		val (vertices,normals,texcoords) = interleave(
+			DataSeq[Vec3, RFloat],
+			DataSeq[Vec3, RFloat],
+			DataSeq[Vec2, RFloat]
+		)(size)
+		
+		var currentpos = 0
+		var currentsize = 0
+		
+		for(mesh <- meshes){
+			currentsize = mesh.size
+			vertices.bindingBufferSubData(currentpos,currentsize) put 
+				mesh.vertices.bindingBufferSubData(0,currentsize)
+			currentpos += currentsize
+		}
+	}
+}
+
 class TextureMesh(data:TextureMeshData) extends Mesh with Serializable {
 	import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
 	
@@ -180,8 +202,6 @@ class TextureMesh(data:TextureMeshData) extends Mesh with Serializable {
 	
 	@transient private var msize = vertexArray.size
 	def size = msize
-	println("texture mesh size: "+vertexArray.size)
-	
 	
 	for(i <- 0 until vertexArray.size){
 		vertices(i) = vertexArray(i)
