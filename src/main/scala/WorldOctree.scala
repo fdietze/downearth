@@ -52,6 +52,8 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	}
 	
 	def draw{
+		makeUpdates
+	
 		import org.lwjgl.opengl.GL11._
 		glColor3f(1,1,1)
 		root.draw
@@ -91,8 +93,17 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
+	var generatingNodes:List[(NodeInfo,FutureNode)] = Nil
+	
 	def generateNode(nodepos:Vec3i,nodesize:Int){
-		insert(nodepos,nodesize, WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize))
+		generatingNodes ::= ( NodeInfo(nodepos, nodesize), WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize) )
+	}
+	
+	def makeUpdates = {
+		val (ready,notReady) = generatingNodes.partition( _._2.node.isSet )
+		for( ( NodeInfo(nodepos,nodesize), futureNode) <- ready )
+			insert( nodepos,nodesize, futureNode.node.apply )
+		generatingNodes = notReady
 	}
 
 	def move(dir:Vec3i){
@@ -172,12 +183,19 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	def isSet(nodepos:Vec3i,nodesize:Int) = {
+	def isSet(nodepos:Vec3i,nodesize:Int):Boolean = {
 		val info = NodeInfo(nodepos,nodesize)
+		
+		var isGenerating = false
+		for( (nodeinfo,node) <- generatingNodes ){
+			if(nodeinfo indexInRange info)
+				return true
+		}
+		
 		if(rootNodeInfo indexInRange info)
-			root.isSet(rootNodeInfo,info)
+			return root.isSet(rootNodeInfo,info)
 		else
-			false
+			return false
 	}
 	
 	def getPolygons(pos:Vec3i) = {

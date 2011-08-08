@@ -638,7 +638,7 @@ object DeadInnderNode extends Octant{
 	}
 }
 
-class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
+class FutureNode( val node:scala.actors.Future[Octant] ) extends Octant{
 	def apply(info:NodeInfo, p:Vec3i) = if(node.isSet) node().apply(info,p) else Config.ungeneratedDefault
 	
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
