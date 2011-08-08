@@ -36,14 +36,15 @@ object WorldGenerator {
 		val data = new Array3D[Octant](size)
 		for(vi <- Vec3i(0) until size){
 			val npos = nodepos+vi*nodesize
-			val insertion = genWorldAt(npos,nodesize)
+			val insertion = genWorldAt(NodeInfo(npos,nodesize))
 			insertion.genMesh
 			data(vi) = insertion.root
 		}
 		data
 	}
 
-	def genWorldAt(nodepos:Vec3i,nodesize:Int):WorldOctree = {
+	def genWorldAt(nodeinfo:NodeInfo):WorldOctree = {
+		val NodeInfo(nodepos, nodesize) = nodeinfo
 		import MarchingHexaeder._
 		
 		val octree = new WorldOctree( nodesize, nodepos.clone )

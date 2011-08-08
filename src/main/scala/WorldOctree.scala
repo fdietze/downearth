@@ -20,7 +20,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	var root:Octant = new Leaf(EmptyHexaeder) // DeadInnderNode
 
 	var meshGenerated = false
-
+	
 	override def indexInRange(pos:Vec3i) = Util.indexInRange(pos,rootNodePos,rootNodeSize)
 	
 	def rootNodeInfo = NodeInfo(rootNodePos,rootNodeSize)
@@ -91,7 +91,8 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	var generatingNodes:List[(NodeInfo,Future[Octant])] = Nil
 	
 	def generateNode(nodepos:Vec3i,nodesize:Int){
-		generatingNodes ::= ( NodeInfo(nodepos, nodesize), WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize) )
+		// generatingNodes ::= ( NodeInfo(nodepos, nodesize), WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize) ) 
+		jobqueue enqueue NodeInfo(nodepos,nodesize)
 	}
 	
 	def makeUpdates = {

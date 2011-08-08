@@ -8,28 +8,52 @@ import scala.actors.{Actor,Future}
 
 import simplex3d.math.Vec3i
 
-case class GenerateNodeAt(nodepos:Vec3i,nodesize:Int)
-case class GenerateSliceAt(slicepos:Vec3i,minMeshNodeSize:Int,slicesize:Vec3i)
+import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 
 object WorldNodeGenerator {
 	
 	Master.start
 	
-	def generateFutureNodeAt(nodepos:Vec3i,nodesize:Int):Future[Octant] = {
-		val answer = Master !! GenerateNodeAt(nodepos,nodesize)
+	def generateFutureNodeAt(nodeinfo : NodeInfo):Future[Octant] = {
+		val answer = Master !! nodeinfo
 		answer.asInstanceOf[Future[Octant]]
 	}
 	
 	object Master extends Actor {
+		val jobqueue = new SynchronizedQueue[NodeInfo]
+		val done  = new SynchronizedQueue[(NodeInfo,Octant)]
+		val activeJobs = new HashSet[NodeInfo] with SynchronizedSet[NodeInfo]
+		
+		val workers = (1 to 6) map (new Worker)
+		
+		val activeWorkers = HashSet[Worker]()
+		val idlingWorkers = Queue(workers:_*)
+		
 		def act = {
 			loop{
 				react{
-					case GenerateSliceAt(slicepos,minMeshNodeSize,slicesize) =>
-						reply(WorldGenerator.genSlice(slicepos, minMeshNodeSize, slicesize))
-					case GenerateNodeAt(nodepos,nodesize) =>
-						val node = WorldGenerator.genWorldAt(nodepos,nodesize)
+					case nodeinfo:NodeInfo =>
+						// TODO worker beauftragen falls verfügbar, sonst in die jobqueue
+						if(idlingWorkers.isEmpty)
+						jobqueue enqueue nodeinfo
+					case tuple:Tuple2[NodeInfo,Octant] =>
+						// TODO neuen Job vergeben falls verfügbar, sonst worker zu idlingWorkers hinzufügen
+						done += tuple
+						val job = jobqueue.dequeue
+						activeJobs += job
+				}
+			}
+		}
+	}
+	
+	class Worker extends Actor {
+		def act = {
+			loop{
+				react{
+					case nodeinfo:NodeInfo =>
+						val node = WorldGenerator genWorldAt nodeinfo
 						node.genMesh
-						reply(node.root)
+						Master ! Tuple2(nodeinfo,node)
 				}
 			}
 		}

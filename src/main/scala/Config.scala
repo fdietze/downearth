@@ -9,7 +9,7 @@ object Config{
 	val minMeshNodeSize = 16
 	val worldWindowSize = 64
 	val useshaders = false
-	val ungeneratedDefault = FullHexaeder
+	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
 	val FPS_LIMIT = 6000
 	val maxMeshVertexCount = 12345
