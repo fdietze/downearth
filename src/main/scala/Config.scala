@@ -8,7 +8,7 @@ import noise.intervals._
 object Config{
 	val minMeshNodeSize = 16
 	val worldWindowSize = 64
-	val useshaders = true
+	val useshaders = false
 	val ungeneratedDefault = FullHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
 	val FPS_LIMIT = 6000

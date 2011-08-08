@@ -469,23 +469,24 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		throw new NoSuchMethodException("FutureNodes shouldn exist under Vertex Array")
 	}
 	
-	// TODO vertexArray updated
-	/*
 	override def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
-		
 		if(dstinfo indexInRange info){ // info <= dstinfo
 			val indices = info.direction(dir)
-			for(i <- indices) yield {
-				data(i).patchSurface(info(i),dstinfo, dir, vertpos, vertcount)
+			var patches:List[Patch[TextureMeshData]] = Nil
+			for(i <- indices) {
+				val childpatches = data(i).patchSurface(info(i),dstinfo, dir, vvertcount.view(0,i).sum, vvertcount(i))
+				val sizedifference = childpatches.map(_.sizedifference).sum
+				vvertcount(i) += sizedifference
+				patches :::= childpatches
 			}
+			patches
 		}
 		else{
 			val (index,nodeinfo) = info(dstinfo.pos)
 			assert(nodeinfo indexInRange dstinfo)
-			data(index).patchSurface(nodeinfo,dstinfo,dir,vertpos,vertcount)
+			data(index).patchSurface(nodeinfo,dstinfo,dir,vvertcount.view(0,index).sum,vvertcount(index))
 		}
 	}
-	*/
 }
 
 //decorator pattern
@@ -570,6 +571,13 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 	}
 	
 	def cleanFutures(info:NodeInfo):Octant = this
+	
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {		
+		var patches:List[Patch[TextureMeshData]] = node.patchSurface(info, dstinfo, dir, 0, mesh.size)
+		mesh patch patches.reverse
+		
+		Nil
+	}
 }
 
 object DeadInnderNode extends Octant{
@@ -624,6 +632,10 @@ object DeadInnderNode extends Octant{
 	}
 	
 	def cleanFutures(info:NodeInfo):Octant = this
+	
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
+		Nil
+	}
 }
 
 class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
@@ -694,6 +706,13 @@ class FutureNode( node:scala.actors.Future[Octant] ) extends Octant{
 	}
 	
 	def cleanFutures(info:NodeInfo):Octant = if( node.isSet ) node() else DeadInnderNode
+	
+	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
+		if(node.isSet)
+			node.apply.patchSurface(info,dstinfo,dir,vertpos,vertcount)
+		else
+			Nil
+	}
 	
 	override def toString = "[Future]"
 }
