@@ -94,7 +94,6 @@ object Controller{
 		val mousedest = World.raytracer(current.position,current.direction,true,100)
 		mousedest match {
 			case Some(pos) => 
-				println("build at "+pos)
 				World(pos) = FullHexaeder
 			case _ =>
 		}

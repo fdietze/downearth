@@ -12,6 +12,10 @@ def volumedot(a:Volume, b:Volume) = a.x*b.x + a.y*b.y + a.z*b.z
 def intervalsqrt(i:Interval) = Interval(sqrt(i.a), sqrt(i.b))
 //TODO: scalar <op> Interval/Volume
 
+object Interval {
+	def apply(a:Double):Interval = Interval(a,a)
+}
+
 case class Interval (a:Double = 0.0, b:Double = 0.0) {
 	def low = min(a,b)
 	def high = max(a,b)
@@ -19,6 +23,8 @@ case class Interval (a:Double = 0.0, b:Double = 0.0) {
 	def isPositive = low >= 0 
 	def isNegative = high <= 0
 	def apply(value:Double) = low <= value && value <= high
+	
+	def unary_- = Interval(-high, -low)
 	
 	def + (that:Interval) = Interval(this.low + that.low,  this.high + that.high)
 	def - (that:Interval) = Interval(this.low - that.high, this.high - that.low )
@@ -42,6 +48,8 @@ case class Interval (a:Double = 0.0, b:Double = 0.0) {
 	def * (that:Double) = Interval(this.low * that, this.high * that)
 	def / (that:Double) = Interval(this.low / that, this.high / that)
 	
+	//TODO: scalar <op> Interval
+	
 	override def toString = "Interval("+low+","+high+")"
 }
 
@@ -51,6 +59,8 @@ case class Volume(x:Interval = Interval(), y:Interval = Interval(), z:Interval =
 
 	def apply(v:Vec3) = x(v.x) && y(v.y) && z(v.z)
 	
+	def unary_- = Volume(-x, -y, -z)
+
 	def + (that:Volume) = Volume(this.x + that.x, this.y + that.y, this.z + that.z)
 	def - (that:Volume) = Volume(this.x - that.x, this.y - that.y, this.z - that.z)
 	def * (that:Volume) = Volume(this.x * that.x, this.y * that.y, this.z * that.z)
@@ -70,6 +80,7 @@ object Volume {
 			Interval(v1.z, v2.z)
 		)
 	}
+	def apply(v:Vec3):Volume = Volume(v,v)
 }
 
 }

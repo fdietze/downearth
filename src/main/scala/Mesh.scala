@@ -83,7 +83,7 @@ object MutableTextureMesh{
 		new MutableTextureMesh(vertices,normals,texcoords)
 	}
 	
-	def apply(meshes:Array[TextureMesh]) = {
+	def apply(meshes:Array[MutableTextureMesh]) = {
 		val size = meshes.map(_.size).sum
 		val (vertices,normals,texcoords) = interleave(
 			DataSeq[Vec3, RFloat],
