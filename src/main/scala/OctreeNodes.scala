@@ -534,7 +534,7 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 		assert(mesh == null)
 		val meshBuilder = new TextureMeshBuilder
 		val result = node.genPolygons(info, meshBuilder, worldaccess)
-		mesh = new MutableTextureMesh(meshBuilder.result)
+		mesh = MutableTextureMesh(meshBuilder.result)
 		
 		//genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in anderen Threads als dem render Thread aufgerufen wird
 		//um die erzeugung des vbo kümmert sich das mesh selbst beim rendern

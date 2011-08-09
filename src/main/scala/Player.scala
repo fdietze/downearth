@@ -87,6 +87,7 @@ object Controller{
 	def rotateObjects{
 		id = (id+1)%objects.size
 		current = objects(id)
+		World.octree.jumpTo(current.position)
 	}
 	
 	def build{

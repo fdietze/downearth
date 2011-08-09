@@ -122,7 +122,7 @@ object World{
 		val selection = raytracer(Controller.current.position,Controller.current.direction,false,100)
 		selection match {
 		case Some(v) =>
-			Draw.addText("Position: (" + v.x.toInt + ", " + v.y.toInt + ", " + v.z.toInt + ")")
+			Draw.addText("Position: " + Vec3i(v) )
 			// malt die Markierung der angewählten Zelle
 			glDisable(GL_LIGHTING)
 			glPushMatrix

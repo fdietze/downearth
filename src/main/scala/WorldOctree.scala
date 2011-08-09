@@ -83,16 +83,15 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		worldWindowPos = newcenter-worldWindowSize/2
 		
 		for(vi <- (Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize)).toSeq.sortBy(v => length(v-worldWindowSize/minMeshNodeSize/2)) ){
-			val nodepos = worldWindowPos + vi*minMeshNodeSize
-			generateNode(nodepos,minMeshNodeSize)
+			val nodeinfo = NodeInfo(worldWindowPos + vi*minMeshNodeSize,minMeshNodeSize)
+			generateNode(nodeinfo)
 		}
 	}
 	
-	// var generatingNodes:List[(NodeInfo,Future[Octant])] = Nil
-	
-	def generateNode(nodepos:Vec3i,nodesize:Int){
-		// generatingNodes ::= ( NodeInfo(nodepos, nodesize), WorldNodeGenerator.generateFutureNodeAt(nodepos,nodesize) ) 
-		WorldNodeGenerator.Master ! NodeInfo(nodepos,nodesize)
+	def generateNode(info:NodeInfo){
+		if(!isSet(info)) {
+			WorldNodeGenerator.Master ! info
+		}
 	}
 	
 	def makeUpdates = {
@@ -111,10 +110,8 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		val slicesize = (Vec3i(1) - abs(dir)) * (worldWindowSize / minMeshNodeSize) + abs(dir)
 		
 		for(vi <- Vec3i(0) until slicesize){
-			val spos = slicepos + vi*minMeshNodeSize
-			if(!isSet(spos,minMeshNodeSize)){
-				generateNode(spos,minMeshNodeSize)
-			}
+			val nodeinfo = NodeInfo(slicepos + vi*minMeshNodeSize,minMeshNodeSize)
+			generateNode(nodeinfo)
 		}
 	}
 	
@@ -192,9 +189,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	def isSet(nodepos:Vec3i,nodesize:Int):Boolean = {
-		val info = NodeInfo(nodepos,nodesize)
-		
+	def isSet(info:NodeInfo):Boolean = {
 		for( job <- WorldNodeGenerator.Master.activeJobs ){
 			if(job indexInRange info)
 				return true
