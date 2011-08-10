@@ -78,63 +78,59 @@ float noise3(vec3 v) {return noise3(v.x, v.y, v.z);}
 
 /////////////////////////////////////////////////////
 
-float diff2(float a, float b) {return a-b;}
-vec3 createvec3(float x, float y, float z) {return vec3(x,y,z);}
-float scalesrcz(float scale) {return world.z * scale;}
-vec3 scalesrcv(float scale) {return world.xyz * scale;}
-float min2(float a, float b) {return min(a,b);}
-float multiplyconstantexp(float a, float value) {return a*value;}
-float scalesrcx(float scale) {return world.x * scale;}
-float scalesrcy(float scale) {return world.y * scale;}
-vec4 matrgb(float r, float g, float b) {return vec4(r, g, b, 0.0);}
-vec4 matthreshold(vec4 m1, float t, vec4 m2) {return t >= 0 ? m1 : m2;}
-float perlinnoise3(vec3 v, float x, float y, float z, float add, float sub, float size, float scale, float offset) {return (noise3((v + vec3(x,y,z))*size)+offset)*scale/size + add - sub;}
-float addconstantexp(float a, float value) {return a+value;}
-float sphere(vec3 v, float radius) {return radius-sqrt(dot(v,v));}
+float sphere_uid4e428756(vec3 v, float radius) {return radius - sqrt(dot(v,v));}
+float scalesrcy_uid4e428756(float scale) {return world.y * scale;}
+float negate_uid4e428756(float a) {return -a;}
+vec4 matrgb_uid4e428756(float r, float g, float b) {return vec4(r, g, b, 0.0);}
+float addconstantexp_uid4e428756(float a, float value) {return a+value;}
+float scalesrcx_uid4e428756(float scale) {return world.x * scale;}
+vec3 createvec3_uid4e428756(float x, float y, float z) {return vec3(x,y,z);}
+float min2_uid4e428756(float a, float b) {return min(a,b);}
+vec4 matthreshold_uid4e428756(vec4 m1, float t, vec4 m2) {return t >= 0 ? m1 : m2;}
+vec4 matmix_uid4e428756(vec4 m1, float t, vec4 m2, float shift) {return t >= shift ? m1 : m2;}
+float perlinnoise3_uid4e428756(vec3 v, float x, float y, float z, float add, float sub, float size, float scale, float offset) {return (noise3((v + vec3(x,y,z))*size)+offset)*scale/size + add - sub;}
+float scalesrcz_uid4e428756(float scale) {return world.z * scale;}
+vec3 scalevec3_uid4e428756(vec3 v, float x, float y, float z) {return v*vec3(x,y,z);}
+vec3 scalesrcv_uid4e428756(float scale) {return world.xyz * scale;}
 
 
 
 void main(){
 
-float vn1_scalesrcz = scalesrcz(0.10881882041201557);
-float vn2_addconstantexp = addconstantexp(vn1_scalesrcz, 54.19169999120173);
-float vn42_addconstantexp = addconstantexp(vn2_addconstantexp, 0.16957554093095903);
-float vn1_scalesrcy = scalesrcy(0.10881882041201557);
-float vn1_scalesrcx = scalesrcx(0.10881882041201557);
-float vn17_multiplyconstantexp = multiplyconstantexp(vn42_addconstantexp, 22.315898661606493);
-float vn15_multiplyconstantexp = multiplyconstantexp(vn1_scalesrcy, 0.7169776240079135);
-float vn14_multiplyconstantexp = multiplyconstantexp(vn1_scalesrcx, 0.7169776240079135);
-vec3 vn16_createvec3 = createvec3(vn1_scalesrcx, vn1_scalesrcy, vn42_addconstantexp);
-vec3 vn6_createvec3 = createvec3(vn14_multiplyconstantexp, vn15_multiplyconstantexp, vn17_multiplyconstantexp);
-float vn21_sphere = sphere(vn16_createvec3, 54.19169999120173);
-vec3 vn39_scalesrcv = scalesrcv(1.0);
-float vn13_sphere = sphere(vn6_createvec3, 84.44850628946526);
-vec3 vn1_scalesrcv = scalesrcv(0.10881882041201557);
-float vn3_addconstantexp = addconstantexp(vn21_sphere, 31.124958317193155);
-float vn34_sphere = sphere(vn16_createvec3, 38.85423630064148);
-float vn38_perlinnoise3 = perlinnoise3(vn39_scalesrcv, 0.0, 0.0, 0.0, 0.0, 0.0, 0.18946457081379972, 1.3947436663504058, 0.0);
-float vn43_perlinnoise3 = perlinnoise3(vn1_scalesrcv, 0.0, 0.0, 0.0, vn13_sphere, 0.0, 0.5743491774985172, 183.54627174602587, -0.43999999999999995);
-float vn4_diff2 = diff2(0.0, vn3_addconstantexp);
-vec4 vn36_matrgb = matrgb(1.0, 0.34, 0.0);
-float vn37_perlinnoise3 = perlinnoise3(vn39_scalesrcv, vn38_perlinnoise3, vn38_perlinnoise3, vn38_perlinnoise3, vn34_sphere, 0.0, 0.4600938253124378, 24.933266549136007, 0.0);
-vec4 vn30_matrgb = matrgb(1.0, 0.56, 0.0);
-float vn10_min2 = min2(vn4_diff2, vn43_perlinnoise3);
-float vn5_perlinnoise3 = perlinnoise3(vn1_scalesrcv, 0.0, 0.0, 0.0, vn21_sphere, 0.0, 0.05593906693299827, 0.5743491774985175, 0.0);
-vec4 vn26_matrgb = matrgb(0.53, 0.35, 0.2);
-vec4 vn35_matthreshold = matthreshold(vn30_matrgb, vn37_perlinnoise3, vn36_matrgb);
-vec4 vn23_matrgb = matrgb(0.48, 0.57, 0.03);
-float vn24_addconstantexp = addconstantexp(vn10_min2, 1.9453098948245722);
-vec4 vn7_matrgb = matrgb(0.59, 0.51, 0.42);
-vec4 vn18_matrgb = matrgb(0.0, 0.13, 0.7);
-float vn40_addconstantexp = addconstantexp(vn5_perlinnoise3, 0.006801176275750969);
-vec4 vn28_matthreshold = matthreshold(vn35_matthreshold, vn34_sphere, vn26_matrgb);
-vec4 vn22_matthreshold = matthreshold(vn7_matrgb, vn24_addconstantexp, vn23_matrgb);
-float vn19_addconstantexp = addconstantexp(vn21_sphere, 0.2642545101403451);
-vec4 vn25_matthreshold = matthreshold(vn28_matthreshold, vn40_addconstantexp, vn18_matrgb);
-vec4 vn9_matthreshold = matthreshold(vn25_matthreshold, vn19_addconstantexp, vn22_matthreshold);
+float vn1_scalesrcz_uid4e428756 = scalesrcz_uid4e428756(0.10881882041201557);
+float vn9_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn1_scalesrcz_uid4e428756, 54.19169999120173);
+float vn7_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn9_addconstantexp_uid4e428756, 0.16957554093095903);
+float vn1_scalesrcy_uid4e428756 = scalesrcy_uid4e428756(0.10881882041201557);
+float vn1_scalesrcx_uid4e428756 = scalesrcx_uid4e428756(0.10881882041201557);
+vec3 vn3_createvec3_uid4e428756 = createvec3_uid4e428756(vn1_scalesrcx_uid4e428756, vn1_scalesrcy_uid4e428756, vn7_addconstantexp_uid4e428756);
+vec3 vn6_scalevec3_uid4e428756 = scalevec3_uid4e428756(vn3_createvec3_uid4e428756, 0.7169776240079135, 0.7169776240079135, 22.315898661606493);
+float vn12_sphere_uid4e428756 = sphere_uid4e428756(vn3_createvec3_uid4e428756, 54.19169999120173);
+vec3 vn18_scalesrcv_uid4e428756 = scalesrcv_uid4e428756(1.0);
+float vn14_sphere_uid4e428756 = sphere_uid4e428756(vn6_scalevec3_uid4e428756, 131.59856981197643);
+vec3 vn1_scalesrcv_uid4e428756 = scalesrcv_uid4e428756(0.10881882041201557);
+float vn17_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn12_sphere_uid4e428756, 30.124958317193155);
+float vn25_sphere_uid4e428756 = sphere_uid4e428756(vn3_createvec3_uid4e428756, 38.85423630064148);
+float vn27_perlinnoise3_uid4e428756 = perlinnoise3_uid4e428756(vn18_scalesrcv_uid4e428756, 0.0, 0.0, 0.0, 0.0, 0.0, 0.18946457081379972, 1.3947436663504058, 0.0);
+float vn26_perlinnoise3_uid4e428756 = perlinnoise3_uid4e428756(vn1_scalesrcv_uid4e428756, 0.0, 0.0, 0.0, vn14_sphere_uid4e428756, 0.0, 0.5743491774985172, 205.0738886629432, -0.43999999999999995);
+float vn13_negate_uid4e428756 = negate_uid4e428756(vn17_addconstantexp_uid4e428756);
+vec4 vn10_matrgb_uid4e428756 = matrgb_uid4e428756(1.0, 0.34, 0.0);
+float vn19_perlinnoise3_uid4e428756 = perlinnoise3_uid4e428756(vn18_scalesrcv_uid4e428756, vn27_perlinnoise3_uid4e428756, vn27_perlinnoise3_uid4e428756, vn27_perlinnoise3_uid4e428756, vn25_sphere_uid4e428756, 0.0, 0.4600938253124378, 24.933266549136007, 0.0);
+vec4 vn8_matrgb_uid4e428756 = matrgb_uid4e428756(1.0, 0.56, 0.0);
+float vn11_min2_uid4e428756 = min2_uid4e428756(vn13_negate_uid4e428756, vn26_perlinnoise3_uid4e428756);
+vec4 vn4_matrgb_uid4e428756 = matrgb_uid4e428756(0.53, 0.35, 0.2);
+vec4 vn24_matthreshold_uid4e428756 = matthreshold_uid4e428756(vn8_matrgb_uid4e428756, vn19_perlinnoise3_uid4e428756, vn10_matrgb_uid4e428756);
+vec4 vn23_matrgb_uid4e428756 = matrgb_uid4e428756(0.48, 0.57, 0.03);
+float vn30_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn11_min2_uid4e428756, 1.9453098948245722);
+vec4 vn5_matrgb_uid4e428756 = matrgb_uid4e428756(0.59, 0.51, 0.42);
+vec4 vn15_matrgb_uid4e428756 = matrgb_uid4e428756(0.0, 0.13, 0.7);
+float vn28_perlinnoise3_uid4e428756 = perlinnoise3_uid4e428756(vn1_scalesrcv_uid4e428756, 0.0, 0.0, 0.0, vn12_sphere_uid4e428756, 0.0, 0.05593906693299827, 0.5743491774985175, 0.0);
+vec4 vn20_matthreshold_uid4e428756 = matthreshold_uid4e428756(vn24_matthreshold_uid4e428756, vn25_sphere_uid4e428756, vn4_matrgb_uid4e428756);
+vec4 vn16_matthreshold_uid4e428756 = matthreshold_uid4e428756(vn5_matrgb_uid4e428756, vn30_addconstantexp_uid4e428756, vn23_matrgb_uid4e428756);
+vec4 vn21_matmix_uid4e428756 = matmix_uid4e428756(vn20_matthreshold_uid4e428756, vn28_perlinnoise3_uid4e428756, vn15_matrgb_uid4e428756, -0.11737425948457414);
+vec4 vn22_matmix_uid4e428756 = matmix_uid4e428756(vn21_matmix_uid4e428756, vn12_sphere_uid4e428756, vn16_matthreshold_uid4e428756, -0.11737425948457414);
 
 
-	vec4 materialcolor = vn9_matthreshold;
+	vec4 materialcolor = vn22_matmix_uid4e428756;
 	
 	vec3 L = normalize(gl_LightSource[0].position.xyz - vertex);   
 	vec4 Idiff = clamp(gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0), 0.0, 1.0);  

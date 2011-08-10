@@ -3,13 +3,13 @@ package xöpäx
 import simplex3d.math.float.Vec3
 import simplex3d.math.doublex.Vec3d
 import noise.Noise.{noise3, noise3_prediction}
-import noise.intervals._
+import noise.interval.{Interval, Volume}
 
 object Config{
 
 	val minMeshNodeSize = 16
 	val worldWindowSize = 128
-	val useshaders = false
+	val useshaders = true
 	
 	val ungeneratedDefault = FullHexaeder // UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)

@@ -12,41 +12,37 @@ case class Material(color:Int = 0x000000)
 object density {
 
 def apply(world:Vec3) = {
-def max2(a:Double, b:Double):Double = {max(a,b)}
-def perlinnoise3(v:Vec3, x:Double, y:Double, z:Double, add:Double, sub:Double, size:Double, scale:Double, offset:Double):Double = {(noise3((v + Vec3(x,y,z))*size)+offset)*scale/size + add - sub}
-def scalesrcy(scale:Double):Double = {world.y * scale}
-def diff2(a:Double, b:Double):Double = {a-b}
-def addconstantexp(a:Double, value:Double):Double = {a+value}
-def createvec3(x:Double, y:Double, z:Double):Vec3 = {Vec3(x,y,z)}
-def sphere(v:Vec3, radius:Double):Double = {radius-sqrt(dot(v,v))}
-def multiplyconstantexp(a:Double, value:Double):Double = {a*value}
-def scalesrcx(scale:Double):Double = {world.x * scale}
-def min2(a:Double, b:Double):Double = {min(a,b)}
-def scalesrcz(scale:Double):Double = {world.z * scale}
-def scalesrcv(scale:Double):Vec3 = {world   * scale}
+def min2_uid4e428756(a:Double, b:Double):Double = {min(a,b)}
+def sphere_uid4e428756(v:Vec3, radius:Double):Double = {radius - sqrt(dot(v,v))}
+def negate_uid4e428756(a:Double):Double = {-a}
+def max3_uid4e428756(a:Double, b:Double, c:Double):Double = {max(max(a,b),c)}
+def scalevec3_uid4e428756(v:Vec3, x:Double, y:Double, z:Double):Vec3 = {v*Vec3(x,y,z)}
+def perlinnoise3_uid4e428756(v:Vec3, x:Double, y:Double, z:Double, add:Double, sub:Double, size:Double, scale:Double, offset:Double):Double = {(noise3((v + Vec3(x,y,z))*size)+offset)*scale/size + add - sub}
+def addconstantexp_uid4e428756(a:Double, value:Double):Double = {a+value}
+def scalesrcx_uid4e428756(scale:Double):Double = {world.x * scale}
+def scalesrcy_uid4e428756(scale:Double):Double = {world.y * scale}
+def createvec3_uid4e428756(x:Double, y:Double, z:Double):Vec3 = {Vec3(x,y,z)}
+def scalesrcv_uid4e428756(scale:Double):Vec3 = {world   * scale}
+def scalesrcz_uid4e428756(scale:Double):Double = {world.z * scale}
 
-val vn1_scalesrcz = scalesrcz(0.10881882041201557)
-val vn2_addconstantexp = addconstantexp(vn1_scalesrcz, 54.19169999120173)
-val vn42_addconstantexp = addconstantexp(vn2_addconstantexp, 0.16957554093095903)
-val vn1_scalesrcy = scalesrcy(0.10881882041201557)
-val vn1_scalesrcx = scalesrcx(0.10881882041201557)
-val vn17_multiplyconstantexp = multiplyconstantexp(vn42_addconstantexp, 22.315898661606493)
-val vn15_multiplyconstantexp = multiplyconstantexp(vn1_scalesrcy, 0.7169776240079135)
-val vn14_multiplyconstantexp = multiplyconstantexp(vn1_scalesrcx, 0.7169776240079135)
-val vn16_createvec3 = createvec3(vn1_scalesrcx, vn1_scalesrcy, vn42_addconstantexp)
-val vn6_createvec3 = createvec3(vn14_multiplyconstantexp, vn15_multiplyconstantexp, vn17_multiplyconstantexp)
-val vn21_sphere = sphere(vn16_createvec3, 54.19169999120173)
-val vn13_sphere = sphere(vn6_createvec3, 84.44850628946526)
-val vn1_scalesrcv = scalesrcv(0.10881882041201557)
-val vn3_addconstantexp = addconstantexp(vn21_sphere, 31.124958317193155)
-val vn43_perlinnoise3 = perlinnoise3(vn1_scalesrcv, 0.0, 0.0, 0.0, vn13_sphere, 0.0, 0.5743491774985172, 183.54627174602587, -0.43999999999999995)
-val vn4_diff2 = diff2(0.0, vn3_addconstantexp)
-val vn5_perlinnoise3 = perlinnoise3(vn1_scalesrcv, 0.0, 0.0, 0.0, vn21_sphere, 0.0, 0.05593906693299827, 0.5743491774985175, 0.0)
-val vn10_min2 = min2(vn4_diff2, vn43_perlinnoise3)
-val vn20_max2 = max2(vn5_perlinnoise3, vn21_sphere)
-val vn8_max2 = max2(vn20_max2, vn10_min2)
+val vn1_scalesrcz_uid4e428756 = scalesrcz_uid4e428756(0.10881882041201557)
+val vn9_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn1_scalesrcz_uid4e428756, 54.19169999120173)
+val vn7_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn9_addconstantexp_uid4e428756, 0.16957554093095903)
+val vn1_scalesrcy_uid4e428756 = scalesrcy_uid4e428756(0.10881882041201557)
+val vn1_scalesrcx_uid4e428756 = scalesrcx_uid4e428756(0.10881882041201557)
+val vn3_createvec3_uid4e428756 = createvec3_uid4e428756(vn1_scalesrcx_uid4e428756, vn1_scalesrcy_uid4e428756, vn7_addconstantexp_uid4e428756)
+val vn6_scalevec3_uid4e428756 = scalevec3_uid4e428756(vn3_createvec3_uid4e428756, 0.7169776240079135, 0.7169776240079135, 22.315898661606493)
+val vn12_sphere_uid4e428756 = sphere_uid4e428756(vn3_createvec3_uid4e428756, 54.19169999120173)
+val vn14_sphere_uid4e428756 = sphere_uid4e428756(vn6_scalevec3_uid4e428756, 131.59856981197643)
+val vn1_scalesrcv_uid4e428756 = scalesrcv_uid4e428756(0.10881882041201557)
+val vn17_addconstantexp_uid4e428756 = addconstantexp_uid4e428756(vn12_sphere_uid4e428756, 30.124958317193155)
+val vn26_perlinnoise3_uid4e428756 = perlinnoise3_uid4e428756(vn1_scalesrcv_uid4e428756, 0.0, 0.0, 0.0, vn14_sphere_uid4e428756, 0.0, 0.5743491774985172, 205.0738886629432, -0.43999999999999995)
+val vn13_negate_uid4e428756 = negate_uid4e428756(vn17_addconstantexp_uid4e428756)
+val vn11_min2_uid4e428756 = min2_uid4e428756(vn13_negate_uid4e428756, vn26_perlinnoise3_uid4e428756)
+val vn28_perlinnoise3_uid4e428756 = perlinnoise3_uid4e428756(vn1_scalesrcv_uid4e428756, 0.0, 0.0, 0.0, vn12_sphere_uid4e428756, 0.0, 0.05593906693299827, 0.5743491774985175, 0.0)
+val vn2_max3_uid4e428756 = max3_uid4e428756(vn28_perlinnoise3_uid4e428756, vn12_sphere_uid4e428756, vn11_min2_uid4e428756)
 
-vn8_max2
+vn2_max3_uid4e428756
 }
 
 }

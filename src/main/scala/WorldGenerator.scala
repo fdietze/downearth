@@ -51,13 +51,16 @@ object WorldGenerator {
 		
 		if(interval.isPositive){
 			octree.root = new Leaf(FullHexaeder)
+			PredictionStats.predictioncalls += 1
 		}
 		
 		else if(interval.isNegative){
 			octree.root = new Leaf(EmptyHexaeder)
+			PredictionStats.predictioncalls += 1
 		}
 		
 		else{
+			PredictionStats.samplingcalls += 1
 			val noiseData = new Array3D[Float](Vec3i(nodesize+3))
 			//braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 			val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
@@ -103,6 +106,7 @@ object WorldGenerator {
 			assert(octree.rootNodePos == nodepos)
 			assert(octree.rootNodeSize == nodesize)
 		}
+		println(PredictionStats)
 		octree
 	}
 
