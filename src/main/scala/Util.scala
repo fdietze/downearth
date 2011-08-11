@@ -11,9 +11,17 @@ import org.lwjgl.opengl.{ARBShaderObjects, ARBVertexShader, ARBFragmentShader}
 import javax.vecmath.{Vector3f,Quat4f}
 
 object MyFont{
-	import org.newdawn.slick.TrueTypeFont;
-	import java.awt.Font;
-	val font = new TrueTypeFont(new Font("Monospace", Font.BOLD, 10),true);
+	import org.newdawn.slick.UnicodeFont
+	import org.newdawn.slick.font.effects._
+	import java.awt.{Font,Color};
+	import java.util.List
+	val font = new UnicodeFont(new Font("Monospace", Font.BOLD, 14))
+	font.addAsciiGlyphs
+	font.addGlyphs("äöüÄÖÜß")
+	val effects = font.getEffects.asInstanceOf[List[Effect]]
+	effects add new ShadowEffect
+	effects add new ColorEffect(Color.WHITE)
+	font.loadGlyphs
 }
 
 object Util {
