@@ -41,8 +41,6 @@ object World{
 	
 		val t = direction
 		
-		Draw addText direction
-		
 		val pos = Vec3i(floor(from))
 		val step = Vec3i(sign(direction))
 		val tMax = Vec3(0)
@@ -122,7 +120,7 @@ object World{
 		val selection = raytracer(Controller.current.position,Controller.current.direction,false,100)
 		selection match {
 		case Some(v) =>
-			Draw.addText("Position: " + Vec3i(v) )
+			Draw.addText("Selected Voxel: " + Vec3i(v) )
 			// malt die Markierung der angewählten Zelle
 			glDisable(GL_LIGHTING)
 			glPushMatrix

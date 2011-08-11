@@ -49,7 +49,14 @@ object Player extends ControlInterface{
 	body setAngularFactor 0
 	
 	def move(dir:Vec3){
-		body.applyCentralImpulse((m_camera makeRelative dir)*5)
+		val flatdir = Vec3(((m_camera makeRelative dir)*4).xy,0)
+		body.applyCentralImpulse( flatdir )
+		
+		val v = new Vector3f
+		body getCenterOfMassPosition v
+		Draw.addText("Player Position: " + round10(v)  )
+		body getLinearVelocity v
+		Draw.addText("Player Velocity: " + round10(v) )
 	}
 	
 	var dir = Vec2(Pi/2)
@@ -67,7 +74,12 @@ object Player extends ControlInterface{
 	}
 	
 	def jump{
-		body.applyCentralImpulse(new Vector3f(0,0,10))
+		val v = new Vector3f
+		body getLinearVelocity v
+		if( abs(v.z) < 0.5 )
+			body.applyCentralImpulse(new Vector3f(0,0,5))
+		// if there is a contact point
+		// jum in direction of Body normal
 	}
 }
 

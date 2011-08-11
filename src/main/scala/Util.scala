@@ -234,5 +234,8 @@ object Util {
 	// 0 => (1,2)
 	// 1 => (0,2)
 	// 2 => (0,1)
+	
+	def round10(a:Double) = math.round(a*10.0)/10.0f
+	def round10(v:Vec3):Vec3 = Vec3(round10(v.x), round10(v.y), round10(v.z))
 }
 

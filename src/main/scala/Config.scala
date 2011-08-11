@@ -8,7 +8,7 @@ import noise.interval.{Interval, Volume}
 object Config{
 
 	val minMeshNodeSize = 16
-	val worldWindowSize = 128
+	val worldWindowSize = 64
 	val useshaders = true
 	
 	val ungeneratedDefault = FullHexaeder // UndefHexaeder

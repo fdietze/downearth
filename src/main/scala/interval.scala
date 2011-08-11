@@ -10,6 +10,7 @@ case class Interval (low:Double = 0.0, high:Double = 0.0) {
 
 	def isPositive = low >= 0 
 	def isNegative = high <= 0
+	def nosize = low == high
 	def apply(value:Double) = low <= value && value <= high
 	
 	// -Interval
@@ -47,7 +48,8 @@ case class Interval (low:Double = 0.0, high:Double = 0.0) {
 case class Volume(x:Interval = Interval(), y:Interval = Interval(), z:Interval = Interval()) {
 	def low  = Vec3(x.low , y.low , z.low )
 	def high = Vec3(x.high, y.high, z.high)
-
+	
+	def nosize = x.nosize || y.nosize || z.nosize
 	def apply(v:Vec3) = x(v.x) && y(v.y) && z(v.z)
 	
 	// -Volume

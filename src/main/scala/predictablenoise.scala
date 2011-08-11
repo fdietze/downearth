@@ -86,11 +86,12 @@ object Noise {
 		gradients3(hash(hash(hash(X)+Y)+Z) & 15)
 	}
 	
-	def noise3_prediction(v:Volume):Interval = noise3_prediction(v.x.low, v.y.low, v.z.low, v.x.high, v.y.high, v.z.high)
-	def nosie3_prediction(x:Interval,y:Interval,z:Interval):Interval = noise3_prediction(x.low, y.low, z.low, x.high, y.high, z.high)
-	def noise3_prediction(x0:Double, y0:Double, z0:Double, x1:Double, y1:Double, z1:Double):Interval = {
+	def noise3_prediction(v:Volume):Interval = {
+		import v.x.{low => x0, high => x1}
+		import v.y.{low => y0, high => y1}
+		import v.z.{low => z0, high => z1}
 		
-		assert(x0 < x1 && y0 < y1 && z0 < z1, "First coordinate needs to be lower in all components.\n"+(x0,y0,z0)+" < "+(x1,y1,z1))
+		if( v.nosize ) return Interval(noise3(v.low))
 		
 		// Edges of the unit cube
 		val X = fastfloor(x0)
