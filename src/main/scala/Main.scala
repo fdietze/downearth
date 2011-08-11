@@ -179,7 +179,7 @@ object Main {
 		if(isKeyDown(KEY_D))
 			delta.x += 1
 		
-		val factor = if(turbo) 16f else 4f
+		val factor = if(turbo) Config.CameraTurboSpeed else Config.CameraSpeed
 		Controller.move(factor*(delta/max(1,length(delta)))*timestep)
 		
 		if(Mouse.isGrabbed) 

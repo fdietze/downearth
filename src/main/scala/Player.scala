@@ -87,13 +87,13 @@ object Controller{
 	def rotateObjects{
 		id = (id+1)%objects.size
 		current = objects(id)
+		World.octree.jumpTo(current.position)
 	}
 	
 	def build{
 		val mousedest = World.raytracer(current.position,current.direction,true,100)
 		mousedest match {
 			case Some(pos) => 
-				println("build at "+pos)
 				World(pos) = FullHexaeder
 			case _ =>
 		}

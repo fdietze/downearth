@@ -120,7 +120,6 @@ object BulletPhysics{
 		def reloadAt(p:Vec3i){
 			if(indexInRange(p)){
 				val rpos = p-pos
-				println("in Range "+rpos)
 				removeBody( bodies(rpos) )
 				bodies(rpos) = fillfunc(rpos)
 			}

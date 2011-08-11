@@ -64,6 +64,7 @@ trait Octant extends Serializable{
 	/**generates the polygons for this Octant
 	 * @return number of added vertices
 	 */
+	// checks weather a subnode has already been set or not
 	def isSet(info:NodeInfo,pos:NodeInfo):Boolean
 	// creates polygons in subtree and adds them to meshBuilder
 	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int
@@ -78,9 +79,6 @@ trait Octant extends Serializable{
 	
 	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] //return slice applied on the vertices
 	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) //return slice
-	
-	// removes all Futures
-	def cleanFutures(info:NodeInfo):Octant
 	
 	// pateches one side of a Node
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]]
@@ -258,10 +256,6 @@ class Leaf(val h:Hexaeder) extends OctantUnterVertexArray{
 		(from,to)
 	}
 	
-	def cleanFutures(info:NodeInfo):Octant = {
-		throw new NoSuchMethodException("dont call this in Leaf, Here shouldn't be a FutureNode")
-	}
-	
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
 		List(repolyWorld(info,dstinfo.pos, vertpos, vertcount))
 	}
@@ -373,7 +367,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 		else{
 			val (index,childinfo) = info(insertinfo.pos)
 			data(index) = data(index).insertNode(childinfo, insertinfo, insertnode)
-			this
+			joinChildren
 		}
 		// TODO merge?
 	}
@@ -385,13 +379,6 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 	
 	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
-	}
-	
-	def cleanFutures(info:NodeInfo):Octant = {
-		for(i <- 0 until 8){
-			data(i) = data(i).cleanFutures( info(i) )
-		}
-		this
 	}
 	
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
@@ -407,6 +394,33 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 			val (index,nodeinfo) = info(dstinfo.pos)
 			assert(nodeinfo indexInRange dstinfo)
 			data(index).patchSurface(nodeinfo,dstinfo,dir,0,0)
+		}
+	}
+	
+	def joinChildren:Octant = {
+		try{
+			val meshNodes = data.asInstanceOf[Array[InnerNodeWithVertexArray]]
+			var sum = 0
+			for(meshnode <- meshNodes){
+				sum += meshnode.mesh.size
+			}
+			if(sum < Config.maxMeshVertexCount){
+				val childmeshes = meshNodes map (_.mesh)
+				val mesh = MutableTextureMesh( childmeshes )
+				val node = new InnerNodeWithVertexArray(this)
+				node.mesh = mesh
+				childmeshes.foreach(_.freevbo)
+				for(i <- 0 until 8){
+					data(i) = meshNodes(i).node
+				}
+				node
+			}
+			else
+				this
+		}
+		catch{
+			case _ =>
+				this
 		}
 	}
 }
@@ -481,10 +495,6 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 		data(index).getPolygonsUnderVertexArray( nodeinfo,pos, newfrom, newto )
 	}
 	
-	override def cleanFutures(info:NodeInfo):Octant = {
-		throw new NoSuchMethodException("FutureNodes shouldn exist under Vertex Array")
-	}
-	
 	override def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
 		assert(vvertcount.sum == vertcount)
 		
@@ -534,7 +544,7 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 		assert(mesh == null)
 		val meshBuilder = new TextureMeshBuilder
 		val result = node.genPolygons(info, meshBuilder, worldaccess)
-		mesh = new MutableTextureMesh(meshBuilder.result)
+		mesh = MutableTextureMesh(meshBuilder.result)
 		
 		//genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in anderen Threads als dem render Thread aufgerufen wird
 		//um die erzeugung des vbo kümmert sich das mesh selbst beim rendern
@@ -589,8 +599,6 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
-	
-	def cleanFutures(info:NodeInfo):Octant = this
 	
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {		
 		var patches:List[Patch[TextureMeshData]] = node.patchSurface(info, dstinfo, dir, 0, mesh.size)
@@ -650,8 +658,6 @@ object DeadInnderNode extends Octant{
 	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
-	
-	def cleanFutures(info:NodeInfo):Octant = this
 	
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]] = {
 		Nil

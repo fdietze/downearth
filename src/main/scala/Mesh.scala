@@ -66,10 +66,50 @@ object EmptyMeshData extends MeshData{
 object EmptyPatch extends Patch[Nothing](0,0,null)
 */
 
-class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with MutableMesh[TextureMeshData]{
-	import data._
+object MutableTextureMesh{
+	
+	def apply(data:TextureMeshData) = {
+  	import data._
+  	val (vertices,normals,texcoords) = interleave(
+			DataSeq[Vec3, RFloat],
+			DataSeq[Vec3, RFloat],
+			DataSeq[Vec2, RFloat]
+		)(vertexArray.size)
+		for(i <- 0 until vertexArray.size){
+			vertices(i) = vertexArray(i)
+			normals(i) = normalArray(i/3)
+			texcoords(i) = texcoordsArray(i)
+		}
+		new MutableTextureMesh(vertices,normals,texcoords)
+	}
+	
+	def apply(meshes:Array[MutableTextureMesh]) = {
+		val size = meshes.map(_.size).sum
+		val (vertices,normals,texcoords) = interleave(
+			DataSeq[Vec3, RFloat],
+			DataSeq[Vec3, RFloat],
+			DataSeq[Vec2, RFloat]
+		)(size)
+		
+		var currentpos = 0
+		var currentsize = 0
+		
+		for(mesh <- meshes){
+			currentsize = mesh.size
+			vertices.bindingBufferSubData(currentpos,currentsize) put 
+				mesh.vertices.bindingBufferSubData(0,currentsize)
+			currentpos += currentsize
+		}
+		new MutableTextureMesh(vertices,normals,texcoords)
+	}
+}
 
-	private var msize = vertexArray.size
+class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat], 
+                         normals_ :DataView[Vec3,RFloat], 
+                         texcoords_ :DataView[Vec2,RFloat]) 
+  	extends TextureMesh(vertices_, normals_, texcoords_) with MutableMesh[TextureMeshData] {
+
+	private var msize = vertices_.size
 	override def size = msize
 
 	def patch(patches:Iterable[Patch[TextureMeshData]]){
@@ -152,31 +192,29 @@ class MutableTextureMesh(data:TextureMeshData) extends TextureMesh(data) with Mu
 }
 
 object TextureMesh{
-	def apply(data:TextureMeshData) = new TextureMesh(data)
-	def apply(meshes:Array[TextureMesh]) = {
-		val size = meshes.map(_.size).sum
-		val (vertices,normals,texcoords) = interleave(
+	
+	def apply(data:TextureMeshData) = {
+  	import data._
+  	val (vertices,normals,texcoords) = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec2, RFloat]
-		)(size)
-		
-		var currentpos = 0
-		var currentsize = 0
-		
-		for(mesh <- meshes){
-			currentsize = mesh.size
-			vertices.bindingBufferSubData(currentpos,currentsize) put 
-				mesh.vertices.bindingBufferSubData(0,currentsize)
-			currentpos += currentsize
+		)(vertexArray.size)
+		for(i <- 0 until vertexArray.size){
+			vertices(i) = vertexArray(i)
+			normals(i) = normalArray(i/3)
+			texcoords(i) = texcoordsArray(i)
 		}
-	}
+		new TextureMesh(vertices,normals,texcoords)
+  }
 }
 
-class TextureMesh(data:TextureMeshData) extends Mesh with Serializable {
+class TextureMesh(@transient var vertices:DataView[Vec3,RFloat], 
+                  @transient var normals:DataView[Vec3,RFloat], 
+                  @transient var texcoords:DataView[Vec2,RFloat] ) 
+                       extends Mesh with Serializable {
+  
 	import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
-	
-	
 	@throws(classOf[IOException])
 	private[this] def writeObject(out:ObjectOutputStream) {
 		out.writeInt(msize)
@@ -192,22 +230,8 @@ class TextureMesh(data:TextureMeshData) extends Mesh with Serializable {
 		texcoords= data(2).asInstanceOf[DataView[Vec2,RFloat]]
 	}
 	
-	import data._
-	
-	@transient var (vertices,normals,texcoords) = interleave(
-		DataSeq[Vec3, RFloat],
-		DataSeq[Vec3, RFloat],
-		DataSeq[Vec2, RFloat]
-	)(vertexArray.size)
-	
-	@transient private var msize = vertexArray.size
+	@transient private var msize = vertices.size
 	def size = msize
-	
-	for(i <- 0 until vertexArray.size){
-		vertices(i) = vertexArray(i)
-		normals(i) = normalArray(i/3)
-		texcoords(i) = texcoordsArray(i)
-	}
 	
 	def draw{
 		TextureManager.box.bind

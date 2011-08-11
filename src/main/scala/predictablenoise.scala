@@ -1,6 +1,6 @@
 package noise
 
-import intervals._
+import interval.{Interval, Volume}
 
 import simplex3d.math._
 import simplex3d.math.double._
