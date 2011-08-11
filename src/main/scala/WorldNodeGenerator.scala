@@ -30,16 +30,16 @@ object WorldNodeGenerator {
 				case nodeinfo:NodeInfo =>
 					activeJobs += nodeinfo
 					// worker beauftragen falls verfügbar, sonst in die jobqueue
-					if(idlingWorkers.isEmpty){
+					if(idlingWorkers.isEmpty) {
 						jobqueue enqueue nodeinfo
 					}
-					else{
+					else {
 						val worker = idlingWorkers.dequeue
 						worker ! nodeinfo
 					}
 				case ( oldjob : NodeInfo, node : Octant ) =>
 					// neuen Job vergeben falls verfügbar, sonst worker zu idlingWorkers hinzufügen
-					done enqueue (oldjob->node)
+					done enqueue ( oldjob -> node )
 					activeJobs -= oldjob
 					
 					if(jobqueue.isEmpty){
@@ -66,7 +66,6 @@ object WorldNodeGenerator {
 				receive {
 					case nodeinfo:NodeInfo =>
 						val node = WorldGenerator genWorldAt nodeinfo
-						node.genMesh
 						Master ! Tuple2(nodeinfo,node.root)
 					case PoisonPill => 
 						alive = false

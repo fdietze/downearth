@@ -28,19 +28,7 @@ object WorldGenerator {
 		
 		octree
 	}
-
-	def genSlice(nodepos:Vec3i ,nodesize:Int, size:Vec3i) = {
-		assert(size.x == 1 || size.y == 1 || size.z == 1)
-		val data = new Array3D[Octant](size)
-		for(vi <- Vec3i(0) until size){
-			val npos = nodepos+vi*nodesize
-			val insertion = genWorldAt(NodeInfo(npos,nodesize))
-			insertion.genMesh
-			data(vi) = insertion.root
-		}
-		data
-	}
-
+	
 	def genWorldAt(nodeinfo:NodeInfo):WorldOctree = {
 		val NodeInfo(nodepos, nodesize) = nodeinfo
 		import MarchingHexaeder._
@@ -51,11 +39,14 @@ object WorldGenerator {
 		
 		if(interval.isPositive){
 			octree.root = new Leaf(FullHexaeder)
+			//TODO was schlaueres, das gibt noch Fehler
+			octree.genMesh(x => FullHexaeder)
 			PredictionStats.predictioncalls += 1
 		}
 		
 		else if(interval.isNegative){
 			octree.root = new Leaf(EmptyHexaeder)
+			octree.genMesh(x => EmptyHexaeder)
 			PredictionStats.predictioncalls += 1
 		}
 		
@@ -101,12 +92,13 @@ object WorldGenerator {
 				else h
 			}
 			
-			octree.fill( fillfun _ )
+			val fillfunction = fillfun _
 			
+			octree.fill( fillfunction )
+			octree.genMesh( fillfunction )
 			assert(octree.rootNodePos == nodepos)
 			assert(octree.rootNodeSize == nodesize)
 		}
-		println(PredictionStats)
 		octree
 	}
 

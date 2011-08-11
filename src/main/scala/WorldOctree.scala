@@ -71,8 +71,9 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	def genMesh {
-		root = root.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else World(x)}) )
+	def genMesh(f:(Vec3i => Hexaeder) = World.apply _){
+		assert(! meshGenerated)
+		root = root.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else f(x) }) )
 		meshGenerated = true
 	}
 	
