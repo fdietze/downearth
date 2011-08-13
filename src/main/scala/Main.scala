@@ -21,16 +21,6 @@ import Util._
 import Config.FPS_LIMIT
 
 object Main {
-	import org.lwjgl.BufferUtils
-	import java.nio.FloatBuffer
-	
-	implicit def sequence2FloatBuffer(s:Seq[Float]):FloatBuffer = {
-		val buffer = BufferUtils.createFloatBuffer(s.size)
-		s.foreach(buffer.put)
-		buffer.flip
-		buffer
-	}
-	
 	var finished = false
 	
 	var textCache:List[(Vec2i,String)] = Nil
@@ -74,10 +64,7 @@ object Main {
 	def main(args:Array[String]){
 		while(!finished){
 			logic
-			FreeCamera.apply
-			lighting
 			draw
-			
 			frame
 		}
 		terminate
@@ -137,19 +124,6 @@ object Main {
 		Display.destroy()
 		WorldSerializer.save(World.octree)
 		sys.exit(0)
-	}
-	
-	def lighting{
-		//Add ambient light
-		glLightModel(GL_LIGHT_MODEL_AMBIENT, Seq(0.2f, 0.2f, 0.2f, 1.0f));
-	
-		//Add positioned light
-
-		glLight(GL_LIGHT0, GL_POSITION, Seq(FreeCamera.position.x, FreeCamera.position.y, FreeCamera.position.z, 1.0f));
-
-		//Add directed light
-//		glLight(GL_LIGHT1, GL_DIFFUSE, Seq(0.5f, 0.2f, 0.2f, 1.0f));
-//		glLight(GL_LIGHT1, GL_POSITION, Seq(-1.0f, 0.5f, 0.5f, 0.0f));
 	}
 	
 	var turbo = false
@@ -232,10 +206,28 @@ object Main {
 					Controller.rotateObjects
 				case KEY_SPACE =>
 					Controller.jump
+				case KEY_1 =>
+					DefaultHexaeder.id = 0
+				case KEY_2 =>
+					DefaultHexaeder.id = 1
+				case KEY_3 =>
+					DefaultHexaeder.id = 2
+				case KEY_4 =>
+					DefaultHexaeder.id = 3
+				case KEY_5 =>
+					DefaultHexaeder.id = 4
+				case KEY_6 =>
+					DefaultHexaeder.id = 5
+				case KEY_7 =>
+					DefaultHexaeder.id = 6
+				case KEY_8 =>
+					DefaultHexaeder.id = 7
 				case _ =>
 				}
 			}
 		}
+		
+		Draw.addText( DefaultHexaeder.current )
 		
 		// Mouse Event Input
 		

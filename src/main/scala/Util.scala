@@ -3,12 +3,16 @@ package xöpäx
 import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
+import simplex3d.data._
+import simplex3d.data.float._
 import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11.glMultMatrix
 import org.lwjgl.opengl.{ARBShaderObjects, ARBVertexShader, ARBFragmentShader}
 import javax.vecmath.{Vector3f,Quat4f}
+import org.lwjgl.BufferUtils
+import java.nio.FloatBuffer
 
 object MyFont{
 	import org.newdawn.slick.UnicodeFont
@@ -29,6 +33,29 @@ object Util {
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
 	implicit def q2qf(in:Quat4) = new Quat4f(in.a,in.b,in.c,in.d)
 	implicit def qf2q(in:Quat4f) = Quat4(in.w,in.x,in.y,in.z)
+	implicit def mat2buffer(in:Mat4):FloatBuffer = {
+		val data = DataBuffer[Mat4,RFloat](1)
+		data(0) = in
+		data.buffer
+	}
+	implicit def vec3_2buffer(in:Vec3):FloatBuffer = {
+		val data = DataBuffer[Vec3,RFloat](1)
+		data(0) = in
+		data.buffer
+	}
+	implicit def vec4_2buffer(in:Vec4):FloatBuffer = {
+		val data = DataBuffer[Vec4,RFloat](1)
+		data(0) = in
+		data.buffer
+	}
+	
+	implicit def sequence2FloatBuffer(s:Seq[Float]):FloatBuffer = {
+		val buffer = BufferUtils.createFloatBuffer(s.size)
+		s.foreach(buffer.put)
+		buffer.flip
+		buffer
+	}
+	
 	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
 
 	def printLogInfo(obj:Int) {

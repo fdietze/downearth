@@ -72,22 +72,22 @@ trait Octant extends Serializable{
 	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Patch[TextureMeshData])
 	//similar to patch, but it does not change anything in the Tree
 	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Patch[TextureMeshData]
-	// adds InnerNodeWithVertexArray into the tree, and creates Meshes inside of them
+	// adds MeshNode into the tree, and creates Meshes inside of them
 	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant
 	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) : Octant
 	def draw
 	
-	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] //return slice applied on the vertices
-	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) //return slice
+	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] //return slice applied on the vertices
+	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) //return slice
 	
 	// pateches one side of a Node
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Patch[TextureMeshData]]
 }
 
-abstract class OctantOverVertexArray extends Octant
-abstract class OctantUnterVertexArray extends Octant
+abstract class OctantOverMesh extends Octant
+abstract class OctantUnterMesh extends Octant
 
-class Leaf(val h:Hexaeder) extends OctantUnterVertexArray{
+class Leaf(val h:Hexaeder) extends OctantUnterMesh{
 	// a leaf is always defined
 	def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
@@ -243,16 +243,16 @@ class Leaf(val h:Hexaeder) extends OctantUnterVertexArray{
 	}
 
 	override def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
-		(new InnerNodeWithVertexArray(this)).genMesh(info,dstnodesize,worldaccess)
+		(new MeshNode(this)).genMesh(info,dstnodesize,worldaccess)
 	}
 	
 	def draw{}
 	
-	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
 		throw new NoSuchMethodException("dont call this in Leaf")
 	}
 	
-	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
+	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
 		(from,to)
 	}
 	
@@ -274,7 +274,7 @@ object Leaf{
 case object EmptyLeaf extends Leaf(EmptyHexaeder)
 case object FullLeaf extends Leaf(FullHexaeder)
 
-class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
+class InnerNodeOverMesh(h:Hexaeder) extends OctantUnterMesh {
 	val data = new Array[Octant](8)
 	//initiali the 8 child nodes
 	for(fidx <- 0 until 8) {
@@ -316,7 +316,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 	}
 
 	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
-		throw new NoSuchMethodException("if InnerNodeOverVertexArray exists then a mesh should already be generated")
+		throw new NoSuchMethodException("if InnerNodeOverMesh exists then a mesh should already be generated")
 	}
 	
 	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int):(Octant, Patch[TextureMeshData]) = {
@@ -372,12 +372,12 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 		// TODO merge?
 	}
 	
-	def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
 		val (index,nodeinfo) = info(pos)
-		data(index).getPolygonsOverVertexArray( nodeinfo,pos )
+		data(index).getPolygonsOverMesh( nodeinfo,pos )
 	}
 	
-	def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
 	
@@ -387,7 +387,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 			for(i <- indices) yield {
 				data(i).patchSurface(info(i),dstinfo, dir, 0, 0)
 			}
-			// there are no patches over vertexArray
+			// there are no patches over Mesh
 			Nil
 		}
 		else{
@@ -399,7 +399,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 	
 	def joinChildren:Octant = {
 		try{
-			val meshNodes = data.asInstanceOf[Array[InnerNodeWithVertexArray]]
+			val meshNodes = data.asInstanceOf[Array[MeshNode]]
 			var sum = 0
 			for(meshnode <- meshNodes){
 				sum += meshnode.mesh.size
@@ -407,7 +407,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 			if(sum < Config.maxMeshVertexCount){
 				val childmeshes = meshNodes map (_.mesh)
 				val mesh = MutableTextureMesh( childmeshes )
-				val node = new InnerNodeWithVertexArray(this)
+				val node = new MeshNode(this)
 				node.mesh = mesh
 				childmeshes.foreach(_.freevbo)
 				for(i <- 0 until 8){
@@ -425,7 +425,7 @@ class InnerNodeOverVertexArray(h:Hexaeder) extends OctantUnterVertexArray {
 	}
 }
 
-class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
+class InnerNode(h:Hexaeder) extends InnerNodeOverMesh(h) {
 	// this node is under the vertex array, and may not have unset nodes
 	override def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
@@ -473,26 +473,26 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 
 	override def genMesh(info:NodeInfo, destnodesize:Int, worldaccess:(Vec3i => Hexaeder)) = {
 		if(info.size <= destnodesize){
-			val replacement = new InnerNodeWithVertexArray(this)
+			val replacement = new MeshNode(this)
 			replacement.genMesh(info,destnodesize,worldaccess)
 		}
 		else{
-			val replacement = new InnerNodeOverVertexArray(EmptyHexaeder)
+			val replacement = new InnerNodeOverMesh(EmptyHexaeder)
 			for(i <- 0 until  8)
 				replacement.data(i) = data(i).genMesh(info(i), destnodesize, worldaccess)
 			replacement
 		}
 	}
 	
-	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
+	override def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
 		throw new NoSuchMethodException("dont call this under Vertex Array")
 	}
 	
-	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	override def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		val (index,nodeinfo) = info(pos)
 		val newfrom = from+vvertcount.view(0,index).sum
 		val newto = newfrom + vvertcount(index)
-		data(index).getPolygonsUnderVertexArray( nodeinfo,pos, newfrom, newto )
+		data(index).getPolygonsUnderMesh( nodeinfo,pos, newfrom, newto )
 	}
 	
 	override def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
@@ -520,7 +520,7 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverVertexArray(h) {
 }
 
 //decorator pattern
-class InnerNodeWithVertexArray(var node:Octant) extends Octant {
+class MeshNode(var node:Octant) extends Octant {
 	// Nodes under the vertex Array must be set
 	def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
@@ -591,12 +591,12 @@ class InnerNodeWithVertexArray(var node:Octant) extends Octant {
 		null 
 	}
 	
-	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = {
-		val (from,to) = node.getPolygonsUnderVertexArray( info, pos, 0, mesh.size )
+	override def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
+		val (from,to) = node.getPolygonsUnderMesh( info, pos, 0, mesh.size )
 		(from until to) map mesh.vertices
 	}
 	
-	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	override def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
 	
@@ -640,7 +640,7 @@ object DeadInnderNode extends Octant{
 		if(info == insertinfo)
 			insertnode
 		else{
-			val replacement = new InnerNodeOverVertexArray(EmptyHexaeder)
+			val replacement = new InnerNodeOverMesh(EmptyHexaeder)
 			for(i <- 0 until 8)
 				replacement.data(i) = DeadInnderNode
 
@@ -653,9 +653,9 @@ object DeadInnderNode extends Octant{
 	
 	def draw{}
 	
-	override def getPolygonsOverVertexArray( info:NodeInfo, pos:Vec3i) = Nil
+	override def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = Nil
 	
-	override def getPolygonsUnderVertexArray( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	override def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
 	

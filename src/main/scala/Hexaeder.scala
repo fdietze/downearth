@@ -65,7 +65,11 @@ trait Hexaeder extends Serializable{
 	def normals:Seq[Vec3]
 }
 
-class PartialHexaeder extends Hexaeder {
+class PartialHexaeder(
+	var X:Int = 0x80808080,
+	var Y:Int = 0x88008800,
+	var Z:Int = 0x88880000)
+		extends Hexaeder {
 	import LookupTables._
 	import Util._
 	
@@ -80,15 +84,16 @@ class PartialHexaeder extends Hexaeder {
 	implicit def bool2int(b:Boolean) = if(b) 1 else 0
 	
 
-	val data = Array[Byte](0x08,0x08,0x08,0x08,     0x00,0x88,0x00,0x88,     0x00,0x00,0x88,0x88)
-	
-	override def toString = data.map(b => "%h".format(b & 0xFF).reverse.padTo(2,'0').reverse ).mkString("[",",","]")
+	//val data = Array[Byte](0x08,0x08,0x08,0x08,     0x00,0x88,0x00,0x88,     0x00,0x00,0x88,0x88)
+	//override def toString = data.map(b => "%h".format(b & 0xFF).reverse.padTo(2,'0').reverse ).mkString("[",",","]")
+	override def toString = "%h %h %h".format(X,Y,Z)
 	
 	
 	override def equals(that:Any) = {
 		that match {
 		case h:PartialHexaeder =>
-			data.deep == h.data.deep
+			//data.deep == h.data.deep
+			(X == h.X && Y == h.Y && Z == h.Z)
 		case _ => 
 			false
 		}
@@ -102,6 +107,7 @@ class PartialHexaeder extends Hexaeder {
 	def checkvertex(v:Vec3) = all(greaterThanEqual(v,Vec3(0))) && all(lessThanEqual(v,Vec3(1f)))
 		
 	
+	/*
 	def readNibble(i:Int) = {
 		val byte = data(i/2)
 		val nib = 1 - (i&1)
@@ -113,23 +119,44 @@ class PartialHexaeder extends Hexaeder {
 		val nib = 1 - (i&1)
 		data(i/2) = (byte & (0xF0 >> (nib << 2) )) | ( nibble << ( nib << 2 ) )
 	}
+	*/
+	def writeX(i:Int,v:Int){ X = (X & ~(15 << (i*4))) | v << (i*4) }
+	def readX(i:Int) = (X >> (i*4)) & 15
+	def writeY(i:Int,v:Int){ Y = (Y & ~(15 << (i*4))) | v << (i*4) }
+	def readY(i:Int) = (Y >> (i*4)) & 15
+	def writeZ(i:Int,v:Int){ Z = (Z & ~(15 << (i*4))) | v << (i*4) }
+	def readZ(i:Int) = (Z >> (i*4)) & 15
 	
 	def readVertex(p:Int) = {
-		Vec3i(readNibble(p),readNibble(8+p),readNibble(16+p))
+		//Vec3i(readNibble(p),readNibble(8+p),readNibble(16+p))
+		Vec3i(readX(p),readY(p),readZ(p))
 	}
 	
 	def writeVertex(p:Int, v:Vec3i) = {
-		writeNibble(p, v.x)
-		writeNibble(8+p, v.y)
-		writeNibble(16+p, v.z)
+		//writeNibble(p, v.x)
+		//writeNibble(8+p, v.y)
+		//writeNibble(16+p, v.z)
+		writeX(p,v.x)
+		writeY(p,v.y)
+		writeZ(p,v.z)
 	}
 	
-	def readComponent(p:Int, axis:Int) = {
-		readNibble((axis << 3) + p)
+	def readComponent(p:Int, axis:Int):Int = {
+		//readNibble((axis << 3) + p)
+		axis match{
+			case 0 => return readX(p)
+			case 1 => return readY(p)
+			case 2 => return readZ(p)
+		}
 	}
 
 	def writeComponent(p:Int, axis:Int, v:Int) = {
-		writeNibble((axis << 3) + p, v)
+		//writeNibble((axis << 3) + p, v)
+		axis match{
+			case 0 => writeX(p,v)
+			case 1 => writeY(p,v)
+			case 2 => writeZ(p,v)
+		}
 	}
 
 	def apply(p:Int) = {

@@ -14,14 +14,12 @@ import javax.vecmath.Vector3f
 import com.bulletphysics.linearmath.Transform
 import com.bulletphysics.collision.shapes.SphereShape
 
+import Util._
 
 object Camera{
-	
 	val WIDTH = 1024
 	val HEIGHT = WIDTH*3/4
-	
 	val UP = Vec3.UnitZ
-	
 }
 
 abstract class Camera{
@@ -55,33 +53,39 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 	}
 	
 	def applyfrustum{
-		// frustum matrix
-		// temporary storage for Matrices
-		val data = DataBuffer[Mat4,RFloat](1)
-		data(0) = frustum
 		glMatrixMode(GL_PROJECTION)
-		//glLoadIdentity
-		//glFrustum(-r,r,-t,t,n,f)
-		glLoadMatrix( data.buffer )
+		glLoadMatrix( frustum )
 		glMatrixMode(GL_MODELVIEW)
 		glDisable(GL_BLEND)
-		
 	}
 	
 	def apply = {
 		val data = DataBuffer[Mat4,RFloat](1)
-		data(0) = Mat4(inverse(Mat3x4 rotate(directionQuat)))
-		glLoadMatrix( data.buffer )
-		glDisable(GL_DEPTH_TEST)
-		glDisable(GL_LIGHTING)
-		Skybox.render
-		data(0) = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
-		glLoadMatrix( data.buffer )
+		if(Config.skybox){
+			glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat))) )
+			glDisable( GL_DEPTH_TEST )
+			glDisable( GL_LIGHTING )
+			Skybox.render
+		}
+		
+		glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position))) )
+	}
+	
+	def lighting{
+		//Add ambient light
+		glLightModel(GL_LIGHT_MODEL_AMBIENT, Seq(0.2f, 0.2f, 0.2f, 1.0f))
+		//Add positioned light
+		glLight(GL_LIGHT0, GL_POSITION, Vec4(position, 1f))
+		//Add directed light
+		//glLight(GL_LIGHT1, GL_DIFFUSE, Seq(0.5f, 0.2f, 0.2f, 1.0f));
+		//glLight(GL_LIGHT1, GL_POSITION, Seq(-1.0f, 0.5f, 0.5f, 0.0f));
 	}
 	
 	def renderScene {
 		applyfrustum
 		apply
+		
+		lighting
 		
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_LIGHTING)
@@ -129,8 +133,4 @@ object GUI extends Camera{
 	}
 }
 
-object FreeCamera extends Camera3D(
-		positionVec = Vec3(3,1,0),
-		directionVec = Vec3(0.26f,-0.05f,0.14f)) {
-	import Camera._
-}
+object FreeCamera extends Camera3D(positionVec = Vec3(3,1,0), directionVec = Vec3(0.26f,-0.05f,0.14f))

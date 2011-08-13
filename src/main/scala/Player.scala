@@ -63,14 +63,7 @@ object Player extends ControlInterface{
 	
 	def rotate(rot:Vec3){
 		m_camera.rotate(rot)
-		
 		m_camera.lerpUp(1-m_camera.direction.z.abs)
-		/*
-		dir += rot.xy
-		dir.x = clamp( dir.x, 0, Pi )
-		dir.y = ( dir.y + 2*Pi ) % (2*Pi)
-		m_camera.directionQuat = Quat4 rotateX dir.x rotateZ dir.y
-		*/
 	}
 	
 	def jump{
@@ -91,6 +84,27 @@ trait ControlInterface{
 	def rotate(rot:Vec3)
 }
 
+
+object DefaultHexaeder{
+	val full = FullHexaeder
+	val half = new PartialHexaeder(Z = 0x44440000){ override def toString = "half" }
+	val quarter = new PartialHexaeder(Z = 0x44440000, Y = 0x88448844){ override def toString = "quarter" }
+	val eighth = new PartialHexaeder(0x40404040,0x44004400,0x44440000){ override def toString = "eighth" }
+	val rampA = new PartialHexaeder(Z = 0x00440000){ override def toString = "rampA" }
+	val rampB = new PartialHexaeder(Z = 0x44880000){ override def toString = "rampB" }
+	val rampC = new PartialHexaeder(Z = 0x00880000){ override def toString = "rampC" }
+	
+	val all = Seq(full,half,quarter,eighth,rampA,rampB,rampC)
+	private var m_id = 0
+	def id_=( new_id:Int ){ m_id = clamp(new_id,0,all.size-1) }
+	def id = m_id
+	
+	def current = all(id)
+	def rotate{
+		id = (id+1) % all.size
+	}
+}
+
 object Controller{
 	val objects = List[ControlInterface](Player,FreeCamera)
 	var id = 0
@@ -102,11 +116,12 @@ object Controller{
 		World.octree.jumpTo(current.position)
 	}
 	
-	def build{
+	
+	def build {
 		val mousedest = World.raytracer(current.position,current.direction,true,100)
 		mousedest match {
 			case Some(pos) => 
-				World(pos) = FullHexaeder
+				World(pos) = DefaultHexaeder.current
 			case _ =>
 		}
 	}

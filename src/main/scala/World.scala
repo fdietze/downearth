@@ -22,9 +22,7 @@ object World{
 		WorldSerializer.load match {
 		case Some(s) => s
 		case None => 
-			val gen = time("genworld: ")(WorldGenerator.genWorld)
-//			          time("genmesh: ")(gen.genMesh)
-			gen
+			time("genworld: ")(WorldGenerator.genWorld)
 		}
 	}
 	

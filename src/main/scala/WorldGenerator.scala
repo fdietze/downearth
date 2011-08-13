@@ -25,7 +25,6 @@ object WorldGenerator {
 		octree.root = DeadInnderNode
 		octree.jumpTo(Vec3i(0))
 		octree.meshGenerated = true
-		
 		octree
 	}
 	

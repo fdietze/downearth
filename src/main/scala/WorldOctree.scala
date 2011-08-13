@@ -147,7 +147,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		
 		if(any(lessThan(nodepos, rootNodePos))) {
 			// Welt wird in (+1,+1,+1) vergrößert
-			val newroot = new InnerNodeOverVertexArray(EmptyHexaeder)
+			val newroot = new InnerNodeOverMesh(EmptyHexaeder)
 			for(i <- 0 until 7)
 				newroot.data(i) = DeadInnderNode
 
@@ -160,7 +160,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 		else if(any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize))) {
 			// Welt wird in (-1,-1,-1) vergrößert
-			val newroot = new InnerNodeOverVertexArray(EmptyHexaeder)
+			val newroot = new InnerNodeOverMesh(EmptyHexaeder)
 			for(i <- 1 until 8)
 				newroot.data(i) = DeadInnderNode
 
@@ -208,7 +208,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	def getPolygons(pos:Vec3i) = {
 		if(rootNodeInfo indexInRange pos)
-			root.getPolygonsOverVertexArray(rootNodeInfo,pos)
+			root.getPolygonsOverMesh(rootNodeInfo,pos)
 		else
 			Nil
 	}

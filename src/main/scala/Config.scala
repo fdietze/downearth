@@ -9,13 +9,15 @@ object Config{
 
 	val minMeshNodeSize = 16
 	val worldWindowSize = 64
-	val useshaders = true
+	val useshaders = false
+	val smoothShading = true
+	val skybox = true
 	
 	val ungeneratedDefault = FullHexaeder // UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
 	val FPS_LIMIT = 6000
 	val maxMeshVertexCount = 12345
-	val numWorkingThreads = 8
+	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val patchAtNodeInsert = false
 	val CameraSpeed = 4f
 	val CameraTurboSpeed = 32f

@@ -7,6 +7,7 @@ import org.lwjgl.opengl.ARBVertexBufferObject._
 
 import simplex3d.math.float.{Vec3,Vec2}
 import simplex3d.math.Vec3i
+import simplex3d.math.float.functions.normalize
 
 import simplex3d.data._
 import simplex3d.data.float._
@@ -69,15 +70,60 @@ object EmptyPatch extends Patch[Nothing](0,0,null)
 object MutableTextureMesh{
 	
 	def apply(data:TextureMeshData) = {
-  	import data._
-  	val (vertices,normals,texcoords) = interleave(
+	import data.{vertexArray,texcoordsArray}
+	
+	val normalArray = if(Config.smoothShading) new Array[Vec3](vertexArray.size) else (data.normalArray flatMap (x => Seq(x,x,x)))
+	
+	
+	if(Config.smoothShading){
+		
+		/*
+		val indices = ((0 until vertexArray.size) groupBy vertexArray).values
+		for(x <- indices){
+			val normal = normalize((x map data.normalArray).reduce(_+_))
+			for(i <- x)
+				normalArray(i) = normal
+		}
+		*/
+		
+		val indices = (0 until vertexArray.size).sortWith( (a,b) => {
+			val v1 = vertexArray(a)
+			val v2 = vertexArray(b)
+			(v1.x < v2.x) || (v1.x == v2.x && v1.y < v2.y) || (v1.xy == v2.xy && v1.z < v2.z)
+		})
+		
+		var equals:List[Int] = Nil
+		
+		for(index <- indices){
+			if( equals == Nil || vertexArray(equals.head) == vertexArray(index) )
+				equals ::= index
+			else{
+				val normal = normalize( (equals map ( i => data.normalArray(i/3) ) ).reduce(_+_) )
+				for(j <- equals)
+					normalArray(j) = normal
+				equals = index :: Nil
+			}
+		}
+		
+		def makeSmooth{
+			val normal = normalize( (equals map ( i => data.normalArray(i/3) ) ).reduce(_+_) )
+			for(i <- equals)
+				normalArray(i) = normal
+		}
+		
+		if(equals != Nil)
+			makeSmooth
+	}
+	
+	
+	val (vertices,normals,texcoords) = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec2, RFloat]
 		)(vertexArray.size)
 		for(i <- 0 until vertexArray.size){
 			vertices(i) = vertexArray(i)
-			normals(i) = normalArray(i/3)
+			normals(i) = normalArray(i)
 			texcoords(i) = texcoordsArray(i)
 		}
 		new MutableTextureMesh(vertices,normals,texcoords)
