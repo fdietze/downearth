@@ -9,9 +9,9 @@ object Config{
 
 	val minMeshNodeSize = 16
 	val worldWindowSize = 64
-	val useshaders = false
-	val smoothShading = true
-	val skybox = true
+	val useshaders = true
+	val smoothShading = false
+	val skybox = true //TODO: on false, disable loading of texture
 	
 	val ungeneratedDefault = FullHexaeder // UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
@@ -24,7 +24,7 @@ object Config{
 	
 	val densityfunction:(Vec3 => Float) = v => gen.density(v).toFloat
 	val prediction:( (Vec3,Vec3) => Interval ) = { case (v1,v2) => gen.prediction(Volume(v1,v2)) }	
-	val saveWorld = false
+	val saveWorld = true
 	
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )

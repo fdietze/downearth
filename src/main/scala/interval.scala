@@ -8,8 +8,8 @@ package object interval {
 case class Interval (low:Double = 0.0, high:Double = 0.0) {
 	assert(low <= high, "Invalid Interval: ["+low+", "+high+"], low > high")
 
-	def isPositive = low >= 0 
-	def isNegative = high <= 0
+	def isPositive = low > 0 
+	def isNegative = high < 0
 	def nosize = low == high
 	def apply(value:Double) = low <= value && value <= high
 	

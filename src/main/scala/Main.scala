@@ -253,14 +253,17 @@ object Main {
 	}
 	
 	def activateShader(foo: => Unit){
+		import ARBShaderObjects._
 		val useshaders = shader != 0 && vertshader != 0 && fragshader != 0
-		if(useshaders)
-			ARBShaderObjects.glUseProgramObjectARB(shader)
+		if(useshaders) {
+			glUseProgramObjectARB(shader)
+			glUniform1fARB( glGetUniformLocationARB( shader, "time" ), uptime.toFloat/1000f )
+		}
 		
 		foo
 		
 		if(useshaders)
-			ARBShaderObjects.glUseProgramObjectARB(0)
+			glUseProgramObjectARB(0)
 	}
 	
 	def draw{
