@@ -4,7 +4,9 @@ import simplex3d.data._
 import simplex3d.data.float._
 import simplex3d.math.Vec3i
 import simplex3d.math.float._
-import simplex3d.math.float.functions._
+//import simplex3d.math.float.functions.
+
+import Util._
 
 case class NotHandledYetException(message:String) extends Exception
 
@@ -22,7 +24,6 @@ object CaseType extends Enumeration {
 import CaseType._
 
 object MarchingHexaeder{
-	import Util._
 	def sameEdge(a:Int,b:Int) = isPowerOfTwo(a ^ b)
 	def over2edges(a:Int,b:Int) = isPowerOfTwo((~(a^b)) & 7)
 	def extractPositiveEdges(x:Int) = for(i <- 0 until 8 if(((1 << i) & x) == (1 << i))) yield i
@@ -69,7 +70,6 @@ object MarchingHexaeder{
 	val stableCases = Set(allPositive,allNegative,onePositive,twoPositivesConnected,fourPositivesConnectedOnPlane,broken)
 	def isStableCase(caseType:CaseType) = stableCases contains caseType
 
-	// TODO scheiß name der Funktion uns scheiß Variablenamen
 	def transformToStable(data:IndexedSeq[Float],oldCase:Int):(IndexedSeq[Float],Int) = {
 		// Wenn instabiler Fall: Werte auf 0 setzen (Dichtefunktion verzerren), je nach Fall um auf stabilen fall zu kommen
 		
@@ -100,7 +100,7 @@ object MarchingHexaeder{
 
 		def error(poslist:Seq[Int]) = poslist.map(data(_).abs).sum
 		
-		// TODO zeroNegativeZero behandeln
+		// zeroNegativeZero behandeln
 		// es ist nur eine Ecke eingedrückt, aber man muss wissen welche 
 		// Ecke in welche Richtung eingedrückt ist.
 		// zudem ist ein oneNegative nicht automatisch ein StableCase, 
@@ -153,10 +153,10 @@ object MarchingHexaeder{
 					//    /|      /|
 					//   / |     / |
 					//  c--+----a  |
-					//  |  +----+--f     
+					//  |  +----+--f
 					//  | /     | /
 					//  |/      |/
-					//  d-------b					
+					//  d-------b
 					val Seq(a,b) = extractNegativeEdges(newCase)
 					
 					val otherAxis = Set(1,2,4) - (a^b)
@@ -236,20 +236,20 @@ object MarchingHexaeder{
 						setZero(b)
 
 				case `threeNegativesUnconnected` =>
-					
-					// TODO: oder: einen auf Null setzen und die Ecken zwischen den beiden anderen Negativen auf null setzten => Plane
 					setZero( extractNegativeEdges(newCase):_* )
-				
+					// oder: einen auf Null setzen und die Ecken zwischen den beiden anderen Negativen auf null setzten => Plane
+					// der Fall tritt allerdings zu selten auf
 				case `twoNegativesOverTwoEdges` =>
 					// Beide auf Null setzen => allPositive
 					// oder: Beide dazwischen auf Null setzen => Plane
 					val Seq(a,b) = extractNegativeEdges(newCase)
-					//TODO: hier fliegt exception, dass a und b nicht auf einem plane liegen
 					val Seq(c,d) = getOppositesOnPlane(a,b)
 					if( error(Seq(c,d)) > error(Seq(a,b)) )
 						setZero(a,b)
 					else
 						setZero(c,d)
+					
+					// könnte aber auch zero negativ zero sein
 
 				case `twoPositivesOverTwoEdges` =>
 					// einen auf Null setzen => onePositive

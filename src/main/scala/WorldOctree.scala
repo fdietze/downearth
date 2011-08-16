@@ -195,8 +195,9 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			if(job indexInRange info)
 				return true
 		}
-		for( (job,_) <- WorldNodeGenerator.Master.done ){
-			if(job indexInRange info)
+		// TODO hier gibts manchmal eine exception
+		for( job <- WorldNodeGenerator.Master.done ){
+			if(job._1 indexInRange info)
 				return true
 		}
 		
