@@ -37,10 +37,10 @@ val vn20_sphere_uid4e4afc52 = sphere_uid4e4afc52(vn3_createvec3_uid4e4afc52, 54.
 val vn29_sphere_uid4e4afc52 = sphere_uid4e4afc52(vn24_scalevec3_uid4e4afc52, 131.59856981197643)
 val vn14_scalesrcv_uid4e4afc52 = scalesrcv_uid4e4afc52(0.10881882041201557)
 val vn25_addconstantexp_uid4e4afc52 = addconstantexp_uid4e4afc52(vn20_sphere_uid4e4afc52, 30.124958317193155)
-val vn1_perlinnoise3_uid4e4afc52 = perlinnoise3_uid4e4afc52(vn14_scalesrcv_uid4e4afc52, 0.0, 0.0, 0.0, vn29_sphere_uid4e4afc52, 0.0, 0.5743491774985172, 205.0738886629432, -0.43999999999999995)
+val vn1_perlinnoise3_uid4e4afc52 = perlinnoise3_uid4e4afc52(vn14_scalesrcv_uid4e4afc52, 0.0, 0.0, 0.0, vn29_sphere_uid4e4afc52, 0.0, 0.7169776240079135, 256.0, -0.56)
 val vn31_negate_uid4e4afc52 = negate_uid4e4afc52(vn25_addconstantexp_uid4e4afc52)
 val vn6_min2_uid4e4afc52 = min2_uid4e4afc52(vn31_negate_uid4e4afc52, vn1_perlinnoise3_uid4e4afc52)
-val vn11_perlinnoise3_uid4e4afc52 = perlinnoise3_uid4e4afc52(vn14_scalesrcv_uid4e4afc52, 0.0, 0.0, 0.0, vn20_sphere_uid4e4afc52, 0.0, 0.05593906693299827, 0.5743491774985175, 0.0)
+val vn11_perlinnoise3_uid4e4afc52 = perlinnoise3_uid4e4afc52(vn14_scalesrcv_uid4e4afc52, 0.0, 0.0, 0.0, vn20_sphere_uid4e4afc52, 0.0, 0.05593906693299827, 0.2642545101403451, 0.0)
 val vn5_max3_uid4e4afc52 = max3_uid4e4afc52(vn11_perlinnoise3_uid4e4afc52, vn20_sphere_uid4e4afc52, vn6_min2_uid4e4afc52)
 
 vn5_max3_uid4e4afc52

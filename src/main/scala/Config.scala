@@ -8,7 +8,7 @@ import noise.interval.{Interval, Volume}
 object Config{
 
 	val minMeshNodeSize = 16
-	val worldWindowSize = 64
+	val worldWindowSize = 128
 	val useshaders = true
 	val smoothShading = false
 	val skybox = true //TODO: on false, disable loading of texture
@@ -24,7 +24,7 @@ object Config{
 	
 	val densityfunction:(Vec3 => Float) = v => gen.density(v).toFloat
 	val prediction:( (Vec3,Vec3) => Interval ) = { case (v1,v2) => gen.prediction(Volume(v1,v2)) }	
-	val saveWorld = true
+	val saveWorld = false
 	
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
