@@ -95,6 +95,16 @@ def square(i:Interval) = {
 	else
 		Interval(0, functions.max(i.low*i.low, i.high*i.high))
 }
+
+def pow(i:Interval, n:Int) = {
+	if( i.isPositive || (n & 1) == 1)
+		Interval(functions.pow(i.low,n), functions.pow(i.high,n))
+	else if( i.isNegative && (n & 1) == 0 )
+		Interval(functions.pow(i.high,n), functions.pow(i.low,n))
+	else
+		Interval(0,functions.pow(functions.max(functions.abs(i.low), functions.abs(i.high)),n))
+}
+
 def length(v:Volume) = sqrt(square(v.x) + square(v.y) + square(v.z))
 
 // Factories

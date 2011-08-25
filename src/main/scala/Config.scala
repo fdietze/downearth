@@ -12,10 +12,11 @@ object Config{
 	val useshaders = true
 	val smoothShading = false
 	val skybox = true //TODO: on false, disable loading of texture
+	val fullscreen = true
 	
 	val ungeneratedDefault = FullHexaeder // UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
-	val FPS_LIMIT = 6000
+	val FPS_LIMIT = 60
 	val maxMeshVertexCount = 12345
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val patchAtNodeInsert = false

@@ -20,7 +20,7 @@ object TextureManager{
 		texture
 	}
 	
-	val box = loadImage("box2.png")
-	val skybox = loadImage("stormydays_rearrange.jpg")
+	lazy val box = loadImage("box2.png")
+	lazy val skybox = loadImage("stormydays_rearrange.jpg")
 }
 

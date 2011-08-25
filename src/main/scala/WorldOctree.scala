@@ -196,11 +196,16 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 				return true
 		}
 		// TODO hier gibts manchmal eine exception
-		for( job <- WorldNodeGenerator.Master.done ){
-			if(job._1 indexInRange info)
+		try{
+			for( job <- WorldNodeGenerator.Master.done ){
+				if(job._1 indexInRange info)
+					return true
+			}
+		}
+		catch{
+			case x => println(x)
 				return true
 		}
-		
 		if(rootNodeInfo indexInRange info)
 			return root.isSet(rootNodeInfo,info)
 		else

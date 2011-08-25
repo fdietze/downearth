@@ -75,6 +75,7 @@ object Main {
 		Display.setTitle("Worldgen")
 		Display.setDisplayMode(displayMode)
 		Display.create()
+//		Display.setFullscreen(Config.fullscreen)
 		
 		if(Config.useshaders)
 			initshaders
