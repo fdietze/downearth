@@ -210,7 +210,7 @@ object MarchingHexaeder{
 						
 					
 				case `threeNegativesConnected` =>
-					//wird zu Plane, indem der vierte in dieser negativen Ebene Auf Null gesetzt wird
+					
 					val negatives = extractNegativeEdges(newCase)
 					val p0 = negatives.reduceLeft( _ ^ _ )
 					
@@ -223,8 +223,10 @@ object MarchingHexaeder{
 					// p0--n2
 					
 					if( error(Seq(p0)) < error(Seq(n0,n2)) )
+						//wird zu Plane, indem der vierte in dieser negativen Ebene Auf Null gesetzt wird
 						setZero(p0)
 					else
+						//wird zu ZeroNegativeZero, indem die beiden ausen liegenden Vertices auf Null gesetzt werden
 						setZeroPreserveSign(n0,n2)
 					
 				case `twoPositivesOverThreeEdges` =>

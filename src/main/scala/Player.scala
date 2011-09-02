@@ -67,12 +67,7 @@ object Player extends ControlInterface{
 	}
 	
 	def jump{
-		val v = new Vector3f
-		body getLinearVelocity v
-		if( abs(v.z) < 0.5 )
-			body.applyCentralImpulse(new Vector3f(0,0,5))
-		// if there is a contact point
-		// jum in direction of Body normal
+		body.applyCentralImpulse(new Vector3f(0,0,5))
 	}
 }
 

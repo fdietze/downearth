@@ -54,38 +54,54 @@ object WorldGenerator {
 			val noiseData = new Array3D[Float](Vec3i(nodesize+3))
 			//braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 			val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
-		
-			def extractData(pos:Vec3i) = {
+			
+			noiseData.fill(v =>	densityfunction(nodepos+v-1))
+			val transformedData = new Array3D[Float](Vec3i(nodesize+3))
+			transformedData fill (v => noiseData(v))
+			
+			val casecounter = new Array[Int](22)
+			
+			def extractNoiseData(pos:Vec3i) = {
 				assert(exactCaseData.indexInRange(pos))
 				offset map (o => noiseData(pos+o))
 			}
-
-			noiseData.fill(v =>	densityfunction(nodepos+v-1) )
-		
-			val casecounter = new Array[Int](22)
-
+			
+			def extractTransformedData(pos:Vec3i) = {
+				assert(exactCaseData.indexInRange(pos))
+				offset map (o => transformedData(pos+o))
+			}
 			
 			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ){
-				val exactCase = dataToCase(extractData(coord))
+				val exactCase = dataToCase(extractNoiseData(coord))
 				exactCaseData(coord) = exactCase.toShort
 			}
-		
+			
 			
 			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
-				val data = extractData(coord)
+				val data = extractNoiseData(coord)
 				val exactCase = exactCaseData(coord)
 				val caseType = caseTypeLookup(exactCase)
 		
 				if( !isStableCase(caseType) ) {
 					val (newData, newCase) = transformToStable(data,exactCase)
-					noiseData(coord) = newData
+					transformedData(coord) = newData
 					exactCaseData(coord) = newCase.toShort		
 				}
 			}
-
+			
 			def fillfun(v:Vec3i) = {
 				val arraypos = v + 1 - nodepos
-				val h = data2hexaeder(extractData(arraypos), exactCaseData(arraypos))
+				val h = 
+				try{
+					data2hexaeder(extractTransformedData(arraypos), exactCaseData(arraypos))
+				}
+				catch{
+					case e => 
+						println(extractTransformedData(arraypos))
+						println(exactCaseData(arraypos))
+						println(e)
+						null
+				}
 				if( h.noVolume )
 					EmptyHexaeder
 				else h

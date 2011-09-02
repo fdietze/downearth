@@ -6,6 +6,7 @@
 varying vec3 vertex;
 varying vec3 normal;
 varying vec4 world;
+uniform float time;
 
 /*
 possible vertex shader:
@@ -78,16 +79,16 @@ float noise3(vec3 v) {return noise3(v.x, v.y, v.z);}
 
 /////////////////////////////////////////////////////
 
-vec4 matrgb(float r, float g, float b) {return vec4(r, g, b, 0.0);}
+vec4 matrgb_uid4e4af9b6(float r, float g, float b) {return vec4(r, g, b, 0.0);}
 
 
 
 void main(){
 
-vec4 vn4_matrgb = matrgb(0.5, 0.64, 0.74);
+vec4 vn4_matrgb_uid4e4af9b6 = matrgb_uid4e4af9b6(0.21, 0.3, 0.43);
 
 
-	vec4 materialcolor = vn4_matrgb;
+	vec4 materialcolor = vn4_matrgb_uid4e4af9b6;
 	
 	vec3 L = normalize(gl_LightSource[0].position.xyz - vertex);   
 	vec4 Idiff = clamp(gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0), 0.0, 1.0);  
