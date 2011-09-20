@@ -7,11 +7,12 @@ import noise.interval.{Interval, Volume}
 
 object Config{
 
-	val minMeshNodeSize = 32
+	val minMeshNodeSize = 16
 	val worldWindowSize = 128
 	val useshaders = false
 	val smoothShading = false
-	val skybox = true
+	val skybox = true //TODO: on false, disable loading of texture
+	val fullscreen = true
 	
 	val ungeneratedDefault = FullHexaeder // UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
