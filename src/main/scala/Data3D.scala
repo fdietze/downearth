@@ -25,13 +25,12 @@ trait Data3D[A]{
 	}
 }
 
-class Array3D[@specialized(Byte,Short,Float,Double) A:ClassManifest](val vsize:Vec3i) 
+class Array3D[@specialized(Byte,Short,Float,Double) A:ClassManifest](val vsize:Vec3i, val data:Array[A]) 
 extends Data3D[A] with Iterable[A] with Serializable{
+	def this(vsize:Vec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
 
-	import vsize.{x => sx,y => sy, z => sz}
-
+	import vsize.{x ⇒ sx,y ⇒ sy, z ⇒ sz}
 	val volume = sx*sy*sz
-	private val data = new Array[A](volume)
 	
 	def index(pos:Vec3i) = pos.x + sx*(pos.y + sy*pos.z)
 	
@@ -39,12 +38,6 @@ extends Data3D[A] with Iterable[A] with Serializable{
 		assert( indexInRange(v) )
 		data( index(v) )
 	}
-
-	// 8 Umliegende Datensätze auslesen
-	/*
-	def apply(v:Vec3i,i:Int) = {
-		apply(v + Vec3i(i&1,(i&2)>>1,(i&4)>>2))
-	}*/
 
 	def update(v:Vec3i,i:Int,value:A){
 		update(v + Vec3i(i&1,(i&2)>>1,(i&4)>>2),value)
@@ -61,11 +54,20 @@ extends Data3D[A] with Iterable[A] with Serializable{
 			update( v,i,data(i) )
 	}
 	
+	def extract(pos:Vec3i) = {
+		
+		(for(i ← Vec3i(0) until Vec3i(2) ) yield apply(pos + i)).toIndexedSeq
+	}
+	
 	import collection.Iterator
 	
 	def iterator = data.iterator
 	
 	override def toString = data.mkString
+	
+	override def clone = {
+		new Array3D(vsize,data.clone)
+	}
 }
 
 

@@ -11,12 +11,12 @@ object Config{
 	val worldWindowSize = 64
 	val useshaders = true
 	val smoothShading = false
-	val skybox = true //TODO: on false, disable loading of texture
+	val skybox = true
 	
-	val ungeneratedDefault = FullHexaeder // UndefHexaeder
+	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)//Vec3(-10,34,164)
-	val FPS_LIMIT = 6000
-	val maxMeshVertexCount = 12345
+	val FPS_LIMIT = 60
+	val maxMeshVertexCount = 30000
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val patchAtNodeInsert = false
 	val CameraSpeed = 4f
@@ -24,7 +24,7 @@ object Config{
 	
 	val densityfunction:(Vec3 => Float) = v => gen.density(v).toFloat
 	val prediction:( (Vec3,Vec3) => Interval ) = { case (v1,v2) => gen.prediction(Volume(v1,v2)) }	
-	val saveWorld = true
+	val saveWorld = false
 	
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )

@@ -100,8 +100,8 @@ object DefaultHexaeder{
 	def id = m_id
 	
 	def current = all(id)
-	def rotate{
-		id = (id+1) % all.size
+	def rotate(num:Int){
+		id = (id+num+all.size) % all.size
 	}
 }
 

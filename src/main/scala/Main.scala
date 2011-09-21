@@ -245,9 +245,11 @@ object Main {
 						Controller.build
 					case 0 =>
 						Controller.remove
-					case _ => 
+					case _ =>
 					}
 				}
+				else
+					println("mouseEvent" + getEventButton)
 			}
 		}
 	}
