@@ -15,3 +15,13 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 libraryDependencies += "se.scalablesolutions.akka" % "akka-actor" % "1.1.3" 
 
 javaOptions in run += "-XX:+ExplicitGCInvokesConcurrent"
+
+javaOptions in run += "-Xmx512m"
+
+javaOptions in run += "-Xms512m"
+
+//scalacOptions in Compile += "-g:none" // keine debug-infos
+
+//scalacOptions in Compile += "-optimise"
+
+//javaOptions in run += "-XX:+UseCompressedOops"
