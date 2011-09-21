@@ -55,8 +55,8 @@ extends Data3D[A] with Iterable[A] with Serializable{
 	}
 	
 	def extract(pos:Vec3i) = {
-		
-		(for(i ← Vec3i(0) until Vec3i(2) ) yield apply(pos + i)).toIndexedSeq
+		MarchingHexaeder.offset map ( v ⇒ apply(v+pos) )
+		//(for(i ← Vec3i(0) until Vec3i(2) ) yield apply(pos + i)).toIndexedSeq
 	}
 	
 	import collection.Iterator
