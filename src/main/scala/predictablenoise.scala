@@ -91,7 +91,7 @@ object Noise {
 		import v.y.{low => y0, high => y1}
 		import v.z.{low => z0, high => z1}
 		
-		if( v.nosize ) return Interval(noise3(v.low))
+		//if( v.isDegenerate ) return Interval(noise3(v.low))
 		
 		// Edges of the unit cube
 		val X = fastfloor(x0)
@@ -210,6 +210,7 @@ g3y/6,(g3z-g3y)/6,(2*g3z-g3y)/6,-(6*g7z+g7y-6*g3z+g3y)/12,-(2*g7z+g7y)/6,-(g7z+g
 		Interval(imin,imax)
 	}
 	
+	// Improved Perlin Noise
 	def noise3(v:Vec3):Double = noise3(v.x, v.y, v.z)
 	def noise3(x:Double, y:Double, z:Double):Double = {
 
