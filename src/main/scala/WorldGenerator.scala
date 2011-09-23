@@ -63,7 +63,7 @@ object WorldGenerator {
 			val originalNoiseData = new Array3D[Float](Vec3i(nodesize+3))
 			// Füllen der Datenpunkte mit Hilfe der Dichtefunktion
 			originalNoiseData.fill(v =>	densityfunction(nodepos+v-1) )
-			//val modifiedNoiseData = originalNoiseData.clone
+			val modifiedNoiseData = originalNoiseData.clone
 			val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 		
 
@@ -76,8 +76,8 @@ object WorldGenerator {
 			// für jeden Cube:
 			for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
 				// Datenpunkte extrahieren
-				val data = originalNoiseData.extract(coord)
-				//val modifiedData = modifiedNoiseData.extract(coord,Vec3i(2))
+				val originalData = originalNoiseData.extract(coord)
+				val modifiedData = modifiedNoiseData.extract(coord)
 				// Fall für diesen Cube auslesen und benennen
 
 				val exactCase = exactCaseData(coord)
@@ -86,17 +86,27 @@ object WorldGenerator {
 				// Wenn Fall nicht darstellbar
 				if( !isStableCase(caseType) ) {
 					// In einen darstellbaren Fall transformieren
-					val (newData, newCase) = transformToStable(data,exactCase)
+					val (newData, newCase) = transformToStable(originalData,exactCase)
+					
+					// Stabilisierung auf die schon modifizierten Datan anwenden
+					val merge = 
+						for( i <- 0 until 8 ) yield {
+							if( newData(i) == 0 )
+								0
+							else
+								modifiedData(i)
+						}
+					
 					// Transformierten Cube abspeichern
-					originalNoiseData(coord) = newData
-					exactCaseData(coord) = newCase.toShort		
+					modifiedNoiseData(coord) = merge
+					exactCaseData(coord) = newCase.toShort
 				}
 			}
 
 			// Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
 			def fillfun(v:Vec3i) = {
 				val arraypos = v + 1 - nodepos
-				val h = data2hexaeder( originalNoiseData.extract(arraypos), exactCaseData(arraypos) )
+				val h = data2hexaeder( modifiedNoiseData.extract(arraypos), exactCaseData(arraypos) )
 
 				if( h.noVolume )
 					EmptyHexaeder
