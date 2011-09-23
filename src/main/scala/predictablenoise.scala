@@ -91,15 +91,12 @@ object Noise {
 		import v.y.{low => y0, high => y1}
 		import v.z.{low => z0, high => z1}
 		
-		//if( v.isDegenerate ) return Interval(noise3(v.low))
-		
 		// Edges of the unit cube
 		val X = fastfloor(x0)
 		val Y = fastfloor(y0)
 		val Z = fastfloor(z0)
 		
 		// Interval needs to stay inside one unit cube of the lattice
-		
 		if( X < fastceil(x1)-1
 		 || Y < fastceil(y1)-1
 		 || Z < fastceil(z1)-1 )
