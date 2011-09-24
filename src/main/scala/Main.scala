@@ -18,6 +18,7 @@ import simplex3d.data.float._
 import org.newdawn.slick.Font
 
 import Util._
+import Config._
 import Config.FPS_LIMIT
 
 object Main {
@@ -71,7 +72,7 @@ object Main {
 	}
 
 	def init{
-		val displayMode = new DisplayMode(Camera.WIDTH, Camera.HEIGHT)
+		val displayMode = new DisplayMode(screenWidth, screenHeight)
 		Display.setTitle("Worldgen")
 		Display.setDisplayMode(displayMode)
 		Display.create()
@@ -179,7 +180,6 @@ object Main {
 					else
 						Mouse setGrabbed true
 				case KEY_R =>
-					Balls.resetBallPos
 					Player.resetPos
 				case KEY_RIGHT =>
 					World.octree.move(Vec3i( 1,0,0))

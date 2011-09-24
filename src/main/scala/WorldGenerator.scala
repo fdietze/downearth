@@ -30,7 +30,7 @@ object WorldGenerator {
 	
 	def genWorldAt(nodeinfo:NodeInfo):WorldOctree = {
 		val NodeInfo(nodepos, nodesize) = nodeinfo
-		import MarchingHexaeder._ //TODO: MarchingHexaeder umbenennen zu HexaederMC
+		import HexaederMC._ //TODO: MarchingHexaeder umbenennen zu HexaederMC
 		
 		val octree = new WorldOctree( nodesize, nodepos.clone )
 		

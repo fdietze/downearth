@@ -23,7 +23,7 @@ object CaseType extends Enumeration {
 
 import CaseType._
 
-object MarchingHexaeder{
+object HexaederMC{
 	def sameEdge(a:Int,b:Int) = isPowerOfTwo(a ^ b)
 	def over2edges(a:Int,b:Int) = isPowerOfTwo((~(a^b)) & 7)
 	def extractPositiveEdges(x:Int) = for(i <- 0 until 8 if(((1 << i) & x) == (1 << i))) yield i

@@ -5,7 +5,10 @@ import simplex3d.math.float.functions.{lessThan,lessThanEqual,greaterThanEqual,n
 import simplex3d.math.float.{Vec3,Vec2}
 import simplex3d.data.DataArray._
 
-object LookupTables{
+import Util._
+
+// Konstanten zur Verwendung im Hexaeder
+object Hexaeder{
 	val planelookup = Vector(
 		Vector(0,2,4,6),
 		Vector(1,3,5,7),
@@ -16,15 +19,15 @@ object LookupTables{
 	)
 }
 
+import Hexaeder._
 import scala.collection.mutable.WrappedArray
 
-// TODO eigener hexaeder der nicht geändert werden kann
+// TODO ein hexaeder der nicht geändert werden kann
 case object FullHexaeder extends PartialHexaeder{
 	override def toString = "[X]"
 	private val m_normals = Array(Vec3( 1,0,0),Vec3(0, 1,0),Vec3(0,0, 1),Vec3(-1,0,0),Vec3(0,-1,0),Vec3(0,0,-1))
 	override def normals = m_normals
 	override def planemax(axis:Int, direction:Int) = true
-	
 }
 
 case object EmptyHexaeder extends Hexaeder{
@@ -70,8 +73,6 @@ class PartialHexaeder(
 	var Y:Int = 0x88008800,
 	var Z:Int = 0x88880000)
 		extends Hexaeder {
-	import LookupTables._
-	import Util._
 	
 	//   Stores 8 Vertices * 3 Nibbles
 	//   +---+---+---+---+---+---+---+---+---+---+---+---+
@@ -83,16 +84,11 @@ class PartialHexaeder(
 	implicit def int2byte(i:Int) = i.toByte
 	implicit def bool2int(b:Boolean) = if(b) 1 else 0
 	
-
-	//val data = Array[Byte](0x08,0x08,0x08,0x08,     0x00,0x88,0x00,0x88,     0x00,0x00,0x88,0x88)
-	//override def toString = data.map(b => "%h".format(b & 0xFF).reverse.padTo(2,'0').reverse ).mkString("[",",","]")
 	override def toString = "%h %h %h".format(X,Y,Z)
-	
-	
+
 	override def equals(that:Any) = {
 		that match {
 		case h:PartialHexaeder =>
-			//data.deep == h.data.deep
 			(X == h.X && Y == h.Y && Z == h.Z)
 		case _ => 
 			false
@@ -105,21 +101,7 @@ class PartialHexaeder(
 	def checkrange(p:Int) = 0 <= p && p < 8 // 8 Vertices
 	def checkvalue(v:Float) = 0 <= v && v <= 1f
 	def checkvertex(v:Vec3) = all(greaterThanEqual(v,Vec3(0))) && all(lessThanEqual(v,Vec3(1f)))
-		
 	
-	/*
-	def readNibble(i:Int) = {
-		val byte = data(i/2)
-		val nib = 1 - (i&1)
-		(byte & (0x0F << (nib << 2) )) >> ( nib << 2 )
-	}
-	
-	def writeNibble(i:Int,nibble:Int) {
-		var byte = data(i/2)
-		val nib = 1 - (i&1)
-		data(i/2) = (byte & (0xF0 >> (nib << 2) )) | ( nibble << ( nib << 2 ) )
-	}
-	*/
 	def writeX(i:Int,v:Int){ X = (X & ~(15 << (i*4))) | v << (i*4) }
 	def readX(i:Int) = (X >> (i*4)) & 15
 	def writeY(i:Int,v:Int){ Y = (Y & ~(15 << (i*4))) | v << (i*4) }
@@ -128,21 +110,16 @@ class PartialHexaeder(
 	def readZ(i:Int) = (Z >> (i*4)) & 15
 	
 	def readVertex(p:Int) = {
-		//Vec3i(readNibble(p),readNibble(8+p),readNibble(16+p))
 		Vec3i(readX(p),readY(p),readZ(p))
 	}
 	
 	def writeVertex(p:Int, v:Vec3i) = {
-		//writeNibble(p, v.x)
-		//writeNibble(8+p, v.y)
-		//writeNibble(16+p, v.z)
 		writeX(p,v.x)
 		writeY(p,v.y)
 		writeZ(p,v.z)
 	}
 	
 	def readComponent(p:Int, axis:Int):Int = {
-		//readNibble((axis << 3) + p)
 		axis match{
 			case 0 => return readX(p)
 			case 1 => return readY(p)
@@ -151,7 +128,6 @@ class PartialHexaeder(
 	}
 
 	def writeComponent(p:Int, axis:Int, v:Int) = {
-		//writeNibble((axis << 3) + p, v)
 		axis match{
 			case 0 => writeX(p,v)
 			case 1 => writeY(p,v)
@@ -280,28 +256,3 @@ class PartialHexaeder(
 		return false
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

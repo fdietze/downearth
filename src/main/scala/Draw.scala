@@ -9,8 +9,9 @@ import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
 
-object Draw{
-	def renderAxis{
+// nützliche Methoden, um verschiedene Objekte zu zeichnen.
+object Draw {
+	def renderAxis {
 		glBegin(GL_LINES)
 		glColor3f(1,0,0)
 		glVertex3f(0,0,0)
@@ -24,19 +25,7 @@ object Draw{
 		glEnd
 	}
 	
-	def renderGrid(size : Int){
-	    // this creates the nice looking background.
-		glBegin(GL_LINES)
-		for(i <- -size to size){
-			glVertex2i(i,-size)
-			glVertex2i(i, size)
-			glVertex2i(-size,i)
-			glVertex2i( size,i)
-		}
-		glEnd
-	}
-	
-	def renderCube(size:Float){
+	def renderCube(size:Float) {
 		glPushMatrix
 		glScalef(size,size,size)
 		glBegin(GL_LINES)
@@ -64,37 +53,40 @@ object Draw{
 		glEnd
 	}
 	
-	def renderHexaeder(h:Hexaeder){
+	// rendert den Umriss eines Hexaeders, um ihn für die Selektion hervorheben zu können.
+	def renderHexaeder(h:Hexaeder) {
 		val verts = h.vertices
 		
 		val indices = Seq(0,1,2,3,4,5,6,7,0,2,1,3,4,6,5,7,0,4,1,5,2,6,3,7)
 		
-		try{
+		try {
 			glBegin(GL_LINES)
 			for(v <- indices map verts)
 				glVertex3f(v.x,v.y,v.z)
 			glEnd
 		}
-		catch{
+		catch {
 			case e:Exception => 
 				println("cant draw Hexaeder: " + h + "\nvertices: " + h.vertices)
 				throw e
 		}
 	}
-	
+
+
+	// simuliert ein Konsolenähnliches verhalten, um Text auf dem Bildschirm darzustellen
 	var textCache:List[String] = Nil
 	
-	def addText(msg:Any){
+	def addText(msg:Any) {
 		textCache ::= msg.toString
 	}
 	
 	def drawTexts{
 		import org.newdawn.slick.Color.white
-		if( textCache.size > 0 ){
+		if( textCache.size > 0 ) {
 			glEnable(GL_BLEND)
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 			val pos = Vec2i(20,20)
-			for( msg <- textCache ){
+			for( msg <- textCache ) {
 				MyFont.font.drawString(pos.x, pos.y, msg, white)
 				pos.y += 20
 			}
@@ -103,6 +95,4 @@ object Draw{
 			textCache = Nil
 		}
 	}
-	
 }
-

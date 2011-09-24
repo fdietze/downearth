@@ -15,33 +15,28 @@ import com.bulletphysics.linearmath.Transform
 import com.bulletphysics.collision.shapes.SphereShape
 
 import Util._
-
-object Camera{
-	val WIDTH = 1024
-	val HEIGHT = WIDTH*3/4
-	val UP = Vec3.UnitZ
-}
+import Config._
 
 abstract class Camera{
 	def renderScene
 }
 
+// Eine Kamera, die frei im Raum bewegt werden kann, und selbst dafür sorgt, dass alles was sie sieht gerendert wird
 class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with ControlInterface{
-	def this (positionVec:Vec3,directionVec:Vec3) = this(positionVec,quaternion(lookAt(-directionVec,Camera.UP)))
+	def this (positionVec:Vec3,directionVec:Vec3) = this(positionVec,quaternion(lookAt(-directionVec,worldUpVector)))
 	
-	import Camera._
 	def camera = this
 	
-	def direction = directionQuat.rotateVector(-UP)
+	def direction = directionQuat.rotateVector(-worldUpVector)
 	
-	// rotates the camera to have a correct upwards vector
+	// rotiert die Kamera, damit der worldUpVector auch für die Kamera oben ist
 	def lerpUp(factor:Float){
-		val dest = quaternion(lookAt(-direction,Camera.UP))
+		val dest = quaternion(lookAt(-direction,worldUpVector))
 		directionQuat = slerp(directionQuat,dest,factor)
 	}
 	
 	val frustum = {
-		val v = WIDTH.toFloat / HEIGHT.toFloat	
+		val v = screenWidth.toFloat / screenHeight.toFloat	
 		
 		val n = 0.05f //near
 		val f = 1000   //far
@@ -52,6 +47,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
 	
+	// setzt die Projektionsmatrix
 	def applyfrustum{
 		glMatrixMode(GL_PROJECTION)
 		glLoadMatrix( frustum )
@@ -59,15 +55,9 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 		glDisable(GL_BLEND)
 	}
 	
+	// setzt die Rotation und Position der Kamera
 	def apply = {
 		val data = DataBuffer[Mat4,RFloat](1)
-		if(Config.skybox){
-			glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat))) )
-			glDisable( GL_DEPTH_TEST )
-			glDisable( GL_LIGHTING )
-			Skybox.render
-		}
-		
 		glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position))) )
 	}
 	
@@ -83,6 +73,14 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 	
 	def renderScene {
 		applyfrustum
+		
+		if(Config.skybox){
+			glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat))) )
+			glDisable( GL_DEPTH_TEST )
+			glDisable( GL_LIGHTING )
+			Skybox.render
+		}
+		
 		apply
 		
 		lighting
@@ -112,14 +110,13 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 
 // 2D Kamera für die GUI
 object GUI extends Camera{
-	import Camera.{WIDTH,HEIGHT}
 	
 	def applyortho{
 		glDisable(GL_DEPTH_TEST)
 		glDisable(GL_LIGHTING)
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity
-		glOrtho(0,WIDTH,HEIGHT,0,-1,1)
+		glOrtho(0,screenWidth,screenHeight,0,-1,1)
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity
 	}
@@ -128,9 +125,10 @@ object GUI extends Camera{
 		applyortho
 		Main.showfps
 		Draw.drawTexts
-		glTranslatef(Camera.WIDTH/2,Camera.HEIGHT/2,0)
+		glTranslatef(screenWidth/2,screenHeight/2,0)
 		Draw.crossHair
 	}
 }
 
+// Frei bewegliche Kamera im Level die jederzeit rendern kann
 object FreeCamera extends Camera3D(positionVec = Vec3(3,1,0), directionVec = Vec3(0.26f,-0.05f,0.14f))

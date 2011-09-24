@@ -3,12 +3,9 @@ package xöpäx
 import simplex3d.math.Vec3i
 import simplex3d.math.float.functions.{lessThan,lessThanEqual,greaterThanEqual}
 import simplex3d.math.{all}
-/******************************************************************************/
-/* assert(x<sx && y < sy && z < sz && 0 <= x && 0 <= y && 0 <= z) */
-/******* @specialized(Byte,Short,Float,Double)                          *******/
-/******************************************************************************/
 
 import Util._
+
 
 trait Data3D[A]{
 	def vsize:Vec3i
@@ -54,9 +51,9 @@ extends Data3D[A] with Iterable[A] with Serializable{
 			update( v,i,data(i) )
 	}
 	
+	// Wird für den HexaederMC verwerdet, und extrahiert die 8 Datenpunkte, die für die Generierung eines Hexaeders relevant sind
 	def extract(pos:Vec3i) = {
-		MarchingHexaeder.offset map ( v ⇒ apply(v+pos) )
-		//(for(i ← Vec3i(0) until Vec3i(2) ) yield apply(pos + i)).toIndexedSeq
+		HexaederMC.offset map ( v ⇒ apply(v+pos) )
 	}
 	
 	import collection.Iterator
@@ -69,5 +66,3 @@ extends Data3D[A] with Iterable[A] with Serializable{
 		new Array3D(vsize,data.clone)
 	}
 }
-
-
