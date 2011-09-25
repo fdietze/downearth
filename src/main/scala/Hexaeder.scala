@@ -9,6 +9,7 @@ import Util._
 
 // Konstanten zur Verwendung im Hexaeder
 object Hexaeder{
+	// die Lookup-Tabelle für die Vertex-Indizes der sechs Seitenflächen
 	val planelookup = Vector(
 		Vector(0,2,4,6),
 		Vector(1,3,5,7),
@@ -179,7 +180,7 @@ class PartialHexaeder(
 		import scala.collection.mutable.ArrayBuilder
 		val normalBuilder = ArrayBuilder.make[Vec3]
 		for(axis <- 0 to 2; direction <- 0 to 1){
-			if(planemax(axis,direction)){
+			if(planemax(axis,direction)) {
 				val normal = Vec3(0)
 				normal(axis) = (direction << 1) - 1
 				normalBuilder += normal
@@ -193,23 +194,30 @@ class PartialHexaeder(
 		normalBuilder.result
 	}
 	
+	// Gibt eine Liste aller 8 Vertices zurück
 	def vertices = (0 until 8) map apply
 	
+	/**
+	 * @param axis Achse 0,1,2 für x,y,z
+	 * @param direction 0,1 für nagativ, positiv
+	 * @return Vektor mit indizes der Vertices einer Seitenfläche
+	 */
 	def plane(axis:Int, direction:Int) = planelookup(axis << 1 | direction)
 
+	// gibt an, ob sich eine Seitenfläche am äußersten Rand seiner Zelle befindet,
+	// d.h. alle Vertices in der jeweiligen Achsenrichtung den größten bzw kleinsten Wert haben
 	def planemax(axis:Int, direction:Int) =	{
-		var b = true
+		var isAllMax = true
 		for( vi <- plane(axis,direction) )
-			b &&= readComponent(vi, axis) == direction*detail
+			isAllMax &&= readComponent(vi, axis) == direction*detail
 
-		b
+		isAllMax
 	}
 	
 	
-	// TODO statt planecoords und planetriangles
+	// TODO zusätzlich eine reduzierte Version von planetriangles zur Verfügung stellen:
 	// planetriangles für polygone 
 	// planetriangles2d für texturkoordinaten und occlusion
-	
 	def planecoords(axis:Int, direction:Int) = {
 		val (axisa,axisb) = Util.otherAxis( axis )
 		
@@ -228,7 +236,7 @@ class PartialHexaeder(
 				Vector(p(1),p(0),p(2),p(3))
 		
 		val Vector(v0,v1,v2,v3) = indices.map(apply _)
-		// koordinaten für zwei dreiecke
+		// koordinaten für zwei Dreiecke
 		val triangleCoords =
 			if(dot(v3-v1,cross(v2-v1,v0-v1)) > 0)
 				Vector(v0,v1,v3,  v3,v1,v2)
@@ -240,6 +248,10 @@ class PartialHexaeder(
 	
 
 	// Testet, ob zwei Seitenflächen direkt aneinander liegen
+	// wird benötigt, denn alle Hexaeder ohne Volumen sollen durch
+	// den EmptyHexaeder ersetzt werden, damit sie im Octree auch
+	// zusammengefasst werden können.
+	// TODO: Effizienter implementieren
 	def noVolume():Boolean = {
 		val edges = (0 until 8)
 		

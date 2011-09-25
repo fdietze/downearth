@@ -1,6 +1,5 @@
 package xöpäx
 
-// What GL version you plan on using
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.{
   Display, DisplayMode,
@@ -19,7 +18,6 @@ import org.newdawn.slick.Font
 
 import Util._
 import Config._
-import Config.FPS_LIMIT
 
 object Main {
 	var finished = false
@@ -29,6 +27,7 @@ object Main {
 	def time = System.currentTimeMillis
 	val starttime = time
 	def uptime = time - starttime
+
 	var lastframe = uptime
 	var timestep = 0f
 	var currentfps = 0
@@ -39,15 +38,51 @@ object Main {
 	var vertshader = 0
 	var fragshader = 0
 	
-	init
-	
-	def showfps{
-		val fps = "%d fps" format currentfps
-		Draw addText fps
+	def main(args:Array[String]) {
+		init
+		while(!finished) {
+			logic
+			draw
+			frame
+		}
+		terminate
+	}
+
+	def init {
+		Display.setTitle("Open World")
+		
+		if( Config.fullscreen && displayMode.isFullscreenCapable )
+			Display.setFullscreen(true)
+
+		Display.setDisplayMode(displayMode)
+		
+		Display.create()
+		
+		if(Config.useshaders)
+			initshaders
+		
+		glEnable(GL_CULL_FACE)
+		
+		// TODO: in die Kamera?
+		glEnable(GL_LIGHTING)
+		glEnable(GL_COLOR_MATERIAL)
+		glEnable(GL_LIGHT0)
+
+		//initilisiert die Welt, um danach erst die Maus zu fangen.
+		World 
+		
+		Mouse.setGrabbed(true)
+	}
+
+	def terminate {
+		Display.destroy()
+		WorldSerializer.save(World.octree)
+		sys.exit(0)
 	}
 	
-	def frame{
-		if(time-timestamp > 1000){
+	// Berechnet die Aktuelle Framerate
+	def frame {
+		if(time - timestamp > 1000){
 			currentfps = framecounter
 			timestamp = time
 			framecounter = 0
@@ -58,81 +93,19 @@ object Main {
 		timestep = (uptime - lastframe)/1000f
 		lastframe = uptime
 		
-		Display.sync(FPS_LIMIT)
+		Display.sync(fpsLimit)
 		Display.update
 	}
-	
-	def main(args:Array[String]){
-		while(!finished){
-			logic
-			draw
-			frame
-		}
-		terminate
-	}
 
-	def init{
-		val displayMode = new DisplayMode(screenWidth, screenHeight)
-		Display.setTitle("Worldgen")
-		Display.setDisplayMode(displayMode)
-		Display.create()
-//		Display.setFullscreen(Config.fullscreen)
-		
-		if(Config.useshaders)
-			initshaders
-		
-		glEnable(GL_CULL_FACE)
-		glEnable(GL_LIGHTING)
-		glEnable(GL_COLOR_MATERIAL)
-		glEnable(GL_LIGHT0)
-
-		World
-		
-		Mouse.setGrabbed(true)
+	def showfps {
+		val fps = "%d fps" format currentfps
+		Draw addText fps
 	}
 	
-	def initshaders {
-		shader = ARBShaderObjects.glCreateProgramObjectARB
-		if( shader != 0 ) {
-			vertshader = ARBShaderObjects.glCreateShaderObjectARB(ARBVertexShader.GL_VERTEX_SHADER_ARB)
-			fragshader=ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
-			if( vertshader != 0 ) {
-				val vertexPath = getClass.getClassLoader.getResource("shaders/screen.vert").getPath
-				val vertexCode = io.Source.fromFile(vertexPath).mkString
-				ARBShaderObjects.glShaderSourceARB(vertshader, vertexCode)
-				ARBShaderObjects.glCompileShaderARB(vertshader)
-			}
-			
-			if( fragshader != 0 ) {
-				val fragPath = getClass.getClassLoader.getResource("shaders/screen.frag").getPath
-				val fragCode = io.Source.fromFile(fragPath).mkString
-				ARBShaderObjects.glShaderSourceARB(fragshader, fragCode)
-				ARBShaderObjects.glCompileShaderARB(fragshader)
-			}
-			
-			if(vertshader !=0 && fragshader !=0) {
-				ARBShaderObjects.glAttachObjectARB(shader, vertshader)
-				ARBShaderObjects.glAttachObjectARB(shader, fragshader)
-				ARBShaderObjects.glLinkProgramARB(shader)
-				ARBShaderObjects.glValidateProgramARB(shader)
-			}
-		}
-		printLogInfo(shader)
-		printLogInfo(vertshader)
-		printLogInfo(fragshader)
-	}
-
-	def terminate{
-		Display.destroy()
-		WorldSerializer.save(World.octree)
-		sys.exit(0)
-	}
-	
-	var turbo = false
-	
-	def logic{
+	// Behandelt alle Benutzereingaben über Maus und Tastatur
+	def logic {
 		if(Display.isCloseRequested)
-			finished = true;
+			finished = true
 		
 		val delta = Vec3(0)
 		val delta_angle = Vec3(0)
@@ -165,10 +138,11 @@ object Main {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
 			glDisable(GL_LIGHTING)
 		}
-		else{
+		else {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 			glEnable(GL_LIGHTING)
 		}
+		// TODO: wofür dieser Kommentar?:
 		// switches the mode how 3d noise is transformed into a 3d Hexaeder
 		
 		while ( Keyboard.next ) {
@@ -249,27 +223,11 @@ object Main {
 					case _ =>
 					}
 				}
-				else
-					println("mouseEvent" + getEventButton)
 			}
 		}
 	}
-	
-	def activateShader(foo: => Unit){
-		import ARBShaderObjects._
-		val useshaders = shader != 0 && vertshader != 0 && fragshader != 0
-		if(useshaders) {
-			glUseProgramObjectARB(shader)
-			glUniform1fARB( glGetUniformLocationARB( shader, "time" ), uptime.toFloat/1000f )
-		}
-		
-		foo
-		
-		if(useshaders)
-			glUseProgramObjectARB(0)
-	}
-	
-	def draw{
+
+	def draw {
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 		
 		// the active Camera
@@ -279,5 +237,54 @@ object Main {
 		
 		GUI.renderScene
 	}
-}
 
+
+
+	def initshaders {
+		shader = ARBShaderObjects.glCreateProgramObjectARB
+		if( shader != 0 ) {
+			vertshader = ARBShaderObjects.glCreateShaderObjectARB(ARBVertexShader.GL_VERTEX_SHADER_ARB)
+			fragshader=ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
+			if( vertshader != 0 ) {
+				val vertexPath = getClass.getClassLoader.getResource("shaders/screen.vert").getPath
+				val vertexCode = io.Source.fromFile(vertexPath).mkString
+				ARBShaderObjects.glShaderSourceARB(vertshader, vertexCode)
+				ARBShaderObjects.glCompileShaderARB(vertshader)
+			}
+			
+			if( fragshader != 0 ) {
+				val fragPath = getClass.getClassLoader.getResource("shaders/screen.frag").getPath
+				val fragCode = io.Source.fromFile(fragPath).mkString
+				ARBShaderObjects.glShaderSourceARB(fragshader, fragCode)
+				ARBShaderObjects.glCompileShaderARB(fragshader)
+			}
+			
+			if(vertshader !=0 && fragshader !=0) {
+				ARBShaderObjects.glAttachObjectARB(shader, vertshader)
+				ARBShaderObjects.glAttachObjectARB(shader, fragshader)
+				ARBShaderObjects.glLinkProgramARB(shader)
+				ARBShaderObjects.glValidateProgramARB(shader)
+			}
+		}
+		printLogInfo(shader)
+		printLogInfo(vertshader)
+		printLogInfo(fragshader)
+	}
+
+	
+	// mit dieser Methode kann ein Bereich umschlossen werden,
+	// der mit Shadern gerendert werden soll
+	def activateShader(func: => Unit) {
+		import ARBShaderObjects._
+		val useshaders = shader != 0 && vertshader != 0 && fragshader != 0
+		if(useshaders) {
+			glUseProgramObjectARB(shader)
+			glUniform1fARB( glGetUniformLocationARB( shader, "time" ), uptime.toFloat/1000f )
+		}
+		
+		func
+		
+		if(useshaders)
+			glUseProgramObjectARB(0)
+	}
+}

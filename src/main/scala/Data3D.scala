@@ -6,6 +6,12 @@ import simplex3d.math.{all}
 
 import Util._
 
+object Data3D{
+	// Abbildung der flachen Indices der Vertizes auf ihre 3D Indizes als Vec3i
+	val vectorIndices = for(i <- 0 until 8) yield Vec3i(i&1,(i&2)>>1,(i&4)>>2)
+}
+
+import Data3D._
 
 trait Data3D[A]{
 	def vsize:Vec3i
@@ -53,7 +59,7 @@ extends Data3D[A] with Iterable[A] with Serializable{
 	
 	// Wird für den HexaederMC verwerdet, und extrahiert die 8 Datenpunkte, die für die Generierung eines Hexaeders relevant sind
 	def extract(pos:Vec3i) = {
-		HexaederMC.offset map ( v ⇒ apply(v+pos) )
+		vectorIndices map ( v ⇒ apply(v+pos) )
 	}
 	
 	import collection.Iterator
