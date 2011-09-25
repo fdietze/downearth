@@ -12,7 +12,11 @@ import simplex3d.math.float.functions.normalize
 import simplex3d.data._
 import simplex3d.data.float._
 
-trait Mesh extends Serializable{
+// Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
+// erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
+// sie die Kommunikation mit der Grafikkarte.
+
+trait Mesh extends Serializable {
 	var vertexBufferObject:Int = 0
 	def genvbo
 	def freevbo
@@ -21,15 +25,15 @@ trait Mesh extends Serializable{
 	def size:Int
 }
  
-trait MutableMesh[T <: MeshData] extends Mesh{
+trait MutableMesh[T <: MeshData] extends Mesh {
 	def patch(patches:Iterable[Patch[T]])
 }
 
-trait MeshData{
+trait MeshData {
 	def size:Int
 }
 
-trait MeshBuilder[T <: MeshData]{
+trait MeshBuilder[T <: MeshData] {
 	def result : T
 }
 
@@ -54,7 +58,7 @@ case class TextureMeshBuilder(
 }
 
 // A <: B <: MeshData => Patch[A] <: Patch[B]
-case class Patch[+T <: MeshData](pos:Int,size:Int,data:T){
+case class Patch[+T <: MeshData](pos:Int,size:Int,data:T) {
 	//the difference of the size after the patch has been applied
 	def sizedifference = data.size - size
 }
@@ -67,7 +71,7 @@ object EmptyMeshData extends MeshData{
 object EmptyPatch extends Patch[Nothing](0,0,null)
 */
 
-object MutableTextureMesh{
+object MutableTextureMesh {
 	
 	def apply(data:TextureMeshData) = {
 	import data.{vertexArray,texcoordsArray}
@@ -75,16 +79,7 @@ object MutableTextureMesh{
 	val normalArray = if(Config.smoothShading) new Array[Vec3](vertexArray.size) else (data.normalArray flatMap (x => Seq(x,x,x)))
 	
 	
-	if(Config.smoothShading){
-		
-		/*
-		val indices = ((0 until vertexArray.size) groupBy vertexArray).values
-		for(x <- indices){
-			val normal = normalize((x map data.normalArray).reduce(_+_))
-			for(i <- x)
-				normalArray(i) = normal
-		}
-		*/
+	if(Config.smoothShading) {
 		
 		val indices = (0 until vertexArray.size).sortWith( (a,b) => {
 			val v1 = vertexArray(a)

@@ -10,18 +10,15 @@ import Util._
 // Konstanten zur Verwendung im Hexaeder
 object Hexaeder{
 	// die Lookup-Tabelle für die Vertex-Indizes der sechs Seitenflächen
-	val planelookup = Vector(
-		Vector(0,2,4,6),
-		Vector(1,3,5,7),
-		Vector(1,0,5,4),
-		Vector(3,2,7,6),
-		Vector(0,1,2,3),
-		Vector(4,5,6,7)
-	)
+	val detail = Config.hexaederResolution
+	assert( 0 < detail && detail <= 15 )
+	
+	val detailf =  detail.toFloat
+	val mask = detail << 0  | detail << 4  | detail << 8  | detail << 12 | 
+	           detail << 16 | detail << 20 | detail << 24 | detail << 28
 }
 
 import Hexaeder._
-import scala.collection.mutable.WrappedArray
 
 // TODO ein hexaeder der nicht geändert werden kann
 case object FullHexaeder extends PartialHexaeder{
@@ -70,9 +67,9 @@ trait Hexaeder extends Serializable{
 }
 
 class PartialHexaeder(
-	var X:Int = 0x80808080,
-	var Y:Int = 0x88008800,
-	var Z:Int = 0x88880000)
+	var X:Int = 0xF0F0F0F0 & mask,
+	var Y:Int = 0xFF00FF00 & mask,
+	var Z:Int = 0xFFFF0000 & mask)
 		extends Hexaeder {
 	
 	//   Stores 8 Vertices * 3 Nibbles
@@ -96,19 +93,16 @@ class PartialHexaeder(
 		}
 	}
 	
-	def detail =  8
-	def detailf =  8f
-	
 	def checkrange(p:Int) = 0 <= p && p < 8 // 8 Vertices
 	def checkvalue(v:Float) = 0 <= v && v <= 1f
 	def checkvertex(v:Vec3) = all(greaterThanEqual(v,Vec3(0))) && all(lessThanEqual(v,Vec3(1f)))
 	
-	def writeX(i:Int,v:Int){ X = (X & ~(15 << (i*4))) | v << (i*4) }
-	def readX(i:Int) = (X >> (i*4)) & 15
-	def writeY(i:Int,v:Int){ Y = (Y & ~(15 << (i*4))) | v << (i*4) }
-	def readY(i:Int) = (Y >> (i*4)) & 15
-	def writeZ(i:Int,v:Int){ Z = (Z & ~(15 << (i*4))) | v << (i*4) }
-	def readZ(i:Int) = (Z >> (i*4)) & 15
+	def writeX(i:Int,v:Int){ X = (X & ~(15 << (i << 2))) | v << (i << 2) }
+	def readX(i:Int) = (X >> (i << 2)) & 15
+	def writeY(i:Int,v:Int){ Y = (Y & ~(15 << (i << 2))) | v << (i << 2) }
+	def readY(i:Int) = (Y >> (i << 2)) & 15
+	def writeZ(i:Int,v:Int){ Z = (Z & ~(15 << (i << 2))) | v << (i << 2) }
+	def readZ(i:Int) = (Z >> (i << 2)) & 15
 	
 	def readVertex(p:Int) = {
 		Vec3i(readX(p),readY(p),readZ(p))

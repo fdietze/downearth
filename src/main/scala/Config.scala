@@ -11,7 +11,8 @@ object Config{
 	val worldWindowSize = 128
 	val useshaders = true
 	val smoothShading = false
-
+	val hexaederResolution = 15
+	
 	val skybox = true
 	val fullscreen = false
 	

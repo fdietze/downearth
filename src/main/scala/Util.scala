@@ -56,6 +56,7 @@ object Util {
 		buffer
 	}
 	
+	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
 
 	def printLogInfo(obj:Int) {
@@ -79,14 +80,14 @@ object Util {
 	
 	def isPowerOfTwo(x:Int) = (((x-1) & x) == 0) && x != 0
 	val log2:(Int => Int) = {
-		case	1 => 0
-		case	2 => 1
-		case	4 => 2
-		case	8 => 3
+		case  1 => 0
+		case  2 => 1
+		case  4 => 2
+		case  8 => 3
 		case 16 => 4
 		case 32 => 5
 		case 64 => 6
-		case	x =>(log(x)/0.6931471805599453).toInt
+		case  x =>(log(x)/0.6931471805599453).toInt
 	}
 
 	import scala.collection.IterableLike
@@ -264,5 +265,14 @@ object Util {
 	
 	def round10(a:Double) = math.round(a*10.0)/10.0f
 	def round10(v:Vec3):Vec3 = Vec3(round10(v.x), round10(v.y), round10(v.z))
+	
+	val planelookup = Vector(
+		Vector(0,2,4,6),
+		Vector(1,3,5,7),
+		Vector(1,0,5,4),
+		Vector(3,2,7,6),
+		Vector(0,1,2,3),
+		Vector(4,5,6,7)
+	)
 }
 

@@ -86,7 +86,7 @@ object WorldGenerator {
 				// Wenn Fall nicht darstellbar
 				if( !isStableCase(caseType) ) {
 					// In einen darstellbaren Fall transformieren
-					val (newData, newCase) = transformToStable(originalData,exactCase)
+					val (newData, newCase) = transformToStable(originalData, exactCase)
 					
 					// Stabilisierung auf die schon modifizierten Datan anwenden
 					val merge = 

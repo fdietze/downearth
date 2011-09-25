@@ -7,19 +7,21 @@ import simplex3d.math.float.functions._
 import Util._
 import collection.Map
 
-// TODO wird diese klasse noch gebraucht?
-case class WorldNodeInfo(pos:Vec3i,size:Int,value:Hexaeder)
-
-case class NodeInfo(pos:Vec3i,size:Int){
+// NodeInfo enthält die Metainformationen für einen Knoten im Octree, also Position in Weltkoordanaten und Größe. Zudem hat die Klasse noch Methoden, um Metainformationen der Kindknoten berechnen zu können.
+case class NodeInfo(pos:Vec3i,size:Int) {
 	def upperPos = pos+size
-	// wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die Berechnung ihres index
+	// Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die Berechnung ihres Index.
+	// Das Array3D wird nicht mehr verwendet, aber an vielen stellen wird noch sein Verhalten imitiert.
 	def indexVec(p:Vec3i,nodepos:Vec3i = pos,nodesize:Int = size) = ((p-nodepos)*2)/nodesize
+	
 	// macht aus dem Vec3i index einen flachen index, der auf ein array angewendet werden kann
 	def flat(ivec:Vec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
+	
 	// macht aus einem flachen index wieder ein Vec3i index
 	def index2vec(idx:Int) =
 		Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
 	
+	// Erzeugung des NodeInfo vom Kindknoten, aus einem Vektor-Index
 	def apply(p:Vec3i):(Int,NodeInfo) = {
 		assert( indexInRange(p) )
 		val v = indexVec(p,pos,size)
@@ -28,36 +30,28 @@ case class NodeInfo(pos:Vec3i,size:Int){
 		(index,NodeInfo(pos+v*hsize,hsize) )
 	}
 	
+	// Erzeugung des NodeInfo vom Kindknoten, aus einem flachen Index
 	def apply(index:Int):NodeInfo = {
 		val v = index2vec(index)
 		val hsize = size >> 1
 		NodeInfo(pos+v*hsize,hsize)
 	}
 	
-	def direction(dir:Int) = dir match {
-		case 0 => List(0,2,4,6)
-		case 1 => List(1,3,5,7)
-		case 2 => List(0,1,4,5)
-		case 3 => List(2,3,6,7)
-		case 4 => List(0,1,2,3)
-		case 5 => List(4,5,6,7)
-	}
-	
 	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
 	
-	// currently nodeInfo does not support renctangular spaces
-	// so the return has to be a Seq
+	
+	// Listet alle die Koordinaten auf, die innerhalb von beiden Bereichen sind.
 	def intersection(that:NodeInfo):Iterable[Vec3i] = {
 		val pos1 = max(pos,that.pos)
 		val pos2 = min(upperPos,that.upperPos)
 		pos1 until pos2
 	}
-	
 }
 
-trait Octant extends Serializable{
+
+trait Octant extends Serializable {
 	def apply(info:NodeInfo, p:Vec3i) : Hexaeder
 	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder):Octant
 
@@ -87,7 +81,7 @@ trait Octant extends Serializable{
 abstract class OctantOverMesh extends Octant
 abstract class OctantUnterMesh extends Octant
 
-class Leaf(val h:Hexaeder) extends OctantUnterMesh{
+class Leaf(val h:Hexaeder) extends OctantUnterMesh {
 	// a leaf is always defined
 	def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
@@ -383,7 +377,7 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantUnterMesh {
 	
 	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Patch[TextureMeshData]] = {
 		if(dstinfo indexInRange info){ // info <= dstinfo
-			val indices = info.direction(dir)
+			val indices = planelookup(dir)
 			for(i <- indices) yield {
 				data(i).patchSurface(info(i),dstinfo, dir, 0, 0)
 			}
@@ -499,7 +493,7 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverMesh(h) {
 		assert(vvertcount.sum == vertcount)
 		
 		if(dstinfo indexInRange info){ // info <= dstinfo
-			val indices = info.direction(dir)
+			val indices = planelookup(dir)
 			var patches:List[Patch[TextureMeshData]] = Nil
 			for(i <- indices) {
 				val newvertpos = vertpos + vvertcount.view(0,i).sum
