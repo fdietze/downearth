@@ -115,7 +115,7 @@ object World{
 	def draw{
 		octree.draw
 		
-		val selection = raytracer(Controller.current.position,Controller.current.direction,false,100)
+		val selection = raytracer(Player.position,Player.direction,false,100)
 		selection match {
 		case Some(v) =>
 			Draw.addText("Selected Voxel: " + Vec3i(v) )
@@ -132,6 +132,6 @@ object World{
 		}
 		
 		if(Config.streamWorld)
-			octree stream Controller.current.position
+			octree stream Player.position
 	}
 }

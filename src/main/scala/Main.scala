@@ -178,7 +178,7 @@ object Main {
 				case KEY_F1 =>
 					Config.debugDraw = !Config.debugDraw
 				case KEY_TAB =>
-					Controller.rotateObjects
+					Player.toggleGhost
 				case KEY_SPACE =>
 					Controller.jump
 				case KEY_1 =>
@@ -233,7 +233,7 @@ object Main {
 		// the active Camera
 		BulletPhysics.update
 		
-		Controller.current.camera.renderScene
+		Player.camera.renderScene
 		
 		GUI.renderScene
 	}

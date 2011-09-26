@@ -11,15 +11,18 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.util.glu._
 import GLU._
 
-import javax.vecmath.{Quat4f,Vector3f}
 import com.bulletphysics.linearmath.Transform
 import com.bulletphysics.collision.shapes._
 
 import Util._
+import Config.startpos
+import javax.vecmath.{Vector3f, Quat4f}
 
-object Player extends ControlInterface{
-	import Config.startpos
-	
+object Player {
+
+	val camDistFromCenter = Vec3(0,0,0.8f)
+	var isGhost = false
+
 	//val camera = new Camera3D(startpos,Vec3(1,0,0))
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
@@ -27,58 +30,80 @@ object Player extends ControlInterface{
 		m_camera.position = position
 		m_camera
 	}
-	
-	def position:Vec3 = body.getCenterOfMassTransform(new Transform).origin + Vec3(0,0,0.8f)
-	def direction:Vec3 = camera.direction
-	
-	def resetPos {
+
+	def position:Vec3 = {
+		if( isGhost )
+			m_camera.position
+		else
+			body.getCenterOfMassTransform(new Transform).origin + camDistFromCenter
+	}
+
+	def position_= (newpos:Vec3) {
+		m_camera.position := newpos
+		m_camera.position += camDistFromCenter
+
 		val v = new Vector3f
-		body setLinearVelocity v
+		body.setLinearVelocity(v)
 		body getCenterOfMassPosition v
 		v.negate
-		v.x += startpos.x
-		v.y += startpos.y
-		v.z += startpos.z
+		v.x += newpos.x
+		v.y += newpos.y
+		v.z += newpos.z
 		body translate v
 	}
-	
+
+	def direction:Vec3 = camera.direction
+
+	def resetPos {
+		position = startpos
+	}
+
 	// CapsuleShape(0.3f,1.2f)
 	val body = BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )
-	
-	
 	body setAngularFactor 0
 	
 	def move(dir:Vec3){
-		val flatdir = Vec3(((m_camera makeRelative dir)*4).xy,0)
-		body.applyCentralImpulse( flatdir )
-		
-		val v = new Vector3f
-		body getCenterOfMassPosition v
-		Draw.addText("Player Position: " + round10(v)  )
-		body getLinearVelocity v
-		Draw.addText("Player Velocity: " + round10(v) )
+		if( isGhost ){
+			m_camera move dir*4
+		}
+		else {
+			val flatdir = m_camera makeRelative dir
+			flatdir *= 4
+			flatdir.z = 0
+			body.applyCentralImpulse( flatdir )
+			val v = new Vector3f
+			body getCenterOfMassPosition v
+			Draw.addText("Player Position: " + round10(v)  )
+			body getLinearVelocity v
+			Draw.addText("Player Velocity: " + round10(v) )
+		}
 	}
 	
 	var dir = Vec2(Pi/2)
 	
 	def rotate(rot:Vec3){
+		// TODO hier entstehen noch starke rotationsartefakte
 		m_camera.rotate(rot)
 		m_camera.lerpUp(1-m_camera.direction.z.abs)
 	}
 	
 	def jump{
-		body.applyCentralImpulse(new Vector3f(0,0,5))
+		if( !isGhost )
+			body.applyCentralImpulse(new Vector3f(0,0,5))
+	}
+
+	def toggleGhost{
+		if( isGhost ){
+			position = camera.position - camDistFromCenter
+			BulletPhysics.addBody(body)
+			isGhost = false
+		}
+		else {
+			BulletPhysics.removeBody(body)
+			isGhost = true
+		}
 	}
 }
-
-trait ControlInterface{
-	def position:Vec3
-	def direction:Vec3
-	def camera:Camera3D
-	def move(dir:Vec3)
-	def rotate(rot:Vec3)
-}
-
 
 object DefaultHexaeder{
 	val full = FullHexaeder
@@ -101,19 +126,9 @@ object DefaultHexaeder{
 }
 
 object Controller{
-	val objects = List[ControlInterface](Player,FreeCamera)
-	var id = 0
-	var current = objects(id)
-	
-	def rotateObjects{
-		id = (id+1)%objects.size
-		current = objects(id)
-		World.octree.jumpTo(current.position)
-	}
-	
-	
+
 	def build {
-		val mousedest = World.raytracer(current.position,current.direction,true,100)
+		val mousedest = World.raytracer(Player.position, Player.direction, true, 100)
 		mousedest match {
 			case Some(pos) => 
 				World(pos) = DefaultHexaeder.current
@@ -121,27 +136,25 @@ object Controller{
 		}
 	}
 	
-	def remove{
-		val mousedest = World.raytracer(current.position,current.direction,false,100)
+	def remove {
+		val mousedest = World.raytracer(Player.position, Player.direction, false, 100)
 		mousedest match {
 			case Some(pos) =>
 				World(pos) = EmptyHexaeder
 			case _ =>
 		}
 	}
-	
-	def move(dir:Vec3){
-		current move dir
+
+	def move(dir:Vec3) {
+		Player move dir
 	}
 	
-	def rotate(rot:Vec3){
-		current rotate rot
+	def rotate(rot:Vec3) {
+		Player rotate rot
 	}
 	
-	def jump{
-		if(current == Player){
-			Player.jump
-		}
+	def jump {
+		Player.jump
 	}
 }
 
