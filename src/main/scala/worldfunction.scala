@@ -1,5 +1,5 @@
  
-package xöpäx.gen
+package openworld.gen
 
 import noise.Noise.noise3
 

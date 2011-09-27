@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -7,17 +7,8 @@ import simplex3d.math.float.functions._
 import org.lwjgl.opengl.GL11._
 import Util._
 
-import actors.Futures
-
 object World{
-	
-	/*
-	val octree = time("genworld: "){
-		WorldGenerator.genWorld
-	}
-	time("genmesh: ")(octree.genMesh)
-	*/
-	
+
 	val octree = {
 		WorldSerializer.load match {
 		case Some(s) => s

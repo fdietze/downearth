@@ -1,5 +1,5 @@
  
-package xöpäx.gen
+package openworld.gen
 
 import simplex3d.math._
 import simplex3d.math.double._

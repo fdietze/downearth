@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import org.lwjgl.opengl.GL11._
 

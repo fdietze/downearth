@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -85,6 +85,7 @@ object Player {
 		// TODO hier entstehen noch starke rotationsartefakte
 		m_camera.rotate(rot)
 		m_camera.lerpUp(1-m_camera.direction.z.abs)
+
 	}
 	
 	def jump{
@@ -107,19 +108,30 @@ object Player {
 
 object DefaultHexaeder{
 	val full = FullHexaeder
-	val half = new PartialHexaeder(Z = 0x44440000){ override def toString = "half" }
-	val quarter = new PartialHexaeder(Z = 0x44440000, Y = 0x88448844){ override def toString = "quarter" }
-	val eighth = new PartialHexaeder(0x40404040,0x44004400,0x44440000){ override def toString = "eighth" }
-	val rampA = new PartialHexaeder(Z = 0x00440000){ override def toString = "rampA" }
-	val rampB = new PartialHexaeder(Z = 0x44880000){ override def toString = "rampB" }
-	val rampC = new PartialHexaeder(Z = 0x00880000){ override def toString = "rampC" }
-	
-	val all = Seq(full,half,quarter,eighth,rampA,rampB,rampC)
+	val half = new PartialHexaeder(Z = 0x44440000)
+	val quarter = new PartialHexaeder(Z = 0x44440000, Y = 0x44004400)
+	val eighth = new PartialHexaeder(0x40404040,0x44004400,0x44440000)
+	val rampA = new PartialHexaeder(Z = 0x00440000)
+	val rampB = new PartialHexaeder(Z = 0x44880000)
+	val rampC = new PartialHexaeder(Z = 0x00880000)
+
+	def makeRotations(h:Hexaeder) = {
+		val h1 = h.rotateZ
+		val h2 = h1.rotateZ
+		val h3 = h2.rotateZ
+		Vector(h,h1,h2,h3)
+	}
+
+	val all = Vector(full,half,quarter,eighth,rampA,rampB,rampC) map makeRotations
 	private var m_id = 0
-	def id_=( new_id:Int ){ m_id = clamp(new_id,0,all.size-1) }
+	def id_= ( new_id:Int ) { m_id = clamp(new_id,0,all.size-1) }
 	def id = m_id
-	
-	def current = all(id)
+
+	def rotation = {
+		val dir = Player.direction
+		(math.atan2(dir.y, dir.x) * 2 / math.Pi + 5.5).toInt % 4
+	}
+	def current = all(id)(rotation)
 	def rotate(num:Int){
 		id = (id+num+all.size) % all.size
 	}

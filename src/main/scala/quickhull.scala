@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math.float.Vec2
 

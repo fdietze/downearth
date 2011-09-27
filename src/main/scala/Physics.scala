@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import com.bulletphysics.{collision,dynamics,util}
 import collision._
