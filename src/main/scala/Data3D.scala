@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math.Vec3i
 import simplex3d.math.float.functions.{lessThan,lessThanEqual,greaterThanEqual}

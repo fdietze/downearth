@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 //import akka.actor.Actor
 //import Actor._

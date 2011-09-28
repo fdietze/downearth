@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -7,17 +7,8 @@ import simplex3d.math.float.functions._
 import org.lwjgl.opengl.GL11._
 import Util._
 
-import actors.Futures
-
 object World{
-	
-	/*
-	val octree = time("genworld: "){
-		WorldGenerator.genWorld
-	}
-	time("genmesh: ")(octree.genMesh)
-	*/
-	
+
 	val octree = {
 		WorldSerializer.load match {
 		case Some(s) => s
@@ -115,7 +106,7 @@ object World{
 	def draw{
 		octree.draw
 		
-		val selection = raytracer(Controller.current.position,Controller.current.direction,false,100)
+		val selection = raytracer(Player.position,Player.direction,false,100)
 		selection match {
 		case Some(v) =>
 			Draw.addText("Selected Voxel: " + Vec3i(v) )
@@ -132,6 +123,6 @@ object World{
 		}
 		
 		if(Config.streamWorld)
-			octree stream Controller.current.position
+			octree stream Player.position
 	}
 }

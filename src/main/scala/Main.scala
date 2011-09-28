@@ -1,9 +1,8 @@
-package xöpäx
+package openworld
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.{
-  Display, DisplayMode,
-  ARBShaderObjects, ARBVertexShader, ARBFragmentShader
+  Display, ARBShaderObjects, ARBVertexShader, ARBFragmentShader
 }
 import org.lwjgl.input._
 import Keyboard._
@@ -11,10 +10,6 @@ import Keyboard._
 import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
-
-import simplex3d.data._
-import simplex3d.data.float._
-import org.newdawn.slick.Font
 
 import Util._
 import Config._
@@ -178,7 +173,7 @@ object Main {
 				case KEY_F1 =>
 					Config.debugDraw = !Config.debugDraw
 				case KEY_TAB =>
-					Controller.rotateObjects
+					Player.toggleGhost
 				case KEY_SPACE =>
 					Controller.jump
 				case KEY_1 =>
@@ -233,7 +228,7 @@ object Main {
 		// the active Camera
 		BulletPhysics.update
 		
-		Controller.current.camera.renderScene
+		Player.camera.renderScene
 		
 		GUI.renderScene
 	}

@@ -1,8 +1,12 @@
-package xöpäx
+package openworld
 
 import simplex3d.math.float.Vec2
 
-object QuickHull{
+// Berechnet aus einer Punktwolke, alle Punkte, die auf ihrer konvexen Hülle liegen
+// http://de.wikipedia.org/wiki/QuickHull
+object QuickHull {
+	// TODO dieser bereich ist performance kritisch, und kann eventuell noch
+	// optimiert werden.
 	def computeHull( p : Array[Vec2] ):Int = {
 		val qh = new QuickHull(p)
 		qh.quickHull
@@ -21,8 +25,6 @@ class QuickHull(p:Array[Vec2])
 	}
 
 	case class Line(p0:Vec2,p1:Vec2){
-		//TODO implementieren
-		
 		def isRight(p:Vec2) = {
 			val v1 = p1-p0
 			val v2 = p-p1
@@ -76,7 +78,7 @@ class QuickHull(p:Array[Vec2])
 
 	def exchange( i:Int, j:Int )
 	{
-		val t=p(i)  // <---- TODO hier ist eine IndexOutOfBoundsException (8) aufgetreten
+		val t=p(i)
 		p(i)=p(j)
 		p(j)=t
 	}
@@ -127,4 +129,4 @@ class QuickHull(p:Array[Vec2])
 		}
 		return i;
 	}
-}   // end class QuickHull
+}

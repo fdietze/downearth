@@ -1,8 +1,7 @@
-package xöpäx
+package openworld
 
 import simplex3d.math._
 import simplex3d.math.float._
-import simplex3d.math.float.functions._
 
 import simplex3d.noise._
 
@@ -41,19 +40,16 @@ object WorldGenerator {
 		if(interval.isPositive){
 			octree.root = new Leaf(FullHexaeder)
 			octree.genMesh(x => FullHexaeder)
-			PredictionStats.predictioncalls += 1
 		}
 		
 		else if(interval.isNegative){
 			octree.root = new Leaf(EmptyHexaeder)
 			octree.genMesh(x => EmptyHexaeder)
-			PredictionStats.predictioncalls += 1
 		}
 		
 		else{
 			// Predichtion hat kein eindeutiges Ergebnis,
 			// Bereich KANN Oberfläche enthalten
-			PredictionStats.samplingcalls += 1
 			
 			// Bereich des Nodes wird vollständig abgetastet
 

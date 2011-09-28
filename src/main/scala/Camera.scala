@@ -1,6 +1,5 @@
-package xöpäx
+package openworld
 
-import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
@@ -9,20 +8,15 @@ import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
 
-import xöpäx.Util.multMatrixOfBody
-import javax.vecmath.Vector3f
-import com.bulletphysics.linearmath.Transform
-import com.bulletphysics.collision.shapes.SphereShape
-
-import Util._
 import Config._
+import Util._
 
 abstract class Camera{
 	def renderScene
 }
 
 // Eine Kamera, die frei im Raum bewegt werden kann, und selbst dafür sorgt, dass alles was sie sieht gerendert wird
-class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with ControlInterface{
+class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	def this (positionVec:Vec3,directionVec:Vec3) = this(positionVec,quaternion(lookAt(-directionVec,worldUpVector)))
 	
 	def camera = this
@@ -31,8 +25,10 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera with Co
 	
 	// rotiert die Kamera, damit der worldUpVector auch für die Kamera oben ist
 	def lerpUp(factor:Float){
-		val dest = quaternion(lookAt(-direction,worldUpVector))
-		directionQuat = slerp(directionQuat,dest,factor)
+		val up = inverse(directionQuat) rotateVector worldUpVector
+		val α = atan(up.y, up.x) - Pi/2
+		
+		directionQuat *= Quat4 rotateZ(α*pow(factor,1.5f))
 	}
 	
 	val frustum = {
@@ -116,19 +112,29 @@ object GUI extends Camera{
 		glDisable(GL_LIGHTING)
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity
-		glOrtho(0,screenWidth,screenHeight,0,-1,1)
+		glOrtho(0,screenWidth,screenHeight,0,-100,100)
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity
 	}
 	
 	def renderScene {
+
 		applyortho
 		Main.showfps
 		Draw.drawTexts
+		glPushMatrix
 		glTranslatef(screenWidth/2,screenHeight/2,0)
 		Draw.crossHair
+		glPopMatrix
+		
+		val α = math.atan2( Player.direction.y, Player.direction.x ).toFloat.toDegrees - 90
+		glTranslatef(screenWidth - 64, 64, 0)
+		glScalef(32,32,32)
+		glRotatef(30,1,0,0)
+		glRotatef(α,0,1,0)
+		glRotatef(90,1,0,0)
+		glTranslatef(-0.5f,-0.5f,-0.5f)
+		Draw.renderHexaeder( DefaultHexaeder.current )
+		
 	}
 }
-
-// Frei bewegliche Kamera im Level die jederzeit rendern kann
-object FreeCamera extends Camera3D(positionVec = Vec3(3,1,0), directionVec = Vec3(0.26f,-0.05f,0.14f))

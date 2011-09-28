@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math.float.Vec3
 import simplex3d.math.doublex.Vec3d
@@ -11,7 +11,7 @@ object Config{
 	val worldWindowSize = 128
 	val useshaders = true
 	val smoothShading = false
-	val hexaederResolution = 15
+	val hexaederResolution = 8
 	
 	val skybox = true
 	val fullscreen = false

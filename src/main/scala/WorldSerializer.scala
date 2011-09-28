@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import java.io._
 import Config.saveWorld

@@ -1,4 +1,4 @@
-package xöpäx
+package openworld
 
 import simplex3d.math.float._
 import org.lwjgl.opengl.GL11._

@@ -1,32 +1,26 @@
-package xöpäx
+package openworld
 
-import com.bulletphysics.{BulletGlobals,collision,dynamics,util}
+import com.bulletphysics.{collision,dynamics,util}
 import collision._
 import dynamics._
 import util.ObjectArrayList
 import broadphase.DbvtBroadphase
 import constraintsolver.SequentialImpulseConstraintSolver
-import dispatch.{CollisionObject, CollisionFlags, CollisionDispatcher, DefaultCollisionConfiguration}
+import dispatch.{CollisionObject, CollisionDispatcher, DefaultCollisionConfiguration}
 import javax.vecmath.Vector3f
 import shapes._
 import simplex3d.math.float.functions._
 import simplex3d.math.float._
 import simplex3d.math._
-import java.nio.{ByteOrder,ByteBuffer}
+//import java.nio.{ByteOrder,ByteBuffer}
 
 import Util._
-import WorldGenerator.cubesize
 import com.bulletphysics.linearmath.{DefaultMotionState, Transform}
 import org.lwjgl.opengl.GL11._
-import com.bulletphysics.util.ObjectArrayList._
-import com.bulletphysics.collision.dispatch.DefaultNearCallback
-import com.bulletphysics.collision.broadphase.BroadphasePair;
-import com.bulletphysics.collision.broadphase.DispatcherInfo;
 
-import simplex3d.data._
-import simplex3d.data.float._
+// Verbindung der Engine zur jBullet-Implementierung
 
-object BulletPhysics{
+object BulletPhysics {
 	
 	val broadPhase = new DbvtBroadphase
 	val collisionConfig = new DefaultCollisionConfiguration()
@@ -76,6 +70,8 @@ object BulletPhysics{
 		}
 	}
 	
+	// TODO diese Methode muss noch sauberer implementiert werden.
+	// Spielerverhalen kann so noch nicht realistisch simuliert werden.
 	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape):RigidBody = {
 		val startTransform = new Transform();
 		startTransform.setIdentity
@@ -105,6 +101,14 @@ object BulletPhysics{
 		}
 		
 		body
+	}
+
+	def removeBody( body: RigidBody ) {
+		dynamicsWorld removeRigidBody body
+	}
+
+	def addBody( body: RigidBody ){
+		dynamicsWorld addRigidBody body
 	}
 	
 	abstract class StreamingBox[T:Manifest](centerpos:Vec3i,radius:Int){
@@ -232,7 +236,7 @@ object BulletPhysics{
 		}
 	}
 	
-	def prepareGroundMesh2{
+	def prepareGroundMesh2 {
 		for( Body(body, _ , stream) <- bodies ){
 			val tmp = new Vector3f
 			body getCenterOfMassPosition tmp
@@ -244,7 +248,7 @@ object BulletPhysics{
 	def getTime = System.nanoTime / 1000000000.0
 	var simtime = getTime
 	
-	def simStep(timestep:Float){
+	def simStep(timestep:Float) {
 		dynamicsWorld stepSimulation timestep
 	}
 	
