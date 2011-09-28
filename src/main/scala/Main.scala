@@ -192,12 +192,14 @@ object Main {
 					DefaultHexaeder.id = 6
 				case KEY_8 =>
 					DefaultHexaeder.id = 7
+				case KEY_9 =>
+					DefaultHexaeder.id = 8
+				case KEY_0 =>
+					DefaultHexaeder.id = 9
 				case _ =>
 				}
 			}
 		}
-		
-		Draw.addText( DefaultHexaeder.current )
 		
 		// Mouse Event Input
 		
@@ -220,6 +222,8 @@ object Main {
 				}
 			}
 		}
+		
+		DefaultHexaeder.rotate( Mouse.getDWheel / 120 )
 	}
 
 	def draw {
