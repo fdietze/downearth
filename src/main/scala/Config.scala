@@ -13,7 +13,7 @@ object Config{
 	val smoothShading = false
 	val hexaederResolution = 8
 	
-	val skybox = true
+	val skybox = false
 	val fullscreen = false
 	
 	val ungeneratedDefault = UndefHexaeder
@@ -23,7 +23,7 @@ object Config{
 	val maxMeshVertexCount = 30000
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val patchAtNodeInsert = false
-	val CameraSpeed = 4f
+	val CameraSpeed = 2f
 	val CameraTurboSpeed = 32f
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
@@ -51,5 +51,6 @@ object Config{
 	var debugDraw = false
 	var streamWorld = false
 	var turbo = false
+	var frustumCulling = true
 }
 

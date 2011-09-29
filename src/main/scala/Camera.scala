@@ -1,5 +1,6 @@
 package openworld
 
+import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
@@ -42,20 +43,26 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
-	
-	// setzt die Projektionsmatrix
-	def applyfrustum{
-		glMatrixMode(GL_PROJECTION)
-		glLoadMatrix( frustum )
-		glMatrixMode(GL_MODELVIEW)
-		glDisable(GL_BLEND)
+	val frustumBuffer = {
+		val buffer = DataBuffer[Mat4,RFloat](1)
+		buffer(0) = frustum
+		buffer.buffer
 	}
 	
-	// setzt die Rotation und Position der Kamera
-	def apply = {
-		val data = DataBuffer[Mat4,RFloat](1)
-		glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position))) )
+	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
+	def modelviewBuffer = {
+		m_modelviewBuffer(0) = modelview
+		m_modelviewBuffer.buffer
 	}
+	def modelview = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
+	
+	
+	val m_skyboxBuffer = DataBuffer[Mat4,RFloat](1)
+	def skyboxBuffer = {
+		m_skyboxBuffer(0) = skybox
+		m_skyboxBuffer.buffer
+	}
+	def skybox = Mat4(inverse(Mat3x4 rotate(directionQuat)))
 	
 	def lighting{
 		//Add ambient light
@@ -68,24 +75,61 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	}
 	
 	def renderScene {
-		applyfrustum
+		glMatrixMode(GL_PROJECTION)
+		glLoadMatrix( frustumBuffer )
 		
+		glMatrixMode(GL_MODELVIEW)
+		glDisable(GL_BLEND)
 		if(Config.skybox){
-			glLoadMatrix( Mat4(inverse(Mat3x4 rotate(directionQuat))) )
+			glLoadMatrix( skyboxBuffer )
 			glDisable( GL_DEPTH_TEST )
 			glDisable( GL_LIGHTING )
 			Skybox.render
 		}
 		
-		apply
+		glLoadMatrix( modelviewBuffer )
 		
 		lighting
 		
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_LIGHTING)
 		
+		val frustumtest:FrustumTest = 
+		if( Config.frustumCulling )
+			new FrustumTestImpl(frustum,modelview)
+		else {
+			new FrustumTest { 
+				def testNode( info:NodeInfo ) = true 
+				val falsecount = 0
+			}
+		}
+		
 		Main.activateShader{
-			World.draw
+			World.draw(frustumtest)
+		}
+		
+		Draw.addText("frustum culled nodes: "+frustumtest.falsecount)
+		
+		val selection = World.raytracer(Player.position,Player.direction,false,100)
+		selection match {
+		case Some(v) =>
+			Draw.addText("Selected Voxel: " + Vec3i(v) )
+			// malt die Markierung der angewählten Zelle
+			glPushMatrix
+			glTranslatef(v.x,v.y,v.z)
+			val h = World(v)
+			glDisable(GL_LIGHTING)
+			glDisable(GL_TEXTURE_2D)
+			glDisable(GL_DEPTH_TEST)
+			glEnable(GL_BLEND)
+			glColor4f(1,1,1,0.25f)
+			Draw.renderHexaeder(h)
+			glDisable(GL_BLEND)
+			glEnable(GL_DEPTH_TEST)
+			Draw.renderHexaeder(h)
+			glPopMatrix
+			glEnable(GL_LIGHTING)
+		case None =>
 		}
 		
 		if(Config.debugDraw)
@@ -124,6 +168,9 @@ object GUI extends Camera{
 		Draw.drawTexts
 		glPushMatrix
 		glTranslatef(screenWidth/2,screenHeight/2,0)
+		glDisable(GL_LIGHTING)
+		glDisable(GL_TEXTURE_2D)
+		glColor3f(1,1,1)
 		Draw.crossHair
 		glPopMatrix
 		
@@ -136,5 +183,62 @@ object GUI extends Camera{
 		glTranslatef(-0.5f,-0.5f,-0.5f)
 		Draw.renderHexaeder( DefaultHexaeder.current )
 		
+	}
+}
+
+trait FrustumTest {
+	def testNode( info:NodeInfo ):Boolean
+	def falsecount:Int
+}
+
+// Frustum Culling
+// Idea by Mark Morley, http://web.archive.org/web/20030601123911/http://www.markmorley.com/opengl/frustumculling.html
+class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
+
+	val planes = Array(Vec4(0),Vec4(0),Vec4(0),Vec4(0),Vec4(0),Vec4(0))
+	val rows = transpose(projection * modelview)
+	planes(0) = normalize(rows(3) - rows(0)) //right plane
+	planes(1) = normalize(rows(3) + rows(0)) //left plane
+	planes(2) = normalize(rows(3) + rows(1)) //bottom plane
+	planes(3) = normalize(rows(3) - rows(1)) //top plane
+	planes(4) = normalize(rows(3) - rows(2)) //far plane
+	planes(5) = normalize(rows(3) + rows(2)) //near plane
+
+   var falsecount = 0
+
+	def testNode( info:NodeInfo ):Boolean = {
+		val inside = testCube(info.pos + info.size / 2, info.size / 2)
+		if( !inside )
+			falsecount += 1
+		return inside
+	}
+	
+	private def testCube( pos:Vec3, radius:Float ):Boolean = {
+		// TODO: Give the information, if a cube is completely in the frustum
+		var p = 0
+		import pos.{x,y,z}
+		while( p < 6 )
+		{
+			if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
+			if( planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
+				return false
+			p += 1
+		}
+		// TODO: no false positives! => check all 8 points
+/*		val zero = ((v - radius)/(radius*2)).toInt
+		println(zero)
+		var inside = false
+		for( point <- zero to (zero + 1) )
+			if( PointInFrustum(point.toFloat) )
+				inside = true
+		return inside
+*/
+		return true
 	}
 }

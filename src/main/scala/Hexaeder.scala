@@ -56,7 +56,11 @@ case object EmptyHexaeder extends Hexaeder{
 	override def toString = "[ ]"
 }
 
-case object UndefHexaeder extends Hexaeder{
+// Platzhalter für Hexaeder, die in der Generierung noch fehler Haben. Solle 
+// nicht mehr auftreten
+case object BrokenHexaeder extends PartialHexaeder(X=0x53535353, Y=0x55335533, Z=0x55553333)
+
+case object UndefHexaeder extends Hexaeder {
 	def apply(p:Int, axis:Int) = 0
 	def apply(p:Int) = Vec3(0)
 	def vertices = Nil
@@ -69,7 +73,7 @@ case object UndefHexaeder extends Hexaeder{
 	override def toString = "[~]"
 }
 
-trait Hexaeder extends Serializable{
+trait Hexaeder extends Serializable {
 	def apply(p:Int,axis:Int):Float
 	def apply(p:Int):Vec3
 	def vertices:Seq[Vec3]

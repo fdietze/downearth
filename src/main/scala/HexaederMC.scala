@@ -837,6 +837,11 @@ object HexaederMC {
 				hexaeder(n1,log2(axis)) = interpolate(data(n1),data(n1^axis),n1 - (n1^axis) >= 0)
 				//TODO: immer axis 1,2,4 verwenden!
 				return hexaeder
+			case _ =>
+				// dieser Hexaeder sollte nicht mehr auftreten, wird aber
+				// dennoch erzeugt falls vorher ein Fehler in der
+				// transformToStable aufgetreten ist.
+				return BrokenHexaeder
 		}
 	}
 	

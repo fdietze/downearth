@@ -103,25 +103,8 @@ object World{
 		else
 			UndefHexaeder
 		
-	def draw{
-		octree.draw
-		
-		val selection = raytracer(Player.position,Player.direction,false,100)
-		selection match {
-		case Some(v) =>
-			Draw.addText("Selected Voxel: " + Vec3i(v) )
-			// malt die Markierung der angewählten Zelle
-			glDisable(GL_LIGHTING)
-			glPushMatrix
-			glTranslatef(v.x,v.y,v.z)
-			val h = octree(v)
-			glColor3f(1,1,1)
-			Draw.renderHexaeder(h)
-			glPopMatrix
-			glEnable(GL_LIGHTING)
-		case None =>
-		}
-		
+	def draw(test:FrustumTest){
+		octree.draw(test)
 		if(Config.streamWorld)
 			octree stream Player.position
 	}

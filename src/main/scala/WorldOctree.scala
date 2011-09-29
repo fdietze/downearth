@@ -46,12 +46,12 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	override def toString = "Octree("+root.toString+")"
 	
-	def draw{
+	def draw(test:FrustumTest) {
 		makeUpdates
 	
 		import org.lwjgl.opengl.GL11._
 		glColor3f(1,1,1)
-		root.draw
+		root.draw(rootNodeInfo,test)
 		
 		if(Config.debugDraw){
 			glDisable(GL_LIGHTING)

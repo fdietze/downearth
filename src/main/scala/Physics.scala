@@ -41,7 +41,7 @@ object BulletPhysics {
 	
 	var pause = false
 	
-	def togglePause{
+	def togglePause {
 		if(pause){
 			pause = false
 			simtime = getTime
@@ -57,13 +57,13 @@ object BulletPhysics {
 	var groundBodies:Seq[RigidBody] = Nil
 	
 	def worldChange(pos:Vec3i) {
-		for( Body( _ , _ , stream ) <- bodies ){
+		for( Body( _ , _ , stream ) <- bodies ) {
 			stream reloadAt pos
 		}
 	}
 	
 	def worldChange(nodeinfo:NodeInfo) {
-		for( Body( _ , _ , stream ) <- bodies ){
+		for( Body( _ , _ , stream ) <- bodies ) {
 			for(pos <- nodeinfo intersection stream.nodeinfo) {
 				stream reloadAt pos
 			}
@@ -86,8 +86,8 @@ object BulletPhysics {
 		val myMotionState = new DefaultMotionState(startTransform)
 		val rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape, localInertia)
 		
-		rbInfo.friction = 0.9f
-		rbInfo.linearDamping = 0.25f
+		rbInfo.friction = 0.5f
+		rbInfo.linearDamping = 0.40f
 
 		val body = new RigidBody(rbInfo)
 		dynamicsWorld.addRigidBody(body,1,-1)
@@ -107,7 +107,7 @@ object BulletPhysics {
 		dynamicsWorld removeRigidBody body
 	}
 
-	def addBody( body: RigidBody ){
+	def addBody( body: RigidBody ) {
 		dynamicsWorld addRigidBody body
 	}
 	
@@ -167,7 +167,7 @@ object BulletPhysics {
 			}
 		}
 		
-		def moveTo(dstpos:Vec3){
+		def moveTo(dstpos:Vec3) {
 			val movingdistance = Vec3i(round(dstpos))-(pos + size/2)
 			for(i <- 0 until 3) {
 				for( _ <- 0 until movingdistance(i).abs ){
@@ -178,7 +178,7 @@ object BulletPhysics {
 			}
 		}
 		
-		def draw{
+		def draw {
 			glPushMatrix
 			glTranslatef(pos.x,pos.y,pos.z)
 			Draw.renderCube(size)
@@ -207,7 +207,7 @@ object BulletPhysics {
 				None
 		}
 		
-		def removeBody(bodies:Option[RigidBody]){
+		def removeBody(bodies:Option[RigidBody]) {
 			if(bodies != None)
 				dynamicsWorld.removeRigidBody(bodies.get)
 		}
@@ -231,7 +231,7 @@ object BulletPhysics {
 			polygons
 		}
 		
-		def removeBody(bodies:Seq[RigidBody]){
+		def removeBody(bodies:Seq[RigidBody]) {
 			bodies foreach dynamicsWorld.removeRigidBody
 		}
 	}
@@ -255,14 +255,14 @@ object BulletPhysics {
 	def update{
 		if(!pause){
 			val currentTime = getTime
-			while(simtime < currentTime){
+			while(simtime < currentTime) {
 				dynamicsWorld stepSimulation (currentTime - simtime).toFloat
 				simtime = currentTime
 			}
 		}
 	}
 	
-	def debugDrawWorld{
+	def debugDrawWorld {
 		glPushMatrix
 		glDisable(GL_LIGHTING)
 		dynamicsWorld.debugDrawWorld
