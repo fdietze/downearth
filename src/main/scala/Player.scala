@@ -106,7 +106,7 @@ object Player {
 	}
 }
 
-object DefaultHexaeder{
+object BuildInterface{
 	val full = FullHexaeder
 	val half = new PartialHexaeder(Z = 0x44440000)
 	val quarter = new PartialHexaeder(Z = 0x44440000, Y = 0x44004400)
@@ -114,6 +114,12 @@ object DefaultHexaeder{
 	val rampA = new PartialHexaeder(Z = 0x00440000)
 	val rampB = new PartialHexaeder(Z = 0x44880000)
 	val rampC = new PartialHexaeder(Z = 0x00880000)
+	
+	// wird benötigt um den Korrekten Hexaeder hervorzuheben
+	// true: Momentan am Bauen
+	// false: Momentan am Buddeln
+	private var buildStatus = false
+	
 
 	def makeRotations(h:Hexaeder) = {
 		val h1 = h.rotateZ
@@ -133,40 +139,60 @@ object DefaultHexaeder{
 	}
 	def current = all(id)(rotation)
 	def rotate(num:Int){
+		if(num != 0)
+			buildStatus = true
 		id = (id+num+all.size) % all.size
 	}
-}
-
-object Controller{
-
-	def build {
-		val mousedest = World.raytracer(Player.position, Player.direction, true, 100)
+	
+	def build(position:Vec3,direction:Vec3) {
+		buildStatus = true
+		val mousedest = World.raytracer(position, direction, true, 100)
 		mousedest match {
 			case Some(pos) => 
-				World(pos) = DefaultHexaeder.current
+				World(pos) = current
 			case _ =>
 		}
 	}
 	
-	def remove {
-		val mousedest = World.raytracer(Player.position, Player.direction, false, 100)
+	def remove(position:Vec3,direction:Vec3) {
+		buildStatus = false
+		val mousedest = World.raytracer(position, direction, false, 100)
 		mousedest match {
 			case Some(pos) =>
 				World(pos) = EmptyHexaeder
 			case _ =>
 		}
 	}
-
-	def move(dir:Vec3) {
-		Player move dir
-	}
 	
-	def rotate(rot:Vec3) {
-		Player rotate rot
-	}
+	def highlightHexaeder(position:Vec3, direction:Vec3) {
+		Draw.addText(buildStatus)
 	
-	def jump {
-		Player.jump
+		val selection = World.raytracer(position,direction,buildStatus,100)
+		selection match {
+		case Some(v) =>
+			Draw.addText("Selected Voxel: " + Vec3i(v) )
+			// malt die Markierung der angewählten Zelle
+			glPushMatrix
+			glTranslatef(v.x,v.y,v.z)
+			val hexaeder = 
+			if(buildStatus)
+				current
+			else
+				World(v)
+			
+			glDisable(GL_LIGHTING)
+			glDisable(GL_TEXTURE_2D)
+			glDisable(GL_DEPTH_TEST)
+			glEnable(GL_BLEND)
+			glColor4f(1,1,1,0.25f)
+			Draw.renderHexaeder(hexaeder)
+			glDisable(GL_BLEND)
+			glEnable(GL_DEPTH_TEST)
+			Draw.renderHexaeder(hexaeder)
+			glPopMatrix
+			glEnable(GL_LIGHTING)
+		case None =>
+		}
 	}
 }
 

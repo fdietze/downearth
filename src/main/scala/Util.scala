@@ -213,20 +213,25 @@ object Util {
 		stack
 	}
 	
-	def lineHexaederIntersect(linestart:Vec3,linedir:Vec3,h:Hexaeder) = {
+	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
+	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
+	def rayHexaederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder) = {
 		if( (h eq EmptyHexaeder) || (h eq UndefHexaeder) )
 			false
 		else{
-			val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,linedir)) )
+			val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,rayDirection)) )
 
-			val x = normalize( cross(q,linedir) )
-			val y = normalize( cross(x,linedir) )
+			val x = normalize( cross(q,rayDirection) )
+			val y = normalize( cross(x,rayDirection) )
 
 			val m = transpose( Mat3x2(x,y) )
 
-			// line start projected, hexaeder projected
-			val projected = (linestart :: h.vertices.toList) map ( m * _ )
+			// alle Vertices werden in richtung des Strahls projeziert
+			val projected = (rayStart :: h.vertices.toList) map ( m * _ )
 			val convexhull = convexHull2d(projected)
+			// enthäld die Konvexe Hülle der Projezierten Vertices noch 
+			// den projezierten Startpunkt des Strahls, so hat der strahl den 
+			// Hexaeder getroffen
 			!(convexhull contains projected.head)
 		}
 	}

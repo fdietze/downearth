@@ -13,8 +13,8 @@ object Config{
 	val smoothShading = false
 	val hexaederResolution = 8
 	
-	val skybox = false
-	val fullscreen = false
+	val skybox = true
+	val fullscreen = true
 	
 	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)

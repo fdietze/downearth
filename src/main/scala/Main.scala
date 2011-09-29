@@ -124,10 +124,10 @@ object Main {
 			delta.x += 1
 		
 		val factor = if(turbo) Config.CameraTurboSpeed else Config.CameraSpeed
-		Controller.move(factor*(delta/max(1,length(delta)))*timestep)
+		Player.move(factor*(delta/max(1,length(delta)))*timestep)
 		
 		if(Mouse.isGrabbed) 
-			Controller.rotate(2f*delta_angle)
+			Player.rotate(2f*delta_angle)
 		
 		if(isKeyDown(KEY_F)){
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
@@ -137,8 +137,6 @@ object Main {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 			glEnable(GL_LIGHTING)
 		}
-		// TODO: wofür dieser Kommentar?:
-		// switches the mode how 3d noise is transformed into a 3d Hexaeder
 		
 		while ( Keyboard.next ) {
 			if (getEventKeyState) {
@@ -177,27 +175,27 @@ object Main {
 				case KEY_TAB =>
 					Player.toggleGhost
 				case KEY_SPACE =>
-					Controller.jump
+					Player.jump
 				case KEY_1 =>
-					DefaultHexaeder.id = 0
+					BuildInterface.id = 0
 				case KEY_2 =>
-					DefaultHexaeder.id = 1
+					BuildInterface.id = 1
 				case KEY_3 =>
-					DefaultHexaeder.id = 2
+					BuildInterface.id = 2
 				case KEY_4 =>
-					DefaultHexaeder.id = 3
+					BuildInterface.id = 3
 				case KEY_5 =>
-					DefaultHexaeder.id = 4
+					BuildInterface.id = 4
 				case KEY_6 =>
-					DefaultHexaeder.id = 5
+					BuildInterface.id = 5
 				case KEY_7 =>
-					DefaultHexaeder.id = 6
+					BuildInterface.id = 6
 				case KEY_8 =>
-					DefaultHexaeder.id = 7
+					BuildInterface.id = 7
 				case KEY_9 =>
-					DefaultHexaeder.id = 8
+					BuildInterface.id = 8
 				case KEY_0 =>
-					DefaultHexaeder.id = 9
+					BuildInterface.id = 9
 				case _ =>
 				}
 			}
@@ -207,25 +205,25 @@ object Main {
 		
 		if(turbo) {
 			if( Mouse isButtonDown 0 )
-				Controller.remove
+				BuildInterface.remove(Player.position, Player.direction)
 			if( Mouse isButtonDown 1 )
-				Controller.build
+				BuildInterface.build(Player.position, Player.direction)
 		}
 		else {
 			while( Mouse.next ) {
 				if( getEventButtonState ) {
 					getEventButton match {
 					case 1 =>
-						Controller.build
+						BuildInterface.build(Player.position, Player.direction)
 					case 0 =>
-						Controller.remove
+						BuildInterface.remove(Player.position, Player.direction)
 					case _ =>
 					}
 				}
 			}
 		}
 		
-		DefaultHexaeder.rotate( Mouse.getDWheel / 120 )
+		BuildInterface.rotate( Mouse.getDWheel / 120 )
 	}
 
 	def draw {

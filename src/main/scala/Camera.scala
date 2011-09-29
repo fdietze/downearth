@@ -110,27 +110,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Draw.addText("frustum culled nodes: "+frustumtest.falsecount)
 		
-		val selection = World.raytracer(Player.position,Player.direction,false,100)
-		selection match {
-		case Some(v) =>
-			Draw.addText("Selected Voxel: " + Vec3i(v) )
-			// malt die Markierung der angewählten Zelle
-			glPushMatrix
-			glTranslatef(v.x,v.y,v.z)
-			val h = World(v)
-			glDisable(GL_LIGHTING)
-			glDisable(GL_TEXTURE_2D)
-			glDisable(GL_DEPTH_TEST)
-			glEnable(GL_BLEND)
-			glColor4f(1,1,1,0.25f)
-			Draw.renderHexaeder(h)
-			glDisable(GL_BLEND)
-			glEnable(GL_DEPTH_TEST)
-			Draw.renderHexaeder(h)
-			glPopMatrix
-			glEnable(GL_LIGHTING)
-		case None =>
-		}
+		BuildInterface.highlightHexaeder(position,direction)
 		
 		if(Config.debugDraw)
 			BulletPhysics.debugDrawWorld
@@ -181,7 +161,7 @@ object GUI extends Camera{
 		glRotatef(α,0,1,0)
 		glRotatef(90,1,0,0)
 		glTranslatef(-0.5f,-0.5f,-0.5f)
-		Draw.renderHexaeder( DefaultHexaeder.current )
+		Draw.renderHexaeder( BuildInterface.current )
 		
 	}
 }

@@ -26,7 +26,7 @@ trait Mesh extends Serializable {
 }
  
 trait MutableMesh[T <: MeshData] extends Mesh {
-	def patch(patches:Iterable[Patch[T]])
+	def applyUpdates(updates:Iterable[Update[T]])
 }
 
 trait MeshData {
@@ -58,7 +58,7 @@ case class TextureMeshBuilder(
 }
 
 // A <: B <: MeshData => Patch[A] <: Patch[B]
-case class Patch[+T <: MeshData](pos:Int,size:Int,data:T) {
+case class Update[+T <: MeshData](pos:Int,size:Int,data:T) {
 	//the difference of the size after the patch has been applied
 	def sizedifference = data.size - size
 }
@@ -152,15 +152,20 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 
 	private var msize = vertices_.size
 	override def size = msize
-
-	def patch(patches:Iterable[Patch[TextureMeshData]]){
+	
+	// fügt mehrere Updates in 
+	def applyUpdates(updates:Iterable[Update[TextureMeshData]]){
 		val oldvertices = vertices
 		val oldnormals = normals
 		val orldcoords = texcoords
 		
-		val newsize = size + (patches map (_.sizedifference)).sum
+		var newsize = size
+		for(update ← updates){
+			newsize += update.sizedifference
+		}
+		
 		def errorstring = {
-			patches map ( p => "replace " + p.size + " with " + p.data.size + "\n" )
+			updates map ( p => "replace " + p.size + " with " + p.data.size + "\n" )
 		}
 		assert(newsize >= 0,"newsize must be greater than or equal to 0\n"+errorstring)
 		
@@ -205,16 +210,16 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 			}
 		}
 
-		for(p <- patches) {
-			val (pre, other) = dataview.viewsplit(p.pos)
-			val (_ , post) = other.viewsplit(p.size)
-			dataview = (pre ::: View(0,p.data.size,p.data) :: post)
+		for(update <- updates) {
+			val (pre, other) = dataview.viewsplit(update.pos)
+			val post = other.viewsplit(update.size)._2
+			dataview = (pre ::: View(0,update.data.size,update.data) :: post)
 		}
 
 		var index = 0;
-		for(View(offset,size,data) <- dataview){
-			if(data != null){
-				for(i <- offset until (offset+size) ){
+		for(View(offset,size,data) <- dataview) {
+			if(data != null) {
+				for(i <- offset until (offset+size) ) {
 					vertices(index) = data.vertexArray(i)
 					normals(index) = data.normalArray(i/3)
 					texcoords(index) = data.texcoordsArray(i)
@@ -233,7 +238,6 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 }
 
 object TextureMesh{
-	
 	def apply(data:TextureMeshData) = {
   	import data._
   	val (vertices,normals,texcoords) = interleave(

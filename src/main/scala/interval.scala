@@ -79,15 +79,6 @@ def pow(i:Interval, n:Int) = {
 		Interval(0,functions.pow(functions.max(functions.abs(i.low), functions.abs(i.high)),n))
 }
 
-
-
-
-
-
-
-
-
-
 case class Volume(x:Interval = Interval(), y:Interval = Interval(), z:Interval = Interval()) {
 	def low  = Vec3(x.low , y.low , z.low )
 	def high = Vec3(x.high, y.high, z.high)
@@ -127,7 +118,6 @@ object Volume {
 def dot(a:Volume, b:Volume) = a.x*b.x + a.y*b.y + a.z*b.z
 def length(v:Volume) = sqrt(square(v.x) + square(v.y) + square(v.z))
 
-
 // Scalar <op> Interval
 /*implicit def scalarplusinterval(value:Double)  = new { def + (i:Interval):Interval = i + value }
 implicit def scalarminusinterval(value:Double) = new { def - (i:Interval):Interval = -i + value }
@@ -140,6 +130,5 @@ implicit def scalarminusvolume(value:Double) = new { def - (i:Volume) = -i + val
 implicit def scalartimesvolume(value:Double) = new { def * (i:Volume) = i * value }
 implicit def scalarovervolume(value:Double)  = new { def / (i:Volume) = Volume(value) / i }
 */
-
 
 }

@@ -74,7 +74,7 @@ object World{
 
 			h = apply(pos)
 
-			if(!Util.lineHexaederIntersect(from-pos,direction,h))
+			if(!Util.rayHexaederIntersect(from-pos,direction,h))
 				h = null
 			
 			i += 1
