@@ -145,15 +145,20 @@ object MutableTextureMesh {
 	}
 }
 
+// Diese Klasse wird verwendet, um den Octree darzustellen. Er repräsentiert ein
+// Mesh und stellt Methoden zur Verfügung, die es erlauben das Mesh über Updates
+// zu verändern.
 class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat], 
                          normals_ :DataView[Vec3,RFloat], 
                          texcoords_ :DataView[Vec2,RFloat]) 
-  	extends TextureMesh(vertices_, normals_, texcoords_) with MutableMesh[TextureMeshData] {
+    	extends TextureMesh(vertices_, normals_, texcoords_) with MutableMesh[TextureMeshData] {
 
 	private var msize = vertices_.size
 	override def size = msize
 	
-	// fügt mehrere Updates in 
+	// fügt mehrere Updates in den Hexaeder ein. Hier ist es Sinnvoll alle 
+	// Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den 
+	// Hexaeder einzufügen.
 	def applyUpdates(updates:Iterable[Update[TextureMeshData]]){
 		val oldvertices = vertices
 		val oldnormals = normals
@@ -164,10 +169,7 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 			newsize += update.sizedifference
 		}
 		
-		def errorstring = {
-			updates map ( p => "replace " + p.size + " with " + p.data.size + "\n" )
-		}
-		assert(newsize >= 0,"newsize must be greater than or equal to 0\n"+errorstring)
+		assert(newsize >= 0,"newsize must be greater than or equal to 0")
 		
 		val t = interleave(
 			DataSeq[Vec3, RFloat],
@@ -191,9 +193,9 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 		implicit def richviewsplit(viewlist:List[View]) = new {
 			def viewsplit(pos:Int) = {
 				var destoffset = 0
-				val (pre,other) = viewlist.span{
+				val (pre,other) = viewlist.span {
 					v =>
-						if( destoffset + v.size <= pos ){
+						if( destoffset + v.size <= pos ) {
 							destoffset += v.size
 							true
 						}
@@ -239,8 +241,8 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 
 object TextureMesh{
 	def apply(data:TextureMeshData) = {
-  	import data._
-  	val (vertices,normals,texcoords) = interleave(
+	import data._
+	val (vertices,normals,texcoords) = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec2, RFloat]
@@ -251,9 +253,11 @@ object TextureMesh{
 			texcoords(i) = texcoordsArray(i)
 		}
 		new TextureMesh(vertices,normals,texcoords)
-  }
+	}
 }
 
+// die Basisklasse TextureMesh kann serialisiert werden, und somit auch auf der
+// Festplatte gespeichert werden.
 class TextureMesh(@transient var vertices:DataView[Vec3,RFloat], 
                   @transient var normals:DataView[Vec3,RFloat], 
                   @transient var texcoords:DataView[Vec2,RFloat] ) 

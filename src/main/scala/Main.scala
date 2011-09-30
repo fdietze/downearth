@@ -210,8 +210,6 @@ object Main {
 				BuildInterface.build(Player.position, Player.direction)
 		}
 		
-		else
-		
 		while( Mouse.next ) {
 			if( getEventButtonState ) {
 				getEventButton match {
@@ -238,8 +236,6 @@ object Main {
 		
 		GUI.renderScene
 	}
-
-
 
 	def initshaders {
 		shader = ARBShaderObjects.glCreateProgramObjectARB
@@ -271,7 +267,6 @@ object Main {
 		printLogInfo(vertshader)
 		printLogInfo(fragshader)
 	}
-
 	
 	// mit dieser Methode kann ein Bereich umschlossen werden,
 	// der mit Shadern gerendert werden soll

@@ -311,7 +311,7 @@ object Leaf{
 case object EmptyLeaf extends Leaf(EmptyHexaeder)
 case object FullLeaf extends Leaf(FullHexaeder)
 
-class InnerNodeOverMesh(h:Hexaeder) extends OctantUnderMesh {
+class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 	val data = new Array[Octant](8)
 	//initiali the 8 child nodes
 	for(fidx <- 0 until 8) {
@@ -332,24 +332,28 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantUnderMesh {
 		val (index,nodeinfo) = info(p)
 		data(index)(nodeinfo,p)
 	}
-
+	
 	def merge_? = {
 		val first = data(0)
 		var merge = true
-			for(i <- data )
-				merge = merge && (i == first)
+		for(i <- 1 to 7 )
+			merge = merge && ( data(i) == first )
 		merge
 	}
-
+	
 	def updated(info:NodeInfo, p:Vec3i,h:Hexaeder) = {
 		val (index,childinfo) = info(p)
-
+		
 		data(index) = data(index).updated(childinfo,p,h)
-
+		
 		if(merge_?)
 			Leaf(h)
 		else
 			this
+		
+		// TODO merge ist hier ein Meshjoin und muss ganz anders behandelt werden
+		// this
+		
 	}
 
 	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
@@ -399,19 +403,17 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantUnderMesh {
 	
 	override def toString = data.mkString("(",",",")")
 	
-	override def genPolygons(info:NodeInfo , meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int = 
+	override def genPolygons(info:NodeInfo , meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Hexaeder)):Int = 
 		throw new NoSuchMethodException("in root use genMesh instead of genPolygons")
 	
 	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) = {
-		
 		if(info == insertinfo)
 			insertnode
-		else{
+		else {
 			val (index,childinfo) = info(insertinfo.pos)
 			data(index) = data(index).insertNode(childinfo, insertinfo, insertnode)
 			joinChildren
 		}
-		// TODO merge?
 	}
 	
 	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
@@ -440,35 +442,49 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantUnderMesh {
 	}
 	
 	def joinChildren:Octant = {
-		try{
-			val meshNodes = data.asInstanceOf[Array[MeshNode]]
+		// TODO passendere Konstruktoren/Factories anbieten
+		// nodejoin auslagern
+		if( ( data map ( x => x.isInstanceOf[MeshNode]) ).reduce( _ && _ ) ) {
+			// println("starting Join.")
+			val meshNodes = data map (_.asInstanceOf[MeshNode])
+			// println("step 0")
 			var sum = 0
-			for(meshnode <- meshNodes){
+			for(meshnode <- meshNodes) {
 				sum += meshnode.mesh.size
 			}
-			if(sum < Config.maxMeshVertexCount){
-				val childmeshes = meshNodes map (_.mesh)
-				val mesh = MutableTextureMesh( childmeshes )
-				val node = new MeshNode(this)
-				node.mesh = mesh
-				childmeshes.foreach(_.freevbo)
-				for(i <- 0 until 8){
-					data(i) = meshNodes(i).node
+			
+			if(sum < Config.maxMeshVertexCount) {
+				val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
+				val node = new InnerNode(EmptyHexaeder)
+				
+				for(i <- 0 until 8) {
+					node.data(i) = meshNodes(i).node
+					node.vvertcount(i) = meshNodes(i).mesh.size
+					meshNodes(i).mesh.freevbo
 				}
-				node
+				
+				val meshnode = new MeshNode(node)
+				meshnode.mesh = mesh
+				
+				println("joined")
+				meshnode
 			}
+			
 			else
 				this
 		}
-		catch{
-			case _ =>
-				this
-		}
+		else
+			this
 	}
 }
 
 class InnerNode(h:Hexaeder) extends InnerNodeOverMesh(h) {
 	// this node is under the vertex array, and may not have unset nodes
+	
+//	override def updated(info:NodeInfo, p:Vec3i,h:Hexaeder) = {
+//		throw new NoSuchMethodException("bei inneren Knoten Patch World verwenden")
+//	}
+	
 	override def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
 	val vvertcount = new Array[Int](8)
