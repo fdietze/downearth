@@ -5,6 +5,7 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
 import Util._
+import Hexaeder.planelookup
 import collection.Map
 
 trait Octant extends Serializable {
@@ -142,63 +143,77 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 		}
 	}
 	
-	// Falls das Blatt voll und größer als 1 ist, muss eine größere Fläche an 
-	// polygonen erzeugt werten.
+	// erzeugt aus Zwei aneinender grenzenden Hexaedern die Polygone, die nicht verdeckt werden.
+	// performance kritischer bereich, weil es für jedes benachberte Hexaederpaar aufgerufen wird
 	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
 		if(to != UndefHexaeder){
-			assert(meshBuilder != null)
 			assert(from != EmptyHexaeder)
-
+			
 			import meshBuilder._
-		
+			
 			val axis = dir >> 1
 			val direction = dir & 1
 		
 			//die beiden achsesen, die nicht axis sind
 			val axisa = 1-((axis+1) >> 1)
 			val axisb = (2 - (axis >> 1))
-		
-
+			
 			var vertexCounter = 0
-	
-			val triangleCoords = from.planetriangles(axis, direction)
-			val occludingCoords = to.planetriangles(axis,1-direction).filter(v => v(axis) == 1-direction) map
-					(v => Vec2(v(axisa),v(axisb)))
-	
-			val (t1,t2) = triangleCoords splitAt 3
-	
-			def triangleMax( s:Seq[Vec3] ) = {
-				var isMax = true
-				for( v <- s ){
-					isMax = isMax && (v(axis) == direction)
-				}
-				isMax
+			
+			val t = from.planetriangles(axis, direction)
+			
+			val occluderVertices = to.planetriangles(axis,1-direction)
+			val occludingCoords = new collection.mutable.ArrayBuffer[Vec2](6) // es sind nie mehr als 6 Vertices
+			
+			for(ov ← occluderVertices){
+				if( ov(axis) == 1-direction )
+					occludingCoords += Vec2(ov(axisa),ov(axisb))
 			}
-		
-			def addVertices(t:Seq[Vec3]){
-				for(v <- t){
-					vertexBuilder += (Vec3(pos) + v)
-					texCoordBuilder += Vec2( v(axisa)/2f + (direction & (axis >> 1))/2f , v(axisb)/2f )
-					vertexCounter += 1
-				}
-				normalBuilder += normalize(cross(t(2)-t(1),t(0)-t(1)))
+			
+			@inline def triangleMax(v0:Vec3, v1:Vec3, v2:Vec3) = {
+				(v0(axis) == direction) && (v1(axis) == direction) && (v2(axis) == direction)
 			}
-		
-			for( t <- List( t1, t2 ) ) {
-		
-				// liegen zwei vertices eines polygons zusammen, hat das polygon keine oberfläche und muss nicht
-				// gezeichnet werden
-				if(t(0) != t(1) && t(1) != t(2) && t(0) != t(2)){
-					if(to == EmptyHexaeder || !triangleMax(t))
-						addVertices(t)
-					else{
-						val flatTriangle = t map (v => Vec2(v(axisa),v(axisb)));
-						if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ){
-							addVertices(t)
-						}
+			
+			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3){
+				vertexBuilder += (Vec3(pos) + v0)
+				texCoordBuilder += Vec2( v0(axisa)/2f + (direction & (axis >> 1))/2f , v0(axisb)/2f )
+				vertexCounter += 1
+				
+				vertexBuilder += (Vec3(pos) + v1)
+				texCoordBuilder += Vec2( v1(axisa)/2f + (direction & (axis >> 1))/2f , v1(axisb)/2f )
+				vertexCounter += 1
+				
+				vertexBuilder += (Vec3(pos) + v2)
+				texCoordBuilder += Vec2( v2(axisa)/2f + (direction & (axis >> 1))/2f , v2(axisb)/2f )
+				vertexCounter += 1
+				
+				normalBuilder += normalize(cross(v2-v1,v0-v1))
+			}
+			
+			// liegen zwei vertices eines polygons zusammen, hat das polygon keine oberfläche und muss nicht
+			// gezeichnet werden
+			if(t(0) != t(1) && t(1) != t(2) && t(0) != t(2)){
+				if(to == EmptyHexaeder || !triangleMax(t(0),t(1),t(2)))
+					addVertices(t(0), t(1), t(2))
+				else{
+					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb)));
+					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ) {
+						addVertices(t(0), t(1), t(2))
 					}
 				}
 			}
+			
+			if(t(3) != t(4) && t(4) != t(5) && t(3) != t(5)){
+				if(to == EmptyHexaeder || !triangleMax(t(3),t(4),t(5)))
+					addVertices(t(3), t(4), t(5))
+				else{
+					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb)));
+					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ) {
+						addVertices(t(3), t(4), t(5))
+					}
+				}
+			}
+			
 			vertexCounter
 		}
 		else

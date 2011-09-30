@@ -45,12 +45,10 @@ object Main {
 
 	def init {
 		Display.setTitle("Open World")
-		
-		if( Config.fullscreen && displayMode.isFullscreenCapable )
-			Display.setFullscreen(true)
-
-		Display.setDisplayMode(displayMode)
-		
+		if(Config.fullscreen)
+			Display.setDisplayModeAndFullscreen(displayMode)
+		else
+			Display.setDisplayMode(displayMode)
 		Display.create()
 		
 		if(Config.useshaders)
@@ -164,6 +162,10 @@ object Main {
 					Config.streamWorld = !Config.streamWorld
 				case KEY_F8 =>
 					Config.frustumCulling = !Config.frustumCulling
+				case KEY_F11 =>
+					Config.fullscreen = !Config.fullscreen
+					Display.setFullscreen(Config.fullscreen)
+					Display.setDisplayMode(Config.displayMode)
 				case KEY_T =>
 					turbo = ! turbo
 				case KEY_ESCAPE =>
@@ -205,20 +207,20 @@ object Main {
 		
 		if(turbo) {
 			if( Mouse isButtonDown 0 )
-				BuildInterface.remove(Player.position, Player.direction)
-			if( Mouse isButtonDown 1 )
 				BuildInterface.build(Player.position, Player.direction)
 		}
-		else {
-			while( Mouse.next ) {
-				if( getEventButtonState ) {
-					getEventButton match {
-					case 1 =>
+		
+		else
+		
+		while( Mouse.next ) {
+			if( getEventButtonState ) {
+				getEventButton match {
+				case 0 =>
+					if(!turbo)
 						BuildInterface.build(Player.position, Player.direction)
-					case 0 =>
-						BuildInterface.remove(Player.position, Player.direction)
-					case _ =>
-					}
+				case 1 =>
+					BuildInterface.buildStatus = !BuildInterface.buildStatus
+				case _ =>
 				}
 			}
 		}

@@ -118,8 +118,7 @@ object BuildInterface{
 	// wird benötigt um den Korrekten Hexaeder hervorzuheben
 	// true: Momentan am Bauen
 	// false: Momentan am Buddeln
-	private var buildStatus = false
-	
+	var buildStatus = false
 
 	def makeRotations(h:Hexaeder) = {
 		val h1 = h.rotateZ
@@ -145,21 +144,10 @@ object BuildInterface{
 	}
 	
 	def build(position:Vec3,direction:Vec3) {
-		buildStatus = true
-		val mousedest = World.raytracer(position, direction, true, 100)
+		val mousedest = World.raytracer(position, direction, buildStatus, 100)
 		mousedest match {
 			case Some(pos) => 
-				World(pos) = current
-			case _ =>
-		}
-	}
-	
-	def remove(position:Vec3,direction:Vec3) {
-		buildStatus = false
-		val mousedest = World.raytracer(position, direction, false, 100)
-		mousedest match {
-			case Some(pos) =>
-				World(pos) = EmptyHexaeder
+				World(pos) = if(buildStatus) current else EmptyHexaeder
 			case _ =>
 		}
 	}

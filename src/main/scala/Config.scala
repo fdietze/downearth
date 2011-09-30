@@ -14,7 +14,6 @@ object Config{
 	val hexaederResolution = 8
 	
 	val skybox = true
-	val fullscreen = true
 	
 	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)
@@ -33,13 +32,17 @@ object Config{
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
 	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
-
-
-	val displayMode =
-		if(fullscreen) // Vollbild-Modus mit höchster Auflösung
-			Display.getAvailableDisplayModes.maxBy( _.getWidth )
+	
+	var fullscreen = true
+	
+	// Vollbild-Modus mit höchster Auflösung
+	val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
+	val windowDisplayMode = new DisplayMode(1024, 768)
+	def displayMode =
+		if(fullscreen) 
+			fullscreenDisplayMode
 		else
-			new DisplayMode(1024, 768)
+			windowDisplayMode
 	
 	def screenWidth  = displayMode.getWidth
 	def screenHeight = displayMode.getHeight

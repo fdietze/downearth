@@ -32,7 +32,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		directionQuat *= Quat4 rotateZ(α*pow(factor,1.5f))
 	}
 	
-	val frustum = {
+	def frustum = {
 		val v = screenWidth.toFloat / screenHeight.toFloat	
 		
 		val n = 0.05f //near
@@ -43,19 +43,18 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
-	val frustumBuffer = {
+	def frustumBuffer = {
 		val buffer = DataBuffer[Mat4,RFloat](1)
 		buffer(0) = frustum
 		buffer.buffer
 	}
 	
 	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
+	def modelview = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
 	def modelviewBuffer = {
 		m_modelviewBuffer(0) = modelview
 		m_modelviewBuffer.buffer
 	}
-	def modelview = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
-	
 	
 	val m_skyboxBuffer = DataBuffer[Mat4,RFloat](1)
 	def skyboxBuffer = {
@@ -75,12 +74,13 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	}
 	
 	def renderScene {
+		glViewport(0,0,screenWidth,screenHeight)
 		glMatrixMode(GL_PROJECTION)
 		glLoadMatrix( frustumBuffer )
-		
 		glMatrixMode(GL_MODELVIEW)
 		glDisable(GL_BLEND)
-		if(Config.skybox){
+		
+		if(Config.skybox) {
 			glLoadMatrix( skyboxBuffer )
 			glDisable( GL_DEPTH_TEST )
 			glDisable( GL_LIGHTING )
@@ -94,11 +94,11 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_LIGHTING)
 		
-		val frustumtest:FrustumTest = 
+		val frustumtest:FrustumTest =
 		if( Config.frustumCulling )
 			new FrustumTestImpl(frustum,modelview)
 		else {
-			new FrustumTest { 
+			new FrustumTest {
 				def testNode( info:NodeInfo ) = true 
 				val falsecount = 0
 			}
@@ -139,6 +139,7 @@ object GUI extends Camera{
 		glOrtho(0,screenWidth,screenHeight,0,-100,100)
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity
+		glViewport(0,0,screenWidth,screenHeight)
 	}
 	
 	def renderScene {

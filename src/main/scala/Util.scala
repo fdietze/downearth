@@ -188,6 +188,7 @@ object Util {
 		println(msg+t)
 		f
 	}
+	/*
 	// Graham Scan algorithm O(n log n)
 	def convexHull2d( points:List[Vec2] ) = {
 		def ccw(p1:Vec2, p2:Vec2, p3:Vec2) = (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x) > 0
@@ -209,13 +210,13 @@ object Util {
 			push(p)
 		}
 		
-
 		stack
 	}
+	*/
 	
 	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
 	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
-	def rayHexaederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder) = {
+	def rayHexaederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder):Boolean = {
 		if( (h eq EmptyHexaeder) || (h eq UndefHexaeder) )
 			false
 		else{
@@ -228,11 +229,36 @@ object Util {
 
 			// alle Vertices werden in richtung des Strahls projeziert
 			val projected = (rayStart :: h.vertices.toList) map ( m * _ )
-			val convexhull = convexHull2d(projected)
+			val array = Array(projected:_*)
+			val convexhullcount = QuickHull computeHull array
+			
 			// enthäld die Konvexe Hülle der Projezierten Vertices noch 
 			// den projezierten Startpunkt des Strahls, so hat der strahl den 
 			// Hexaeder getroffen
-			!(convexhull contains projected.head)
+			for(i ← 0 until convexhullcount){
+				if( array(i) == projected.head )
+					return false
+			}
+			return true
+		}
+	}
+	
+	def rayHexaederIntersect2(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder) = {
+		for(i ← 0 until 6){
+			val axis = i >> 1
+			val direction = i & 1
+			val Vector(v0,v1,v2, v3,v4,v5) = h.planetriangles(axis,direction)
+			// normalen der Dreiecke
+			val n0 = cross(v2-v1,v0-v1)
+			val n1 = cross(v5-v4,v3-v4)
+			// falls der strahl auf die Sichtbare Seite des Dreiecks trifft.
+			def triangleMax(v0:Vec3, v1:Vec3, v2:Vec3) = {
+				(v0(axis) == direction) && (v1(axis) == direction) && (v2(axis) == direction)
+			}
+			
+			if( dot(n0,rayDirection) < 0 ){
+				
+			}
 		}
 	}
 	
@@ -270,14 +296,5 @@ object Util {
 	
 	def round10(a:Double) = math.round(a*10.0)/10.0f
 	def round10(v:Vec3):Vec3 = Vec3(round10(v.x), round10(v.y), round10(v.z))
-	
-	val planelookup = Vector(
-		Vector(0,2,4,6),
-		Vector(1,3,5,7),
-		Vector(1,0,5,4),
-		Vector(3,2,7,6),
-		Vector(0,1,2,3),
-		Vector(4,5,6,7)
-	)
 }
 

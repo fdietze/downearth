@@ -28,6 +28,15 @@ object Hexaeder {
 	
 	def apply(v0:Vec3, v1:Vec3, v2:Vec3, v3:Vec3, v4:Vec3, v5:Vec3, v6:Vec3, v7:Vec3):Hexaeder =
 		apply(Seq(v0,v1,v2,v3,v4,v5,v6,v7))
+	
+	val planelookup = Vector(
+		Vector(0,2,4,6),
+		Vector(1,3,5,7),
+		Vector(1,0,5,4),
+		Vector(3,2,7,6),
+		Vector(0,1,2,3),
+		Vector(4,5,6,7)
+	)
 }
 
 import Hexaeder._
@@ -305,7 +314,8 @@ class PartialHexaeder(
 		}
 		return false
 	}
-
+	
+	// erstellt eine Kopie von diesem Hexaeder der 90° um die Z-Achse rotiert wurde.
 	def rotateZ = {
 		// def map(x:Int) = (0x000F000F & x) << 4 | (0x00F000F0 & x) << 8 | (0x0F000F00 & x) >> 8 | (0xF000F000 & x) >> 4
 		val verts = vertices map ( v => Vec3(1-v.y, v.x, v.z) )
@@ -323,3 +333,4 @@ class PartialHexaeder(
 		Hexaeder(newverts)
 	}
 }
+
