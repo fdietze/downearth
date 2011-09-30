@@ -238,8 +238,8 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 			}
 		}
 		else {
-			if(h == FullHexaeder){
-				for( dir <- (0 to 5) ){
+			if(h == FullHexaeder) {
+				for( dir <- (0 to 5) ) {
 					val axis = dir >> 1
 
 					val axisa = 1-((axis+1) >> 1)

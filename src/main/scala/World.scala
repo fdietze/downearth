@@ -82,12 +82,13 @@ object World{
 		
 		val prepos = pos.clone
 		prepos(axis) -= step(axis)
-
-		if(h != null)
-			if(top)
+		
+		if(h != null){
+			if(top && rayCellTest(from-pos,direction,h))
 				Some(prepos)
 			else
 				Some(pos)
+		}
 		else
 			None
 	}

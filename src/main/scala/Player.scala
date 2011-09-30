@@ -153,8 +153,6 @@ object BuildInterface{
 	}
 	
 	def highlightHexaeder(position:Vec3, direction:Vec3) {
-		Draw.addText(buildStatus)
-	
 		val selection = World.raytracer(position,direction,buildStatus,100)
 		selection match {
 		case Some(v) =>

@@ -188,7 +188,7 @@ object Util {
 		println(msg+t)
 		f
 	}
-	/*
+	
 	// Graham Scan algorithm O(n log n)
 	def convexHull2d( points:List[Vec2] ) = {
 		def ccw(p1:Vec2, p2:Vec2, p3:Vec2) = (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x) > 0
@@ -212,7 +212,6 @@ object Util {
 		
 		stack
 	}
-	*/
 	
 	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
 	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
@@ -224,42 +223,64 @@ object Util {
 
 			val x = normalize( cross(q,rayDirection) )
 			val y = normalize( cross(x,rayDirection) )
-
 			val m = transpose( Mat3x2(x,y) )
 
 			// alle Vertices werden in richtung des Strahls projeziert
-			val projected = (rayStart :: h.vertices.toList) map ( m * _ )
-			val array = Array(projected:_*)
-			val convexhullcount = QuickHull computeHull array
+			val projected = (rayStart :: h.vertices.toList).map(m*_)
+			val projectedStart = projected.head
+			val convexHull = convexHull2d( projected )
 			
 			// enthäld die Konvexe Hülle der Projezierten Vertices noch 
 			// den projezierten Startpunkt des Strahls, so hat der strahl den 
 			// Hexaeder getroffen
-			for(i ← 0 until convexhullcount){
-				if( array(i) == projected.head )
-					return false
-			}
-			return true
+			!(convexHull contains projectedStart)
 		}
 	}
 	
-	def rayHexaederIntersect2(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder) = {
-		for(i ← 0 until 6){
+	// falls schon sichergestellt wurde, dass der Strahl den Hexaeder trifft, 
+	// wird hir noch herausgefunden, ob der strahl eine Aussenwand des Hexaeders
+	// trifft oder nich.
+	def rayCellTest(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder):Boolean = {
+		val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,rayDirection)) )
+		val x = normalize( cross(q,rayDirection) )
+		val y = normalize( cross(x,rayDirection) )
+		val m = transpose( Mat3x2(x,y) )
+		
+		for(i ← 0 until 6) {
 			val axis = i >> 1
 			val direction = i & 1
-			val Vector(v0,v1,v2, v3,v4,v5) = h.planetriangles(axis,direction)
-			// normalen der Dreiecke
-			val n0 = cross(v2-v1,v0-v1)
-			val n1 = cross(v5-v4,v3-v4)
-			// falls der strahl auf die Sichtbare Seite des Dreiecks trifft.
+			val (triangle1, triangle2) = h.planetriangles(axis,direction).splitAt(3)
+			
 			def triangleMax(v0:Vec3, v1:Vec3, v2:Vec3) = {
 				(v0(axis) == direction) && (v1(axis) == direction) && (v2(axis) == direction)
 			}
 			
-			if( dot(n0,rayDirection) < 0 ){
+			for( triangle ← List(triangle1,triangle2) ) {
+				val v0 = triangle(0)
+				val v1 = triangle(1)
+				val v2 = triangle(2)
+				// normale des Dreiecks
+				val n = cross(v2-v1,v0-v1)
+				// falls der Strahl auf die Sichtbare Seite des ersten Dreiecks trifft.
+				if( dot(n,rayDirection) <= 0 ) {
+					val projected = List(m*rayStart, m*v0, m*v1, m*v2)
+					val projectedStart = projected(0)
 				
+					// arbeitet inplace auf dem Array
+					val convexhull = convexHull2d( projected )
+					
+					// falls das dreieck getroffen wurde
+					if( !( convexhull contains projectedStart ) ){
+						// wird ausgegeben, ob es aussen am rand liegt oder nicht
+						return triangleMax(v0,v1,v2)
+					}
+				}
 			}
 		}
+		
+		// dieser code hier wird nur erreicht, wenn der strahl den Hexaeder garnicht getroffen hat
+		Draw addText "nicht getroffen"
+		return false
 	}
 	
 	def occludes2d(occluder:Seq[Vec2], occludee:Seq[Vec2]):Boolean = {

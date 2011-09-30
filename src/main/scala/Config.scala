@@ -33,7 +33,7 @@ object Config{
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
 	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
 	
-	var fullscreen = true
+	var fullscreen = false
 	
 	// Vollbild-Modus mit höchster Auflösung
 	val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
