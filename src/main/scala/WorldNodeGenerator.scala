@@ -12,8 +12,8 @@ import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 
 case object PoisonPill
 
+// Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 object WorldNodeGenerator {
-	
 	object Master extends DaemonActor {
 		val jobqueue = new SynchronizedQueue[NodeInfo]
 		val done  = new SynchronizedQueue[(NodeInfo,OctantOverMesh)]
