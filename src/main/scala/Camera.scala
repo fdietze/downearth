@@ -144,6 +144,11 @@ object GUI extends Camera{
 	
 	def renderScene {
 
+		// Disable Wireframe for GUI
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
+		glEnable(GL_LIGHTING)
+
+
 		applyortho
 		Main.showfps
 		Draw.drawTexts

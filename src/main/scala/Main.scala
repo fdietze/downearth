@@ -45,13 +45,13 @@ object Main {
 
 	def init {
 		Display.setTitle("Open World")
-		if(Config.fullscreen)
+		if(fullscreen)
 			Display.setDisplayModeAndFullscreen(displayMode)
 		else
 			Display.setDisplayMode(displayMode)
 		Display.create()
 		
-		if(Config.useshaders)
+		if(useshaders)
 			initshaders
 		
 		glEnable(GL_CULL_FACE)
@@ -108,26 +108,22 @@ object Main {
 		delta_angle.y -= getDX/300f
 		delta_angle.x = getDY/300f
 		
-		if(isKeyDown(KEY_Q))
-			delta_angle.z += 0.5f*timestep
-		if(isKeyDown(KEY_E))
-			delta_angle.z -= 0.5f*timestep
-		if(isKeyDown(KEY_W))
+		if(isKeyDown(keyForward))
 			delta.z -= 1
-		if(isKeyDown(KEY_S))
+		if(isKeyDown(keyBackward))
 			delta.z += 1
-		if(isKeyDown(KEY_A))
+		if(isKeyDown(keyLeft))
 			delta.x -= 1
-		if(isKeyDown(KEY_D))
+		if(isKeyDown(keyRight))
 			delta.x += 1
 		
-		val factor = if(turbo) Config.CameraTurboSpeed else Config.CameraSpeed
+		val factor = if(turbo) cameraTurboSpeed else cameraSpeed
 		Player.move(factor*(delta/max(1,length(delta)))*timestep)
 		
 		if(Mouse.isGrabbed) 
 			Player.rotate(2f*delta_angle)
 		
-		if(isKeyDown(KEY_F)){
+		if( wireframe ){
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
 			glDisable(GL_LIGHTING)
 		}
@@ -139,64 +135,53 @@ object Main {
 		while ( Keyboard.next ) {
 			if (getEventKeyState) {
 				getEventKey match {
-				case KEY_G =>
-					if(Mouse isGrabbed)
-						Mouse setGrabbed false
-					else
-						Mouse setGrabbed true
-				case KEY_R =>
+				case `keyMouseGrab` =>
+					Mouse setGrabbed !(Mouse isGrabbed)
+				case `keyPlayerReset` =>
 					Player.resetPos
-				case KEY_RIGHT =>
-					World.octree.move(Vec3i( 1,0,0))
-				case KEY_LEFT =>
-					World.octree.move(Vec3i(-1,0,0))
-				case KEY_UP =>
-					World.octree.move(Vec3i(0, 1,0))
-				case KEY_DOWN =>
-					World.octree.move(Vec3i(0,-1,0))
-				case KEY_PRIOR =>
-					World.octree.move(Vec3i(0,0, 1))
-				case KEY_NEXT =>
-					World.octree.move(Vec3i(0,0,-1))
-				case KEY_F7 =>
-					Config.streamWorld = !Config.streamWorld
-				case KEY_F8 =>
-					Config.frustumCulling = !Config.frustumCulling
-				case KEY_F11 =>
-					Config.fullscreen = !Config.fullscreen
-					Display.setFullscreen(Config.fullscreen)
-					Display.setDisplayMode(Config.displayMode)
-				case KEY_T =>
+				case `keyStreaming` =>
+					streamWorld = !streamWorld
+				case `keyWireframe` =>
+					wireframe = !wireframe
+				case `keyFrustumCulling` =>
+					frustumCulling = !frustumCulling
+				case `keyFullScreen` =>
+					fullscreen = !fullscreen
+					Display.setFullscreen(fullscreen)
+					Display.setDisplayMode(displayMode)
+					if( fullscreen )
+						Mouse setGrabbed true
+				case `keyTurbo` =>
 					turbo = ! turbo
-				case KEY_ESCAPE =>
+				case `keyQuit` =>
 					finished = true
-				case KEY_P | KEY_PAUSE =>
+				case `keyPausePhysics` =>
 					BulletPhysics.togglePause
-				case KEY_F1 =>
-					Config.debugDraw = !Config.debugDraw
-				case KEY_TAB =>
+				case `keyDebugDraw` =>
+					debugDraw = !debugDraw
+				case `keyToggleGhostPlayer` =>
 					Player.toggleGhost
-				case KEY_SPACE =>
+				case `keyJump` =>
 					Player.jump
-				case KEY_1 =>
+				case `keyChooseHex0` =>
 					BuildInterface.id = 0
-				case KEY_2 =>
+				case `keyChooseHex1` =>
 					BuildInterface.id = 1
-				case KEY_3 =>
+				case `keyChooseHex2` =>
 					BuildInterface.id = 2
-				case KEY_4 =>
+				case `keyChooseHex3` =>
 					BuildInterface.id = 3
-				case KEY_5 =>
+				case `keyChooseHex4` =>
 					BuildInterface.id = 4
-				case KEY_6 =>
+				case `keyChooseHex5` =>
 					BuildInterface.id = 5
-				case KEY_7 =>
+				case `keyChooseHex6` =>
 					BuildInterface.id = 6
-				case KEY_8 =>
+				case `keyChooseHex7` =>
 					BuildInterface.id = 7
-				case KEY_9 =>
+				case `keyChooseHex8` =>
 					BuildInterface.id = 8
-				case KEY_0 =>
+				case `keyChooseHex9` =>
 					BuildInterface.id = 9
 				case _ =>
 				}
@@ -213,16 +198,20 @@ object Main {
 		while( Mouse.next ) {
 			if( getEventButtonState ) {
 				getEventButton match {
-				case 0 =>
-					if(!turbo)
-						BuildInterface.build(Player.position, Player.direction)
-				case 1 =>
+				case 0 => // Left Click
+					if( !(Mouse isGrabbed) )
+						Mouse setGrabbed true
+					else
+						if(!turbo)
+							BuildInterface.build(Player.position, Player.direction)
+				case 1 => // Right Click
 					BuildInterface.buildStatus = !BuildInterface.buildStatus
 				case _ =>
 				}
 			}
 		}
 		
+		//TODO: why 120?
 		BuildInterface.rotate( Mouse.getDWheel / 120 )
 	}
 
