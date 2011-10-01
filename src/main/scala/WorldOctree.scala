@@ -9,14 +9,16 @@ import collection.Map
 
 import Config.minMeshNodeSize
 
+// Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Hexaeder] with Serializable{
-
 	var worldWindowPos:Vec3i = rootNodePos.clone
 	val worldWindowSize:Int = rootNodeSize
 	
 	def worldWindowCenter = worldWindowPos + worldWindowSize/2
 	
 	val vsize = Vec3i(worldWindowSize)
+	
+	// TODO dies ist noch etwas unsauber gelöst.
 	var root:Octant = new Leaf(EmptyHexaeder) // DeadInnerNode
 	def rootA = root.asInstanceOf[OctantUnderMesh]
 	def rootB = root.asInstanceOf[OctantOverMesh]

@@ -128,7 +128,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 }
 
-// 2D Kamera für die GUI
+// die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
 object GUI extends Camera{
 	
 	def applyortho{
@@ -143,7 +143,6 @@ object GUI extends Camera{
 	}
 	
 	def renderScene {
-
 		applyortho
 		Main.showfps
 		Draw.drawTexts
@@ -155,6 +154,8 @@ object GUI extends Camera{
 		Draw.crossHair
 		glPopMatrix
 		
+		/*
+		// rendert den aktuell ausgewählten Hexaeder zum Bauen
 		val α = math.atan2( Player.direction.y, Player.direction.x ).toFloat.toDegrees - 90
 		glTranslatef(screenWidth - 64, 64, 0)
 		glScalef(32,32,32)
@@ -163,6 +164,7 @@ object GUI extends Camera{
 		glRotatef(90,1,0,0)
 		glTranslatef(-0.5f,-0.5f,-0.5f)
 		Draw.renderHexaeder( BuildInterface.current )
+		*/
 		
 	}
 }
@@ -185,7 +187,7 @@ class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
 	planes(4) = normalize(rows(3) - rows(2)) //far plane
 	planes(5) = normalize(rows(3) + rows(2)) //near plane
 
-   var falsecount = 0
+	var falsecount = 0
 
 	def testNode( info:NodeInfo ):Boolean = {
 		val inside = testCube(info.pos + info.size / 2, info.size / 2)
@@ -211,15 +213,6 @@ class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
 				return false
 			p += 1
 		}
-		// TODO: no false positives! => check all 8 points
-/*		val zero = ((v - radius)/(radius*2)).toInt
-		println(zero)
-		var inside = false
-		for( point <- zero to (zero + 1) )
-			if( PointInFrustum(point.toFloat) )
-				inside = true
-		return inside
-*/
 		return true
 	}
 }
