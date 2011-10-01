@@ -21,7 +21,7 @@ object WorldGenerator {
 	
 	def genWorld:WorldOctree = {
 		val octree = new WorldOctree(cubesize,Vec3i(-cubesize/2))
-		octree.root = DeadInnderNode
+		octree.root = DeadInnerNode
 		octree.jumpTo(Vec3i(0))
 		octree.meshGenerated = true
 		octree

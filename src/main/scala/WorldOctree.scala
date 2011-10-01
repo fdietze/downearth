@@ -17,8 +17,10 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	def worldWindowCenter = worldWindowPos + worldWindowSize/2
 	
 	val vsize = Vec3i(worldWindowSize)
-	var root:Octant = new Leaf(EmptyHexaeder) // DeadInnderNode
-
+	var root:Octant = new Leaf(EmptyHexaeder) // DeadInnerNode
+	def rootA = root.asInstanceOf[OctantUnderMesh]
+	def rootB = root.asInstanceOf[OctantOverMesh]
+	
 	var meshGenerated = false
 	
 	override def indexInRange(pos:Vec3i) = Util.indexInRange(pos,rootNodePos,rootNodeSize)
@@ -34,10 +36,11 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 	def update(p:Vec3i,h:Hexaeder) {
 		if(rootNodeInfo.indexInRange(p)) {
+			// TODO, kann auf updated zurückgeführt werden
 			if(meshGenerated)
-				root = root.patchWorld(rootNodeInfo, p,h,-1,-1)._1
+				root = rootB.updated(rootNodeInfo, p,h)
 			else 
-				root = root.updated(rootNodeInfo, p,h)
+				root = rootA.updated(rootNodeInfo, p,h)
 		}
 		else{
 			printf("update out of world at %s, %s\n",p.toString,rootNodeInfo.toString)
@@ -51,7 +54,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 		import org.lwjgl.opengl.GL11._
 		glColor3f(1,1,1)
-		root.draw(rootNodeInfo,test)
+		rootB.draw(rootNodeInfo,test)
 		
 		if(Config.debugDraw){
 			glDisable(GL_LIGHTING)
@@ -73,7 +76,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	def genMesh(f:(Vec3i => Hexaeder) = World.apply _){
 		assert(! meshGenerated)
-		root = root.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else f(x) }) )
+		root = rootA.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else f(x) }) )
 		meshGenerated = true
 	}
 	
@@ -123,7 +126,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 		//while(Util.indexInRange(worldWindowPos,worldWindowSize,Vec3i(pos))
 		
-		assert((worldWindowSize / minMeshNodeSize) % 2 == 0  , "da ist noch was nicht implementiert")
+		assert((worldWindowSize / minMeshNodeSize) % 2 == 0)
 		
 		val lowerVertex = wpos + wsize/2 - msize/2
 		val upperVertex = wpos + wsize/2 + msize/2
@@ -142,17 +145,14 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			move( Vec3i(0,0,1) )
 	}
 	
-	def insert( nodeinfo:NodeInfo, that:Octant ) {
+	def insert( nodeinfo:NodeInfo, that:OctantOverMesh ) {
 		val NodeInfo(nodepos,nodesize) = nodeinfo
 		
 		if(any(lessThan(nodepos, rootNodePos))) {
 			// Welt wird in (+1,+1,+1) vergrößert
-			val newroot = new InnerNodeOverMesh(EmptyHexaeder)
-			for(i <- 0 until 7)
-				newroot.data(i) = DeadInnderNode
-
-			newroot.data(7) = root
-			root = newroot
+			val newdata = Array.fill[OctantOverMesh](8)(DeadInnerNode)
+			newdata(7) = rootB
+			root = new InnerNodeOverMesh(newdata)
 			
 			rootNodePos -= rootNodeSize
 			rootNodeSize *= 2
@@ -160,28 +160,14 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 		else if(any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize))) {
 			// Welt wird in (-1,-1,-1) vergrößert
-			val newroot = new InnerNodeOverMesh(EmptyHexaeder)
-			for(i <- 1 until 8)
-				newroot.data(i) = DeadInnderNode
-
-			newroot.data(0) = root
-			root = newroot
-
+			val newdata = Array.fill[OctantOverMesh](8)(DeadInnerNode)
+			newdata(0) = rootB
+			root = new InnerNodeOverMesh(newdata)
+			
 			rootNodeSize *= 2
 		}
 		
-		root = root.insertNode(rootNodeInfo, nodeinfo, that)
-		
-		// nachbarn patchen
-		if(Config.patchAtNodeInsert) {
-			for(dir <- 0 until 6){
-				val dirvec = Vec3i(0)
-				dirvec(dir >> 1) = (dir & 1)*2-1
-				val patchNodeInfo = NodeInfo(nodepos - dirvec*nodesize,nodesize)
-				if(rootNodeInfo indexInRange patchNodeInfo)
-					root.patchSurface(rootNodeInfo, patchNodeInfo, dir, 0, 0)
-			}
-		}
+		root = rootB.insertNode(rootNodeInfo, nodeinfo, that)
 	}
 
 	override def fill( foo: Vec3i => Hexaeder ){
@@ -195,7 +181,6 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			if(job indexInRange info)
 				return true
 		}
-		// TODO hier gibts manchmal eine exception
 
 		try{
 			for( job <- WorldNodeGenerator.Master.done ){
@@ -208,14 +193,14 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 				return true
 		}
 		if(rootNodeInfo indexInRange info)
-			return root.isSet(rootNodeInfo,info)
+			return rootB.isSet(rootNodeInfo,info)
 		else
 			return false
 	}
 	
 	def getPolygons(pos:Vec3i) = {
 		if(rootNodeInfo indexInRange pos)
-			root.getPolygonsOverMesh(rootNodeInfo,pos)
+			root.asInstanceOf[OctantOverMesh].getPolygons(rootNodeInfo,pos)
 		else
 			Nil
 	}

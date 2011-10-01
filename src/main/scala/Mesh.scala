@@ -237,6 +237,20 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 		msize = newsize
 		genvbo
 	}
+	
+	def split(chunksizes:Array[Int]) = {
+		var index = 0
+		for(chunksize ← chunksizes) yield {
+			val (newvertices, newnormals, newtexcoords) = interleave(
+				DataSeq[Vec3, RFloat],
+				DataSeq[Vec3, RFloat],
+				DataSeq[Vec2, RFloat]
+				)( chunksize )
+			newvertices.bindingBuffer.put(vertices.bindingBufferSubData(index,chunksize))
+			index += chunksize
+			new MutableTextureMesh(newvertices,newnormals,newtexcoords)
+		}
+	}
 }
 
 object TextureMesh{

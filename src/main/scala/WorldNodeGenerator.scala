@@ -16,7 +16,7 @@ object WorldNodeGenerator {
 	
 	object Master extends DaemonActor {
 		val jobqueue = new SynchronizedQueue[NodeInfo]
-		val done  = new SynchronizedQueue[(NodeInfo,Octant)]
+		val done  = new SynchronizedQueue[(NodeInfo,OctantOverMesh)]
 		val activeJobs = new HashSet[NodeInfo] with SynchronizedSet[NodeInfo]
 		
 		val workers = (1 to Config.numWorkingThreads) map (i => new Worker)
@@ -37,7 +37,7 @@ object WorldNodeGenerator {
 						val worker = idlingWorkers.dequeue
 						worker ! nodeinfo
 					}
-				case ( oldjob : NodeInfo, node : Octant ) =>
+				case ( oldjob : NodeInfo, node : OctantOverMesh ) =>
 					// neuen Job vergeben falls verfügbar, sonst worker zu idlingWorkers hinzufügen
 					done enqueue ( oldjob -> node )
 					activeJobs -= oldjob

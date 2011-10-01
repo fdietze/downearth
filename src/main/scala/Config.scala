@@ -9,19 +9,20 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	val minMeshNodeSize = 16
 	val worldWindowSize = 128
-	val useshaders = true
+	val useshaders = false
 	val smoothShading = false
 	val hexaederResolution = 8
 	
-	val skybox = true
+	val skybox = false
 	
 	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)
 	val fpsLimit = 60
-
+	
+	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
+	// gesetzt werden (10000)
 	val maxMeshVertexCount = 30000
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
-	val patchAtNodeInsert = false
 	val CameraSpeed = 2f
 	val CameraTurboSpeed = 32f
 	

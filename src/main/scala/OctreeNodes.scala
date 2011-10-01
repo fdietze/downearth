@@ -15,96 +15,58 @@ trait Octant extends Serializable {
 	
 	// Greift mit absoluten Koordinaten auf den Oktant zu
 	def apply(info:NodeInfo, p:Vec3i) : Hexaeder
-
-	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Hexaeder):Octant
-
-	// Überprüft, ob ein bestimmter Teilbereich des Knotens schon generiert wurde.
-	def isSet(info:NodeInfo, pos:NodeInfo):Boolean
-
-	// Generiert die Polygone des gesamten Knotens, und fügt sie zum meshBuilder 
-	// hinzu, worldaccess wird für den Verdeckungstest mit den Nachbarn gebraucht.
-	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int
-
-	// Ähnlich zu updated, aber diese Funktion generierd auch Patches, um das 
-	// Mesh updaten zu können.
-	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Update[TextureMeshData])
-
+	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
 	// Polygonverdeckungstest aufzufrischen.
 	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData]
-
-	// Ersetzt im Baum an einigen stellen die Knoten durch MeshNodes, und 
-	// aktiviert die Polygongenerierung.
-	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant
-	
-	// Ähnlich wie updated, nur dass nich ein einzelner Hexaeder eingefügt wird, 
-	// sonden ein ganzer Teilbaum. Funktioniert zur Zeit nur mit MeshNodes, und 
-	// Elternknoten von MeshNodes
-	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) : Octant
-	
-	// löst aus, dass alle Meshes in allen MeshNodes innerhalb dieses Oktants gezeichnet werden.
-	// TODO frustum-Culling
-	def draw(info:NodeInfo, test:FrustumTest)
-	
-	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] //return slice applied on the vertices
-	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) //return slice
-	
-	// patches one side of a Node
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Update[TextureMeshData]]
-}
-
-// NodeInfo enthält die Metainformationen für einen Knoten im Octree, also
-// Position in Weltkoordanaten und Größe. Zudem hat die Klasse noch Methoden,
-// um Metainformationen der Kindknoten berechnen zu können.
-case class NodeInfo(pos:Vec3i, size:Int) {
-	def upperPos = pos+size
-	// Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
-	// Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an 
-	// vielen stellen wird noch sein Verhalten imitiert.
-	def indexVec(p:Vec3i,nodepos:Vec3i = pos,nodesize:Int = size) = ((p-nodepos)*2)/nodesize
-	
-	// macht aus dem Vec3i index einen flachen index, der auf ein Array 
-	// angewendet werden kann
-	def flat(ivec:Vec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
-	
-	// macht aus einem flachen Index wieder ein Vec3i-Index
-	def index2vec(idx:Int) =
-		Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
-	
-	// Erzeugung des NodeInfo vom Kindknoten, aus einem Vektor-Index
-	def apply(p:Vec3i):(Int,NodeInfo) = {
-		assert( indexInRange(p) )
-		val v = indexVec(p,pos,size)
-		val index = flat(v)
-		val hsize = size >> 1
-		(index,NodeInfo(pos+v*hsize,hsize) )
-	}
-	
-	// Erzeugung des NodeInfo vom Kindknoten, aus einem flachen Index
-	def apply(index:Int):NodeInfo = {
-		val v = index2vec(index)
-		val hsize = size >> 1
-		NodeInfo(pos+v*hsize,hsize)
-	}
-	
-	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
-	
-	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
-	
-	// Listet alle die Koordinaten auf, die innerhalb von beiden Bereichen sind.
-	def intersection(that:NodeInfo):Iterable[Vec3i] = {
-		val pos1 = max(pos,that.pos)
-		val pos2 = min(upperPos,that.upperPos)
-		pos1 until pos2
-	}
 }
 
 // im Octree wird unterschieden, ob sich der Octant oberhalb oder unterhalb des 
 // Meshes befindet
-trait OctantOverMesh extends Octant
-trait OctantUnderMesh extends Octant
+trait OctantOverMesh extends Octant {
+	
+	// Überprüft, ob ein bestimmter Teilbereich des Knotens schon generiert wurde.
+	def isSet(info:NodeInfo, pos:NodeInfo):Boolean
+	
+	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
+	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Hexaeder):OctantOverMesh
+	
+	// löst aus, dass alle Meshes in allen MeshNodes innerhalb dieses Oktants gezeichnet werden.
+	def draw(info:NodeInfo, test:FrustumTest)
+	
+	// extrahiert alle Polygone an einer Position, extrahiert sie also aus dem 
+	// Mesh heraus
+	def getPolygons( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] 
+	
+	// Ähnlich wie updated, nur dass nich ein einzelner Hexaeder eingefügt wird, 
+	// sonden ein ganzer Teilbaum. Funktioniert zur Zeit nur mit MeshNodes, und 
+	// Elternknoten von MeshNodes
+	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:OctantOverMesh): OctantOverMesh
+}
+
+trait OctantUnderMesh extends Octant {
+	// Ersetzt im Baum an einigen stellen die Knoten durch MeshNodes, und 
+	// aktiviert die Polygongenerierung. Der Baum mit InnerNodes (erbt von 
+	// OctantUnderMesh) initialisiert, und anschließend werden im genMesh 
+	// Schritt die Knoten ersetzt, die tatsächlich höher liegen.
+	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder)): OctantOverMesh
+	// Generiert die Polygone des gesamten Knotens, und fügt sie zum meshBuilder 
+	// hinzu, worldaccess wird für den Verdeckungstest mit den Nachbarn gebraucht.
+	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i =>Hexaeder)):Int	
+	
+	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
+	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Hexaeder):OctantUnderMesh
+	
+	// extrahiert alle Polygone an einer Position in form des Bereichs von 
+	// Polygonen aus dem Mesh
+	def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int)
+	
+	// Ähnlich zu updated, aber diese Funktion generierd auch Updates für das 
+	// Mesh, welches sich verändert.
+	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData])
+}
+
 
 
 // TODO: eventuell Leaf von Hexaeder erben lassen um eine Refernz zu sparen.
@@ -220,7 +182,7 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 			0
 	}
 	
-	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)):Int = {
+	override def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)):Int = {
 		import info.{pos => nodepos, size => nodesize}
 		assert(meshBuilder != null)
 		var vertexCounter = 0
@@ -264,7 +226,7 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 		vertexCounter
 	}
 	
-	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Update[TextureMeshData]) = {
+	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData]) = {
 		val replacement = updated(info, p, nh)
 		
 		val builder = new TextureMeshBuilder
@@ -279,22 +241,14 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 		Update(vertpos,vertcount,builder.result)
 	}
 
-	override def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
+	override def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):OctantOverMesh = {
 		(new MeshNode(this)).genMesh(info,dstnodesize,worldaccess)
 	}
 	
 	def draw(info:NodeInfo,test:FrustumTest){}
 	
-	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
-		throw new NoSuchMethodException("dont call this in Leaf")
-	}
-	
-	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
+	override def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
 		(from,to)
-	}
-	
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Update[TextureMeshData]] = {
-		List(repolyWorld(info,dstinfo.pos, vertpos, vertcount))
 	}
 }
 
@@ -311,12 +265,8 @@ object Leaf{
 case object EmptyLeaf extends Leaf(EmptyHexaeder)
 case object FullLeaf extends Leaf(FullHexaeder)
 
-class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
-	val data = new Array[Octant](8)
-	//initiali the 8 child nodes
-	for(fidx <- 0 until 8) {
-		data(fidx) = Leaf(h)
-	}
+class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
+	// def this(h:Hexaeder) = this(Array[OctantOverMesh]( (0 until 8).map(_ => Leaf(h)):_* ) )
 	
 	def isSet(info:NodeInfo,pos:NodeInfo) = {
 		assert(info indexInRange pos,"Not in range: "+info+pos)
@@ -333,38 +283,9 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 		data(index)(nodeinfo,p)
 	}
 	
-	def merge_? = {
-		val first = data(0)
-		var merge = true
-		for(i <- 1 to 7 )
-			merge = merge && ( data(i) == first )
-		merge
-	}
-	
-	def updated(info:NodeInfo, p:Vec3i,h:Hexaeder) = {
+	override def updated(info:NodeInfo, p:Vec3i, nh:Hexaeder):OctantOverMesh = {
 		val (index,childinfo) = info(p)
-		
-		data(index) = data(index).updated(childinfo,p,h)
-		
-		if(merge_?)
-			Leaf(h)
-		else
-			this
-		
-		// TODO merge ist hier ein Meshjoin und muss ganz anders behandelt werden
-		// this
-		
-	}
-
-	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder) ):Octant = {
-		throw new NoSuchMethodException("if InnerNodeOverMesh exists then a mesh should already be generated")
-	}
-	
-	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int):(Octant, Update[TextureMeshData]) = {
-		//TODO nachbarn patchen
-		val (index,childinfo) = info(p)
-		data(index).patchWorld(childinfo,p, nh, -1, -1)
-		
+		data(index) = data(index).updated(childinfo,p, nh)
 		
 		// TODO refactor diesen teil so weit es geht nach NodeInfo auslagern
 		import info.{pos => nodepos, size => nodesize}
@@ -382,7 +303,7 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 			data(index).repolyWorld(NodeInfo(nodepos+nv*hsize,hsize),n,-1,-1)
 		}
 		
-		(this,null)
+		joinChildren
 	}
 
 	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int):Update[TextureMeshData] = {
@@ -403,10 +324,7 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 	
 	override def toString = data.mkString("(",",",")")
 	
-	override def genPolygons(info:NodeInfo , meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Hexaeder)):Int = 
-		throw new NoSuchMethodException("in root use genMesh instead of genPolygons")
-	
-	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) = {
+	override def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:OctantOverMesh) = {
 		if(info == insertinfo)
 			insertnode
 		else {
@@ -416,34 +334,18 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 		}
 	}
 	
-	def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
+	override def getPolygons( info:NodeInfo, pos:Vec3i) = {
 		val (index,nodeinfo) = info(pos)
-		data(index).getPolygonsOverMesh( nodeinfo,pos )
+		data(index).getPolygons( nodeinfo,pos )
 	}
 	
 	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		throw new NoSuchMethodException("dont call this over Vertex Array")
 	}
 	
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Update[TextureMeshData]] = {
-		if(dstinfo indexInRange info){ // info <= dstinfo
-			val indices = planelookup(dir)
-			for(i <- indices) yield {
-				data(i).patchSurface(info(i),dstinfo, dir, 0, 0)
-			}
-			// there are no patches over Mesh
-			Nil
-		}
-		else{
-			val (index,nodeinfo) = info(dstinfo.pos)
-			assert(nodeinfo indexInRange dstinfo)
-			data(index).patchSurface(nodeinfo,dstinfo,dir,0,0)
-		}
-	}
-	
-	def joinChildren:Octant = {
-		// TODO passendere Konstruktoren/Factories anbieten
-		// nodejoin auslagern
+	// falls alle Kindknoten MeshNodes sind, und zusammen weniger Vertices Haben, 
+	// als Vorgeschrieben, so werden sie hier zu einem einzigen Mesh zusammengefügt
+	def joinChildren:OctantOverMesh = {
 		if( ( data map ( x => x.isInstanceOf[MeshNode]) ).reduce( _ && _ ) ) {
 			// println("starting Join.")
 			val meshNodes = data map (_.asInstanceOf[MeshNode])
@@ -455,18 +357,16 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 			
 			if(sum < Config.maxMeshVertexCount) {
 				val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
-				val node = new InnerNode(EmptyHexaeder)
+				var node = new InnerNode( meshNodes.map(_.node) )
 				
 				for(i <- 0 until 8) {
-					node.data(i) = meshNodes(i).node
 					node.vvertcount(i) = meshNodes(i).mesh.size
 					meshNodes(i).mesh.freevbo
 				}
 				
-				val meshnode = new MeshNode(node)
+				val meshnode = new MeshNode(node.merge)
 				meshnode.mesh = mesh
 				
-				println("joined")
 				meshnode
 			}
 			
@@ -478,16 +378,37 @@ class InnerNodeOverMesh(h:Hexaeder) extends OctantOverMesh {
 	}
 }
 
-class InnerNode(h:Hexaeder) extends InnerNodeOverMesh(h) {
-	// this node is under the vertex array, and may not have unset nodes
-	
-//	override def updated(info:NodeInfo, p:Vec3i,h:Hexaeder) = {
-//		throw new NoSuchMethodException("bei inneren Knoten Patch World verwenden")
-//	}
-	
-	override def isSet(info:NodeInfo,pos:NodeInfo) = true
-	
+class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
+	def this(h:Hexaeder) = this( Array.fill[OctantUnderMesh](8)(Leaf(h)) )
 	val vvertcount = new Array[Int](8)
+	
+	// ist nur dann wahr, wenn alle Kindknoten das selbe Blatt sind.
+	def merge_? = {
+		val first = data(0)
+		( data(1) == first ) && ( data(2) == first ) &&
+		( data(3) == first ) && ( data(4) == first ) &&
+		( data(5) == first ) && ( data(6) == first ) &&
+		( data(7) == first )
+	}
+	
+	// wenn alle kinder das selbe Blatt sind, dann werden sie hier zu einem.
+	def merge = {
+		if( merge_? )
+			data(0)
+		else
+			this
+	}
+	
+	def apply(info:NodeInfo, p:Vec3i) = {
+		val (index,nodeinfo) = info(p)
+		data(index)(nodeinfo,p)
+	}
+	
+	def updated(info:NodeInfo, p:Vec3i,h:Hexaeder) = {
+		val (index,childinfo) = info(p)
+		data(index) = data(index).updated(childinfo,p,h)
+		merge
+	}
 	
 	override def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)) = {
 		for(i <- 0 until 8)
@@ -535,78 +456,45 @@ class InnerNode(h:Hexaeder) extends InnerNodeOverMesh(h) {
 			replacement.genMesh(info,destnodesize,worldaccess)
 		}
 		else{
-			val replacement = new InnerNodeOverMesh(EmptyHexaeder)
+			val newdata = new Array[OctantOverMesh](8)
 			for(i <- 0 until  8)
-				replacement.data(i) = data(i).genMesh(info(i), destnodesize, worldaccess)
+				newdata(i) = data(i).genMesh(info(i), destnodesize, worldaccess)
+			val replacement = new InnerNodeOverMesh(newdata)
 			replacement
 		}
 	}
 	
-	override def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
-		throw new NoSuchMethodException("dont call this under Vertex Array")
-	}
-	
-	override def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	override def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		val (index,nodeinfo) = info(pos)
 		val newfrom = from+vvertcount.view(0,index).sum
 		val newto = newfrom + vvertcount(index)
-		data(index).getPolygonsUnderMesh( nodeinfo,pos, newfrom, newto )
-	}
-	
-	override def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int) : List[Update[TextureMeshData]] = {
-		assert(vvertcount.sum == vertcount)
-		
-		if(dstinfo indexInRange info){ // info <= dstinfo
-			val indices = planelookup(dir)
-			var patches:List[Update[TextureMeshData]] = Nil
-			for(i <- indices) {
-				val newvertpos = vertpos + vvertcount.view(0,i).sum
-				val childpatches = data(i).patchSurface(info(i),dstinfo, dir, newvertpos , vvertcount(i))
-				val sizedifference = childpatches.map(_.sizedifference).sum
-				vvertcount(i) += sizedifference
-				patches :::= childpatches
-			}
-			patches
-		}
-		else{
-			val (index,nodeinfo) = info(dstinfo.pos)
-			assert(nodeinfo indexInRange dstinfo)
-			val newvertpos = vertpos + vvertcount.view(0,index).sum
-			data(index).patchSurface(nodeinfo,dstinfo,dir,newvertpos,vvertcount(index))
-		}
+		data(index).getPolygons( nodeinfo,pos, newfrom, newto )
 	}
 }
 
 //decorator pattern
-class MeshNode(var node:Octant) extends Octant {
-	// Nodes under the vertex Array must be set
+class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
+	// Nodes unter dem MeshNode müssen gesetzt sein.
 	def isSet(info:NodeInfo,pos:NodeInfo) = true
 	
-	def insertNode(info: NodeInfo, insertinfo: NodeInfo, insertnode: Octant) = {
-		throw new NoSuchMethodException("no nodes can be inserted inside of inner nodes with vertex arrays")
-	}
-	
-	def genPolygons(info: NodeInfo, meshBuilder: TextureMeshBuilder, worldaccess: (Vec3i) => Hexaeder) = {
-		throw new NoSuchMethodException("an inner node with vertex array does not generate polygons")
-	}
-	
-	def updated(info: NodeInfo, p: Vec3i, nh: Hexaeder) = {
-		throw new NoSuchMethodException("use patch for inner nodes with vertex arrays instead")
+	override def insertNode(info: NodeInfo, insertinfo: NodeInfo, insertnode: OctantOverMesh) = {
+		throw new Exception("nodes can't be inserted into MeshNodes" + info)
 	}
 	
 	def apply(info: NodeInfo, p: Vec3i) = node(info,p)
 
 	var mesh:MutableTextureMesh = null
 	
-	override def genMesh(info:NodeInfo , destnodesize:Int, worldaccess:(Vec3i => Hexaeder)) = {
+	// der einzige OctantOverMesh, der genMesh implementiert
+	def genMesh(info:NodeInfo , destnodesize:Int, worldaccess:(Vec3i => Hexaeder)) = {
 		assert(mesh == null)
 		val meshBuilder = new TextureMeshBuilder
 		val result = node.genPolygons(info, meshBuilder, worldaccess)
 		mesh = MutableTextureMesh(meshBuilder.result)
 		
-		//genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in anderen Threads als dem render Thread aufgerufen wird
-		//um die erzeugung des vbo kümmert sich das mesh selbst beim rendern
-		//mesh.genvbo
+		// genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in 
+		// anderen Threads als dem render Thread aufgerufen wird. Um die
+		// Erzeugung des vbo kümmert sich das mesh selbst beim rendern
 		
 		this
 	}
@@ -616,7 +504,7 @@ class MeshNode(var node:Octant) extends Octant {
 			mesh.draw
 	}
 	
-	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Update[TextureMeshData]) = {
+	override def updated(info:NodeInfo, p:Vec3i, nh:Hexaeder) : OctantOverMesh = {
 		
 		val (replacement,patch) = node.patchWorld(info, p, nh, 0, mesh.size)
 		node = replacement
@@ -633,15 +521,35 @@ class MeshNode(var node:Octant) extends Octant {
 				newsize += newpatch.sizedifference
 			}
 		}
-
+		
 		// mehrer patches die hintereinander abgearbeitet werden können,
 		// können hier auch in einem schritt ausgeführt werden
 		// da die liste von links aufgebaut wurde muss sie zuerst umgekehrt werden
 		mesh applyUpdates patches.reverse
 		
-		// es wurde schon gepatched, deshalb muss dieser patch nicht mehr mitgeschleppt werden
-		// merge auf Nodes mit Vertex Arrays ist noch nicht implementiert
-		(this,null)
+		// falls das mesh an dieser Stelle die Maximalgröße Überschreitet, wird es aufgeteilt
+		if( mesh.size > Config.maxMeshVertexCount ){
+			// println("mesh splitting")
+			
+			node match {
+				case innernode:InnerNode =>
+					val newdata = new Array[OctantOverMesh](8)
+					val childmeshes = mesh.split(innernode.vvertcount)
+					for(i ← 0 until 8){
+						val meshnode = new MeshNode(innernode.data(i))
+						meshnode.mesh = childmeshes(i)
+						newdata(i) = meshnode
+					}
+					new InnerNodeOverMesh(newdata)
+				case leaf:Leaf =>
+					// kommt nur ganz selten vorkommen, denn Blätter haben 
+					// meist nicht viele Polygone
+					println("Blatt kann nicht geteilt werden")
+					this
+			}
+		}
+		else
+			this
 	}
 
 	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) = {
@@ -650,59 +558,31 @@ class MeshNode(var node:Octant) extends Octant {
 		null 
 	}
 	
-	override def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = {
-		val (from,to) = node.getPolygonsUnderMesh( info, pos, 0, mesh.size )
+	override def getPolygons( info:NodeInfo, pos:Vec3i) = {
+		val (from,to) = node.getPolygons( info, pos, 0, mesh.size )
 		(from until to) map mesh.vertices
-	}
-	
-	override def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
-		throw new NoSuchMethodException("dont call this over Vertex Array")
-	}
-	
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Update[TextureMeshData]] = {		
-		var patches:List[Update[TextureMeshData]] = node.patchSurface(info, dstinfo, dir, 0, mesh.size)
-		mesh applyUpdates patches.reverse
-		
-		Nil
 	}
 }
 
-object DeadInnderNode extends Octant{
+object DeadInnerNode extends OctantOverMesh {
 	def isSet(info:NodeInfo,pos:NodeInfo) = false
 	def apply(info:NodeInfo, p:Vec3i) = Config.ungeneratedDefault
-	def updated(info:NodeInfo, p:Vec3i,nh:Hexaeder) = {
-		println("update out of World")
+	
+	//similar to updated, but this function also generates patches to update the mesh
+	override def updated(info:NodeInfo, p:Vec3i, nh:Hexaeder) : OctantOverMesh = {
+		println("dead nodes can't be patched")
 		this
 	}
-	/**generates the polygons for this Octant
-	 * @return number of added vertices
-	 */
-	// diese methode wird nicht gebraucht, da wir uns oberhalb der VBOs befinden, und auch keine Hexaeder definiert sind
-	def genPolygons(info:NodeInfo,meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i =>Hexaeder)) = {
-		throw new NoSuchMethodException("dead nodes can't generate Polygons")
-	}
-
-	//similar to updated, but this function also generates patches to update the mesh
-	def patchWorld(info:NodeInfo, p:Vec3i, nh:Hexaeder, vertpos:Int, vertcount:Int) : (Octant, Update[TextureMeshData]) = {
-		println("dead nodes can't be patched")
-		(this,null)
-	}
-
-	// TODO EmptyPatch
-	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData] = null
-
-	override def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Hexaeder)) = this
-
-	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) = {
+	
+	def repolyWorld(info: NodeInfo, p: Vec3i, vertpos: Int, vertcount: Int): Update[TextureMeshData] = null
+	
+	override def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:OctantOverMesh):OctantOverMesh = {
 		// assert(nodesize >= insertnodesize)
 		
 		if(info == insertinfo)
 			insertnode
 		else{
-			val replacement = new InnerNodeOverMesh(EmptyHexaeder)
-			for(i <- 0 until 8)
-				replacement.data(i) = DeadInnderNode
-
+			val replacement = new InnerNodeOverMesh(Array.fill[OctantOverMesh](8)(DeadInnerNode))
 			val (index, childinfo) = info(insertinfo.pos)
 			replacement.data(index) = insertNode(childinfo,insertinfo,insertnode)
 			replacement
@@ -712,14 +592,6 @@ object DeadInnderNode extends Octant{
 	
 	def draw(info:NodeInfo, test:FrustumTest){}
 	
-	override def getPolygonsOverMesh( info:NodeInfo, pos:Vec3i) = Nil
-	
-	override def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
-		throw new NoSuchMethodException("dont call this over Vertex Array")
-	}
-	
-	def patchSurface(info:NodeInfo, dstinfo:NodeInfo, dir:Int, vertpos:Int, vertcount:Int):List[Update[TextureMeshData]] = {
-		Nil
-	}
+	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
 }
 
