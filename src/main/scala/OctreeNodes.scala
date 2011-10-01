@@ -15,22 +15,21 @@ trait Octant extends Serializable {
 	
 	// Greift mit absoluten Koordinaten auf den Oktant zu
 	def apply(info:NodeInfo, p:Vec3i) : Hexaeder
-	
-	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
-	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
-	// Polygonverdeckungstest aufzufrischen.
-	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData]
 }
 
 // im Octree wird unterschieden, ob sich der Octant oberhalb oder unterhalb des 
 // Meshes befindet
 trait OctantOverMesh extends Octant {
-	
 	// Überprüft, ob ein bestimmter Teilbereich des Knotens schon generiert wurde.
 	def isSet(info:NodeInfo, pos:NodeInfo):Boolean
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
 	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Hexaeder):OctantOverMesh
+	
+	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
+	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
+	// Polygonverdeckungstest aufzufrischen.
+	def repolyWorld(info:NodeInfo, p:Vec3i):Unit
 	
 	// löst aus, dass alle Meshes in allen MeshNodes innerhalb dieses Oktants gezeichnet werden.
 	def draw(info:NodeInfo, test:FrustumTest)
@@ -57,6 +56,11 @@ trait OctantUnderMesh extends Octant {
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
 	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Hexaeder):OctantUnderMesh
+	
+	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
+	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
+	// Polygonverdeckungstest aufzufrischen.
+	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData]
 	
 	// extrahiert alle Polygone an einer Position in form des Bereichs von 
 	// Polygonen aus dem Mesh
@@ -300,16 +304,15 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 		val hsize = info.size >> 1
 		for( (n,nv) <- neigbours if(nv != v) ){
 			val index = info.flat(nv)
-			data(index).repolyWorld(NodeInfo(nodepos+nv*hsize,hsize),n,-1,-1)
+			data(index).repolyWorld(NodeInfo(nodepos+nv*hsize,hsize),n)
 		}
 		
 		joinChildren
 	}
 
-	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int):Update[TextureMeshData] = {
+	override def repolyWorld(info:NodeInfo, p:Vec3i) = {
 		val (index,childinfo) = info(p)
-		data(index).repolyWorld(childinfo,p, -1, -1)
-		null
+		data(index).repolyWorld(childinfo,p)
 	}
 	
 	override def draw(info:NodeInfo, test:FrustumTest) {
@@ -552,10 +555,9 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 			this
 	}
 
-	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) = {
+	override def repolyWorld(info:NodeInfo, p:Vec3i) = {
 		// vertpos und vertcount wird von node.repolyWorld gesetzt
 		mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.size))
-		null 
 	}
 	
 	override def getPolygons( info:NodeInfo, pos:Vec3i) = {
@@ -574,7 +576,7 @@ object DeadInnerNode extends OctantOverMesh {
 		this
 	}
 	
-	def repolyWorld(info: NodeInfo, p: Vec3i, vertpos: Int, vertcount: Int): Update[TextureMeshData] = null
+	override def repolyWorld(info: NodeInfo, p: Vec3i){}
 	
 	override def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:OctantOverMesh):OctantOverMesh = {
 		// assert(nodesize >= insertnodesize)
@@ -587,11 +589,11 @@ object DeadInnerNode extends OctantOverMesh {
 			replacement.data(index) = insertNode(childinfo,insertinfo,insertnode)
 			replacement
 		}
-		// TODO merge?
 	}
 	
+	// deadNodes sind unsichtbar
 	def draw(info:NodeInfo, test:FrustumTest){}
-	
+	// deadNodes haben keine Polygone
 	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
 }
 
