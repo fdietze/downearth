@@ -12,6 +12,8 @@ javaOptions in run += "-XX:+ExplicitGCInvokesConcurrent"
 
 javaOptions in run += "-Xmx512m"
 
+//fork in run := true
+
 scalacOptions in Compile += "-unchecked"
 
 scalacOptions in Compile += "-deprecation"

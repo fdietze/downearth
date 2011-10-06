@@ -7,8 +7,11 @@ import simplex3d.math.float.functions._
 import org.lwjgl.opengl.GL11._
 import Util._
 
-object World{
-
+object World {
+	
+	var drawcalls = 0
+	var emptydrawcalls = 0
+	
 	val octree = {
 		WorldSerializer.load match {
 		case Some(s) => s
@@ -105,6 +108,8 @@ object World{
 			UndefHexaeder
 		
 	def draw(test:FrustumTest){
+		drawcalls = 0
+		emptydrawcalls = 0
 		octree.draw(test)
 		if(Config.streamWorld)
 			octree stream Player.position

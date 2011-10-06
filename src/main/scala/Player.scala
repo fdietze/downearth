@@ -173,6 +173,7 @@ object BuildInterface{
 			glColor4f(1,1,1,0.25f)
 			Draw.renderHexaeder(hexaeder)
 			glDisable(GL_BLEND)
+			//TODO: Disable Depth-test and draw only the side of the hexaeder which has polygons
 			glEnable(GL_DEPTH_TEST)
 			Draw.renderHexaeder(hexaeder)
 			glPopMatrix

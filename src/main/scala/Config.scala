@@ -7,17 +7,17 @@ import noise.interval.{Interval, Volume}
 import org.lwjgl.opengl.{Display, DisplayMode}
 
 object Config{
-	val minMeshNodeSize = 16
-	val worldWindowSize = 128
+	val minMeshNodeSize = 8
+	val worldWindowSize = 64
 	val useshaders = false
 	val smoothShading = false // experimental
 	val hexaederResolution = 8
 	
-	val skybox = false
+	val skybox = true
 	
 	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)
-	val fpsLimit = 60
+	val fpsLimit = 100
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)

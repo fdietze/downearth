@@ -296,13 +296,14 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	@transient private var msize = vertices.size
 	def size = msize
 	
-	def draw{
+	def draw {
 		TextureManager.box.bind
 		
 		if(vertexBufferObject == 0)
 			genvbo
 		
 		if( size > 0 ) {
+			World.drawcalls += 1
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
 
 			glEnableClientState(GL_VERTEX_ARRAY)
@@ -320,6 +321,9 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+		}
+		else {
+			World.emptydrawcalls += 1
 		}
 	}
 	
