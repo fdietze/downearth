@@ -108,7 +108,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 			World.draw(frustumtest)
 		}
 		
-		Draw.addText("frustum culled nodes: "+frustumtest.falsecount)
+		Draw.addText("frustum culled nodes: " + frustumtest.falsecount)
+		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
 		
 		BuildInterface.highlightHexaeder(position,direction)
 		
