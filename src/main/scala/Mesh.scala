@@ -339,6 +339,7 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	def freevbo {
 		if( vertexBufferObject > 0 ) {
 			glDeleteBuffersARB(vertexBufferObject)
+			vertexBufferObject = 0
 		}
 	}
 }

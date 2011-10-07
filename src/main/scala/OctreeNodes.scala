@@ -342,10 +342,6 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 		data(index).getPolygons( nodeinfo,pos )
 	}
 	
-	def getPolygonsUnderMesh( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
-		throw new NoSuchMethodException("dont call this over Vertex Array")
-	}
-	
 	// falls alle Kindknoten MeshNodes sind, und zusammen weniger Vertices Haben, 
 	// als Vorgeschrieben, so werden sie hier zu einem einzigen Mesh zusammengefügt
 	def joinChildren:OctantOverMesh = {
@@ -360,7 +356,7 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 			
 			if(sum < Config.maxMeshVertexCount) {
 				val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
-				var node = new InnerNode( meshNodes.map(_.node) )
+				val node = new InnerNode( meshNodes.map(_.node) )
 				
 				for(i <- 0 until 8) {
 					node.vvertcount(i) = meshNodes(i).mesh.size
@@ -543,9 +539,10 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 						meshnode.mesh = childmeshes(i)
 						newdata(i) = meshnode
 					}
+					mesh.freevbo
 					new InnerNodeOverMesh(newdata)
 				case leaf:Leaf =>
-					// kommt nur ganz selten vorkommen, denn Blätter haben 
+					// kommt nur ganz selten vor, denn Blätter haben 
 					// meist nicht viele Polygone
 					println("Blatt kann nicht geteilt werden")
 					this
