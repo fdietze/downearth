@@ -1,43 +1,38 @@
-package openworld
 
-import simplex3d.math.float.Vec3
-import simplex3d.math.doublex.Vec3d
-import noise.Noise.{noise3, noise3_prediction}
-import noise.interval.{Interval, Volume}
-import org.lwjgl.opengl.{Display, DisplayMode}
-
-object Config{
-	val minMeshNodeSize = 32
-	val worldWindowSize = 256
-	val useshaders = true
-	val smoothShading = false // experimental
-	val hexaederResolution = 8
+<config>
+	<minMeshNodeSize val="16"/>
+	<worldWindowSize val="128"/>
+	<useshaders val="false"/>
+	<smoothShading val="false"/>
+	<hexaederResolution val="8"/>
+	<skybox val="false"/>
+	<startpos val="0 0 0"/>
+	<fpsLimit val="60"/>
+	<maxMeshVertexCount val="30000"/>
+	<cameraSpeed val="2"/>
+	<cameraTurboSpeed val="32"/>
+	<saveWorld val="false"/>
+	<fullscreen val="false"/>
+	<windowResolution width="1024" height="768"/>
 	
-	val skybox = true
+</config>
 	
-	val ungeneratedDefault = UndefHexaeder
-	val startpos = Vec3(0)
-	val fpsLimit = 100
+	// val ungeneratedDefault = UndefHexaeder
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
-	val maxMeshVertexCount = 30000
-	val numWorkingThreads = Runtime.getRuntime.availableProcessors
-	val cameraSpeed = 2f
-	val cameraTurboSpeed = 32f
+	// val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	
-	def densityfunction(v:Vec3) = gen.density(v).toFloat
-	def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))
-	val saveWorld = false
+	// def densityfunction(v:Vec3) = gen.density(v).toFloat
+	// def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))
+	// val saveWorld = false
 
-	assert( worldWindowSize >= minMeshNodeSize )
-	assert( worldWindowSize % minMeshNodeSize  == 0 )
-	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
-	
-	var fullscreen = false
+	// assert( worldWindowSize >= minMeshNodeSize )
+	// assert( worldWindowSize % minMeshNodeSize  == 0 )
+	// assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
 	
 	// Vollbild-Modus mit höchster Auflösung
-	val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
+	// val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
 	val windowDisplayMode = new DisplayMode(1024, 768)
 	def displayMode =
 		if(fullscreen) 
@@ -78,8 +73,8 @@ object Config{
 
 	val keyDebugDraw      = KEY_F1
 	val keyWireframe      = KEY_F2
-	val keyStreaming      = KEY_F3
-	val keyFrustumCulling = KEY_F4
+	val keyFrustumCulling = KEY_F3
+	val keyStreaming      = KEY_F4
 
 	val keyFullScreen     = KEY_F11
 
@@ -87,8 +82,9 @@ object Config{
 	// settings changeable at runtime:
 	var debugDraw = false
 	var wireframe = false
-	var streamWorld = true
+	var streamWorld = false
 	var frustumCulling = true
+
 	var turbo = false
 }
 

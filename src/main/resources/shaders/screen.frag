@@ -79,41 +79,41 @@ float noise3(vec3 v) {return noise3(v.x, v.y, v.z);}
 
 /////////////////////////////////////////////////////
 
-float sum3_uid4e7ca7b6(float a, float b, float c) {return a+b+c;}
-float perlinnoise3_uid4e7ca7b6(vec3 v, float x, float y, float z, float add, float sub, float size, float scale, float offset) {return (noise3((v + vec3(x,y,z))*size)+offset)*scale/size + add - sub;}
-vec4 matmix_uid4e7ca7b6(vec4 m1, float t, vec4 m2, float shift) {return t >= shift ? m1 : m2;}
-vec4 matrgb_uid4e7ca7b6(float r, float g, float b) {return vec4(r, g, b, 1);}
-float addconstantexp_uid4e7ca7b6(float a, float value) {return a+value;}
-float scalesrcz_uid4e7ca7b6(float scale) {return world.z * scale;}
-float scalesrcx_uid4e7ca7b6(float scale) {return world.x * scale;}
-vec3 scalesrcv_uid4e7ca7b6(float scale) {return world.xyz * scale;}
-float scalesrcy_uid4e7ca7b6(float scale) {return world.y * scale;}
-vec4 matstone_uid4e7ca7b6() {return vec4(0.56, 0.56, 0.56, 0.0);}
+float addconstantexp_uid4e7cbecf(float a, float value) {return a+value;}
+vec4 matrgb_uid4e7cbecf(float r, float g, float b) {return vec4(r, g, b, 1);}
+float scalesrcy_uid4e7cbecf(float scale) {return world.y * scale;}
+vec4 matstone_uid4e7cbecf() {return vec4(0.56, 0.56, 0.56, 0.0);}
+float scalesrcx_uid4e7cbecf(float scale) {return world.x * scale;}
+vec4 matmix_uid4e7cbecf(vec4 m1, float t, vec4 m2, float shift) {return t >= shift ? m1 : m2;}
+float perlinnoise3_uid4e7cbecf(vec3 v, float x, float y, float z, float add, float sub, float size, float scale, float offset) {return (noise3((v + vec3(x,y,z))*size)+offset)*scale/size + add - sub;}
+float sum3_uid4e7cbecf(float a, float b, float c) {return a+b+c;}
+float scalesrcz_uid4e7cbecf(float scale) {return world.z * scale;}
+vec3 scalesrcv_uid4e7cbecf(float scale) {return world.xyz * scale;}
 
 
 
 void main(){
 
-vec3 vn2_scalesrcv_uid4e7ca7b6 = scalesrcv_uid4e7ca7b6(1.0);
-float vn2_scalesrcy_uid4e7ca7b6 = scalesrcy_uid4e7ca7b6(1.0);
-float vn2_scalesrcx_uid4e7ca7b6 = scalesrcx_uid4e7ca7b6(1.0);
-float vn15_perlinnoise3_uid4e7ca7b6 = perlinnoise3_uid4e7ca7b6(vn2_scalesrcv_uid4e7ca7b6, 0.0, 0.0, 0.0, 0.0, 0.0, 6.588728138140584, 1.7411011265922491, 0.0);
-float vn6_perlinnoise3_uid4e7ca7b6 = perlinnoise3_uid4e7ca7b6(vec3(0), vn2_scalesrcx_uid4e7ca7b6, vn2_scalesrcy_uid4e7ca7b6, 0.0, 0.0, 0.0, 0.10881882041201557, 0.18946457081379972, 0.0);
-float vn2_scalesrcz_uid4e7ca7b6 = scalesrcz_uid4e7ca7b6(1.0);
-float vn17_sum3_uid4e7ca7b6 = sum3_uid4e7ca7b6(vn2_scalesrcz_uid4e7ca7b6, vn6_perlinnoise3_uid4e7ca7b6, vn15_perlinnoise3_uid4e7ca7b6);
-float vn4_scalesrcz_uid4e7ca7b6 = scalesrcz_uid4e7ca7b6(1.0);
-vec3 vn4_scalesrcv_uid4e7ca7b6 = scalesrcv_uid4e7ca7b6(1.0);
-vec4 vn3_matrgb_uid4e7ca7b6 = matrgb_uid4e7ca7b6(0.84, 0.49, 0.0);
-float vn1_perlinnoise3_uid4e7ca7b6 = perlinnoise3_uid4e7ca7b6(vec3(0), 0.0, 0.0, vn17_sum3_uid4e7ca7b6, 0.0, 0.0, 5.278031643091579, 0.12158186842653569, -0.12);
-vec4 vn7_matrgb_uid4e7ca7b6 = matrgb_uid4e7ca7b6(0.62, 0.28, 0.0);
-float vn12_perlinnoise3_uid4e7ca7b6 = perlinnoise3_uid4e7ca7b6(vn4_scalesrcv_uid4e7ca7b6, 0.0, 0.0, 0.0, 0.0, vn4_scalesrcz_uid4e7ca7b6, 0.05006686734935137, 4.228072162245522, -0.62);
-vec4 vn14_matmix_uid4e7ca7b6 = matmix_uid4e7ca7b6(vn7_matrgb_uid4e7ca7b6, vn1_perlinnoise3_uid4e7ca7b6, vn3_matrgb_uid4e7ca7b6, 0.0);
-float vn8_addconstantexp_uid4e7ca7b6 = addconstantexp_uid4e7ca7b6(vn12_perlinnoise3_uid4e7ca7b6, 5.597467536876814);
-vec4 vn5_matstone_uid4e7ca7b6 = matstone_uid4e7ca7b6();
-vec4 vn13_matmix_uid4e7ca7b6 = matmix_uid4e7ca7b6(vn5_matstone_uid4e7ca7b6, vn8_addconstantexp_uid4e7ca7b6, vn14_matmix_uid4e7ca7b6, 0.0);
+vec3 vn2_scalesrcv_uid4e7cbecf = scalesrcv_uid4e7cbecf(1.0);
+float vn2_scalesrcy_uid4e7cbecf = scalesrcy_uid4e7cbecf(1.0);
+float vn2_scalesrcx_uid4e7cbecf = scalesrcx_uid4e7cbecf(1.0);
+float vn11_perlinnoise3_uid4e7cbecf = perlinnoise3_uid4e7cbecf(vn2_scalesrcv_uid4e7cbecf, 0.0, 0.0, 0.0, 0.0, 0.0, 6.588728138140584, 1.7411011265922491, 0.0);
+float vn9_perlinnoise3_uid4e7cbecf = perlinnoise3_uid4e7cbecf(vec3(0), vn2_scalesrcx_uid4e7cbecf, vn2_scalesrcy_uid4e7cbecf, 0.0, 0.0, 0.0, 0.10881882041201557, 0.18946457081379972, 0.0);
+float vn2_scalesrcz_uid4e7cbecf = scalesrcz_uid4e7cbecf(1.0);
+float vn12_sum3_uid4e7cbecf = sum3_uid4e7cbecf(vn2_scalesrcz_uid4e7cbecf, vn9_perlinnoise3_uid4e7cbecf, vn11_perlinnoise3_uid4e7cbecf);
+float vn8_scalesrcz_uid4e7cbecf = scalesrcz_uid4e7cbecf(1.0);
+vec3 vn8_scalesrcv_uid4e7cbecf = scalesrcv_uid4e7cbecf(1.0);
+vec4 vn13_matrgb_uid4e7cbecf = matrgb_uid4e7cbecf(0.84, 0.49, 0.0);
+float vn5_perlinnoise3_uid4e7cbecf = perlinnoise3_uid4e7cbecf(vec3(0), 0.0, 0.0, vn12_sum3_uid4e7cbecf, 0.0, 0.0, 5.278031643091579, 0.12158186842653569, -0.12);
+vec4 vn15_matrgb_uid4e7cbecf = matrgb_uid4e7cbecf(0.62, 0.28, 0.0);
+float vn6_perlinnoise3_uid4e7cbecf = perlinnoise3_uid4e7cbecf(vn8_scalesrcv_uid4e7cbecf, 0.0, 0.0, 0.0, 0.0, vn8_scalesrcz_uid4e7cbecf, 0.05006686734935137, 4.228072162245522, -0.62);
+vec4 vn14_matmix_uid4e7cbecf = matmix_uid4e7cbecf(vn15_matrgb_uid4e7cbecf, vn5_perlinnoise3_uid4e7cbecf, vn13_matrgb_uid4e7cbecf, 0.0);
+float vn10_addconstantexp_uid4e7cbecf = addconstantexp_uid4e7cbecf(vn6_perlinnoise3_uid4e7cbecf, 5.597467536876814);
+vec4 vn3_matstone_uid4e7cbecf = matstone_uid4e7cbecf();
+vec4 vn17_matmix_uid4e7cbecf = matmix_uid4e7cbecf(vn3_matstone_uid4e7cbecf, vn10_addconstantexp_uid4e7cbecf, vn14_matmix_uid4e7cbecf, 0.0);
 
 
-	vec4 materialcolor = vn13_matmix_uid4e7ca7b6;
+	vec4 materialcolor = vn17_matmix_uid4e7cbecf;
 	
 	vec3 L = normalize(gl_LightSource[0].position.xyz - vertex);   
 	vec4 Idiff = clamp(gl_FrontLightProduct[0].diffuse * max(dot(normal,L), 0.0), 0.0, 1.0);  

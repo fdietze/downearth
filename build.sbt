@@ -18,3 +18,12 @@ scalacOptions in Compile += "-unchecked"
 
 scalacOptions in Compile += "-deprecation"
 
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+
+//initialCommands := """
+//import simplex3d.math._
+//import simplex3d.math.float._
+//import simplex3d.math.float.functions._
+//import openworld._
+//"""
+

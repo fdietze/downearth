@@ -589,7 +589,10 @@ object DeadInnerNode extends OctantOverMesh {
 	}
 	
 	// deadNodes sind unsichtbar
-	def draw(info:NodeInfo, test:FrustumTest){}
+	def draw(info:NodeInfo, test:FrustumTest){
+		// TODO Hier muss die Anfrage an dien Nodegenerator und die Prediction gestartet werden.
+	}
+	
 	// deadNodes haben keine Polygone
 	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
 }
