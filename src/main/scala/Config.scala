@@ -25,6 +25,7 @@ object Config{
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2f
 	val cameraTurboSpeed = 32f
+	val startAsGhost = true
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
 	def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))

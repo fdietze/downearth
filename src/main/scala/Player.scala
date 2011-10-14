@@ -21,7 +21,6 @@ import javax.vecmath.{Vector3f, Quat4f}
 object Player {
 
 	val camDistFromCenter = Vec3(0,0,0.8f)
-	var isGhost = false
 
 	//val camera = new Camera3D(startpos,Vec3(1,0,0))
 	
@@ -92,7 +91,12 @@ object Player {
 		if( !isGhost )
 			body.applyCentralImpulse(new Vector3f(0,0,5))
 	}
-
+	
+	var isGhost = false
+	
+	if( Config.startAsGhost )
+		toggleGhost
+	
 	def toggleGhost{
 		if( isGhost ){
 			position = camera.position - camDistFromCenter
