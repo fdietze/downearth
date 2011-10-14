@@ -226,11 +226,11 @@ object Util {
 			val m = transpose( Mat3x2(x,y) )
 
 			// alle Vertices werden in richtung des Strahls projeziert
-			val projected = (rayStart :: h.vertices.toList).map(m*_)
+			val projected = Vector.concat( Seq(rayStart), h.vertices ).map( m * _ )
 			val projectedStart = projected.head
-			val convexHull = convexHull2d( projected )
+			val convexHull = ChainHull2D( projected )
 			
-			// enthäld die Konvexe Hülle der Projezierten Vertices noch 
+			// enthält die Konvexe Hülle der Projezierten Vertices noch 
 			// den projezierten Startpunkt des Strahls, so hat der strahl den 
 			// Hexaeder getroffen
 			!(convexHull contains projectedStart)
@@ -287,8 +287,8 @@ object Util {
 		if( occluder == occludee )
 			true
 		else {
-			val vertices = (occluder ++ occludee).toArray
-			val convexHull = vertices.view(0,QuickHull.computeHull(vertices))
+			val vertices = Vector.concat(occluder,occludee)
+			val convexHull = ChainHull2D(vertices)
 			if( convexHull.toSet == occluder.toSet ) // complete occlusion
 				true
 			else
