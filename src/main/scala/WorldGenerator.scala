@@ -35,7 +35,7 @@ object WorldGenerator {
 		
 		
 		// Prediction
-		val interval = time("prediction: "){prediction(Vec3(nodepos),Vec3(nodepos+nodesize))}
+		val interval = prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
 		
 		if(interval.isPositive){
 			octree.root = new Leaf(FullHexaeder)

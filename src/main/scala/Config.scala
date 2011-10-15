@@ -7,8 +7,8 @@ import noise.interval.{Interval, Volume}
 import org.lwjgl.opengl.{Display, DisplayMode}
 
 object Config{
-	val minMeshNodeSize = 32
-	val worldWindowSize = 256
+	val minMeshNodeSize = 16
+	val worldWindowSize = 64
 	val useshaders = false
 	val smoothShading = false // experimental
 	val hexaederResolution = 8
@@ -28,6 +28,7 @@ object Config{
 	val startAsGhost = true
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
+	def materialfunction(v:Vec3) = gen.material(v)
 	def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))
 	val saveWorld = false
 
