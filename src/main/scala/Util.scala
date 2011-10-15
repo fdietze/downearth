@@ -228,6 +228,7 @@ object Util {
 			// alle Vertices werden in richtung des Strahls projeziert
 			val projected = Vector.concat( Seq(rayStart), h.vertices ).map( m * _ )
 			val projectedStart = projected.head
+			
 			val convexHull = ChainHull2D( projected )
 			
 			// enthält die Konvexe Hülle der Projezierten Vertices noch 
@@ -239,7 +240,7 @@ object Util {
 	
 	// falls schon sichergestellt wurde, dass der Strahl den Hexaeder trifft, 
 	// wird hir noch herausgefunden, ob der strahl eine Aussenwand des Hexaeders
-	// trifft oder nich.
+	// trifft oder nicht.
 	def rayCellTest(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder):Boolean = {
 		val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,rayDirection)) )
 		val x = normalize( cross(q,rayDirection) )

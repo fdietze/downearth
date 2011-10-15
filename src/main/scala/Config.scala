@@ -7,17 +7,20 @@ import noise.interval.{Interval, Volume}
 import org.lwjgl.opengl.{Display, DisplayMode}
 
 object Config{
+	import ConfigLoader._
+	
 	val minMeshNodeSize = 32
 	val worldWindowSize = 256
-	val useshaders = false
-	val smoothShading = false // experimental
+	val useshaders = loadBoolean("use_shaders") getOrElse false
+	val smoothShading = loadBoolean("smooth_shading") getOrElse false
 	val hexaederResolution = 8
 	
-	val skybox = false
+	val skybox = loadBoolean("skybox") getOrElse false
 	
 	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)
-	val fpsLimit = 60
+	
+	val fpsLimit = loadInt("fps_limit") getOrElse 60
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
@@ -35,11 +38,15 @@ object Config{
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
 	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
 	
-	var fullscreen = false
+	var fullscreen = loadBoolean("fullscreen") getOrElse false
 	
 	// Vollbild-Modus mit höchster Auflösung
 	val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
-	val windowDisplayMode = new DisplayMode(1024, 768)
+	
+	val windowResolutionWidth  = loadInt("window_resolution_width")  getOrElse 1024
+	val windowResolutionHeight = loadInt("window_resolution_height") getOrElse  768
+	val windowDisplayMode     = new DisplayMode(windowResolutionWidth, windowResolutionHeight)
+	
 	def displayMode =
 		if(fullscreen) 
 			fullscreenDisplayMode
@@ -51,38 +58,37 @@ object Config{
 
 	val worldUpVector = Vec3.UnitZ
 	
-	
 	import org.lwjgl.input.Keyboard._
-	val keyForward  = KEY_W
-	val keyBackward = KEY_S
-	val keyLeft     = KEY_A
-	val keyRight    = KEY_D
-	val keyJump     = KEY_SPACE
+	val keyForward  = loadKey("forward") getOrElse KEY_W
+	val keyBackward = loadKey("backward") getOrElse KEY_S
+	val keyLeft     = loadKey("left") getOrElse KEY_A
+	val keyRight    = loadKey("right") getOrElse KEY_D
+	val keyJump     = loadKey("jump") getOrElse KEY_SPACE
 	
-	val keyChooseHex0 = KEY_1
-	val keyChooseHex1 = KEY_2
-	val keyChooseHex2 = KEY_3
-	val keyChooseHex3 = KEY_4
-	val keyChooseHex4 = KEY_5
-	val keyChooseHex5 = KEY_6
-	val keyChooseHex6 = KEY_7
-	val keyChooseHex7 = KEY_8
-	val keyChooseHex8 = KEY_9
-	val keyChooseHex9 = KEY_0
+	val keyChooseHex0 = loadKey("choseHex01") getOrElse KEY_1
+	val keyChooseHex1 = loadKey("choseHex02") getOrElse KEY_2
+	val keyChooseHex2 = loadKey("choseHex03") getOrElse KEY_3
+	val keyChooseHex3 = loadKey("choseHex04") getOrElse KEY_4
+	val keyChooseHex4 = loadKey("choseHex05") getOrElse KEY_5
+	val keyChooseHex5 = loadKey("choseHex06") getOrElse KEY_6
+	val keyChooseHex6 = loadKey("choseHex07") getOrElse KEY_7
+	val keyChooseHex7 = loadKey("choseHex08") getOrElse KEY_8
+	val keyChooseHex8 = loadKey("choseHex09") getOrElse KEY_9
+	val keyChooseHex9 = loadKey("choseHex10") getOrElse KEY_0
 	
-	val keyMouseGrab         = KEY_G
-	val keyPlayerReset       = KEY_R
-	val keyTurbo             = KEY_T
-	val keyQuit              = KEY_ESCAPE
-	val keyPausePhysics      = KEY_P
-	val keyToggleGhostPlayer = KEY_TAB
+	val keyMouseGrab         = loadKey("mouse_grab") getOrElse KEY_G
+	val keyPlayerReset       = loadKey("reset_pos") getOrElse KEY_R
+	val keyTurbo             = loadKey("turbo") getOrElse KEY_T
+	val keyQuit              = loadKey("quit") getOrElse KEY_ESCAPE
+	val keyPausePhysics      = loadKey("pause") getOrElse KEY_P
+	val keyToggleGhostPlayer = loadKey("toggle_ghost_player") getOrElse KEY_TAB
 
-	val keyDebugDraw      = KEY_F1
-	val keyWireframe      = KEY_F2
-	val keyStreaming      = KEY_F3
-	val keyFrustumCulling = KEY_F4
+	val keyDebugDraw      = loadKey("debug_draw") getOrElse KEY_F1
+	val keyWireframe      = loadKey("wire_frame") getOrElse KEY_F2
+	val keyStreaming      = loadKey("streaming") getOrElse KEY_F3
+	val keyFrustumCulling = loadKey("frustum_culling") getOrElse KEY_F4
 
-	val keyFullScreen     = KEY_F11
+	val keyFullScreen     = loadKey("fullscreen") getOrElse KEY_F11
 
 
 	// settings changeable at runtime:
@@ -91,5 +97,51 @@ object Config{
 	var streamWorld = true
 	var frustumCulling = true
 	var turbo = false
+}
+
+import xml.XML
+import org.lwjgl.input.Keyboard.getKeyIndex
+
+object ConfigLoader {
+	val config = XML.load( getClass.getClassLoader.getResourceAsStream("config.xml") )
+	
+	def loadKey(name:String):Option[Int] = {
+		config \ "keys" \ "key" find ( node => (node \ "@name").text == name) match {
+		case Some(node) => 
+			val key = getKeyIndex(node.text)
+			if(key != 0)
+				Some(key)
+			else {
+				System.err.println("Wrong Format in config.xml for key " + name)
+				None
+			}
+		case None =>
+			None
+		}
+	}
+	
+	def loadValue(name:String):Option[String] = {
+		config \ "value" find ( node => (node \ "@name").text == name ) map ( _.text )
+	}
+	
+	def loadBoolean(name:String):Option[Boolean] = 
+		loadValue(name) match {
+		case Some("false") => Some(false)
+		case Some("true")  => Some(true)
+		case Some(s)       => System.err.println("can't parse " + s + " as Boolean for key " + name); None
+		case _ => None
+	}
+	
+	def loadInt(name:String):Option[Int] = {
+		val option = loadValue(name)
+		try {
+			loadValue(name) map ( _.toInt )
+		}
+		catch {
+			case _ => 
+				System.err.println("can't parse " + option.get + " as Int for key " + name)
+				None
+		}
+	}
 }
 

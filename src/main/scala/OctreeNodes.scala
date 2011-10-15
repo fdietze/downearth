@@ -119,14 +119,21 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 			
 			val axis = dir >> 1
 			val direction = dir & 1
-		
+			
 			//die beiden achsesen, die nicht axis sind
 			val axisa = 1-((axis+1) >> 1)
 			val axisb = (2 - (axis >> 1))
 			
 			var vertexCounter = 0
 			
+			// val Vector(t0,t1,t2,t3,t4,t5) = from.planetriangles(axis, direction)
 			val t = from.planetriangles(axis, direction)
+			val t0 = t(0)
+			val t1 = t(1)
+			val t2 = t(2)
+			val t3 = t(3)
+			val t4 = t(4)
+			val t5 = t(5)
 			
 			val occluderVertices = to.planetriangles(axis,1-direction)
 			val occludingCoords = new collection.mutable.ArrayBuffer[Vec2](6) // es sind nie mehr als 6 Vertices
@@ -158,24 +165,30 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 			
 			// liegen zwei vertices eines polygons zusammen, hat das polygon keine oberfläche und muss nicht
 			// gezeichnet werden
-			if(t(0) != t(1) && t(1) != t(2) && t(0) != t(2)){
-				if(to == EmptyHexaeder || !triangleMax(t(0),t(1),t(2)))
-					addVertices(t(0), t(1), t(2))
+			if( t0 != t1 && t1 != t2 && t0 != t2 ){
+				if(to == EmptyHexaeder || !triangleMax(t0,t1,t2))
+					addVertices(t0, t1, t2)
 				else{
-					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb)));
+					val v0 = Vec2( t0(axisa), t0(axisb) )
+					val v1 = Vec2( t1(axisa), t1(axisb) )
+					val v2 = Vec2( t2(axisa), t2(axisb) )
+					val flatTriangle = Vector(v0,v1,v2)
 					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ) {
-						addVertices(t(0), t(1), t(2))
+						addVertices(t0, t1, t2)
 					}
 				}
 			}
 			
-			if(t(3) != t(4) && t(4) != t(5) && t(3) != t(5)){
-				if(to == EmptyHexaeder || !triangleMax(t(3),t(4),t(5)))
-					addVertices(t(3), t(4), t(5))
+			if(t3 != t4 && t4 != t5 && t3 != t5){
+				if(to == EmptyHexaeder || !triangleMax(t3,t4,t5))
+					addVertices(t3, t4, t5)
 				else{
-					val flatTriangle = t map (v => Vec2(v(axisa),v(axisb)));
+					val v0 = Vec2( t3(axisa), t3(axisb) )
+					val v1 = Vec2( t4(axisa), t4(axisb) )
+					val v2 = Vec2( t5(axisa), t5(axisb) )
+					val flatTriangle = Vector(v0,v1,v2)
 					if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ) {
-						addVertices(t(3), t(4), t(5))
+						addVertices(t3, t4, t5)
 					}
 				}
 			}

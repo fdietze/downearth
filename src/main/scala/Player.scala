@@ -151,8 +151,6 @@ object BuildInterface{
 		val mousedest = World.raytracer(position, direction, buildStatus, 100)
 		mousedest match {
 			case Some(pos) => 
-				if(! buildStatus)
-					println(pos, World(pos))
 				World(pos) = if(buildStatus) current else EmptyHexaeder
 			case _ =>
 		}

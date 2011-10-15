@@ -111,7 +111,7 @@ class PartialHexaeder(
 	implicit def int2byte(i:Int) = i.toByte
 	implicit def bool2int(b:Boolean) = if(b) 1 else 0
 	
-	override def toString = "%h %h %h".format(X,Y,Z)
+	override def toString = "PartialHexaeder(0x%h, 0x%h, 0x%h)".format(X,Y,Z)
 
 	override def equals(that:Any) = {
 		that match {
