@@ -9,10 +9,11 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
-	val minMeshNodeSize = 32
-	val worldWindowSize = 256
+	val minMeshNodeSize = 16
+	val worldWindowSize = 64
 	val useshaders = loadBoolean("use_shaders") getOrElse false
 	val smoothShading = loadBoolean("smooth_shading") getOrElse false
+	
 	val hexaederResolution = 8
 	
 	val skybox = loadBoolean("skybox") getOrElse false
@@ -31,6 +32,7 @@ object Config{
 	val startAsGhost = true
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
+	def materialfunction(v:Vec3) = gen.material(v)
 	def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))
 	val saveWorld = false
 

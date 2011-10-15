@@ -318,5 +318,12 @@ object Util {
 	
 	def round10(a:Double) = math.round(a*10.0)/10.0f
 	def round10(v:Vec3):Vec3 = Vec3(round10(v.x), round10(v.y), round10(v.z))
+	
+	case class Material(color:Int = 0x808080) {
+		def red = color >> 16
+		def green = (color & 0x00FF00) >> 8
+		def blue = color & 0xFF
+		def vec4 = Vec4(red/255f,green/255f,blue/255f,1f)
+	}
 }
 

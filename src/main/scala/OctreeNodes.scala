@@ -5,6 +5,8 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
 import Util._
+import Config._
+
 import Hexaeder.planelookup
 import collection.Map
 
@@ -149,15 +151,18 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 			
 			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3){
 				vertexBuilder += (Vec3(pos) + v0)
-				texCoordBuilder += Vec2( v0(axisa)/2f + (direction & (axis >> 1))/2f , v0(axisb)/2f )
+				//texCoordBuilder += Vec2( v0(axisa)/2f + (direction & (axis >> 1))/2f , v0(axisb)/2f )
+				colorBuilder += materialfunction(Vec3(pos) + v0).vec4
 				vertexCounter += 1
 				
 				vertexBuilder += (Vec3(pos) + v1)
-				texCoordBuilder += Vec2( v1(axisa)/2f + (direction & (axis >> 1))/2f , v1(axisb)/2f )
+				//texCoordBuilder += Vec2( v1(axisa)/2f + (direction & (axis >> 1))/2f , v1(axisb)/2f )
+				colorBuilder += materialfunction(Vec3(pos) + v1).vec4
 				vertexCounter += 1
 				
 				vertexBuilder += (Vec3(pos) + v2)
-				texCoordBuilder += Vec2( v2(axisa)/2f + (direction & (axis >> 1))/2f , v2(axisb)/2f )
+				//texCoordBuilder += Vec2( v2(axisa)/2f + (direction & (axis >> 1))/2f , v2(axisb)/2f )
+				colorBuilder += materialfunction(Vec3(pos) + v2).vec4
 				vertexCounter += 1
 				
 				normalBuilder += normalize(cross(v2-v1,v0-v1))
