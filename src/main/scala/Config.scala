@@ -9,9 +9,10 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
-	val minMeshNodeSize = 16
+	val minMeshNodeSize = 8
 	val worldWindowSize = 64
 	val useshaders = loadBoolean("use_shaders") getOrElse false
+	val vertexMaterials = false
 	val smoothShading = loadBoolean("smooth_shading") getOrElse false
 	
 	val hexaederResolution = 8
