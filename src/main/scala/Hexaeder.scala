@@ -2,7 +2,7 @@ package openworld
 
 //import Util._
 import simplex3d.math.{Vec3i,Vec3b,ConstVec2i,all}
-import simplex3d.math.float.functions.{lessThanEqual,greaterThanEqual,normalize,cross,dot,Pi,round}
+import simplex3d.math.float.functions.{lessThanEqual,greaterThanEqual,normalize,cross,dot,Pi,round,length}
 import simplex3d.math.float.{Vec4,Vec3,Vec2,Mat3x4}
 
 // Konstanten zur Verwendung im Hexaeder
@@ -41,6 +41,20 @@ object Hexaeder {
 
 import Hexaeder._
 
+trait Hexaeder extends Serializable {
+	def apply(p:Int,axis:Int):Float
+	def apply(p:Int):Vec3
+	def vertices:Seq[Vec3]
+
+	def noVolume:Boolean
+	def volume:Float
+	def planemax(axis:Int, direction:Int):Boolean
+	def planecoords(axis:Int, direction:Int):Seq[Vec2]
+	def planetriangles(axis:Int, direction:Int):Seq[Vec3]
+	def normals:Seq[Vec3]
+	def rotateZ:Hexaeder
+}
+
 // TODO ein immutable Hexaeder, denn im Octree dürfen Hexaeder nicht verändert werden ohne sie auszutauschen
 case object FullHexaeder extends PartialHexaeder{
 	override def toString = "[X]"
@@ -48,6 +62,7 @@ case object FullHexaeder extends PartialHexaeder{
 	override def normals = m_normals
 	override def planemax(axis:Int, direction:Int) = true
 	override def rotateZ = this
+	override def volume = 1
 }
 
 case object EmptyHexaeder extends Hexaeder{
@@ -61,6 +76,7 @@ case object EmptyHexaeder extends Hexaeder{
 	def planetriangles(axis:Int, direction:Int) = Nil
 	def normals = Nil
 	def rotateZ = this
+	def volume = 0
 	
 	override def toString = "[ ]"
 }
@@ -80,19 +96,7 @@ case object UndefHexaeder extends Hexaeder {
 	def normals = Nil
 	def rotateZ = this
 	override def toString = "[~]"
-}
-
-trait Hexaeder extends Serializable {
-	def apply(p:Int,axis:Int):Float
-	def apply(p:Int):Vec3
-	def vertices:Seq[Vec3]
-
-	def noVolume:Boolean
-	def planemax(axis:Int, direction:Int):Boolean
-	def planecoords(axis:Int, direction:Int):Seq[Vec2]
-	def planetriangles(axis:Int, direction:Int):Seq[Vec3]
-	def normals:Seq[Vec3]
-	def rotateZ:Hexaeder
+	def volume = 0
 }
 
 class PartialHexaeder(
@@ -332,5 +336,40 @@ class PartialHexaeder(
 		}
 		Hexaeder(newverts)
 	}
+	
+	def allTriangles = {
+		val builder = new collection.immutable.VectorBuilder[Vec3]
+		builder.sizeHint(36)
+		for(axis ← 0 to 2; dir ← 0 to 1) {
+			val Vector(t0,t1,t2,t3,t4,t5) = planetriangles(axis,dir)
+			if(t0 != t1 && t1 != t2 && t2 != t0) {
+				builder += t0
+				builder += t1
+				builder += t2
+			}
+			if(t3 != t4 && t4 != t5 && t5 != t3) {
+				builder += t3
+				builder += t4
+				builder += t5
+			}
+		}
+		builder.result
+	}
+	
+	def volume = {
+		var vol = 0f
+		val t = allTriangles
+		for(i ← Range(0,t.size,3) ) {
+			val normal = cross(t(i+2)-t(i+1),t(i+0)-t(i+1)) // Normale nach aussen
+			val v3 = t(i+1)+normal
+			val h = normalize( cross(t(i+2) - t(i+1), v3 - t(i+1)) )
+			val height = dot(h, t(i+1)) - dot(h, t(i+0))
+			val area = length(t(i+2)-t(i+1))*height*(0.5f)
+			vol += area * dot(normalize(normal),t(i+0)) / 3
+		}
+		vol
+	}
 }
+
+
 

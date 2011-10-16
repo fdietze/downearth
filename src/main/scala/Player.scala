@@ -21,7 +21,6 @@ import javax.vecmath.{Vector3f, Quat4f}
 object Player {
 
 	val camDistFromCenter = Vec3(0,0,0.8f)
-
 	//val camera = new Camera3D(startpos,Vec3(1,0,0))
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
@@ -122,6 +121,7 @@ object BuildInterface{
 	// wird benötigt um den Korrekten Hexaeder hervorzuheben
 	// true: Momentan am Bauen
 	// false: Momentan am Buddeln
+	var inventoryMass = 0f
 	var buildStatus = false
 
 	def makeRotations(h:Hexaeder) = {
@@ -150,8 +150,11 @@ object BuildInterface{
 	def build(position:Vec3,direction:Vec3) {
 		val mousedest = World.raytracer(position, direction, buildStatus, 100)
 		mousedest match {
-			case Some(pos) => 
-				World(pos) = if(buildStatus) current else EmptyHexaeder
+			case Some(pos) =>
+				inventoryMass += World(pos).volume
+				val replacement = if(buildStatus) current else EmptyHexaeder
+				inventoryMass -= replacement.volume
+				World(pos) = replacement
 			case _ =>
 		}
 	}

@@ -222,6 +222,8 @@ object Main {
 		
 		Player.camera.renderScene
 		
+		Draw.addText("Inventory: " + BuildInterface.inventoryMass)
+		
 		GUI.renderScene
 	}
 

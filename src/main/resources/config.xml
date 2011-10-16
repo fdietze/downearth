@@ -4,6 +4,8 @@
 	<value name="window_resolution_width">1024</value>
 	<value name="window_resolution_height">768</value>
 	
+	<value name="smooth_shading">false</value>
+	
 	<keys>
 		<key name="forward">L</key>
 		<key name="backward">A</key>
