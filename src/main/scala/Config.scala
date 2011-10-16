@@ -9,11 +9,11 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
-	val minMeshNodeSize = 8
-	val worldWindowSize = 64
-	val useshaders = loadBoolean("use_shaders") getOrElse false
+	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 8
+	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
+	val useshaders = loadBoolean("useShaders") getOrElse false
 	val vertexMaterials = false
-	val smoothShading = loadBoolean("smooth_shading") getOrElse false
+	val smoothShading = loadBoolean("smoothShading") getOrElse false
 	
 	val hexaederResolution = 8
 	
@@ -22,7 +22,7 @@ object Config{
 	val ungeneratedDefault = UndefHexaeder
 	val startpos = Vec3(0)
 	
-	val fpsLimit = loadInt("fps_limit") getOrElse 60
+	val fpsLimit = loadInt("fpsLimit") getOrElse 60
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
@@ -46,8 +46,8 @@ object Config{
 	// Vollbild-Modus mit höchster Auflösung
 	val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
 	
-	val windowResolutionWidth  = loadInt("window_resolution_width")  getOrElse 1024
-	val windowResolutionHeight = loadInt("window_resolution_height") getOrElse  768
+	val windowResolutionWidth  = loadInt("windowResolutionWidth")  getOrElse 1024
+	val windowResolutionHeight = loadInt("windowResolutionHeight") getOrElse  768
 	val windowDisplayMode     = new DisplayMode(windowResolutionWidth, windowResolutionHeight)
 	
 	def displayMode =
@@ -87,7 +87,7 @@ object Config{
 	val keyToggleGhostPlayer = loadKey("toggle_ghost_player") getOrElse KEY_TAB
 
 	val keyDebugDraw      = loadKey("debug_draw") getOrElse KEY_F1
-	val keyWireframe      = loadKey("wire_frame") getOrElse KEY_F2
+	val keyWireframe      = loadKey("wireframe") getOrElse KEY_F2
 	val keyStreaming      = loadKey("streaming") getOrElse KEY_F3
 	val keyFrustumCulling = loadKey("frustum_culling") getOrElse KEY_F4
 
@@ -101,50 +101,3 @@ object Config{
 	var frustumCulling = true
 	var turbo = false
 }
-
-import xml.XML
-import org.lwjgl.input.Keyboard.getKeyIndex
-
-object ConfigLoader {
-	val config = XML.load( getClass.getClassLoader.getResourceAsStream("config.xml") )
-	
-	def loadKey(name:String):Option[Int] = {
-		config \ "keys" \ "key" find ( node => (node \ "@name").text == name) match {
-		case Some(node) => 
-			val key = getKeyIndex(node.text)
-			if(key != 0)
-				Some(key)
-			else {
-				System.err.println("Wrong Format in config.xml for key " + name)
-				None
-			}
-		case None =>
-			None
-		}
-	}
-	
-	def loadValue(name:String):Option[String] = {
-		config \ "value" find ( node => (node \ "@name").text == name ) map ( _.text )
-	}
-	
-	def loadBoolean(name:String):Option[Boolean] = 
-		loadValue(name) match {
-		case Some("false") => Some(false)
-		case Some("true")  => Some(true)
-		case Some(s)       => System.err.println("can't parse " + s + " as Boolean for key " + name); None
-		case _ => None
-	}
-	
-	def loadInt(name:String):Option[Int] = {
-		val option = loadValue(name)
-		try {
-			loadValue(name) map ( _.toInt )
-		}
-		catch {
-			case _ => 
-				System.err.println("can't parse " + option.get + " as Int for key " + name)
-				None
-		}
-	}
-}
-
