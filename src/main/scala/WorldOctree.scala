@@ -58,7 +58,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		glColor3f(1,1,1)
 		rootB.draw(rootNodeInfo,test)
 		
-		if(Config.debugDraw){
+		if(Config.debugDraw) {
 			glDisable(GL_LIGHTING)
 			glDisable(GL_TEXTURE_2D)
 		
@@ -76,7 +76,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	def genMesh(f:(Vec3i => Hexaeder) = World.apply _){
+	def genMesh(f:(Vec3i => Hexaeder) = World.apply _) {
 		assert(! meshGenerated)
 		root = rootA.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else f(x) }) )
 		meshGenerated = true
@@ -84,17 +84,22 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	import scala.actors.Future
 
-	def jumpTo(pos:Vec3){
-		val newcenter = (Vec3i(pos)/minMeshNodeSize)*minMeshNodeSize
-		worldWindowPos = newcenter-worldWindowSize/2
+	def generateStartArea {
 		
-		for(vi <- (Vec3i(0) until Vec3i(worldWindowSize/minMeshNodeSize)).toSeq.sortBy(v => length(v-worldWindowSize/minMeshNodeSize/2)) ){
-			val nodeinfo = NodeInfo(worldWindowPos + vi*minMeshNodeSize,minMeshNodeSize)
-			generateNode(nodeinfo)
+		root = DeadInnerNode
+		
+		/*
+		for( vi ← (Vec3i(0) until Vec3i(rootNodeSize/minMeshNodeSize) ).toSeq.sortBy(v => length(v-worldWindowSize/minMeshNodeSize/2)) )  {
+			WorldNodeGenerator.Master ! NodeInfo(rootNodePos + vi * minMeshNodeSize, minMeshNodeSize)
 		}
+		*/
+		
+		WorldNodeGenerator.Master ! rootNodeInfo
+		
+		meshGenerated = true
 	}
 	
-	def generateNode(info:NodeInfo){
+	def generateNode(info:NodeInfo) {
 		if(!isSet(info)) {
 			WorldNodeGenerator.Master ! info
 		}

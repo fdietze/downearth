@@ -3,5 +3,11 @@ project/boot/
 .idea*
 *~
 worldoctree
+
 worldfunction.scala
 worldprediction.scala
+worldmaterial.scala
+screen.frag
+
+config.xml
+

@@ -72,6 +72,32 @@ object Draw {
 		}
 	}
 
+	def drawNodeInfo(nodeinfo:NodeInfo) {
+		glDisable(GL_LIGHTING)
+		glDisable(GL_TEXTURE_2D)
+
+		glPushMatrix
+			glTranslatef(nodeinfo.pos.x + 0.1f, nodeinfo.pos.y + 0.1f, nodeinfo.pos.z + 0.1f)
+			Draw.renderCube(nodeinfo.size - 0.2f)
+		glPopMatrix
+	}
+
+	// Für den Debugdraw: alle Bereiche, die gesampled werden
+	var sampledNodes:List[NodeInfo] = Nil
+	var predictedNodes:List[NodeInfo] = Nil
+	def addSampledNode(nodeinfo:NodeInfo) { sampledNodes ::= nodeinfo }
+	def addPredictedNode(nodeinfo:NodeInfo) { predictedNodes ::= nodeinfo }
+	
+	def drawSampledNodes {
+		glColor3f(1,0,0)
+		for( nodeinfo <- sampledNodes )
+			drawNodeInfo(nodeinfo)
+
+		glColor3f(0,0,1)
+		for( nodeinfo <- predictedNodes )
+			drawNodeInfo(nodeinfo)
+	}
+
 
 	// simuliert ein Konsolenähnliches verhalten, um Text auf dem Bildschirm darzustellen
 	var textCache:List[String] = Nil
@@ -80,7 +106,7 @@ object Draw {
 		textCache ::= msg.toString
 	}
 	
-	def drawTexts{
+	def drawTexts {
 		import org.newdawn.slick.Color.white
 		if( textCache.size > 0 ) {
 			glEnable(GL_BLEND)

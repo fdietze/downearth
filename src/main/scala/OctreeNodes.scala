@@ -113,7 +113,7 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 	
 	// erzeugt aus Zwei aneinender grenzenden Hexaedern die Polygone, die nicht verdeckt werden.
 	// performance kritischer bereich, weil es für jedes benachberte Hexaederpaar aufgerufen wird
-	def addSurface(from:Hexaeder,to:Hexaeder,pos:Vec3i,dir:Int,meshBuilder:TextureMeshBuilder) = {
+	def addSurface(from:Hexaeder, to:Hexaeder, pos:Vec3i, dir:Int ,meshBuilder:TextureMeshBuilder) = {
 		if(to != UndefHexaeder){
 			assert(from != EmptyHexaeder)
 			
@@ -152,19 +152,28 @@ class Leaf(val h:Hexaeder) extends OctantUnderMesh {
 			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3){
 				vertexBuilder += (Vec3(pos) + v0)
 				//texCoordBuilder += Vec2( v0(axisa)/2f + (direction & (axis >> 1))/2f , v0(axisb)/2f )
-				colorBuilder += materialfunction(Vec3(pos) + v0).vec4
 				vertexCounter += 1
 				
 				vertexBuilder += (Vec3(pos) + v1)
 				//texCoordBuilder += Vec2( v1(axisa)/2f + (direction & (axis >> 1))/2f , v1(axisb)/2f )
-				colorBuilder += materialfunction(Vec3(pos) + v1).vec4
 				vertexCounter += 1
 				
 				vertexBuilder += (Vec3(pos) + v2)
 				//texCoordBuilder += Vec2( v2(axisa)/2f + (direction & (axis >> 1))/2f , v2(axisb)/2f )
-				colorBuilder += materialfunction(Vec3(pos) + v2).vec4
 				vertexCounter += 1
 				
+				if( vertexMaterials ) {
+					colorBuilder += materialfunction(Vec3(pos) + v0).vec4
+					colorBuilder += materialfunction(Vec3(pos) + v1).vec4
+					colorBuilder += materialfunction(Vec3(pos) + v2).vec4
+				}
+				else {
+					val centerColor = materialfunction(pos + 0.5f).vec4
+					colorBuilder += centerColor
+					colorBuilder += centerColor
+					colorBuilder += centerColor
+				}
+
 				normalBuilder += normalize(cross(v2-v1,v0-v1))
 			}
 			

@@ -8,7 +8,7 @@ import simplex3d.math.double.functions._
 
 
 object Noise {
-	def fastfloor(x:Double) = (if(x > 0) x else (x-1)).toInt
+	def fastfloor(x:Double) = x.floor.toInt //(if(x > 0) x else (x-1)).toInt
 	def fastceil(x:Double) = x.ceil.toInt
 	def fade(t:Double) = t * t * t * (t * (t * 6 - 15) + 10)
 	def lerp(t:Double, a:Double, b:Double) = a + t * (b - a)
@@ -29,14 +29,31 @@ object Noise {
 		val result = h.clone
 		var tmp = 0.0
 		var save = 0.0
-		for( i <- 0 to n-1 ) {
+		
+		var i = 0
+		var j = 0
+		val nm1 = n-1
+		while( i <= nm1 ) {
+			tmp = result(i)
+			j = i+1
+			while( j <= n ) {
+				save = lerp(t, tmp, result(j))
+				tmp = result(j)
+				result(j) = save
+				j += 1
+			}
+			i += 1
+		}
+
+
+/*		for( i <- 0 to n-1 ) {
 			tmp = result(i)
 			for( j <- i+1 to n ) {
 				save = lerp(t, tmp, result(j))
 				tmp = result(j)
 				result(j) = save
 			}
-		}
+		}*/
 		result
 	}
 
@@ -47,18 +64,40 @@ object Noise {
 		val result = h.clone
 		var tmp = 0.0
 		var save = 0.0
-		for( i <- 0 to n-1 ) {
+
+		var i = 0
+		var j = 0
+		val nm1 = n-1
+
+		while( i <= nm1 ) {
+			tmp = result(n-i)
+			j = nm1-i
+			while( j >= 0 ) {
+				save = lerp(t, tmp, result(j))
+				tmp = result(j)
+				result(j) = save
+				j -= 1
+			}
+			i += 1
+		}
+
+/*		for( i <- 0 to n-1 ) {
 			tmp = result(n-i)
 			for( j <- inclusive(n-i-1,0,-1) ) {
 				save = lerp(t, tmp, result(j))
 				tmp = result(j)
 				result(j) = save
 			}
-		}
+		}*/
 		result
 	}
 	
-	def slice(h:Array[Double], t0:Double, t1:Double) = splitright(splitleft(h,t1),t0/t1)
+	def slice(h:Array[Double], t0:Double, t1:Double) = {
+		if( t1 == 0 )
+			splitleft(splitright(h,t0),-t0/(1-t0))
+		else
+			splitright(splitleft(h,t1),t0/t1)
+	}
 	
 	val gradients3 = Array(
 		Vec3( 1, 1, 0),
@@ -97,10 +136,33 @@ object Noise {
 		val Z = fastfloor(z0)
 		
 		// Interval needs to stay inside one unit cube of the lattice
-		if( X < fastceil(x1)-1
-		 || Y < fastceil(y1)-1
-		 || Z < fastceil(z1)-1 )
-			return Interval(-1,1) // no recursion here, because the octree doesn't need more precision
+		// If it only touches a few neighbouring lattices, evaluate all
+		// and build the hull of the intervals.
+		
+		// if one of the intervals spreads over more than 2 unit cubes
+		if( fastceil(x1) - X > 2 || fastceil(y1) - Y > 2 || fastceil(z1) - Z > 2 ) {
+			return Interval(-1,1)
+		}
+		
+		// if interval spreads over more than one unit cube
+		if( fastceil(x1) - X > 1 )
+			return interval.hull(
+				noise3_prediction(Volume(Interval(x0,fastfloor(x0)+1),v.y,v.z)),
+				noise3_prediction(Volume(Interval(fastceil(x1)-1,x1),v.y,v.z))
+			)
+			
+		if( fastceil(y1) - Y > 1 )
+			return interval.hull(
+				noise3_prediction(Volume(v.x, Interval(y0,fastfloor(y0)+1),v.z)),
+				noise3_prediction(Volume(v.x, Interval(fastceil(y1)-1,y1),v.z))
+			)
+			
+		if( fastceil(z1) - Z > 1 )
+			return interval.hull(
+				noise3_prediction(Volume(v.x,v.y,Interval(z0,fastfloor(z0)+1))),
+				noise3_prediction(Volume(v.x,v.y,Interval(fastceil(z1)-1,z1)))
+			)
+		
 		
 		// relative positions in unit cube
 		val relx0 = x0 - X
@@ -109,6 +171,13 @@ object Noise {
 		val relx1 = x1 - X
 		val rely1 = y1 - Y
 		val relz1 = z1 - Z
+		
+/*		assert(relx0 >= 0 && relx0 <= 1, Interval(relx0,relx1))
+		assert(rely0 >= 0 && rely0 <= 1, Interval(rely0,rely1))
+		assert(relz0 >= 0 && relz0 <= 1, Interval(relz0,relz1))
+		assert(relx1 >= 0 && relx1 <= 1, Interval(relx0,relx1))
+		assert(rely1 >= 0 && rely1 <= 1, Interval(rely0,rely1))
+		assert(relz1 >= 0 && relz1 <= 1, Interval(relz0,relz1))*/
 		
 		// Get the Pseudorandom Gradients for each Lattice point
 		val Vec3(g0x,g0y,g0z) = gradientat3(X  ,Y  ,Z  )
@@ -119,7 +188,7 @@ object Noise {
 		val Vec3(g5x,g5y,g5z) = gradientat3(X+1,Y  ,Z+1)
 		val Vec3(g6x,g6y,g6z) = gradientat3(X  ,Y+1,Z+1)
 		val Vec3(g7x,g7y,g7z) = gradientat3(X+1,Y+1,Z+1)
-	
+
 		// Calculate the heights of the bezier curve, converted from the 3d perlin noise polynomial with fade-function of degree 5
 		// resulting polynomial has degree 6. This gives 7^3 Bezier points
 		val bezierheights = 
@@ -172,7 +241,7 @@ g5z/6,0),Array(g1y/6,(g1z+g1y)/6,(2*g1z+g1y)/6,-(6*g5z-g5y-6*g1z-g1y)/12,-(2*g5z
 (g5z-g5y)/3,-(g5z-2*g5y)/6,g5y/3),Array(-(g3y-g1y)/2,(g3z-6*g3y+g1z+6*g1y)/12,(g3z-3*g3y+g1z+3*g1y)/6,-(g7z+g7y+g5z-g5y-g3z+g3y-g1z-g1y)/4,-
 (g7z+3*g7y+g5z-3*g5y)/6,-(g7z+6*g7y+g5z-6*g5y)/12,-(g7y-g5y)/2),Array(-g3y/3,(g3z-2*g3y)/6,(g3z-g3y)/3,-(3*g7z+g7y-3*g3z+g3y)/6,-(g7z+g7y)/3,-(g7z+2*g7y)/6,-g7y/3),Array(-
 g3y/6,(g3z-g3y)/6,(2*g3z-g3y)/6,-(6*g7z+g7y-6*g3z+g3y)/12,-(2*g7z+g7y)/6,-(g7z+g7y)/6,-g7y/6),Array(0,g3z/6,g3z/3,-(g7z-g3z)/2,-g7z/3,-g7z/6,0)))		
-		
+
 
 		val n = bezierheights.size
 
@@ -241,5 +310,56 @@ g3y/6,(g3z-g3y)/6,(2*g3z-g3y)/6,-(6*g7z+g7y-6*g3z+g3y)/12,-(2*g7z+g7y)/6,-(g7z+g
 								grad(hash(BA+1), relx-1, rely  , relz-1 )), // OF CUBE
 						lerp(u, grad(hash(AB+1), relx  , rely-1, relz-1 ),
 								grad(hash(BB+1), relx-1, rely-1, relz-1 ))))
+	}
+	
+	def test {
+		class Timer {
+			var starttime = 0L
+			var passedtime = 0L
+
+			def getTime = System.nanoTime
+
+			def start  { starttime = getTime }
+			def stop   { passedtime += getTime - starttime }
+			def measure[A](function: => A) = {
+				start
+				val returnvalue = function
+				stop
+				returnvalue
+			}
+			def reset  { passedtime = 0 }
+			def read =   passedtime/1000000000.0
+		}
+		val noisetimer = new Timer
+		val predictiontimer = new Timer
+		val n = 5000
+		val samples = 10
+		for( i <- 0 until n )
+		{
+			// Test-Interval
+			import scala.util.Random.{nextDouble => r}
+		
+			val x0 = 1/r
+			val y0 = 1/r
+			val z0 = 1/r
+			val x1 = x0 + r/30
+			val y1 = y0 + r/30
+			val z1 = z0 + r/30
+		
+			val prediction = predictiontimer.measure {
+				noise3_prediction(Volume(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
+			}
+		
+			//println("Prediction: " + prediction + "Interval: " + (x0,y0,z0) + " - " + (x1,y1,z1) )
+			// Sample Interval
+			for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){ 
+				val x = x0 + u / samples.toDouble * (x1 - x0)
+				val y = y0 + v / samples.toDouble * (y1 - y0)
+				val z = z0 + w / samples.toDouble * (z1 - z0)
+				val noise = noisetimer.measure{noise3(x,y,z)}
+				assert(prediction(noise),"Wrong Prediction:\n" + prediction + ", \nInterval: " + (x0,y0,z0) + " - " + (x1,y1,z1) + "\nPosition: " + (x,y,z) + "Value: " + noise)
+			}
+		}
+		println("noise: " + noisetimer.read/(n*pow(samples,3)) + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read*pow(samples,3)/noisetimer.read)
 	}
 }
