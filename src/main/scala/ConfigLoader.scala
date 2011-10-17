@@ -4,16 +4,28 @@ import xml.XML
 import org.lwjgl.input.Keyboard.getKeyIndex
 
 object ConfigLoader {
-	val config = XML.load( getClass.getClassLoader.getResourceAsStream("config.xml") )
+	val config = try {
+		Some( XML.load( getClass.getClassLoader.getResourceAsStream("config.xml") ) )
+	}
+	catch {
+		case _ => 
+			System.err.println("keine config.xml angegeben, oder konnte nicht gefunden werden")
+			None
+	}
 	
 	def loadKey(name:String):Option[Int] = {
-		config \ "keys" \ "key" find ( node => (node \ "@name").text == name) match {
-		case Some(node) => 
-			val key = getKeyIndex(node.text)
-			if(key != 0)
-				Some(key)
-			else {
-				System.err.println("Wrong Format in config.xml for key " + name)
+		config match {
+		case Some(config) =>
+			config \ "keys" \ "key" find ( node => (node \ "@name").text == name) match {
+			case Some(node) => 
+				val key = getKeyIndex(node.text)
+				if(key != 0)
+					Some(key)
+				else {
+					System.err.println("Wrong Format in config.xml for key " + name)
+					None
+				}
+			case None =>
 				None
 			}
 		case None =>
@@ -22,7 +34,10 @@ object ConfigLoader {
 	}
 	
 	def loadValue(name:String):Option[String] = {
-		config \ "value" find ( node => (node \ "@name").text == name ) map ( _.text )
+		if(config ne None)
+			config.get \ "value" find ( node => (node \ "@name").text == name ) map ( _.text )
+		else
+			None
 	}
 	
 	def loadBoolean(name:String):Option[Boolean] = 

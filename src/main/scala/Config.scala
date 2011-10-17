@@ -9,8 +9,10 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
-	val minPredictionSize = loadInt("minPredictionSize") getOrElse 8
 	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
+	val minPredictionSize = loadInt("minPredictionSize") getOrElse 8
+	// wenn die minPredictionSize kleiner ist als die minMeshNodeSize, dann werden Meshes eingefügt die kleiner sind als die minMeshNodeSize, aber mas sieht so auch die Prediction beim streaming
+	
 	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
 	val vertexMaterials = false

@@ -31,12 +31,24 @@ object WorldNodeGenerator {
 				case ( oldjob:NodeInfo, nodeinfoseq: Seq[_]) =>
 					sender ! nodeinfoseq.head
 					// done enqueue (oldjob, DeadNode)
+					
+					nodeinfoseq.tail foreach { 
+					case ni:NodeInfo => 
+						jobqueue enqueue ni
+					}
 					activeJobs -= oldjob
-					activeJobs += nodeinfoseq.head.asInstanceOf[NodeInfo]
 					
-					nodeinfoseq.tail foreach (ni => jobqueue enqueue ni.asInstanceOf[NodeInfo])
+					val job = jobqueue.dequeue
+					sender ! job
+					activeJobs += job
 					
-				
+					while( ! idlingWorkers.isEmpty ) {
+						val job = jobqueue.dequeue
+						val worker = idlingWorkers.dequeue
+						worker ! job
+						activeJobs += job
+					}
+					
 				case nodeinfo:NodeInfo =>
 					println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
 					activeJobs += nodeinfo
@@ -79,11 +91,11 @@ object WorldNodeGenerator {
 			while(alive){
 				receive {
 					case nodeinfo @ NodeInfo(nodepos, nodesize) =>
-						println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
+						// println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
 						val interval = Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	
 						
 						if(interval.isPositive) {
-							println(nodeinfo + ": Prediction war Positiv")
+							// println(nodeinfo + ": Prediction war Positiv")
 							Draw addPredictedNode nodeinfo  // Für DebugDraw
 							
 							val octree = new WorldOctree( nodesize, nodepos.clone )
@@ -95,7 +107,7 @@ object WorldNodeGenerator {
 						}
 						
 						else if(interval.isNegative) {
-							println(nodeinfo + ": Prediction war Negativ")
+							// println(nodeinfo + ": Prediction war Negativ")
 							Draw addPredictedNode nodeinfo  // Für DebugDraw
 							
 							val octree = new WorldOctree( nodesize, nodepos.clone )
@@ -106,18 +118,18 @@ object WorldNodeGenerator {
 						}
 
 						else {
-							println(nodeinfo + ": Bereich könnte Oberfläche enthalten")
+							// println(nodeinfo + ": Bereich könnte Oberfläche enthalten")
 							// falls der Bereich groß genug ist splitten und Teile neu predicten
 							if( (nodesize/2) >= Config.minPredictionSize ) {
-								println("Splitting " + nodeinfo)
+								// println("Splitting " + nodeinfo)
 								// für alle Kindknoten die Nodeinfo an Master senden
 								
-								println("Sende nodeinfos an Master...")
+								// println("Sende nodeinfos an Master...")
 								Master ! Tuple2(nodeinfo, Range(0,8).map( i => nodeinfo(i)))
 							}
 							// sonst samplen
 							else {
-								println(nodeinfo + ": Bereich wird gesamplet")
+								// println(nodeinfo + ": Bereich wird gesamplet")
 								val node = WorldGenerator genWorldAt nodeinfo
 								Master ! Tuple2(nodeinfo, node.root)
 							}
