@@ -57,7 +57,15 @@ object Util {
 	}
 	
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
-	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
+	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
+	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = {
+		i.x >= nodepos.x &&
+		i.y >= nodepos.y &&
+		i.z >= nodepos.z &&
+		i.x < nodepos.x + nodesize &&
+		i.y < nodepos.y + nodesize &&
+		i.z < nodepos.z + nodesize
+	}
 
 	def printLogInfo(obj:Int) {
 		

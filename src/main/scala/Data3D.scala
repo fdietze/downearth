@@ -17,7 +17,15 @@ trait Data3D[A]{
 	def vsize:Vec3i
 	def apply(v:Vec3i):A
 	def update(v:Vec3i,value:A)
-	def indexInRange(i:Vec3i) = all(lessThan(i,vsize)) && all(greaterThanEqual(i,Vec3i(0)))
+	//def indexInRange(i:Vec3i) = all(lessThan(i,vsize)) && all(greaterThanEqual(i,Vec3i(0)))
+	def indexInRange(i:Vec3i) = {
+		i.x >= 0 &&
+		i.y >= 0 &&
+		i.z >= 0 &&
+		i.x < vsize.x &&
+		i.y < vsize.y &&
+		i.z < vsize.z
+	}
 	
 	def fill( foo: Vec3i => A ){
 		for( v <- Vec3i(0) until vsize ){
