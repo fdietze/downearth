@@ -9,6 +9,7 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
+	val minPredictionSize = loadInt("minPredictionSize") getOrElse 8
 	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
 	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
@@ -93,7 +94,7 @@ object Config{
 	// settings changeable at runtime:
 	var debugDraw = false
 	var wireframe = false
-	var streamWorld = true
+	var streamWorld = false
 	var frustumCulling = true
 	var turbo = false
 

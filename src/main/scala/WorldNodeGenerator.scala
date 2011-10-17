@@ -7,6 +7,7 @@ package openworld
 import scala.actors.{DaemonActor, OutputChannel, Actor, Future}
 
 import simplex3d.math.Vec3i
+import simplex3d.math.float.Vec3
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 
@@ -27,7 +28,17 @@ object WorldNodeGenerator {
 		def act = {
 			loop{
 				react{
+				case ( oldjob:NodeInfo, nodeinfoseq: Seq[_]) =>
+					sender ! nodeinfoseq.head
+					// done enqueue (oldjob, DeadNode)
+					activeJobs -= oldjob
+					activeJobs += nodeinfoseq.head.asInstanceOf[NodeInfo]
+					
+					nodeinfoseq.tail foreach (ni => jobqueue enqueue ni.asInstanceOf[NodeInfo])
+					
+				
 				case nodeinfo:NodeInfo =>
+					println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
 					activeJobs += nodeinfo
 					// worker beauftragen falls verfügbar, sonst in die jobqueue
 					if(idlingWorkers.isEmpty) {
@@ -53,6 +64,9 @@ object WorldNodeGenerator {
 				case PoisonPill =>
 					for( worker <- workers )
 						worker ! PoisonPill
+				
+				case irgendwas =>
+					println("Master: konnte " + irgendwas + " nicht erkennen")
 				}
 			}
 		}
@@ -64,9 +78,51 @@ object WorldNodeGenerator {
 		def act = {
 			while(alive){
 				receive {
-					case nodeinfo:NodeInfo =>
-						val node = WorldGenerator genWorldAt nodeinfo
-						Master ! Tuple2(nodeinfo,node.root)
+					case nodeinfo @ NodeInfo(nodepos, nodesize) =>
+						println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
+						val interval = Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	
+						
+						if(interval.isPositive) {
+							println(nodeinfo + ": Prediction war Positiv")
+							Draw addPredictedNode nodeinfo  // Für DebugDraw
+							
+							val octree = new WorldOctree( nodesize, nodepos.clone )
+							octree.root = new Leaf(FullHexaeder)
+							octree.genMesh(x => FullHexaeder)
+							
+							Master ! Tuple2(nodeinfo, octree.root)
+
+						}
+						
+						else if(interval.isNegative) {
+							println(nodeinfo + ": Prediction war Negativ")
+							Draw addPredictedNode nodeinfo  // Für DebugDraw
+							
+							val octree = new WorldOctree( nodesize, nodepos.clone )
+							octree.root = new Leaf(EmptyHexaeder)
+							octree.genMesh(x => EmptyHexaeder)
+							
+							Master ! Tuple2(nodeinfo, octree.root)
+						}
+
+						else {
+							println(nodeinfo + ": Bereich könnte Oberfläche enthalten")
+							// falls der Bereich groß genug ist splitten und Teile neu predicten
+							if( (nodesize/2) >= Config.minPredictionSize ) {
+								println("Splitting " + nodeinfo)
+								// für alle Kindknoten die Nodeinfo an Master senden
+								
+								println("Sende nodeinfos an Master...")
+								Master ! Tuple2(nodeinfo, Range(0,8).map( i => nodeinfo(i)))
+							}
+							// sonst samplen
+							else {
+								println(nodeinfo + ": Bereich wird gesamplet")
+								val node = WorldGenerator genWorldAt nodeinfo
+								Master ! Tuple2(nodeinfo, node.root)
+							}
+						}
+						
 					case PoisonPill => 
 						alive = false
 				}
