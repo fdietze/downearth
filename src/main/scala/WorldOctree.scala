@@ -58,7 +58,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		glColor3f(1,1,1)
 		rootB.draw(rootNodeInfo,test)
 		
-		if(Config.debugDraw){
+		if(Config.debugDraw) {
 			glDisable(GL_LIGHTING)
 			glDisable(GL_TEXTURE_2D)
 		

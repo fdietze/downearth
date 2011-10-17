@@ -9,7 +9,7 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
-	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 8
+	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
 	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
 	val vertexMaterials = false
@@ -20,7 +20,7 @@ object Config{
 	val skybox = loadBoolean("skybox") getOrElse false
 	
 	val ungeneratedDefault = UndefHexaeder
-	val startpos = Vec3(0)
+	val startpos = Vec3(0,0,0) // TODO: Fix streaming with other start position
 	
 	val fpsLimit = loadInt("fpsLimit") getOrElse 60
 	
@@ -37,10 +37,6 @@ object Config{
 	def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))
 	val saveWorld = false
 
-	assert( worldWindowSize >= minMeshNodeSize )
-	assert( worldWindowSize % minMeshNodeSize  == 0 )
-	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
-	
 	var fullscreen = loadBoolean("fullscreen") getOrElse false
 	
 	// Vollbild-Modus mit höchster Auflösung
@@ -100,4 +96,11 @@ object Config{
 	var streamWorld = true
 	var frustumCulling = true
 	var turbo = false
+
+
+
+	assert( worldWindowSize >= minMeshNodeSize )
+	assert( worldWindowSize % minMeshNodeSize  == 0 )
+	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
+
 }

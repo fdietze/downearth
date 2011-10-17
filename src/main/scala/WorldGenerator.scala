@@ -38,20 +38,23 @@ object WorldGenerator {
 		val interval = prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
 		
 		if(interval.isPositive){
+			Draw addPredictedNode nodeinfo  // Für DebugDraw
 			octree.root = new Leaf(FullHexaeder)
 			octree.genMesh(x => FullHexaeder)
 		}
 		
 		else if(interval.isNegative){
+			Draw addPredictedNode nodeinfo  // Für DebugDraw
 			octree.root = new Leaf(EmptyHexaeder)
 			octree.genMesh(x => EmptyHexaeder)
 		}
 		
-		else{
+		else {
 			// Predichtion hat kein eindeutiges Ergebnis,
 			// Bereich KANN Oberfläche enthalten
 			
 			// Bereich des Nodes wird vollständig abgetastet
+			Draw addSampledNode nodeinfo  // Für DebugDraw
 
 			// Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 			// Marching-Cubes für n Cubes: n+1 Datenpunkte

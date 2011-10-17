@@ -111,10 +111,12 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		Draw.addText("frustum culled nodes: " + frustumtest.falsecount)
 		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
 		
-		BuildInterface.highlightHexaeder(position,direction)
+		BuildInterface.highlightHexaeder(position, direction)
 		
-		if(Config.debugDraw)
+		if(Config.debugDraw) {
 			BulletPhysics.debugDrawWorld
+			Draw.drawSampledNodes
+		}
 	}
 	
 	def makeRelative(v:Vec3) = directionQuat.rotateVector(v)
