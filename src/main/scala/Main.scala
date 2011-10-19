@@ -94,7 +94,7 @@ object Main {
 		val fps = "%d fps" format currentfps
 		Draw addText fps
 	}
-	
+	 
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
 	def logic {
 		if(Display.isCloseRequested)
@@ -151,6 +151,8 @@ object Main {
 					Display.setDisplayMode(displayMode)
 					if( fullscreen )
 						Mouse setGrabbed true
+				case `keyScreenshot` =>
+					screenShot( "screenshot" )
 				case `keyTurbo` =>
 					turbo = ! turbo
 				case `keyQuit` =>

@@ -90,6 +90,7 @@ object Config{
 	val keyStreaming      = loadKey("streaming") getOrElse KEY_F3
 	val keyFrustumCulling = loadKey("frustum_culling") getOrElse KEY_F4
 
+	val keyScreenshot     = loadKey("screesshot") getOrElse KEY_F10
 	val keyFullScreen     = loadKey("fullscreen") getOrElse KEY_F11
 
 
