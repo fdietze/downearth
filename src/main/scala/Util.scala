@@ -21,21 +21,6 @@ import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
 import java.text.DateFormat._
 
-
-object MyFont{
-	import org.newdawn.slick.UnicodeFont
-	import org.newdawn.slick.font.effects._
-	import java.awt.{Font,Color};
-	import java.util.List
-	val font = new UnicodeFont(new Font("Monospace", Font.BOLD, 14))
-	font.addAsciiGlyphs
-	font.addGlyphs("äöüÄÖÜß")
-	val effects = font.getEffects.asInstanceOf[List[Effect]]
-	effects add new ShadowEffect
-	effects add new ColorEffect(Color.WHITE)
-	font.loadGlyphs
-}
-
 object Util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x,in.y,in.z)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
@@ -205,7 +190,9 @@ object Util {
 		f
 	}
 	
+	
 	// Graham Scan algorithm O(n log n)
+	/*
 	def convexHull2d( points:List[Vec2] ) = {
 		def ccw(p1:Vec2, p2:Vec2, p3:Vec2) = (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x) > 0
 		def atan2(y:Float,x:Float) = math.atan2(y,x).toFloat
@@ -228,6 +215,7 @@ object Util {
 		
 		stack
 	}
+	*/
 	
 	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
 	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
@@ -280,11 +268,10 @@ object Util {
 				val n = cross(v2-v1,v0-v1)
 				// falls der Strahl auf die Sichtbare Seite des ersten Dreiecks trifft.
 				if( dot(n,rayDirection) <= 0 ) {
-					val projected = List(m*rayStart, m*v0, m*v1, m*v2)
+					val projected = Vector(m*rayStart, m*v0, m*v1, m*v2)
 					val projectedStart = projected(0)
-				
-					// arbeitet inplace auf dem Array
-					val convexhull = convexHull2d( projected )
+					
+					val convexhull = ChainHull2D( projected )
 					
 					// falls das dreieck getroffen wurde
 					if( !( convexhull contains projectedStart ) ){

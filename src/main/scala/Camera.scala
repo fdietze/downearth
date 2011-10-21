@@ -153,6 +153,7 @@ object GUI extends Camera{
 		applyortho
 		Main.showfps
 		Draw.drawTexts
+		DisplayEventManager.draw
 		glPushMatrix
 		glTranslatef(screenWidth/2,screenHeight/2,0)
 		glDisable(GL_LIGHTING)

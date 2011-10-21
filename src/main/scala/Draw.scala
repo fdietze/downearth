@@ -9,6 +9,20 @@ import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
 
+object MyFont{
+	import org.newdawn.slick.UnicodeFont
+	import org.newdawn.slick.font.effects._
+	import java.awt.{Font,Color};
+	import java.util.List
+	val font = new UnicodeFont(new Font("Monospace", Font.BOLD, 14))
+	font.addAsciiGlyphs
+	font.addGlyphs("äöüÄÖÜß")
+	val effects = font.getEffects.asInstanceOf[List[Effect]]
+	effects add new ShadowEffect
+	effects add new ColorEffect(Color.WHITE)
+	font.loadGlyphs
+}
+
 // nützliche Methoden, um verschiedene Objekte zu zeichnen.
 object Draw {
 	def renderAxis {
@@ -111,14 +125,25 @@ object Draw {
 		if( textCache.size > 0 ) {
 			glEnable(GL_BLEND)
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-			val pos = Vec2i(20,20)
+			val posx = 20
+			var posy = 20
 			for( msg <- textCache ) {
-				MyFont.font.drawString(pos.x, pos.y, msg, white)
-				pos.y += 20
+				MyFont.font.drawString(posx, posy, msg, white)
+				posy += 20
 			}
-			
 			glDisable(GL_BLEND)
 			textCache = Nil
 		}
+	}
+	
+	def drawDispayEvent(event:DisplayEvent,pos:Int){
+		import org.newdawn.slick.Color.white
+		
+		val posx = Config.screenWidth - 150
+		val posy = 20 + 20 * pos
+		
+		glEnable(GL_BLEND)
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+		MyFont.font.drawString(posx, posy, event.textMessage, white)
 	}
 }

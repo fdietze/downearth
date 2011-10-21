@@ -44,7 +44,7 @@ object Main {
 	}
 
 	def init {
-		Display.setTitle("Open World")
+		Display	setTitle "Open World"
 		if(fullscreen)
 			Display.setDisplayModeAndFullscreen(displayMode)
 		else
@@ -91,7 +91,7 @@ object Main {
 	}
 
 	def showfps {
-		val fps = "%d fps" format currentfps
+		val fps = "%3d fps" format currentfps
 		Draw addText fps
 	}
 	 
@@ -149,12 +149,14 @@ object Main {
 					fullscreen = !fullscreen
 					Display.setFullscreen(fullscreen)
 					Display.setDisplayMode(displayMode)
-					if( fullscreen )
+					if( fullscreen ) {
 						Mouse setGrabbed true
+					}
 				case `keyScreenshot` =>
 					screenShot( "screenshot" )
 				case `keyTurbo` =>
 					turbo = ! turbo
+					DisplayEventManager.showEventText("turbo is "+(if(turbo) "on" else "off"))
 				case `keyQuit` =>
 					finished = true
 				case `keyPausePhysics` =>

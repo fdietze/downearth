@@ -10,8 +10,7 @@ object Config{
 	import ConfigLoader._
 	
 	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
-	val minPredictionSize = loadInt("minPredictionSize") getOrElse 8
-	// wenn die minPredictionSize kleiner ist als die minMeshNodeSize, dann werden Meshes eingefügt die kleiner sind als die minMeshNodeSize, aber mas sieht so auch die Prediction beim streaming
+	val minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
 	
 	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
@@ -93,7 +92,6 @@ object Config{
 	val keyScreenshot     = loadKey("screesshot") getOrElse KEY_F10
 	val keyFullScreen     = loadKey("fullscreen") getOrElse KEY_F11
 
-
 	// settings changeable at runtime:
 	var debugDraw = false
 	var wireframe = false
@@ -101,10 +99,8 @@ object Config{
 	var frustumCulling = true
 	var turbo = false
 
-
-
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
 	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
-
 }
+

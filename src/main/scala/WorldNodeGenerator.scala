@@ -50,7 +50,7 @@ object WorldNodeGenerator {
 					}
 					
 				case nodeinfo:NodeInfo =>
-					println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
+					// println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
 					activeJobs += nodeinfo
 					// worker beauftragen falls verfügbar, sonst in die jobqueue
 					if(idlingWorkers.isEmpty) {
