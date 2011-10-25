@@ -23,7 +23,7 @@ object WorldNodeGenerator {
 		val workers = (1 to Config.numWorkingThreads) map (i => new Worker)
 		workers.foreach(_.start)
 		
-		val idlingWorkers = Queue[OutputChannel[NodeInfo]](workers:_*)
+		val idleWorkers = Queue[OutputChannel[NodeInfo]](workers:_*)
 		
 		def act = {
 			loop{
@@ -42,9 +42,9 @@ object WorldNodeGenerator {
 					sender ! job
 					activeJobs += job
 					
-					while( ! idlingWorkers.isEmpty ) {
+					while( ! idleWorkers.isEmpty ) {
 						val job = jobqueue.dequeue
-						val worker = idlingWorkers.dequeue
+						val worker = idleWorkers.dequeue
 						worker ! job
 						activeJobs += job
 					}
@@ -53,20 +53,20 @@ object WorldNodeGenerator {
 					// println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
 					activeJobs += nodeinfo
 					// worker beauftragen falls verfügbar, sonst in die jobqueue
-					if(idlingWorkers.isEmpty) {
+					if(idleWorkers.isEmpty) {
 						jobqueue enqueue nodeinfo
 					}
 					else {
-						val worker = idlingWorkers.dequeue
+						val worker = idleWorkers.dequeue
 						worker ! nodeinfo
 					}
 				case ( oldjob : NodeInfo, node : OctantOverMesh ) =>
-					// neuen Job vergeben falls verfügbar, sonst worker zu idlingWorkers hinzufügen
+					// neuen Job vergeben falls verfügbar, sonst worker zu idleWorkers hinzufügen
 					done enqueue ( oldjob -> node )
 					activeJobs -= oldjob
 					
 					if(jobqueue.isEmpty){
-						idlingWorkers enqueue sender
+						idleWorkers enqueue sender
 					}
 					else{
 						val job = jobqueue.dequeue
@@ -83,6 +83,7 @@ object WorldNodeGenerator {
 			}
 		}
 		start
+		override def toString = "Master"
 	}
 	
 	class Worker extends Actor {
@@ -140,6 +141,7 @@ object WorldNodeGenerator {
 				}
 			}
 		}
+		override def toString = "Worker"
 	}
 }
 

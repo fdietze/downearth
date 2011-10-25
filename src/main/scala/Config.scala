@@ -9,10 +9,10 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
-	val minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
-	val minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
+	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
+	var minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
 	
-	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
+	var worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
 	val vertexMaterials = false
 	val smoothShading = loadBoolean("smoothShading") getOrElse false
@@ -29,7 +29,7 @@ object Config{
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
 	val maxMeshVertexCount = 30000
-	val numWorkingThreads = Runtime.getRuntime.availableProcessors
+	val numWorkingThreads = Runtime.getRuntime.availableProcessors + 1
 	val cameraSpeed = 2f
 	val cameraTurboSpeed = 32f
 	val startAsGhost = true
@@ -41,12 +41,13 @@ object Config{
 
 	var fullscreen = loadBoolean("fullscreen") getOrElse false
 	
+	
 	// Vollbild-Modus mit höchster Auflösung
-	val fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
+	def fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
 	
 	val windowResolutionWidth  = loadInt("windowResolutionWidth")  getOrElse 1024
 	val windowResolutionHeight = loadInt("windowResolutionHeight") getOrElse  768
-	val windowDisplayMode     = new DisplayMode(windowResolutionWidth, windowResolutionHeight)
+	lazy val windowDisplayMode     = new DisplayMode(windowResolutionWidth, windowResolutionHeight)
 	
 	def displayMode =
 		if(fullscreen) 
