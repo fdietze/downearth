@@ -17,7 +17,7 @@ final class FloatNoise(source: NoiseSource) {
 
 object WorldGenerator {
 	val noise1 = new FloatNoise(ClassicalGradientNoise)
-	val cubesize = Config.worldWindowSize
+	import Config.{worldWindowSize => cubesize}
 	
 	def genWorld:WorldOctree = {
 		val octree = new WorldOctree(cubesize,Vec3i(-cubesize/2))

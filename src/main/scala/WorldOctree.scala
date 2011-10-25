@@ -85,17 +85,8 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	import scala.actors.Future
 
 	def generateStartArea {
-		
-		root = DeadInnerNode
-		
-		/*
-		for( vi ← (Vec3i(0) until Vec3i(rootNodeSize/minMeshNodeSize) ).toSeq.sortBy(v => length(v-worldWindowSize/minMeshNodeSize/2)) )  {
-			WorldNodeGenerator.Master ! NodeInfo(rootNodePos + vi * minMeshNodeSize, minMeshNodeSize)
-		}
-		*/
-		
+		root = DeadInnerNode // TODO GeneratingNode
 		WorldNodeGenerator.Master ! rootNodeInfo
-		
 		meshGenerated = true
 	}
 	
@@ -177,13 +168,15 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		root = rootB.insertNode(rootNodeInfo, nodeinfo, that)
 	}
 
-	override def fill( foo: Vec3i => Hexaeder ){
+	override def fill( foo: Vec3i => Hexaeder ) {
 		for( v <- rootNodePos until rootNodePos + rootNodeSize ) {
 			this(v) = foo(v)
 		}
 	}
 	
+
 	def isSet(info:NodeInfo):Boolean = {
+		//TODO: generating Node einführen und linearzeitabfrage rauswerfen
 		for( job <- WorldNodeGenerator.Master.activeJobs ){
 			if(job indexInRange info)
 				return true

@@ -17,55 +17,61 @@ case object PoisonPill
 object WorldNodeGenerator {
 	object Master extends DaemonActor {
 		val jobqueue = new SynchronizedQueue[NodeInfo]
-		val done  = new SynchronizedQueue[(NodeInfo,OctantOverMesh)]
-		val activeJobs = new HashSet[NodeInfo] with SynchronizedSet[NodeInfo]
+		val done  = new SynchronizedQueue[(NodeInfo,OctantOverMesh)] //TODO: im worldoctree speichern
+		// Alle im moment bearbeiteten jobs
+		val activeJobs = new HashSet[NodeInfo] with SynchronizedSet[NodeInfo] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
 		
-		val workers = (1 to Config.numWorkingThreads) map (i => new Worker)
+		val workers = (1 to Config.numWorkingThreads) map (i => new Worker(i))
 		workers.foreach(_.start)
 		
 		val idleWorkers = Queue[OutputChannel[NodeInfo]](workers:_*)
 		
+		
+		def distributeJobs {
+			while( !idleWorkers.isEmpty && !jobqueue.isEmpty ){
+				val job = jobqueue.dequeue
+				val worker = idleWorkers.dequeue
+				worker ! job
+				
+				// idleWorkers.dequeue ! jobqueue.dequeue
+			}
+		}
+		
 		def act = {
-			loop{
+			loop {
 				react{
 				case ( oldjob:NodeInfo, nodeinfoseq: Seq[_]) =>
-					sender ! nodeinfoseq.head
-					// done enqueue (oldjob, DeadNode)
+					idleWorkers += sender
 					
-					nodeinfoseq.tail foreach { 
-					case ni:NodeInfo => 
-						jobqueue enqueue ni
+					nodeinfoseq foreach { 
+					case nodeInfo:NodeInfo => 
+						jobqueue enqueue nodeInfo
+						activeJobs += nodeInfo
 					}
+					
+					distributeJobs
 					activeJobs -= oldjob
 					
-					val job = jobqueue.dequeue
-					sender ! job
-					activeJobs += job
-					
-					while( ! idleWorkers.isEmpty ) {
-						val job = jobqueue.dequeue
-						val worker = idleWorkers.dequeue
-						worker ! job
-						activeJobs += job
-					}
-					
 				case nodeinfo:NodeInfo =>
-					// println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
 					activeJobs += nodeinfo
+					// println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
 					// worker beauftragen falls verfügbar, sonst in die jobqueue
-					if(idleWorkers.isEmpty) {
+					if( idleWorkers.isEmpty ) {
 						jobqueue enqueue nodeinfo
 					}
 					else {
 						val worker = idleWorkers.dequeue
 						worker ! nodeinfo
 					}
+
+				// Worker meldet abgeschlossenen Job
 				case ( oldjob : NodeInfo, node : OctantOverMesh ) =>
 					// neuen Job vergeben falls verfügbar, sonst worker zu idleWorkers hinzufügen
 					done enqueue ( oldjob -> node )
 					activeJobs -= oldjob
 					
-					if(jobqueue.isEmpty){
+					if( jobqueue.isEmpty ) {
+						assert( !(idleWorkers contains sender), "IdleWorkers nicht Aktuell" )
 						idleWorkers enqueue sender
 					}
 					else{
@@ -73,6 +79,8 @@ object WorldNodeGenerator {
 						sender ! job
 						activeJobs += job
 					}
+				
+				
 				case PoisonPill =>
 					for( worker <- workers )
 						worker ! PoisonPill
@@ -86,12 +94,14 @@ object WorldNodeGenerator {
 		override def toString = "Master"
 	}
 	
-	class Worker extends Actor {
+	class Worker (id:Int) extends Actor {
 		var alive = true
+		var isActive = false
 		def act = {
-			while(alive){
+			while(alive) {
 				receive {
 					case nodeinfo @ NodeInfo(nodepos, nodesize) =>
+						isActive = true
 						// println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
 						val interval = Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	
 						
@@ -103,8 +113,8 @@ object WorldNodeGenerator {
 							octree.root = new Leaf(FullHexaeder)
 							octree.genMesh(x => FullHexaeder)
 							
+							isActive = false
 							Master ! Tuple2(nodeinfo, octree.root)
-
 						}
 						
 						else if(interval.isNegative) {
@@ -115,6 +125,7 @@ object WorldNodeGenerator {
 							octree.root = new Leaf(EmptyHexaeder)
 							octree.genMesh(x => EmptyHexaeder)
 							
+							isActive = false
 							Master ! Tuple2(nodeinfo, octree.root)
 						}
 
@@ -126,12 +137,14 @@ object WorldNodeGenerator {
 								// für alle Kindknoten die Nodeinfo an Master senden
 								
 								// println("Sende nodeinfos an Master...")
+								isActive = false
 								Master ! Tuple2(nodeinfo, Range(0,8).map( i => nodeinfo(i)))
 							}
 							// sonst samplen
 							else {
 								// println(nodeinfo + ": Bereich wird gesamplet")
 								val node = WorldGenerator genWorldAt nodeinfo
+								isActive = false
 								Master ! Tuple2(nodeinfo, node.root)
 							}
 						}
@@ -141,7 +154,7 @@ object WorldNodeGenerator {
 				}
 			}
 		}
-		override def toString = "Worker"
+		override def toString = "Worker(%d %b)".format(id, isActive)
 	}
 }
 

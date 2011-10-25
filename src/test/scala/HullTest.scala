@@ -27,10 +27,12 @@ class ConvexHullTest extends FunSuite {
 		assert( hull === ChainHull2D(data) )
 	}
 	
+	/*
 	test("test4") {
 		val data   = Vector(Vec2(0.55752814f, -0.3837424f), Vec2(0.7032331f, 0.39506763f), Vec2(1.4141924f, -0.82710135f), Vec2(0.0f, -0.8313947f))
 		val hull   = Util.convexHull2d(data.toList)
 		val result = ChainHull2D(data)
 		assert(hull.toSet === result.toSet)
 	}
+	*/
 }

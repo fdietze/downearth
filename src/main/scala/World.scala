@@ -14,9 +14,8 @@ object World {
 	
 	val octree = {
 		WorldSerializer.load match {
-		case Some(s) => s
-		case None => 
-			time("genworld: ")(WorldGenerator.genWorld)
+			case Some(s) => s
+			case None => WorldGenerator.genWorld
 		}
 	}
 	
@@ -26,7 +25,7 @@ object World {
 	//raytracer zum anclicken von Zellen
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Float):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
-		for(i <- 0 until 3){
+		for(i <- 0 until 3) {
 			if(from(i) == floor(from(i)))
 				from(i) += 0.000001f
 		}
@@ -52,7 +51,7 @@ object World {
 		// todo octreeoptimierung
 		var axis = 0
 		
-		while(h == null && i < distance){
+		while(h == null && i < distance) {
 			if(tMax.x < tMax.y) {
 				if(tMax.x < tMax.z) {
 					axis = 0
