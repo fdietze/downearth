@@ -45,7 +45,7 @@ object Benchmark {
 				print( WorldNodeGenerator.Master.idleWorkers.size + " " )
 				Thread.sleep(100)
 				if( WorldNodeGenerator.Master.idleWorkers.size == Config.numWorkingThreads
-				  WorldNodeGenerator.Master.jobqueue.isEmpty
+				 && WorldNodeGenerator.Master.jobqueue.isEmpty
 				 && WorldNodeGenerator.Master.activeJobs.isEmpty
 				)
 					running = false
