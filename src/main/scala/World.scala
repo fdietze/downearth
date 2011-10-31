@@ -45,7 +45,7 @@ object World {
 		tDelta.y = 1/abs(t.y)
 		tDelta.z = 1/abs(t.z)
 		
-		var h:Hexaeder = null
+		var h:Polyeder = null
 		var i = 0
 		
 		// todo octreeoptimierung
@@ -76,7 +76,7 @@ object World {
 
 			h = apply(pos)
 
-			if(!Util.rayHexaederIntersect(from-pos,direction,h))
+			if(!Util.rayPolyederIntersect(from-pos,direction,h))
 				h = null
 			
 			i += 1
@@ -86,7 +86,7 @@ object World {
 		prepos(axis) -= step(axis)
 		
 		if(h != null){
-			if(top && rayCellTest(from-pos,direction,h))
+			if(top && rayCellTest(from-pos,direction,h.asInstanceOf[Hexaeder]))
 				Some(prepos)
 			else
 				Some(pos)
@@ -95,7 +95,7 @@ object World {
 			None
 	}
 	
-	def update(pos:Vec3i,h:Hexaeder){
+	def update(pos:Vec3i,h:Polyeder){
 		octree(pos) = h
 		BulletPhysics.worldChange(pos)
 	}

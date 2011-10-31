@@ -111,12 +111,12 @@ object Player {
 
 object BuildInterface{
 	val full = FullHexaeder
-	val half = new PartialHexaeder(Z = 0x44440000)
-	val quarter = new PartialHexaeder(Z = 0x44440000, Y = 0x44004400)
-	val eighth = new PartialHexaeder(0x40404040,0x44004400,0x44440000)
-	val rampA = new PartialHexaeder(Z = 0x00440000)
-	val rampB = new PartialHexaeder(Z = 0x44880000)
-	val rampC = new PartialHexaeder(Z = 0x00880000)
+	val half = new Hexaeder(Z = 0x44440000)
+	val quarter = new Hexaeder(Z = 0x44440000, Y = 0x44004400)
+	val eighth = new Hexaeder(0x40404040,0x44004400,0x44440000)
+	val rampA = new Hexaeder(Z = 0x00440000)
+	val rampB = new Hexaeder(Z = 0x44880000)
+	val rampC = new Hexaeder(Z = 0x00880000)
 	
 	// wird benötigt um den Korrekten Hexaeder hervorzuheben
 	// true: Momentan am Bauen
@@ -124,7 +124,7 @@ object BuildInterface{
 	var inventoryMass = 0f
 	var buildStatus = false
 
-	def makeRotations(h:Hexaeder) = {
+	def makeRotations(h:Polyeder) = {
 		val h1 = h.rotateZ
 		val h2 = h1.rotateZ
 		val h3 = h2.rotateZ
@@ -178,11 +178,11 @@ object BuildInterface{
 			glDisable(GL_DEPTH_TEST)
 			glEnable(GL_BLEND)
 			glColor4f(1,1,1,0.25f)
-			Draw.renderHexaeder(hexaeder)
+			Draw renderPolyeder hexaeder
 			glDisable(GL_BLEND)
 			//TODO: Disable Depth-test and draw only the side of the hexaeder which has polygons
 			glEnable(GL_DEPTH_TEST)
-			Draw.renderHexaeder(hexaeder)
+			Draw renderPolyeder hexaeder
 			glPopMatrix
 			glEnable(GL_LIGHTING)
 		case None =>

@@ -219,7 +219,7 @@ object Util {
 	
 	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
 	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
-	def rayHexaederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder):Boolean = {
+	def rayPolyederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Polyeder):Boolean = {
 		if( (h eq EmptyHexaeder) || (h eq UndefHexaeder) )
 			false
 		else{

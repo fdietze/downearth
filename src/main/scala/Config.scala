@@ -12,7 +12,7 @@ object Config{
 	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
 	var minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
 	
-	var worldWindowSize = loadInt("worldWindowSize") getOrElse 64
+	val worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
 	val vertexMaterials = false
 	val smoothShading = loadBoolean("smoothShading") getOrElse false

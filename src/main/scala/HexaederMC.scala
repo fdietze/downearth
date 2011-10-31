@@ -699,7 +699,7 @@ object HexaederMC {
 	}
 	
 	// Erzeugt aus den Daten für Stabile Fälle die eigentlichen Hexaeder
-	def data2hexaeder(data: IndexedSeq[Float], exactCase:Int): Hexaeder = {
+	def data2hexaeder(data: IndexedSeq[Float], exactCase:Int): Polyeder = {
 		caseTypeLookup(exactCase) match{
 			case `allNegative` =>
 				return EmptyHexaeder
@@ -710,7 +710,7 @@ object HexaederMC {
 				
 				
 			case `onePositive` =>
-				val hexaeder = new PartialHexaeder
+				val hexaeder = new Hexaeder
 				
 				//Index der Positiven Ecke
 				val p0 = log2(exactCase)
@@ -774,7 +774,7 @@ object HexaederMC {
 				
 				
 			case `twoPositivesConnected` =>
-				val hexaeder = new PartialHexaeder
+				val hexaeder = new Hexaeder
 				val Seq(p0, p1) = extractPositiveEdges(exactCase)
 
 				val axisa = otherAxisA(p0 ^ p1)
@@ -800,7 +800,7 @@ object HexaederMC {
 				
 
 			case `fourPositivesConnectedOnPlane` =>
-				val hexaeder = new PartialHexaeder
+				val hexaeder = new Hexaeder
 				
 				val Seq(n1,n2,n3,n4) = extractNegativeEdges(exactCase)
 				
@@ -827,7 +827,7 @@ object HexaederMC {
 				n0 und n2 sind 0, und nur der vertex bei n1 wird eingedrückt
 				*/
 				
-				val hexaeder = new PartialHexaeder
+				val hexaeder = new Hexaeder
 
 				val Seq(a,b,c) = extractNegativeEdges(exactCase)
 				val axis = 7 - ((a & b & c) ^ (a | b | c))

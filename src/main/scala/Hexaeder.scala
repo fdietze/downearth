@@ -5,8 +5,9 @@ import simplex3d.math.{Vec3i,Vec3b,ConstVec2i,all}
 import simplex3d.math.float.functions.{lessThanEqual,greaterThanEqual,normalize,cross,dot,Pi,round,length}
 import simplex3d.math.float.{Vec4,Vec3,Vec2,Mat3x4}
 
+import collection.immutable.VectorBuilder
 // Konstanten zur Verwendung im Hexaeder
-object Hexaeder {
+object Polyeder {
 	// die Lookup-Tabelle für die Vertex-Indizes der sechs Seitenflächen
 	val detail = Config.hexaederResolution
 	assert( 0 < detail && detail <= 15 )
@@ -15,20 +16,34 @@ object Hexaeder {
 	val mask = detail << 0  | detail << 4  | detail << 8  | detail << 12 | 
 	           detail << 16 | detail << 20 | detail << 24 | detail << 28
 
-	def apply(vertices: Seq[Vec3]): PartialHexaeder = {
-		assert(vertices.size == 8)
-		val h = new PartialHexaeder
-		var i = 0
-		for(v ← vertices){
-			h(i) = v
-			i += 1
+	def apply(vertices: Seq[Vec3]): Polyeder = {
+		if(vertices.size == 8){
+			val h = new Hexaeder
+			var i = 0
+			for(v ← vertices){
+				h(i) = v
+				i += 1
+			}
+			h
 		}
-		h
+		else if(vertices.size == 10){
+			val h = new Polyeder10
+			var i = 0
+			for(v ← vertices){
+				h(i) = v
+				i += 1
+			}
+			h
+		}
+		else {
+			throw new Exception("entweder 8 oder 10 Verdices, etwas anderes wird zur Zeit noch nicht unterstützt")
+		}
 	}
 	
-	def apply(v0:Vec3, v1:Vec3, v2:Vec3, v3:Vec3, v4:Vec3, v5:Vec3, v6:Vec3, v7:Vec3):Hexaeder =
+	def apply(v0:Vec3, v1:Vec3, v2:Vec3, v3:Vec3, v4:Vec3, v5:Vec3, v6:Vec3, v7:Vec3):Polyeder =
 		apply(Seq(v0,v1,v2,v3,v4,v5,v6,v7))
 	
+	// für den Hexaeder
 	val planelookup = Vector(
 		Vector(0,2,4,6),
 		Vector(1,3,5,7),
@@ -39,123 +54,37 @@ object Hexaeder {
 	)
 }
 
-import Hexaeder._
+import Polyeder._
 
-trait Hexaeder extends Serializable {
+trait Polyeder extends Serializable {
 	def apply(p:Int,axis:Int):Float
 	def apply(p:Int):Vec3
 	def vertices:Seq[Vec3]
+	def numVerts:Int
 
 	def noVolume:Boolean
 	def volume:Float
 	def planemax(axis:Int, direction:Int):Boolean
 	def planecoords(axis:Int, direction:Int):Seq[Vec2]
+	
+	// das alte planetriangles was in zukunft rausfliegen soll wenn der Polyeder existiert
 	def planetriangles(axis:Int, direction:Int):Seq[Vec3]
-	def normals:Seq[Vec3]
-	def rotateZ:Hexaeder
+	// alle Dreiecke die verdecken können, bzw verdeckt werder können pro Zellwand.
+	def outerTriangles(axis:Int, direction:Int):Seq[Vec3]
+	// alle nicht verdeckenden/verdeckbaren Dreiecke
+	def innerTriangles:Seq[Vec3]
+	// all Dreiecke unabhängig davon, ob sie verdeckt werden oder nicht
+	def allTriangles:Seq[Vec3]
+	def rotateZ:Polyeder
 }
 
-// TODO ein immutable Hexaeder, denn im Octree dürfen Hexaeder nicht verändert werden ohne sie auszutauschen
-case object FullHexaeder extends PartialHexaeder{
-	override def toString = "[X]"
-	private val m_normals = Array(Vec3( 1,0,0),Vec3(0, 1,0),Vec3(0,0, 1),Vec3(-1,0,0),Vec3(0,-1,0),Vec3(0,0,-1))
-	override def normals = m_normals
-	override def planemax(axis:Int, direction:Int) = true
-	override def rotateZ = this
-	override def volume = 1
-}
-
-case object EmptyHexaeder extends Hexaeder{
-	def apply(p:Int, axis:Int) = 0
-	def apply(p:Int) = Vec3(0)
-	def vertices = Nil
-
-	def noVolume = true
-	def planemax(axis:Int, direction:Int) = false
-	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
-	def planetriangles(axis:Int, direction:Int) = Nil
-	def normals = Nil
-	def rotateZ = this
-	def volume = 0
-	
-	override def toString = "[ ]"
-}
-
-// Platzhalter für Hexaeder, die in der Generierung noch fehler Haben. Solle 
-// nicht mehr auftreten
-case object BrokenHexaeder extends PartialHexaeder(X=0x53535353, Y=0x55335533, Z=0x55553333)
-
-case object UndefHexaeder extends Hexaeder {
-	def apply(p:Int, axis:Int) = 0
-	def apply(p:Int) = Vec3(0)
-	def vertices = Nil
-	def noVolume = true
-	def planemax(axis:Int, direction:Int) = false
-	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
-	def planetriangles(axis:Int, direction:Int) = Nil
-	def normals = Nil
-	def rotateZ = this
-	override def toString = "[~]"
-	def volume = 0
-}
-
-class PartialHexaeder(
-	var X:Int = 0xF0F0F0F0 & mask,
-	var Y:Int = 0xFF00FF00 & mask,
-	var Z:Int = 0xFFFF0000 & mask)
-		extends Hexaeder {
-	
-	//   Stores 8 Vertices * 3 Nibbles
-	//   +---+---+---+---+---+---+---+---+---+---+---+---+
-	// i | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |10 |11 |
-	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	//   |x|x|x|x|x|x|x|x|y|y|y|y|y|y|y|y|z|z|z|z|z|z|z|z|
-	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-	implicit def int2byte(i:Int) = i.toByte
-	implicit def bool2int(b:Boolean) = if(b) 1 else 0
-	
-	override def toString = "PartialHexaeder(0x%h, 0x%h, 0x%h)".format(X,Y,Z)
-
-	override def equals(that:Any) = {
-		that match {
-		case h:PartialHexaeder =>
-			(X == h.X && Y == h.Y && Z == h.Z)
-		case _ => 
-			false
-		}
-	}
-	
-	def checkrange(p:Int) = 0 <= p && p < 8 // 8 Vertices
-	def checkvalue(v:Float) = 0 <= v && v <= 1f
-	def checkvertex(v:Vec3) = all(greaterThanEqual(v,Vec3.Zero)) && all(lessThanEqual(v,Vec3.One))
-	def chechvertexi(v:Vec3i) = all( greaterThanEqual(v,Vec3i.Zero) ) && all(lessThanEqual(v,Vec3i(detail)))
-	
-	def writeX(i:Int,v:Int){
-		assert(v <= detail)
-		X = (X & ~(15 << (i << 2))) | v << (i << 2)
-	}
-	def readX(i:Int) = (X >> (i << 2)) & 15
-	def writeY(i:Int,v:Int){
-		assert(v <= detail)
-		Y = (Y & ~(15 << (i << 2))) | v << (i << 2)
-	}
-	def readY(i:Int) = (Y >> (i << 2)) & 15
-	def writeZ(i:Int,v:Int){
-		assert(v <= detail)
-		Z = (Z & ~(15 << (i << 2))) | v << (i << 2)
-	}
-	def readZ(i:Int) = (Z >> (i << 2)) & 15
-	
-	def readVertex(p:Int) = {
-		Vec3i(readX(p),readY(p),readZ(p))
-	}
-	
-	def writeVertex(p:Int, v:Vec3i) = {
-		writeX(p,v.x)
-		writeY(p,v.y)
-		writeZ(p,v.z)
-	}
+abstract class APolyeder extends Polyeder {
+	def writeX(i:Int,v:Int):Unit
+	def readX(i:Int):Int
+	def writeY(i:Int,v:Int):Unit
+	def readY(i:Int):Int
+	def writeZ(i:Int,v:Int):Unit
+	def readZ(i:Int):Int
 	
 	def readComponent(p:Int, axis:Int):Int = {
 		axis match{
@@ -172,6 +101,16 @@ class PartialHexaeder(
 			case 2 => writeZ(p,v)
 		}
 	}
+	
+	def readVertex(p:Int) = {
+		Vec3i(readX(p),readY(p),readZ(p))
+	}
+	
+	def writeVertex(p:Int, v:Vec3i) = {
+		writeX(p,v.x)
+		writeY(p,v.y)
+		writeZ(p,v.z)
+	}
 
 	def apply(p:Int) = {
 		assert(checkrange(p))
@@ -183,8 +122,16 @@ class PartialHexaeder(
 		readComponent(p, axis) / detailf
 	}
 	
-	def apply(p:Vec3b):Vec3 = apply(p.x + (p.y << 1) + (p.z << 2))
-	def apply(p:Vec3b, axis:Int):Float = apply(p.x + (p.y << 1) + (p.z << 2), axis)
+	def apply(p:Vec3b):Vec3 = {
+		// implicit def int2byte(i:Int) = i.toByte
+		implicit def bool2int(b:Boolean) = if(b) 1 else 0
+		apply(p.x + (p.y << 1) + (p.z << 2))
+	}
+	
+	def apply(p:Vec3b, axis:Int):Float = {
+		implicit def bool2int(b:Boolean) = if(b) 1 else 0
+		apply(p.x + (p.y << 1) + (p.z << 2), axis)
+	}
 
 	
 	def update(p:Int,v:Vec3) = {
@@ -202,9 +149,15 @@ class PartialHexaeder(
 		writeComponent(p, axis, (round(v*detailf)).toInt)
 	}
 
-	def update(p:Vec3b,v:Vec3){ update(p.x + (p.y << 1) + (p.z << 2),v) }
-	def update(p:Vec3b,axis:Int,v:Int){ update(p.x + (p.y << 1) + (p.z << 2),axis,v) }
+	//def update(p:Vec3b,v:Vec3){ update(p.x + (p.y << 1) + (p.z << 2),v) }
+	//def update(p:Vec3b,axis:Int,v:Int){ update(p.x + (p.y << 1) + (p.z << 2),axis,v) }
 	
+	def checkrange(p:Int) = 0 <= p && p < numVerts
+	def checkvalue(v:Float) = 0 <= v && v <= 1f
+	def checkvertex(v:Vec3) = all(greaterThanEqual(v,Vec3.Zero)) && all(lessThanEqual(v,Vec3.One))
+	def chechvertexi(v:Vec3i) = all( greaterThanEqual(v,Vec3i.Zero) ) && all(lessThanEqual(v,Vec3i(detail)))
+	
+	/*
 	// gibt 2d koordinaten einer seitenfläche an.
 	// wird zur überprüfung, ob die Seite Verdeckt wird verwendet
 	def accessor(k:Vec3i,axis:Int):ConstVec2i = {
@@ -214,25 +167,128 @@ class PartialHexaeder(
 			case 2 => k.xy
 		}
 	}
+	*/
 	
-	// gibt eine Collection mit allen normalen der oberfläche
-	def normals = {
-		import scala.collection.mutable.ArrayBuilder
-		val normalBuilder = ArrayBuilder.make[Vec3]
-		for(axis <- 0 to 2; direction <- 0 to 1){
-			if(planemax(axis,direction)) {
-				val normal = Vec3(0)
-				normal(axis) = (direction << 1) - 1
-				normalBuilder += normal
+	// erstellt eine Kopie von diesem Hexaeder der 90° um die Z-Achse rotiert wurde.
+	def rotateZ = {
+		val verts = vertices map ( v => Vec3(1-v.y, v.x, v.z) )
+		val newverts = Vector(2,0,3,1,6,4,7,5) map verts
+
+		def check(s:Seq[Vec3]):Boolean = {
+			for(v ← s){
+				if(! all(lessThanEqual(v,Vec3.One)))
+					return false
+				if(! all(greaterThanEqual(v,Vec3.Zero)))
+					return false
 			}
-			else {
-				val v = planetriangles(axis,direction)
-				normalBuilder += normalize(cross(v(2)-v(1),v(0)-v(1)))
-				normalBuilder += normalize(cross(v(5)-v(4),v(3)-v(4)))
-			}
+			return true
 		}
-		normalBuilder.result
+		Polyeder(newverts)
 	}
+	
+	def volume = {
+		var vol = 0f
+		val t = allTriangles
+		for(i ← Range(0,t.size,3) ) {
+			val normal = cross(t(i+2)-t(i+1),t(i+0)-t(i+1)) // Normale nach aussen
+			val v3 = t(i+1)+normal
+			val h = normalize( cross(t(i+2) - t(i+1), v3 - t(i+1)) )
+			val height = dot(h, t(i+1)) - dot(h, t(i+0))
+			val area = length(t(i+2)-t(i+1))*height*(0.5f)
+			vol += area * dot(normalize(normal),t(i+0)) / 3
+		}
+		vol
+	}
+}
+
+// TODO ein immutable Hexaeder, denn im Octree dürfen Hexaeder nicht verändert werden ohne sie auszutauschen
+case object FullHexaeder extends Hexaeder{
+	override def toString = "[X]"
+	override def planemax(axis:Int, direction:Int) = true
+	override def rotateZ = this
+	override def volume = 1
+	override def innerTriangles = Nil
+}
+
+case object EmptyHexaeder extends Polyeder {
+	def numVerts = 0
+	def apply(p:Int, axis:Int) = 0
+	def apply(p:Int) = Vec3(0)
+	def vertices = Nil
+	def noVolume = true
+	def planemax(axis:Int, direction:Int) = false
+	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
+	def rotateZ = this
+	def volume = 0
+	def planetriangles(axis:Int, direction:Int) = Nil
+	def outerTriangles(axis:Int, direction:Int) = Nil
+	def innerTriangles = Nil
+	def allTriangles = Nil
+	override def toString = "[ ]"
+}
+
+// Platzhalter für Hexaeder, die in der Generierung noch fehler Haben. Solle 
+// nicht mehr auftreten
+case object BrokenHexaeder extends Hexaeder(X=0x53535353, Y=0x55335533, Z=0x55553333)
+
+case object UndefHexaeder extends Polyeder {
+	def numVerts = 0
+	def apply(p:Int, axis:Int) = 0
+	def apply(p:Int) = Vec3(0)
+	def vertices = Nil
+	def innerTriangles = Nil
+	def noVolume = true
+	def planemax(axis:Int, direction:Int) = false
+	def planecoords(axis:Int, direction:Int):Seq[Vec2] = Nil
+	def planetriangles(axis:Int, direction:Int) = Nil
+	def outerTriangles(axis:Int, direction:Int) = Nil
+	def allTriangles = Nil
+	def rotateZ = this
+	override def toString = "[~]"
+	def volume = 0
+}
+
+class Hexaeder(
+	var X:Int = 0xF0F0F0F0 & mask,
+	var Y:Int = 0xFF00FF00 & mask,
+	var Z:Int = 0xFFFF0000 & mask)
+		extends APolyeder {
+	
+	//   Stores 8 Vertices * 3 Nibbles
+	//   +---+---+---+---+---+---+---+---+---+---+---+---+
+	// i | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |10 |11 |
+	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	//   |x|x|x|x|x|x|x|x|y|y|y|y|y|y|y|y|z|z|z|z|z|z|z|z|
+	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	
+	def numVerts = 8
+	
+	override def toString = "Hexaeder(0x%h, 0x%h, 0x%h)".format(X,Y,Z)
+
+	override def equals(that:Any) = {
+		that match {
+		case h:Hexaeder =>
+			(X == h.X && Y == h.Y && Z == h.Z)
+		case _ => 
+			false
+		}
+	}
+	
+	def writeX(i:Int,v:Int){
+		assert(v <= detail)
+		X = (X & ~(15 << (i << 2))) | v << (i << 2)
+	}
+	def readX(i:Int) = (X >> (i << 2)) & 15
+	def writeY(i:Int,v:Int){
+		assert(v <= detail)
+		Y = (Y & ~(15 << (i << 2))) | v << (i << 2)
+	}
+	def readY(i:Int) = (Y >> (i << 2)) & 15
+	def writeZ(i:Int,v:Int){
+		assert(v <= detail)
+		Z = (Z & ~(15 << (i << 2))) | v << (i << 2)
+	}
+	def readZ(i:Int) = (Z >> (i << 2)) & 15
 	
 	// Gibt eine Liste aller 8 Vertices zurück
 	def vertices = (0 until 8) map apply
@@ -275,24 +331,94 @@ class PartialHexaeder(
 	
 	def planetriangles(axis:Int, direction:Int) = {
 		val p = plane(axis, direction)
-		val indices =
-			if( direction == 1 )
-				Vector(p(0),p(1),p(3),p(2))
-			else
-				Vector(p(1),p(0),p(2),p(3))
 		
-		val Vector(v0,v1,v2,v3) = indices.map(apply _)
+		val v0 = apply(p(1^direction))
+		val v1 = apply(p(0^direction))
+		val v2 = apply(p(2^direction))
+		val v3 = apply(p(3^direction))
+		
 		// koordinaten für zwei Dreiecke
-		val triangleCoords =
-			if(dot(v3-v1,cross(v2-v1,v0-v1)) > 0)
-				Vector(v0,v1,v3,  v3,v1,v2)
-			else
-				Vector(v0,v1,v2,  v0,v2,v3)
-		
-		triangleCoords
+		if(dot(v3-v1,cross(v2-v1,v0-v1)) > 0)
+			Vector(v0,v1,v3,  v3,v1,v2)
+		else
+			Vector(v0,v1,v2,  v0,v2,v3)
 	}
 	
-
+	def outerTriangles(axis:Int, direction:Int) = {
+		// koordinaten für zwei Dreiecke
+		val triangles = planetriangles(axis,direction)
+		
+		val t0 =
+			triangles(0)(axis) == direction &&
+			triangles(1)(axis) == direction &&
+			triangles(2)(axis) == direction
+		
+		val t1 =
+			triangles(3)(axis) == direction &&
+			triangles(4)(axis) == direction &&
+			triangles(5)(axis) == direction
+		
+		if( t0 && t1 ) 
+			triangles // beide Dreiecke sind aussen
+		else if ( t0 )
+			Vector(triangles(0),triangles(1),triangles(2))
+		else if ( t1 )
+			Vector(triangles(3),triangles(4),triangles(5))
+		else
+			Nil
+	}
+	
+	def innerTriangles:Seq[Vec3] = {
+		val triangles = new VectorBuilder[Vec3]
+		var i = 0
+		while(i < 6){
+			val axis = (i >> 1)
+			val direction = (i & 1).toFloat
+			val p = plane(axis,i&1)
+			
+			val indices =
+				if( direction == 1 )
+					Vector(p(0),p(1),p(3),p(2))
+				else
+					Vector(p(1),p(0),p(2),p(3))
+		
+			val Vector(v0,v1,v2,v3) = indices.map(apply _)
+			
+			// koordinaten für zwei Dreiecke
+			
+			if( dot(v3-v1,cross(v2-v1,v0-v1) ) > 0 ){
+				if( v0(axis) != direction || v1(axis) !=direction || v3(axis) != direction ){
+					triangles += v0
+					triangles += v1
+					triangles += v3
+				}
+				
+				if( v3(axis) != direction || v1(axis) !=direction || v2(axis) != direction ){
+					triangles += v3
+					triangles += v1
+					triangles += v2
+				}
+			}
+			else{
+				if( v0(axis) != direction || v1(axis) !=direction || v2(axis) != direction ){
+					triangles += v0
+					triangles += v1
+					triangles += v2
+				}
+				
+				if( v0(axis) != direction || v2(axis) !=direction || v3(axis) != direction ){
+					triangles += v0
+					triangles += v2
+					triangles += v3
+				}
+			}
+			
+			i += 1
+		}
+		
+		triangles.result
+	}
+	
 	// Testet, ob zwei Seitenflächen direkt aneinander liegen
 	// wird benötigt, denn alle Hexaeder ohne Volumen sollen durch
 	// den EmptyHexaeder ersetzt werden, damit sie im Octree auch
@@ -319,57 +445,26 @@ class PartialHexaeder(
 		return false
 	}
 	
-	// erstellt eine Kopie von diesem Hexaeder der 90° um die Z-Achse rotiert wurde.
-	def rotateZ = {
-		// def map(x:Int) = (0x000F000F & x) << 4 | (0x00F000F0 & x) << 8 | (0x0F000F00 & x) >> 8 | (0xF000F000 & x) >> 4
-		val verts = vertices map ( v => Vec3(1-v.y, v.x, v.z) )
-		val newverts = Vector(2,0,3,1,6,4,7,5) map verts
-
-		def check(s:Seq[Vec3]):Boolean = {
-			for(v ← s){
-				if(! all(lessThanEqual(v,Vec3.One)))
-					return false
-				if(! all(greaterThanEqual(v,Vec3.Zero)))
-					return false
-			}
-			return true
-		}
-		Hexaeder(newverts)
-	}
-	
 	def allTriangles = {
-		val builder = new collection.immutable.VectorBuilder[Vec3]
+		val builder = new VectorBuilder[Vec3]
 		builder.sizeHint(36)
 		for(axis ← 0 to 2; dir ← 0 to 1) {
-			val Vector(t0,t1,t2,t3,t4,t5) = planetriangles(axis,dir)
-			if(t0 != t1 && t1 != t2 && t2 != t0) {
-				builder += t0
-				builder += t1
-				builder += t2
+			val t = planetriangles(axis,dir)
+			if(t(0) != t(1) && t(1) != t(2) && t(2) != t(0)) {
+				builder += t(0)
+				builder += t(1)
+				builder += t(2)
 			}
-			if(t3 != t4 && t4 != t5 && t5 != t3) {
-				builder += t3
-				builder += t4
-				builder += t5
+			if(t(3) != t(4) && t(4) != t(5) && t(5) != t(3)) {
+				builder += t(3)
+				builder += t(4)
+				builder += t(5)
 			}
 		}
 		builder.result
 	}
-	
-	def volume = {
-		var vol = 0f
-		val t = allTriangles
-		for(i ← Range(0,t.size,3) ) {
-			val normal = cross(t(i+2)-t(i+1),t(i+0)-t(i+1)) // Normale nach aussen
-			val v3 = t(i+1)+normal
-			val h = normalize( cross(t(i+2) - t(i+1), v3 - t(i+1)) )
-			val height = dot(h, t(i+1)) - dot(h, t(i+0))
-			val area = length(t(i+2)-t(i+1))*height*(0.5f)
-			vol += area * dot(normalize(normal),t(i+0)) / 3
-		}
-		vol
-	}
 }
+
 
 
 
