@@ -5,11 +5,11 @@ import simplex3d.math.float._
 import scala.collection.mutable.Stack
 
 class GenerationBenchmark extends FunSuite {
-	test("test1") {
+	test("parameter combinations") {
 		val configs = Map(
-			'minMeshNodeSize -> Seq(4,8,16,32,64),
-			'minPredictionSize -> Seq(4,8,16,32,64),
-			'worldWindowSize -> Seq(128)
+			'minMeshNodeSize -> Seq(16),
+			'minPredictionSize -> Seq(16),
+			'worldWindowSize -> Seq(16)
 		)
 		
 		val timer = new Util.Timer

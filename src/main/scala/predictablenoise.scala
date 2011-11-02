@@ -45,15 +45,6 @@ object Noise {
 			i += 1
 		}
 
-
-/*		for( i <- 0 to n-1 ) {
-			tmp = result(i)
-			for( j <- i+1 to n ) {
-				save = lerp(t, tmp, result(j))
-				tmp = result(j)
-				result(j) = save
-			}
-		}*/
 		result
 	}
 
@@ -81,14 +72,6 @@ object Noise {
 			i += 1
 		}
 
-/*		for( i <- 0 to n-1 ) {
-			tmp = result(n-i)
-			for( j <- inclusive(n-i-1,0,-1) ) {
-				save = lerp(t, tmp, result(j))
-				tmp = result(j)
-				result(j) = save
-			}
-		}*/
 		result
 	}
 	
@@ -278,7 +261,7 @@ g3y/6,(g3z-g3y)/6,(2*g3z-g3y)/6,-(6*g7z+g7y-6*g3z+g3y)/12,-(2*g7z+g7y)/6,-(g7z+g
 			imax = max(imax, value)
 		}
 		
-		Interval(imin,imax)
+		Interval(max(imin,-1), min(imax,1))
 	}
 	
 	/////////////////////////////////////////
@@ -656,57 +639,5 @@ g6y-15*g6x-21*g5z-4*g5y-21*g5x+21*g4z+4*g4y+15*g4x-15*g3z-10*g3y-21*g3x+15*g2z+1
 								grad(hash(BA+1), relx-1, rely  , relz-1 )), // OF CUBE
 						lerp(u, grad(hash(AB+1), relx  , rely-1, relz-1 ),
 								grad(hash(BB+1), relx-1, rely-1, relz-1 ))))
-	}
-	
-	//TODO: in src/test/scala schieben
-	def test {
-		class Timer {
-			var starttime = 0L
-			var passedtime = 0L
-
-			def getTime = System.nanoTime
-
-			def start  { starttime = getTime }
-			def stop   { passedtime += getTime - starttime }
-			def measure[A](function: => A) = {
-				start
-				val returnvalue = function
-				stop
-				returnvalue
-			}
-			def reset  { passedtime = 0 }
-			def read =   passedtime/1000000000.0
-		}
-		val noisetimer = new Timer
-		val predictiontimer = new Timer
-		val n = 2000
-		val samples = 10
-		for( i <- 0 until n )
-		{
-			// Test-Interval
-			import scala.util.Random.{nextDouble => r}
-		
-			val x0 = 1/r
-			val y0 = 1/r
-			val z0 = 1/r
-			val x1 = x0 + r/30
-			val y1 = y0 + r/30
-			val z1 = z0 + r/30
-		
-			val prediction = predictiontimer.measure {
-				noise3_prediction(Volume(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
-			}
-		
-			//println("Prediction: " + prediction + "Interval: " + (x0,y0,z0) + " - " + (x1,y1,z1) )
-			// Sample Interval
-			for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){ 
-				val x = x0 + u / samples.toDouble * (x1 - x0)
-				val y = y0 + v / samples.toDouble * (y1 - y0)
-				val z = z0 + w / samples.toDouble * (z1 - z0)
-				val noise = noisetimer.measure{noise3(x,y,z)}
-				assert(prediction(noise),"Wrong Prediction:\n" + prediction + ", \nInterval: " + (x0,y0,z0) + " - " + (x1,y1,z1) + "\nPosition: " + (x,y,z) + "Value: " + noise)
-			}
-		}
-		println("noise: " + noisetimer.read/(n*pow(samples,3)) + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read*pow(samples,3)/noisetimer.read)
 	}
 }
