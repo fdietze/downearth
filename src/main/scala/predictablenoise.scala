@@ -108,16 +108,17 @@ object Noise {
 		gradients3(hash(hash(hash(X)+Y)+Z) & 15)
 	}
 
+
 	def noise3_prediction = noise3_prediction_bezier _
-	
-	def noise3_prediction_trivial(v:Volume) = Interval(-1,1)
-	
-	// TODO: Code dry machen
-	def noise3_prediction_bezier(v:Volume):Interval = {
+	def noise3_prediction(v:Volume):Interval = {
 		import v.x.{low => x0, high => x1}
 		import v.y.{low => y0, high => y1}
 		import v.z.{low => z0, high => z1}
-		
+		noise3_prediction(x0,y0,z0,x1,y1,z1)
+	}
+	
+	def noise3_prediction_trivial(x0:Double,y0:Double,z0:Double,x1:Double,y1:Double,z1:Double) = Interval(-1,1)
+	def noise3_prediction_bezier(x0:Double,y0:Double,z0:Double,x1:Double,y1:Double,z1:Double):Interval = {	
 		// Edges of the unit cube
 		val X = fastfloor(x0)
 		val Y = fastfloor(y0)
@@ -135,20 +136,20 @@ object Noise {
 		// if interval spreads over more than one unit cube
 		if( fastceil(x1) - X > 1 )
 			return interval.hull(
-				noise3_prediction(Volume(Interval(x0,fastfloor(x0)+1),v.y,v.z)),
-				noise3_prediction(Volume(Interval(fastceil(x1)-1,x1),v.y,v.z))
+				noise3_prediction(Volume(Interval(x0,fastfloor(x0)+1),Interval(y0,y1),Interval(z0,z1))),
+				noise3_prediction(Volume(Interval(fastceil(x1)-1,x1),Interval(y0,y1),Interval(z0,z1)))
 			)
 			
 		if( fastceil(y1) - Y > 1 )
 			return interval.hull(
-				noise3_prediction(Volume(v.x, Interval(y0,fastfloor(y0)+1),v.z)),
-				noise3_prediction(Volume(v.x, Interval(fastceil(y1)-1,y1),v.z))
+				noise3_prediction(Volume(Interval(x0,x1), Interval(y0,fastfloor(y0)+1),Interval(z0,z1))),
+				noise3_prediction(Volume(Interval(x0,x1), Interval(fastceil(y1)-1,y1),Interval(z0,z1)))
 			)
 			
 		if( fastceil(z1) - Z > 1 )
 			return interval.hull(
-				noise3_prediction(Volume(v.x,v.y,Interval(z0,fastfloor(z0)+1))),
-				noise3_prediction(Volume(v.x,v.y,Interval(fastceil(z1)-1,z1)))
+				noise3_prediction(Volume(Interval(x0,x1),Interval(y0,y1),Interval(z0,fastfloor(z0)+1))),
+				noise3_prediction(Volume(Interval(x0,x1),Interval(y0,y1),Interval(fastceil(z1)-1,z1)))
 			)
 		
 		

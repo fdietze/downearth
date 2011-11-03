@@ -16,64 +16,42 @@ case object PoisonPill
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 object WorldNodeGenerator {
 	object Master extends DaemonActor {
-		val jobqueue = new SynchronizedQueue[NodeInfo]
-		val done  = new SynchronizedQueue[(NodeInfo,OctantOverMesh)] //TODO: im worldoctree speichern
+		val jobqueue = new SynchronizedQueue[Cuboid]
+		val done  = new SynchronizedQueue[(NodeInfo, OctantOverMesh)] //TODO: im worldoctree speichern
 		// Alle im moment bearbeiteten jobs
-		val activeJobs = new HashSet[NodeInfo] with SynchronizedSet[NodeInfo] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
+		val activeJobs = new HashSet[Cuboid] with SynchronizedSet[Cuboid] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
 		
 		val workers = (1 to Config.numWorkingThreads) map (i => new Worker(i))
 		workers.foreach(_.start)
 		
-		val idleWorkers = Queue[OutputChannel[NodeInfo]](workers:_*)
-		
-		def distributeJobs {
-			while( !idleWorkers.isEmpty && !jobqueue.isEmpty ){
-				val job = jobqueue.dequeue
-				val worker = idleWorkers.dequeue
-				worker ! job
-				
-				// idleWorkers.dequeue ! jobqueue.dequeue
-			}
-		}
+		val idleWorkers = Queue[OutputChannel[Cuboid]](workers:_*)
 		
 		def act = {
 			loop {
 				react{
-				case ( oldjob:NodeInfo, nodeinfoseq: Seq[_]) =>
-					idleWorkers += sender
-					
-					nodeinfoseq foreach { 
-					case nodeInfo:NodeInfo => 
-						jobqueue enqueue nodeInfo
-						activeJobs += nodeInfo
-					}
-					
-					distributeJobs
-					activeJobs -= oldjob
-					
-				case nodeinfo:NodeInfo =>
-					activeJobs += nodeinfo
-					// println("Master: habe Nodeinfo " + nodeinfo + " empfangen")
-					// worker beauftragen falls verfügbar, sonst in die jobqueue
-					if( idleWorkers.isEmpty ) {
-						jobqueue enqueue nodeinfo
-					}
-					else {
-						val worker = idleWorkers.dequeue
-						worker ! nodeinfo
-					}
+				
+				// Master erhält neuen Job und verteilt ihn.
+				case cuboid:Cuboid =>
+					activeJobs += cuboid
+					if( !idleWorkers.isEmpty )
+						idleWorkers.dequeue ! cuboid //Verteilen
+					else
+						jobqueue enqueue cuboid //Warteschlange
 
-				// Worker meldet abgeschlossenen Job
-				case ( oldjob : NodeInfo, node : OctantOverMesh ) =>
-					// neuen Job vergeben falls verfügbar, sonst worker zu idleWorkers hinzufügen
+
+				// Worker meldet abgeschlossenen Job (als nodeinfo)
+				case ( oldjob:NodeInfo, node:OctantOverMesh ) =>
 					done enqueue ( oldjob -> node )
+				
+
+				// Worker meldet abgeschlossenen Job (als cuboid)
+				case (oldjob:Cuboid, 'done) =>
 					activeJobs -= oldjob
 					
-					if( jobqueue.isEmpty ) {
-						assert( !(idleWorkers contains sender), "IdleWorkers nicht Aktuell" )
+					// Wenn es noch Jobs gibt, dem Worker einen neuen geben
+					if( jobqueue.isEmpty )
 						idleWorkers enqueue sender
-					}
-					else{
+					else {
 						val job = jobqueue.dequeue
 						sender ! job
 						activeJobs += job
@@ -106,53 +84,57 @@ object WorldNodeGenerator {
 		def act = {
 			while(alive) {
 				receive {
-					case nodeinfo @ NodeInfo(nodepos, nodesize) =>
+					case cuboid @ Cuboid(cuboidpos, cuboidsize) =>
 						isActive = true
-						// println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
-						//val interval = Util.time("predicten"){ Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	}
-						val interval = Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
+						val interval = Config.prediction(cuboid.volume)
 						
 						if(interval.isPositive) {
-							// println(nodeinfo + ": Prediction war Positiv")
-							Draw addPredictedNode nodeinfo  // Für DebugDraw
-							
-							val meshnode = new MeshNode(Leaf(FullHexaeder))
-							meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
+							Draw addPredictedCuboid cuboid  // Für DebugDraw
 							
 							isActive = false
-							Master ! Tuple2(nodeinfo, meshnode)
+							for( nodeinfo <- cuboid.nodeinfos ) {
+								val meshnode = new MeshNode(Leaf(FullHexaeder))
+								meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
+								Master ! Tuple2(nodeinfo, meshnode)
+							}
 						}
 						
 						else if(interval.isNegative) {
-							// println(nodeinfo + ": Prediction war Negativ")
-							Draw addPredictedNode nodeinfo  // Für DebugDraw
-							
-							val meshnode = new MeshNode(Leaf(EmptyHexaeder))
-							meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
+							Draw addPredictedCuboid cuboid  // Für DebugDraw
 							
 							isActive = false
-							Master ! Tuple2(nodeinfo, meshnode)
+							for( nodeinfo <- cuboid.nodeinfos ) {
+								val meshnode = new MeshNode(Leaf(EmptyHexaeder))
+								meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
+								Master ! Tuple2(nodeinfo, meshnode)
+							}
 						}
 
 						else {
-							// println(nodeinfo + ": Bereich könnte Oberfläche enthalten")
 							// falls der Bereich groß genug ist splitten und Teile neu predicten
-							if( (nodesize/2) >= Config.minPredictionSize ) {
-								// println("Splitting " + nodeinfo)
-								// für alle Kindknoten die Nodeinfo an Master senden
+							if( cuboid.size(cuboid.longestedge)/2 >= Config.minPredictionSize ) {
+								// für alle Kindknoten den Cuboid an Master senden
 								
-								// println("Sende nodeinfos an Master...")
 								isActive = false
-								Master ! Tuple2(nodeinfo, Range(0,8).map( i => nodeinfo(i)))
+								//Master ! Tuple2(nodeinfo, Range(0,8).map( i => nodeinfo(i)))
+								if( Config.kdTreePrediction )
+									for( child <- cuboid.splitlongest )
+										Master ! child
+								else
+									for( child <- cuboid.octsplit )
+										Master ! child
 							}
 							// sonst samplen
 							else {
-								// println(nodeinfo + ": Bereich wird gesamplet")
+								assert( cuboid.isCube )
+								val nodeinfo = cuboid.nodeinfo
 								val node = WorldGenerator genWorldAt nodeinfo
 								isActive = false
 								Master ! Tuple2(nodeinfo, node.root)
 							}
 						}
+						Master ! (cuboid, 'done)
+
 						
 					case PoisonPill => 
 						alive = false

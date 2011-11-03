@@ -63,15 +63,15 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			glDisable(GL_TEXTURE_2D)
 		
 			glPushMatrix
-			glTranslatef(rootNodePos.x,rootNodePos.y,rootNodePos.z)
+			glTranslatev(rootNodePos)
 			glColor3f(1,0,0)
 			Draw.renderCube(rootNodeSize)
 			glPopMatrix
 		
 			glPushMatrix
-			glTranslatef(worldWindowPos.x,worldWindowPos.y,worldWindowPos.z)
+			glTranslatev(worldWindowPos + 0.05f)
 			glColor3f(0,1,0)
-			Draw.renderCube(worldWindowSize)
+			Draw.renderCube(worldWindowSize - 0.1f)
 			glPopMatrix
 		}
 	}
@@ -86,13 +86,13 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 	def generateStartArea {
 		root = DeadInnerNode // TODO GeneratingNode
-		WorldNodeGenerator.Master ! rootNodeInfo
+		WorldNodeGenerator.Master ! rootNodeInfo.cuboid
 		meshGenerated = true
 	}
 	
 	def generateNode(info:NodeInfo) {
 		if(!isSet(info)) {
-			WorldNodeGenerator.Master ! info
+			WorldNodeGenerator.Master ! info.cuboid
 		}
 	}
 	

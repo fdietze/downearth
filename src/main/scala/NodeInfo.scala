@@ -6,6 +6,8 @@ import simplex3d.math.float.functions._
 
 import Util._
 
+import noise.interval.Volume
+
 // NodeInfo enthält die Metainformationen für einen Knoten im Octree, also
 // Position in Weltkoordanaten und Größe. Zudem hat die Klasse noch Methoden,
 // um Metainformationen der Kindknoten berechnen zu können.
@@ -49,6 +51,81 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		val pos1 = max(pos,that.pos)
 		val pos2 = min(upperPos,that.upperPos)
 		pos1 until pos2
+	}
+	
+	def cuboid = Cuboid(pos, Vec3i(size))
+	def volume = Volume(pos, pos+size)
+}
+
+
+case class Cuboid(pos:Vec3i, size:Vec3i) {
+	def volume = Volume(pos, pos + size)
+	def isCube = size.x == size.y && size.y == size.z
+	def nodeinfo = {
+		assert(isCube)
+		NodeInfo(pos, size.x)
+	}
+
+	def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
+	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
+	
+	def longestedge:Int = {
+		if( size.x >= size.y && size.x >= size.z )
+			0
+		else if( size.y >= size.x && size.y >= size.z )
+			1
+		else // if( size.z >= size.x && size.z >= size.y )
+			2
+	}
+
+	def shortestedge:Int = {
+		if( size.x <= size.y && size.x <= size.z )
+			0
+		else if( size.y <= size.x && size.y <= size.z )
+			1
+		else // if( size.z <= size.x && size.z <= size.y )
+			2
+	}
+
+
+	def splitlongest:Array[Cuboid] = {
+		var halfsize = Vec3i(0)
+		var offset = Vec3i(0)
+		
+		if( longestedge == 0 ) {
+			halfsize = size / Vec3i(2,1,1)
+			offset = Vec3i(halfsize(0), 0, 0)
+		}
+
+		else if( longestedge == 1 ) {
+			halfsize = size / Vec3i(1,2,1)
+			offset = Vec3i(0, halfsize(1), 0)
+		}
+
+		else if( longestedge == 2 ) {
+			halfsize = size / Vec3i(1,1,2)
+			offset = Vec3i(0, 0, halfsize(2))
+		}
+
+		Array(Cuboid(pos, halfsize), Cuboid(pos + offset, halfsize))
+	}
+	def octsplit:Array[Cuboid] = {
+		assert( isCube )
+		val childsize = size.x >> 1
+		(for( v <- Vec3i(0) until Vec3i(2) ) yield
+			Cuboid(pos + v*childsize, Vec3i(childsize))
+		).toArray
+	}
+	
+	def nodeinfos = {
+		val nodeinfosize = size(shortestedge)
+		for(
+			x <- 0 until size.x by nodeinfosize;
+			y <- 0 until size.y by nodeinfosize;
+			z <- 0 until size.z by nodeinfosize
+		) yield {
+			NodeInfo(pos + Vec3i(x,y,z), nodeinfosize)
+		}
 	}
 }
 

@@ -6,9 +6,10 @@ import scala.collection.mutable.Stack
 
 class GenerationBenchmark extends FunSuite {
 	test("parameter combinations") {
-		val configs = Map(
+		val configs = Map[Symbol,Seq[AnyVal]](
 			'minMeshNodeSize -> Seq(16,8,4),
 			'minPredictionSize -> Seq(16,8,4),
+			'kdTreePrediction -> Seq(false,true),
 			'worldWindowSize -> Seq(64)
 		)
 		
@@ -19,17 +20,20 @@ class GenerationBenchmark extends FunSuite {
 		for(
 			minMeshNodeSize <- configs('minMeshNodeSize);
 			minPredictionSize <- configs('minPredictionSize);
+			kdTreePrediction <- configs('kdTreePrediction);
 			worldWindowSize <- configs('worldWindowSize)
 		) {
 			println("Running Config combination %d of %d...".format(currentcombination, combinations))
-			println("minMeshNodeSize: " + minMeshNodeSize )
+			println("minMeshNodeSize:   " + minMeshNodeSize )
 			println("minPredictionSize: " + minPredictionSize )
-			println("worldWindowSize: " + worldWindowSize )
+			println("kdTreePrediction:  " + kdTreePrediction )
+			println("worldWindowSize:   " + worldWindowSize )
 
 			//overwrite global Config
-			Config.minMeshNodeSize = minMeshNodeSize
-			Config.minPredictionSize = minPredictionSize
-			Config.worldWindowSize = worldWindowSize
+			Config.minMeshNodeSize = minMeshNodeSize.asInstanceOf[Int]
+			Config.minPredictionSize = minPredictionSize.asInstanceOf[Int]
+			Config.kdTreePrediction = kdTreePrediction.asInstanceOf[Boolean]
+			Config.worldWindowSize = worldWindowSize.asInstanceOf[Int]
 			WorldNodeGenerator.Master.done.dequeueAll( _ => true)
 			
 			assert( WorldNodeGenerator.Master.done.isEmpty )
@@ -39,11 +43,11 @@ class GenerationBenchmark extends FunSuite {
 			timer.reset
 			timer.start
 			
-			//TODO: start a really fresh generation
+			// start a fresh generation
 			WorldGenerator.genWorld
 
+			// figure out, when the generation is finished
 			var running = true
-			//TODO: figure out, when the generation is finished
 			while( running )
 			{
 				Thread.sleep(20)
@@ -53,7 +57,7 @@ class GenerationBenchmark extends FunSuite {
 			
 			timer.stop
 			if( timer.read < besttime ) {
-				println("FASTEST COMBINATION so far!")
+				println("---- FASTEST COMBINATION so far! ----")
 				besttime = timer.read
 			}
 			println(">> Time: " + timer.read + "s")

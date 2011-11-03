@@ -13,6 +13,7 @@ import noise.interval.{Interval, Volume}
 class NoisePrediction extends FunSuite {
 
 	//TODO: add accuracy test
+	//TODO: add composition / prediction speed test
 	test("noise prediction speed") {
 		
 		val noisetimer = new Timer

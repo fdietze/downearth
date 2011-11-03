@@ -15,6 +15,7 @@ object Config{
 	// erhält man automatisch ein hierarchisches streaming.
 	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
 	var minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
+	var kdTreePrediction = loadBoolean("kdTreePrediction") getOrElse true
 	
 	var worldWindowSize = loadInt("worldWindowSize") getOrElse 64
 	val useshaders = loadBoolean("useShaders") getOrElse false
@@ -33,14 +34,14 @@ object Config{
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
 	val maxMeshVertexCount = 30000
-	val numWorkingThreads = Runtime.getRuntime.availableProcessors + 1
+	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2f
 	val cameraTurboSpeed = 32f
 	val startAsGhost = true
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
 	def materialfunction(v:Vec3) = gen.material(v)
-	def prediction(v1: Vec3, v2: Vec3) = gen.prediction(Volume(v1,v2))
+	def prediction(v:Volume) = gen.prediction(v)
 	val saveWorld = false
 
 	var fullscreen = loadBoolean("fullscreen") getOrElse false

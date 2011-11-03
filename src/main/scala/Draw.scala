@@ -9,6 +9,8 @@ import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
 
+import Util._
+
 object MyFont{
 	import org.newdawn.slick.UnicodeFont
 	import org.newdawn.slick.font.effects._
@@ -41,7 +43,19 @@ object Draw {
 	
 	def renderCube(size:Float) {
 		glPushMatrix
-		glScalef(size,size,size)
+			glScale(size)
+			plaincube
+		glPopMatrix
+	}
+	
+	def renderCuboid(size:Vec3) {
+		glPushMatrix
+			glScalev(size)
+			plaincube
+		glPopMatrix
+	}
+	
+	def plaincube {
 		glBegin(GL_LINES)
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
 			glVertex3f(i,j,k)
@@ -50,7 +64,6 @@ object Draw {
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
 			glVertex3f(k,i,j)
 		glEnd
-		glPopMatrix
 	}
 	
 	def crossHair{
@@ -86,20 +99,32 @@ object Draw {
 	}
 
 	def drawNodeInfo(nodeinfo:NodeInfo) {
+		import nodeinfo.{pos,size}
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslatef(nodeinfo.pos.x + 0.1f, nodeinfo.pos.y + 0.1f, nodeinfo.pos.z + 0.1f)
-			Draw.renderCube(nodeinfo.size - 0.2f)
+			glTranslatev(pos + 0.1f)
+			Draw.renderCube(size - 0.2f)
+		glPopMatrix
+	}
+	
+	def drawCuboid(cuboid:Cuboid) {
+		import cuboid.{pos,size}
+		glDisable(GL_LIGHTING)
+		glDisable(GL_TEXTURE_2D)
+
+		glPushMatrix
+			glTranslatev(pos + 0.1f)
+			Draw.renderCuboid(cuboid.size - 0.2f)
 		glPopMatrix
 	}
 
 	// Für den Debugdraw: alle Bereiche, die gesampled werden
-	var sampledNodes:List[NodeInfo] = Nil
-	var predictedNodes:List[NodeInfo] = Nil
-	def addSampledNode(nodeinfo:NodeInfo) { sampledNodes ::= nodeinfo }
-	def addPredictedNode(nodeinfo:NodeInfo) { predictedNodes ::= nodeinfo }
+//	var sampledNodes:List[NodeInfo] = Nil
+	var predictedCuboids:List[Cuboid] = Nil
+//	def addSampledNode(nodeinfo:NodeInfo) { sampledNodes ::= nodeinfo }
+	def addPredictedCuboid(cuboid:Cuboid) { predictedCuboids ::= cuboid }
 	
 	def drawSampledNodes {
 		/*
@@ -107,9 +132,13 @@ object Draw {
 		for( nodeinfo <- sampledNodes )
 			drawNodeInfo(nodeinfo)
 		*/
-		glColor3f(0,0,1)
-		for( nodeinfo <- predictedNodes )
-			drawNodeInfo(nodeinfo)
+		for( cuboid <- predictedCuboids ) {
+			if( cuboid.isCube )
+				glColor3f(0,0,1)
+			else
+				glColor3f(1,0,1)
+			drawCuboid(cuboid)
+		}
 	}
 
 

@@ -49,15 +49,28 @@ object Util {
 		buffer
 	}
 	
+	def glTranslatev(v:Vec3) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, v.z)
+	def glScalev(v:Vec3) = org.lwjgl.opengl.GL11.glScalef(v.x, v.y, v.z)
+	def glScale(s:Float) = org.lwjgl.opengl.GL11.glScalef(s,s,s)
+	
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
-	def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = {
+	def indexInRange(i:Vec3i, nodepos:Vec3i, nodesize:Int) = {
 		i.x >= nodepos.x &&
 		i.y >= nodepos.y &&
 		i.z >= nodepos.z &&
 		i.x < nodepos.x + nodesize &&
 		i.y < nodepos.y + nodesize &&
 		i.z < nodepos.z + nodesize
+	}
+
+	def indexInRange(i:Vec3i, nodepos:Vec3i, nodesize:Vec3i) = {
+		i.x >= nodepos.x &&
+		i.y >= nodepos.y &&
+		i.z >= nodepos.z &&
+		i.x < nodepos.x + nodesize.x &&
+		i.y < nodepos.y + nodesize.y &&
+		i.z < nodepos.z + nodesize.z
 	}
 
 	def printLogInfo(obj:Int) {
