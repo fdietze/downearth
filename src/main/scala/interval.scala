@@ -79,6 +79,9 @@ def pow(i:Interval, n:Int) = {
 		Interval(0,functions.pow(functions.max(functions.abs(i.low), functions.abs(i.high)),n))
 }
 
+def exp( x:Interval ) = Interval(functions.exp(x.low), functions.exp(x.high))
+def clamp( x:Interval, low:Double, high:Double ) = Interval(functions.max(x.low,low), functions.min(x.high,high))
+
 case class Volume(x:Interval = Interval(), y:Interval = Interval(), z:Interval = Interval()) {
 	def low  = Vec3(x.low , y.low , z.low )
 	def high = Vec3(x.high, y.high, z.high)
@@ -100,6 +103,12 @@ case class Volume(x:Interval = Interval(), y:Interval = Interval(), z:Interval =
 	def - (that:Double) = Volume(this.x - that, this.y - that, this.z - that)
 	def * (that:Double) = Volume(this.x * that, this.y * that, this.z * that)
 	def / (that:Double) = Volume(this.x / that, this.y / that, this.z / that)
+
+	// Volume <op> Interval
+	def + (that:Interval) = Volume(this.x + that, this.y + that, this.z + that)
+	def - (that:Interval) = Volume(this.x - that, this.y - that, this.z - that)
+	def * (that:Interval) = Volume(this.x * that, this.y * that, this.z * that)
+	def / (that:Interval) = Volume(this.x / that, this.y / that, this.z / that)
 }
 
 object Volume {

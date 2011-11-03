@@ -186,7 +186,7 @@ object Util {
 		val start = System.nanoTime
 		val f = foo
 		val t = (System.nanoTime-start)/1000000.
-		println(msg+t)
+		printf("%s: %6.2f ms\n",msg,t)
 		f
 	}
 	

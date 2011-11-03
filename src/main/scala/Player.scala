@@ -19,9 +19,7 @@ import Config.startpos
 import javax.vecmath.{Vector3f, Quat4f}
 
 object Player {
-
 	val camDistFromCenter = Vec3(0,0,0.8f)
-	//val camera = new Camera3D(startpos,Vec3(1,0,0))
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
 	def camera = {
@@ -117,6 +115,7 @@ object BuildInterface{
 	val rampA = new Hexaeder(Z = 0x00440000)
 	val rampB = new Hexaeder(Z = 0x44880000)
 	val rampC = new Hexaeder(Z = 0x00880000)
+	val test = new Polyeder10
 	
 	// wird benötigt um den Korrekten Hexaeder hervorzuheben
 	// true: Momentan am Bauen

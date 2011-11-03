@@ -7,7 +7,7 @@ package openworld
 import scala.actors.{DaemonActor, OutputChannel, Actor, Future}
 
 import simplex3d.math.Vec3i
-import simplex3d.math.float.Vec3
+import simplex3d.math.float.{Vec3, Vec4}
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 
@@ -25,7 +25,6 @@ object WorldNodeGenerator {
 		workers.foreach(_.start)
 		
 		val idleWorkers = Queue[OutputChannel[NodeInfo]](workers:_*)
-		
 		
 		def distributeJobs {
 			while( !idleWorkers.isEmpty && !jobqueue.isEmpty ){
@@ -94,6 +93,13 @@ object WorldNodeGenerator {
 		override def toString = "Master"
 	}
 	
+	val emptyTextureMeshData = {
+		val vertexArray = new Array[Vec3](0)
+		val normalArray = new Array[Vec3](0)
+		val colorArray  = new Array[Vec4](0)
+		TextureMeshData(vertexArray,normalArray,colorArray)
+	}
+	
 	class Worker (id:Int) extends Actor {
 		var alive = true
 		var isActive = false
@@ -103,30 +109,28 @@ object WorldNodeGenerator {
 					case nodeinfo @ NodeInfo(nodepos, nodesize) =>
 						isActive = true
 						// println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
-						val interval = Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	
+						val interval = Util.time("predicten"){ Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	}
 						
 						if(interval.isPositive) {
 							// println(nodeinfo + ": Prediction war Positiv")
 							Draw addPredictedNode nodeinfo  // Für DebugDraw
 							
-							val octree = new WorldOctree( nodesize, nodepos.clone )
-							octree.root = new Leaf(FullHexaeder)
-							octree.genMesh(x => FullHexaeder)
+							val meshnode = new MeshNode(Leaf(FullHexaeder))
+							meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
 							
 							isActive = false
-							Master ! Tuple2(nodeinfo, octree.root)
+							Master ! Tuple2(nodeinfo, meshnode)
 						}
 						
 						else if(interval.isNegative) {
 							// println(nodeinfo + ": Prediction war Negativ")
 							Draw addPredictedNode nodeinfo  // Für DebugDraw
 							
-							val octree = new WorldOctree( nodesize, nodepos.clone )
-							octree.root = new Leaf(EmptyHexaeder)
-							octree.genMesh(x => EmptyHexaeder)
+							val meshnode = new MeshNode(Leaf(EmptyHexaeder))
+							meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
 							
 							isActive = false
-							Master ! Tuple2(nodeinfo, octree.root)
+							Master ! Tuple2(nodeinfo, meshnode)
 						}
 
 						else {

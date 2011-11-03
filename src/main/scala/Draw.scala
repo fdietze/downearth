@@ -102,10 +102,11 @@ object Draw {
 	def addPredictedNode(nodeinfo:NodeInfo) { predictedNodes ::= nodeinfo }
 	
 	def drawSampledNodes {
+		/*
 		glColor3f(1,0,0)
 		for( nodeinfo <- sampledNodes )
 			drawNodeInfo(nodeinfo)
-
+		*/
 		glColor3f(0,0,1)
 		for( nodeinfo <- predictedNodes )
 			drawNodeInfo(nodeinfo)
