@@ -45,15 +45,6 @@ object Noise {
 			i += 1
 		}
 
-
-/*		for( i <- 0 to n-1 ) {
-			tmp = result(i)
-			for( j <- i+1 to n ) {
-				save = lerp(t, tmp, result(j))
-				tmp = result(j)
-				result(j) = save
-			}
-		}*/
 		result
 	}
 
@@ -81,14 +72,6 @@ object Noise {
 			i += 1
 		}
 
-/*		for( i <- 0 to n-1 ) {
-			tmp = result(n-i)
-			for( j <- inclusive(n-i-1,0,-1) ) {
-				save = lerp(t, tmp, result(j))
-				tmp = result(j)
-				result(j) = save
-			}
-		}*/
 		result
 	}
 	
@@ -197,91 +180,127 @@ object Noise {
 		// Calculate the heights of the bezier curve, converted from the 3d perlin noise polynomial with fade-function of degree 5
 		// resulting polynomial has degree 6. This gives 7^3 Bezier points
 		val bezierheights = 
-Array(Array(Array(0,g0z/6,g0z/3,-(g4z-g0z)/2,-g4z/3,-g4z/6,0),Array(g0y/6,(g0z+g0y)/6,(2*g0z+g0y)/6,-(6*g4z-g4y-6*g0z-g0y)/12,-(2*g4z-g4y)/6,-(g4z-g4y)/6,g4y/6),Array(g0y/3,
-(g0z+2*g0y)/6,(g0z+g0y)/3,-(3*g4z-g4y-3*g0z-g0y)/6,-(g4z-g4y)/3,-(g4z-2*g4y)/6,g4y/3),Array(-(g2y-g0y)/2,(g2z-6*g2y+g0z+6*g0y)/12,(g2z-3*g2y+g0z+3*g0y)/6,-
-(g6z+g6y+g4z-g4y-g2z+g2y-g0z-g0y)/4,-(g6z+3*g6y+g4z-3*g4y)/6,-(g6z+6*g6y+g4z-6*g4y)/12,-(g6y-g4y)/2),Array(-g2y/3,(g2z-2*g2y)/6,(g2z-g2y)/3,-
-(3*g6z+g6y-3*g2z+g2y)/6,-(g6z+g6y)/3,-(g6z+2*g6y)/6,-g6y/3),Array(-g2y/6,(g2z-g2y)/6,(2*g2z-g2y)/6,-(6*g6z+g6y-6*g2z+g2y)/12,-(2*g6z+g6y)/6,-(g6z+g6y)/6,-g6y/6),Array(0,g2z/6
-,g2z/3,-(g6z-g2z)/2,-g6z/3,-g6z/6,0)),Array(Array(g0x/6,(g0z+g0x)/6,(2*g0z+g0x)/6,-(6*g4z-g4x-6*g0z-g0x)/12,-(2*g4z-g4x)/6,-(g4z-g4x)/6,g4x/6),Array((g0y+g0x)/6,(g0z+g0y+g0x)/6,
-(2*g0z+g0y+g0x)/6,-(6*g4z-g4y-g4x-6*g0z-g0y-g0x)/12,-(2*g4z-g4y-g4x)/6,-(g4z-g4y-g4x)/6,(g4y+g4x)/6),Array((2*g0y+g0x)/6,(g0z+2*g0y+g0x)/6,(2*g0z+2*g0y+g0x)/6,-
-(6*g4z-2*g4y-g4x-6*g0z-2*g0y-g0x)/12,-(2*g4z-2*g4y-g4x)/6,-(g4z-2*g4y-g4x)/6,(2*g4y+g4x)/6),Array(-(6*g2y-g2x-6*g0y-g0x)/12,(g2z-6*g2y+g2x+g0z+6*g0y+g0x)/12,
-(2*g2z-6*g2y+g2x+2*g0z+6*g0y+g0x)/12,-(6*g6z+6*g6y-g6x+6*g4z-6*g4y-g4x-6*g2z+6*g2y-g2x-6*g0z-6*g0y-g0x)/24,-(2*g6z+6*g6y-g6x+2*g4z-6*g4y-g4x)/12,-
-(g6z+6*g6y-g6x+g4z-6*g4y-g4x)/12,-(6*g6y-g6x-6*g4y-g4x)/12),Array(-(2*g2y-g2x)/6,(g2z-2*g2y+g2x)/6,(2*g2z-2*g2y+g2x)/6,-(6*g6z+2*g6y-g6x-6*g2z+2*g2y-g2x)/12,-
-(2*g6z+2*g6y-g6x)/6,-(g6z+2*g6y-g6x)/6,-(2*g6y-g6x)/6),Array(-(g2y-g2x)/6,(g2z-g2y+g2x)/6,(2*g2z-g2y+g2x)/6,-(6*g6z+g6y-g6x-6*g2z+g2y-g2x)/12,-(2*g6z+g6y-g6x)/6,-
-(g6z+g6y-g6x)/6,-(g6y-g6x)/6),Array(g2x/6,(g2z+g2x)/6,(2*g2z+g2x)/6,-(6*g6z-g6x-6*g2z-g2x)/12,-(2*g6z-g6x)/6,-(g6z-g6x)/6,g6x/6)),Array(Array(g0x/3,(g0z+2*g0x)/6,(g0z+g0x)/3,-
-(3*g4z-g4x-3*g0z-g0x)/6,-(g4z-g4x)/3,-(g4z-2*g4x)/6,g4x/3),Array((g0y+2*g0x)/6,(g0z+g0y+2*g0x)/6,(2*g0z+g0y+2*g0x)/6,-(6*g4z-g4y-2*g4x-6*g0z-g0y-2*g0x)/12,-
-(2*g4z-g4y-2*g4x)/6,-(g4z-g4y-2*g4x)/6,(g4y+2*g4x)/6),Array((g0y+g0x)/3,(g0z+2*g0y+2*g0x)/6,(g0z+g0y+g0x)/3,-(3*g4z-g4y-g4x-3*g0z-g0y-g0x)/6,-(g4z-g4y-g4x)/3,-
-(g4z-2*g4y-2*g4x)/6,(g4y+g4x)/3),Array(-(3*g2y-g2x-3*g0y-g0x)/6,(g2z-6*g2y+2*g2x+g0z+6*g0y+2*g0x)/12,(g2z-3*g2y+g2x+g0z+3*g0y+g0x)/6,-
-(3*g6z+3*g6y-g6x+3*g4z-3*g4y-g4x-3*g2z+3*g2y-g2x-3*g0z-3*g0y-g0x)/12,-(g6z+3*g6y-g6x+g4z-3*g4y-g4x)/6,-(g6z+6*g6y-2*g6x+g4z-6*g4y-2*g4x)/12,-
-(3*g6y-g6x-3*g4y-g4x)/6),Array(-(g2y-g2x)/3,(g2z-2*g2y+2*g2x)/6,(g2z-g2y+g2x)/3,-(3*g6z+g6y-g6x-3*g2z+g2y-g2x)/6,-(g6z+g6y-g6x)/3,-(g6z+2*g6y-2*g6x)/6,-(g6y-g6x)/3)
-,Array(-(g2y-2*g2x)/6,(g2z-g2y+2*g2x)/6,(2*g2z-g2y+2*g2x)/6,-(6*g6z+g6y-2*g6x-6*g2z+g2y-2*g2x)/12,-(2*g6z+g6y-2*g6x)/6,-(g6z+g6y-2*g6x)/6,-(g6y-2*g6x)/6),Array(g2x/3,
-(g2z+2*g2x)/6,(g2z+g2x)/3,-(3*g6z-g6x-3*g2z-g2x)/6,-(g6z-g6x)/3,-(g6z-2*g6x)/6,g6x/3)),Array(Array(-(g1x-g0x)/2,(g1z-6*g1x+g0z+6*g0x)/12,(g1z-3*g1x+g0z+3*g0x)/6,-
-(g5z+g5x+g4z-g4x-g1z+g1x-g0z-g0x)/4,-(g5z+3*g5x+g4z-3*g4x)/6,-(g5z+6*g5x+g4z-6*g4x)/12,-(g5x-g4x)/2),Array((g1y-6*g1x+g0y+6*g0x)/12,
-(g1z+g1y-6*g1x+g0z+g0y+6*g0x)/12,(2*g1z+g1y-6*g1x+2*g0z+g0y+6*g0x)/12,-(6*g5z-g5y+6*g5x+6*g4z-g4y-6*g4x-6*g1z-g1y+6*g1x-6*g0z-g0y-6*g0x)/24,-
-(2*g5z-g5y+6*g5x+2*g4z-g4y-6*g4x)/12,-(g5z-g5y+6*g5x+g4z-g4y-6*g4x)/12,(g5y-6*g5x+g4y+6*g4x)/12),Array((g1y-3*g1x+g0y+3*g0x)/6,
-(g1z+2*g1y-6*g1x+g0z+2*g0y+6*g0x)/12,(g1z+g1y-3*g1x+g0z+g0y+3*g0x)/6,-(3*g5z-g5y+3*g5x+3*g4z-g4y-3*g4x-3*g1z-g1y+3*g1x-3*g0z-g0y-3*g0x)/12,-
-(g5z-g5y+3*g5x+g4z-g4y-3*g4x)/6,-(g5z-2*g5y+6*g5x+g4z-2*g4y-6*g4x)/12,(g5y-3*g5x+g4y+3*g4x)/6),Array(-(g3y+g3x+g2y-g2x-g1y+g1x-g0y-g0x)/4,
-(g3z-6*g3y-6*g3x+g2z-6*g2y+6*g2x+g1z+6*g1y-6*g1x+g0z+6*g0y+6*g0x)/24,(g3z-3*g3y-3*g3x+g2z-3*g2y+3*g2x+g1z+3*g1y-3*g1x+g0z+3*g0y+3*g0x)/12,-
-(g7z+g7y+g7x+g6z+g6y-g6x+g5z-g5y+g5x+g4z-g4y-g4x-g3z+g3y+g3x-g2z+g2y-g2x-g1z-g1y+g1x-g0z-g0y-g0x)/8,-
-(g7z+3*g7y+3*g7x+g6z+3*g6y-3*g6x+g5z-3*g5y+3*g5x+g4z-3*g4y-3*g4x)/12,-(g7z+6*g7y+6*g7x+g6z+6*g6y-6*g6x+g5z-6*g5y+6*g5x+g4z-6*g4y-6*g4x)/24,-
-(g7y+g7x+g6y-g6x-g5y+g5x-g4y-g4x)/4),Array(-(g3y+3*g3x+g2y-3*g2x)/6,(g3z-2*g3y-6*g3x+g2z-2*g2y+6*g2x)/12,(g3z-g3y-3*g3x+g2z-g2y+3*g2x)/6,-
-(3*g7z+g7y+3*g7x+3*g6z+g6y-3*g6x-3*g3z+g3y+3*g3x-3*g2z+g2y-3*g2x)/12,-(g7z+g7y+3*g7x+g6z+g6y-3*g6x)/6,-(g7z+2*g7y+6*g7x+g6z+2*g6y-6*g6x)/12,-
-(g7y+3*g7x+g6y-3*g6x)/6),Array(-(g3y+6*g3x+g2y-6*g2x)/12,(g3z-g3y-6*g3x+g2z-g2y+6*g2x)/12,(2*g3z-g3y-6*g3x+2*g2z-g2y+6*g2x)/12,-
-(6*g7z+g7y+6*g7x+6*g6z+g6y-6*g6x-6*g3z+g3y+6*g3x-6*g2z+g2y-6*g2x)/24,-(2*g7z+g7y+6*g7x+2*g6z+g6y-6*g6x)/12,-(g7z+g7y+6*g7x+g6z+g6y-6*g6x)/12,-
-(g7y+6*g7x+g6y-6*g6x)/12),Array(-(g3x-g2x)/2,(g3z-6*g3x+g2z+6*g2x)/12,(g3z-3*g3x+g2z+3*g2x)/6,-(g7z+g7x+g6z-g6x-g3z+g3x-g2z-g2x)/4,-(g7z+3*g7x+g6z-3*g6x)/6,-
-(g7z+6*g7x+g6z-6*g6x)/12,-(g7x-g6x)/2)),Array(Array(-g1x/3,(g1z-2*g1x)/6,(g1z-g1x)/3,-(3*g5z+g5x-3*g1z+g1x)/6,-(g5z+g5x)/3,-(g5z+2*g5x)/6,-g5x/3),Array((g1y-2*g1x)/6,
-(g1z+g1y-2*g1x)/6,(2*g1z+g1y-2*g1x)/6,-(6*g5z-g5y+2*g5x-6*g1z-g1y+2*g1x)/12,-(2*g5z-g5y+2*g5x)/6,-(g5z-g5y+2*g5x)/6,(g5y-2*g5x)/6),Array((g1y-g1x)/3,(g1z+2*g1y-2*g1x)/6
-,(g1z+g1y-g1x)/3,-(3*g5z-g5y+g5x-3*g1z-g1y+g1x)/6,-(g5z-g5y+g5x)/3,-(g5z-2*g5y+2*g5x)/6,(g5y-g5x)/3),Array(-(3*g3y+g3x-3*g1y+g1x)/6,
-(g3z-6*g3y-2*g3x+g1z+6*g1y-2*g1x)/12,(g3z-3*g3y-g3x+g1z+3*g1y-g1x)/6,-(3*g7z+3*g7y+g7x+3*g5z-3*g5y+g5x-3*g3z+3*g3y+g3x-3*g1z-3*g1y+g1x)/12,-
-(g7z+3*g7y+g7x+g5z-3*g5y+g5x)/6,-(g7z+6*g7y+2*g7x+g5z-6*g5y+2*g5x)/12,-(3*g7y+g7x-3*g5y+g5x)/6),Array(-(g3y+g3x)/3,(g3z-2*g3y-2*g3x)/6,(g3z-g3y-g3x)/3,-
-(3*g7z+g7y+g7x-3*g3z+g3y+g3x)/6,-(g7z+g7y+g7x)/3,-(g7z+2*g7y+2*g7x)/6,-(g7y+g7x)/3),Array(-(g3y+2*g3x)/6,(g3z-g3y-2*g3x)/6,(2*g3z-g3y-2*g3x)/6,-
-(6*g7z+g7y+2*g7x-6*g3z+g3y+2*g3x)/12,-(2*g7z+g7y+2*g7x)/6,-(g7z+g7y+2*g7x)/6,-(g7y+2*g7x)/6),Array(-g3x/3,(g3z-2*g3x)/6,(g3z-g3x)/3,-(3*g7z+g7x-3*g3z+g3x)/6,-
-(g7z+g7x)/3,-(g7z+2*g7x)/6,-g7x/3)),Array(Array(-g1x/6,(g1z-g1x)/6,(2*g1z-g1x)/6,-(6*g5z+g5x-6*g1z+g1x)/12,-(2*g5z+g5x)/6,-(g5z+g5x)/6,-g5x/6),Array((g1y-g1x)/6,(g1z+g1y-g1x)/6,
-(2*g1z+g1y-g1x)/6,-(6*g5z-g5y+g5x-6*g1z-g1y+g1x)/12,-(2*g5z-g5y+g5x)/6,-(g5z-g5y+g5x)/6,(g5y-g5x)/6),Array((2*g1y-g1x)/6,(g1z+2*g1y-g1x)/6,(2*g1z+2*g1y-g1x)/6,-
-(6*g5z-2*g5y+g5x-6*g1z-2*g1y+g1x)/12,-(2*g5z-2*g5y+g5x)/6,-(g5z-2*g5y+g5x)/6,(2*g5y-g5x)/6),Array(-(6*g3y+g3x-6*g1y+g1x)/12,(g3z-6*g3y-g3x+g1z+6*g1y-g1x)/12,
-(2*g3z-6*g3y-g3x+2*g1z+6*g1y-g1x)/12,-(6*g7z+6*g7y+g7x+6*g5z-6*g5y+g5x-6*g3z+6*g3y+g3x-6*g1z-6*g1y+g1x)/24,-(2*g7z+6*g7y+g7x+2*g5z-6*g5y+g5x)/12,-
-(g7z+6*g7y+g7x+g5z-6*g5y+g5x)/12,-(6*g7y+g7x-6*g5y+g5x)/12),Array(-(2*g3y+g3x)/6,(g3z-2*g3y-g3x)/6,(2*g3z-2*g3y-g3x)/6,-(6*g7z+2*g7y+g7x-6*g3z+2*g3y+g3x)/12,-
-(2*g7z+2*g7y+g7x)/6,-(g7z+2*g7y+g7x)/6,-(2*g7y+g7x)/6),Array(-(g3y+g3x)/6,(g3z-g3y-g3x)/6,(2*g3z-g3y-g3x)/6,-(6*g7z+g7y+g7x-6*g3z+g3y+g3x)/12,-(2*g7z+g7y+g7x)/6,-
-(g7z+g7y+g7x)/6,-(g7y+g7x)/6),Array(-g3x/6,(g3z-g3x)/6,(2*g3z-g3x)/6,-(6*g7z+g7x-6*g3z+g3x)/12,-(2*g7z+g7x)/6,-(g7z+g7x)/6,-g7x/6)),Array(Array(0,g1z/6,g1z/3,-(g5z-g1z)/2,-g5z/3,-
-g5z/6,0),Array(g1y/6,(g1z+g1y)/6,(2*g1z+g1y)/6,-(6*g5z-g5y-6*g1z-g1y)/12,-(2*g5z-g5y)/6,-(g5z-g5y)/6,g5y/6),Array(g1y/3,(g1z+2*g1y)/6,(g1z+g1y)/3,-(3*g5z-g5y-3*g1z-g1y)/6,-
-(g5z-g5y)/3,-(g5z-2*g5y)/6,g5y/3),Array(-(g3y-g1y)/2,(g3z-6*g3y+g1z+6*g1y)/12,(g3z-3*g3y+g1z+3*g1y)/6,-(g7z+g7y+g5z-g5y-g3z+g3y-g1z-g1y)/4,-
-(g7z+3*g7y+g5z-3*g5y)/6,-(g7z+6*g7y+g5z-6*g5y)/12,-(g7y-g5y)/2),Array(-g3y/3,(g3z-2*g3y)/6,(g3z-g3y)/3,-(3*g7z+g7y-3*g3z+g3y)/6,-(g7z+g7y)/3,-(g7z+2*g7y)/6,-g7y/3),Array(-
-g3y/6,(g3z-g3y)/6,(2*g3z-g3y)/6,-(6*g7z+g7y-6*g3z+g3y)/12,-(2*g7z+g7y)/6,-(g7z+g7y)/6,-g7y/6),Array(0,g3z/6,g3z/3,-(g7z-g3z)/2,-g7z/3,-g7z/6,0)))		
+Array(Array(Array(0,g0z*0.16666666666666666,g0z*0.3333333333333333,-(g4z-g0z)*0.5,-g4z*0.3333333333333333,-g4z*0.16666666666666666,0),Array(g0y*0.16666666666666666,(g0z+g0y)*0.16666666666666666,(2*g0z+g0y)*0.16666666666666666,-(6*g4z-g4y-6*g0z-g0y)*0.08333333333333333,-(2*g4z-g4y)*0.16666666666666666,-(g4z-g4y)*0.16666666666666666,g4y*0.16666666666666666),Array(g0y*0.3333333333333333,
+(g0z+2*g0y)*0.16666666666666666,(g0z+g0y)*0.3333333333333333,-(3*g4z-g4y-3*g0z-g0y)*0.16666666666666666,-(g4z-g4y)*0.3333333333333333,-(g4z-2*g4y)*0.16666666666666666,g4y*0.3333333333333333),Array(-(g2y-g0y)*0.5,(g2z-6*g2y+g0z+6*g0y)*0.08333333333333333,(g2z-3*g2y+g0z+3*g0y)*0.16666666666666666,-
+(g6z+g6y+g4z-g4y-g2z+g2y-g0z-g0y)*0.25,-(g6z+3*g6y+g4z-3*g4y)*0.16666666666666666,-(g6z+6*g6y+g4z-6*g4y)*0.08333333333333333,-(g6y-g4y)*0.5),Array(-g2y*0.3333333333333333,(g2z-2*g2y)*0.16666666666666666,(g2z-g2y)*0.3333333333333333,-
+(3*g6z+g6y-3*g2z+g2y)*0.16666666666666666,-(g6z+g6y)*0.3333333333333333,-(g6z+2*g6y)*0.16666666666666666,-g6y*0.3333333333333333),Array(-g2y*0.16666666666666666,(g2z-g2y)*0.16666666666666666,(2*g2z-g2y)*0.16666666666666666,-(6*g6z+g6y-6*g2z+g2y)*0.08333333333333333,-(2*g6z+g6y)*0.16666666666666666,-(g6z+g6y)*0.16666666666666666,-g6y*0.16666666666666666),Array(0,g2z*0.16666666666666666
+,g2z*0.3333333333333333,-(g6z-g2z)*0.5,-g6z*0.3333333333333333,-g6z*0.16666666666666666,0)),Array(Array(g0x*0.16666666666666666,(g0z+g0x)*0.16666666666666666,(2*g0z+g0x)*0.16666666666666666,-(6*g4z-g4x-6*g0z-g0x)*0.08333333333333333,-(2*g4z-g4x)*0.16666666666666666,-(g4z-g4x)*0.16666666666666666,g4x*0.16666666666666666),Array((g0y+g0x)*0.16666666666666666,(g0z+g0y+g0x)*0.16666666666666666,
+(2*g0z+g0y+g0x)*0.16666666666666666,-(6*g4z-g4y-g4x-6*g0z-g0y-g0x)*0.08333333333333333,-(2*g4z-g4y-g4x)*0.16666666666666666,-(g4z-g4y-g4x)*0.16666666666666666,(g4y+g4x)*0.16666666666666666),Array((2*g0y+g0x)*0.16666666666666666,(g0z+2*g0y+g0x)*0.16666666666666666,(2*g0z+2*g0y+g0x)*0.16666666666666666,-
+(6*g4z-2*g4y-g4x-6*g0z-2*g0y-g0x)*0.08333333333333333,-(2*g4z-2*g4y-g4x)*0.16666666666666666,-(g4z-2*g4y-g4x)*0.16666666666666666,(2*g4y+g4x)*0.16666666666666666),Array(-(6*g2y-g2x-6*g0y-g0x)*0.08333333333333333,(g2z-6*g2y+g2x+g0z+6*g0y+g0x)*0.08333333333333333,
+(2*g2z-6*g2y+g2x+2*g0z+6*g0y+g0x)*0.08333333333333333,-(6*g6z+6*g6y-g6x+6*g4z-6*g4y-g4x-6*g2z+6*g2y-g2x-6*g0z-6*g0y-g0x)*0.041666666666666664,-(2*g6z+6*g6y-g6x+2*g4z-6*g4y-g4x)*0.08333333333333333,-
+(g6z+6*g6y-g6x+g4z-6*g4y-g4x)*0.08333333333333333,-(6*g6y-g6x-6*g4y-g4x)*0.08333333333333333),Array(-(2*g2y-g2x)*0.16666666666666666,(g2z-2*g2y+g2x)*0.16666666666666666,(2*g2z-2*g2y+g2x)*0.16666666666666666,-(6*g6z+2*g6y-g6x-6*g2z+2*g2y-g2x)*0.08333333333333333,-
+(2*g6z+2*g6y-g6x)*0.16666666666666666,-(g6z+2*g6y-g6x)*0.16666666666666666,-(2*g6y-g6x)*0.16666666666666666),Array(-(g2y-g2x)*0.16666666666666666,(g2z-g2y+g2x)*0.16666666666666666,(2*g2z-g2y+g2x)*0.16666666666666666,-(6*g6z+g6y-g6x-6*g2z+g2y-g2x)*0.08333333333333333,-(2*g6z+g6y-g6x)*0.16666666666666666,-
+(g6z+g6y-g6x)*0.16666666666666666,-(g6y-g6x)*0.16666666666666666),Array(g2x*0.16666666666666666,(g2z+g2x)*0.16666666666666666,(2*g2z+g2x)*0.16666666666666666,-(6*g6z-g6x-6*g2z-g2x)*0.08333333333333333,-(2*g6z-g6x)*0.16666666666666666,-(g6z-g6x)*0.16666666666666666,g6x*0.16666666666666666)),Array(Array(g0x*0.3333333333333333,(g0z+2*g0x)*0.16666666666666666,(g0z+g0x)*0.3333333333333333,-
+(3*g4z-g4x-3*g0z-g0x)*0.16666666666666666,-(g4z-g4x)*0.3333333333333333,-(g4z-2*g4x)*0.16666666666666666,g4x*0.3333333333333333),Array((g0y+2*g0x)*0.16666666666666666,(g0z+g0y+2*g0x)*0.16666666666666666,(2*g0z+g0y+2*g0x)*0.16666666666666666,-(6*g4z-g4y-2*g4x-6*g0z-g0y-2*g0x)*0.08333333333333333,-
+(2*g4z-g4y-2*g4x)*0.16666666666666666,-(g4z-g4y-2*g4x)*0.16666666666666666,(g4y+2*g4x)*0.16666666666666666),Array((g0y+g0x)*0.3333333333333333,(g0z+2*g0y+2*g0x)*0.16666666666666666,(g0z+g0y+g0x)*0.3333333333333333,-(3*g4z-g4y-g4x-3*g0z-g0y-g0x)*0.16666666666666666,-(g4z-g4y-g4x)*0.3333333333333333,-
+(g4z-2*g4y-2*g4x)*0.16666666666666666,(g4y+g4x)*0.3333333333333333),Array(-(3*g2y-g2x-3*g0y-g0x)*0.16666666666666666,(g2z-6*g2y+2*g2x+g0z+6*g0y+2*g0x)*0.08333333333333333,(g2z-3*g2y+g2x+g0z+3*g0y+g0x)*0.16666666666666666,-
+(3*g6z+3*g6y-g6x+3*g4z-3*g4y-g4x-3*g2z+3*g2y-g2x-3*g0z-3*g0y-g0x)*0.08333333333333333,-(g6z+3*g6y-g6x+g4z-3*g4y-g4x)*0.16666666666666666,-(g6z+6*g6y-2*g6x+g4z-6*g4y-2*g4x)*0.08333333333333333,-
+(3*g6y-g6x-3*g4y-g4x)*0.16666666666666666),Array(-(g2y-g2x)*0.3333333333333333,(g2z-2*g2y+2*g2x)*0.16666666666666666,(g2z-g2y+g2x)*0.3333333333333333,-(3*g6z+g6y-g6x-3*g2z+g2y-g2x)*0.16666666666666666,-(g6z+g6y-g6x)*0.3333333333333333,-(g6z+2*g6y-2*g6x)*0.16666666666666666,-(g6y-g6x)*0.3333333333333333)
+,Array(-(g2y-2*g2x)*0.16666666666666666,(g2z-g2y+2*g2x)*0.16666666666666666,(2*g2z-g2y+2*g2x)*0.16666666666666666,-(6*g6z+g6y-2*g6x-6*g2z+g2y-2*g2x)*0.08333333333333333,-(2*g6z+g6y-2*g6x)*0.16666666666666666,-(g6z+g6y-2*g6x)*0.16666666666666666,-(g6y-2*g6x)*0.16666666666666666),Array(g2x*0.3333333333333333,
+(g2z+2*g2x)*0.16666666666666666,(g2z+g2x)*0.3333333333333333,-(3*g6z-g6x-3*g2z-g2x)*0.16666666666666666,-(g6z-g6x)*0.3333333333333333,-(g6z-2*g6x)*0.16666666666666666,g6x*0.3333333333333333)),Array(Array(-(g1x-g0x)*0.5,(g1z-6*g1x+g0z+6*g0x)*0.08333333333333333,(g1z-3*g1x+g0z+3*g0x)*0.16666666666666666,-
+(g5z+g5x+g4z-g4x-g1z+g1x-g0z-g0x)*0.25,-(g5z+3*g5x+g4z-3*g4x)*0.16666666666666666,-(g5z+6*g5x+g4z-6*g4x)*0.08333333333333333,-(g5x-g4x)*0.5),Array((g1y-6*g1x+g0y+6*g0x)*0.08333333333333333,
+(g1z+g1y-6*g1x+g0z+g0y+6*g0x)*0.08333333333333333,(2*g1z+g1y-6*g1x+2*g0z+g0y+6*g0x)*0.08333333333333333,-(6*g5z-g5y+6*g5x+6*g4z-g4y-6*g4x-6*g1z-g1y+6*g1x-6*g0z-g0y-6*g0x)*0.041666666666666664,-
+(2*g5z-g5y+6*g5x+2*g4z-g4y-6*g4x)*0.08333333333333333,-(g5z-g5y+6*g5x+g4z-g4y-6*g4x)*0.08333333333333333,(g5y-6*g5x+g4y+6*g4x)*0.08333333333333333),Array((g1y-3*g1x+g0y+3*g0x)*0.16666666666666666,
+(g1z+2*g1y-6*g1x+g0z+2*g0y+6*g0x)*0.08333333333333333,(g1z+g1y-3*g1x+g0z+g0y+3*g0x)*0.16666666666666666,-(3*g5z-g5y+3*g5x+3*g4z-g4y-3*g4x-3*g1z-g1y+3*g1x-3*g0z-g0y-3*g0x)*0.08333333333333333,-
+(g5z-g5y+3*g5x+g4z-g4y-3*g4x)*0.16666666666666666,-(g5z-2*g5y+6*g5x+g4z-2*g4y-6*g4x)*0.08333333333333333,(g5y-3*g5x+g4y+3*g4x)*0.16666666666666666),Array(-(g3y+g3x+g2y-g2x-g1y+g1x-g0y-g0x)*0.25,
+(g3z-6*g3y-6*g3x+g2z-6*g2y+6*g2x+g1z+6*g1y-6*g1x+g0z+6*g0y+6*g0x)*0.041666666666666664,(g3z-3*g3y-3*g3x+g2z-3*g2y+3*g2x+g1z+3*g1y-3*g1x+g0z+3*g0y+3*g0x)*0.08333333333333333,-
+(g7z+g7y+g7x+g6z+g6y-g6x+g5z-g5y+g5x+g4z-g4y-g4x-g3z+g3y+g3x-g2z+g2y-g2x-g1z-g1y+g1x-g0z-g0y-g0x)*0.125,-
+(g7z+3*g7y+3*g7x+g6z+3*g6y-3*g6x+g5z-3*g5y+3*g5x+g4z-3*g4y-3*g4x)*0.08333333333333333,-(g7z+6*g7y+6*g7x+g6z+6*g6y-6*g6x+g5z-6*g5y+6*g5x+g4z-6*g4y-6*g4x)*0.041666666666666664,-
+(g7y+g7x+g6y-g6x-g5y+g5x-g4y-g4x)*0.25),Array(-(g3y+3*g3x+g2y-3*g2x)*0.16666666666666666,(g3z-2*g3y-6*g3x+g2z-2*g2y+6*g2x)*0.08333333333333333,(g3z-g3y-3*g3x+g2z-g2y+3*g2x)*0.16666666666666666,-
+(3*g7z+g7y+3*g7x+3*g6z+g6y-3*g6x-3*g3z+g3y+3*g3x-3*g2z+g2y-3*g2x)*0.08333333333333333,-(g7z+g7y+3*g7x+g6z+g6y-3*g6x)*0.16666666666666666,-(g7z+2*g7y+6*g7x+g6z+2*g6y-6*g6x)*0.08333333333333333,-
+(g7y+3*g7x+g6y-3*g6x)*0.16666666666666666),Array(-(g3y+6*g3x+g2y-6*g2x)*0.08333333333333333,(g3z-g3y-6*g3x+g2z-g2y+6*g2x)*0.08333333333333333,(2*g3z-g3y-6*g3x+2*g2z-g2y+6*g2x)*0.08333333333333333,-
+(6*g7z+g7y+6*g7x+6*g6z+g6y-6*g6x-6*g3z+g3y+6*g3x-6*g2z+g2y-6*g2x)*0.041666666666666664,-(2*g7z+g7y+6*g7x+2*g6z+g6y-6*g6x)*0.08333333333333333,-(g7z+g7y+6*g7x+g6z+g6y-6*g6x)*0.08333333333333333,-
+(g7y+6*g7x+g6y-6*g6x)*0.08333333333333333),Array(-(g3x-g2x)*0.5,(g3z-6*g3x+g2z+6*g2x)*0.08333333333333333,(g3z-3*g3x+g2z+3*g2x)*0.16666666666666666,-(g7z+g7x+g6z-g6x-g3z+g3x-g2z-g2x)*0.25,-(g7z+3*g7x+g6z-3*g6x)*0.16666666666666666,-
+(g7z+6*g7x+g6z-6*g6x)*0.08333333333333333,-(g7x-g6x)*0.5)),Array(Array(-g1x*0.3333333333333333,(g1z-2*g1x)*0.16666666666666666,(g1z-g1x)*0.3333333333333333,-(3*g5z+g5x-3*g1z+g1x)*0.16666666666666666,-(g5z+g5x)*0.3333333333333333,-(g5z+2*g5x)*0.16666666666666666,-g5x*0.3333333333333333),Array((g1y-2*g1x)*0.16666666666666666,
+(g1z+g1y-2*g1x)*0.16666666666666666,(2*g1z+g1y-2*g1x)*0.16666666666666666,-(6*g5z-g5y+2*g5x-6*g1z-g1y+2*g1x)*0.08333333333333333,-(2*g5z-g5y+2*g5x)*0.16666666666666666,-(g5z-g5y+2*g5x)*0.16666666666666666,(g5y-2*g5x)*0.16666666666666666),Array((g1y-g1x)*0.3333333333333333,(g1z+2*g1y-2*g1x)*0.16666666666666666
+,(g1z+g1y-g1x)*0.3333333333333333,-(3*g5z-g5y+g5x-3*g1z-g1y+g1x)*0.16666666666666666,-(g5z-g5y+g5x)*0.3333333333333333,-(g5z-2*g5y+2*g5x)*0.16666666666666666,(g5y-g5x)*0.3333333333333333),Array(-(3*g3y+g3x-3*g1y+g1x)*0.16666666666666666,
+(g3z-6*g3y-2*g3x+g1z+6*g1y-2*g1x)*0.08333333333333333,(g3z-3*g3y-g3x+g1z+3*g1y-g1x)*0.16666666666666666,-(3*g7z+3*g7y+g7x+3*g5z-3*g5y+g5x-3*g3z+3*g3y+g3x-3*g1z-3*g1y+g1x)*0.08333333333333333,-
+(g7z+3*g7y+g7x+g5z-3*g5y+g5x)*0.16666666666666666,-(g7z+6*g7y+2*g7x+g5z-6*g5y+2*g5x)*0.08333333333333333,-(3*g7y+g7x-3*g5y+g5x)*0.16666666666666666),Array(-(g3y+g3x)*0.3333333333333333,(g3z-2*g3y-2*g3x)*0.16666666666666666,(g3z-g3y-g3x)*0.3333333333333333,-
+(3*g7z+g7y+g7x-3*g3z+g3y+g3x)*0.16666666666666666,-(g7z+g7y+g7x)*0.3333333333333333,-(g7z+2*g7y+2*g7x)*0.16666666666666666,-(g7y+g7x)*0.3333333333333333),Array(-(g3y+2*g3x)*0.16666666666666666,(g3z-g3y-2*g3x)*0.16666666666666666,(2*g3z-g3y-2*g3x)*0.16666666666666666,-
+(6*g7z+g7y+2*g7x-6*g3z+g3y+2*g3x)*0.08333333333333333,-(2*g7z+g7y+2*g7x)*0.16666666666666666,-(g7z+g7y+2*g7x)*0.16666666666666666,-(g7y+2*g7x)*0.16666666666666666),Array(-g3x*0.3333333333333333,(g3z-2*g3x)*0.16666666666666666,(g3z-g3x)*0.3333333333333333,-(3*g7z+g7x-3*g3z+g3x)*0.16666666666666666,-
+(g7z+g7x)*0.3333333333333333,-(g7z+2*g7x)*0.16666666666666666,-g7x*0.3333333333333333)),Array(Array(-g1x*0.16666666666666666,(g1z-g1x)*0.16666666666666666,(2*g1z-g1x)*0.16666666666666666,-(6*g5z+g5x-6*g1z+g1x)*0.08333333333333333,-(2*g5z+g5x)*0.16666666666666666,-(g5z+g5x)*0.16666666666666666,-g5x*0.16666666666666666),Array((g1y-g1x)*0.16666666666666666,(g1z+g1y-g1x)*0.16666666666666666,
+(2*g1z+g1y-g1x)*0.16666666666666666,-(6*g5z-g5y+g5x-6*g1z-g1y+g1x)*0.08333333333333333,-(2*g5z-g5y+g5x)*0.16666666666666666,-(g5z-g5y+g5x)*0.16666666666666666,(g5y-g5x)*0.16666666666666666),Array((2*g1y-g1x)*0.16666666666666666,(g1z+2*g1y-g1x)*0.16666666666666666,(2*g1z+2*g1y-g1x)*0.16666666666666666,-
+(6*g5z-2*g5y+g5x-6*g1z-2*g1y+g1x)*0.08333333333333333,-(2*g5z-2*g5y+g5x)*0.16666666666666666,-(g5z-2*g5y+g5x)*0.16666666666666666,(2*g5y-g5x)*0.16666666666666666),Array(-(6*g3y+g3x-6*g1y+g1x)*0.08333333333333333,(g3z-6*g3y-g3x+g1z+6*g1y-g1x)*0.08333333333333333,
+(2*g3z-6*g3y-g3x+2*g1z+6*g1y-g1x)*0.08333333333333333,-(6*g7z+6*g7y+g7x+6*g5z-6*g5y+g5x-6*g3z+6*g3y+g3x-6*g1z-6*g1y+g1x)*0.041666666666666664,-(2*g7z+6*g7y+g7x+2*g5z-6*g5y+g5x)*0.08333333333333333,-
+(g7z+6*g7y+g7x+g5z-6*g5y+g5x)*0.08333333333333333,-(6*g7y+g7x-6*g5y+g5x)*0.08333333333333333),Array(-(2*g3y+g3x)*0.16666666666666666,(g3z-2*g3y-g3x)*0.16666666666666666,(2*g3z-2*g3y-g3x)*0.16666666666666666,-(6*g7z+2*g7y+g7x-6*g3z+2*g3y+g3x)*0.08333333333333333,-
+(2*g7z+2*g7y+g7x)*0.16666666666666666,-(g7z+2*g7y+g7x)*0.16666666666666666,-(2*g7y+g7x)*0.16666666666666666),Array(-(g3y+g3x)*0.16666666666666666,(g3z-g3y-g3x)*0.16666666666666666,(2*g3z-g3y-g3x)*0.16666666666666666,-(6*g7z+g7y+g7x-6*g3z+g3y+g3x)*0.08333333333333333,-(2*g7z+g7y+g7x)*0.16666666666666666,-
+(g7z+g7y+g7x)*0.16666666666666666,-(g7y+g7x)*0.16666666666666666),Array(-g3x*0.16666666666666666,(g3z-g3x)*0.16666666666666666,(2*g3z-g3x)*0.16666666666666666,-(6*g7z+g7x-6*g3z+g3x)*0.08333333333333333,-(2*g7z+g7x)*0.16666666666666666,-(g7z+g7x)*0.16666666666666666,-g7x*0.16666666666666666)),Array(Array(0,g1z*0.16666666666666666,g1z*0.3333333333333333,-(g5z-g1z)*0.5,-g5z*0.3333333333333333,-
+g5z*0.16666666666666666,0),Array(g1y*0.16666666666666666,(g1z+g1y)*0.16666666666666666,(2*g1z+g1y)*0.16666666666666666,-(6*g5z-g5y-6*g1z-g1y)*0.08333333333333333,-(2*g5z-g5y)*0.16666666666666666,-(g5z-g5y)*0.16666666666666666,g5y*0.16666666666666666),Array(g1y*0.3333333333333333,(g1z+2*g1y)*0.16666666666666666,(g1z+g1y)*0.3333333333333333,-(3*g5z-g5y-3*g1z-g1y)*0.16666666666666666,-
+(g5z-g5y)*0.3333333333333333,-(g5z-2*g5y)*0.16666666666666666,g5y*0.3333333333333333),Array(-(g3y-g1y)*0.5,(g3z-6*g3y+g1z+6*g1y)*0.08333333333333333,(g3z-3*g3y+g1z+3*g1y)*0.16666666666666666,-(g7z+g7y+g5z-g5y-g3z+g3y-g1z-g1y)*0.25,-
+(g7z+3*g7y+g5z-3*g5y)*0.16666666666666666,-(g7z+6*g7y+g5z-6*g5y)*0.08333333333333333,-(g7y-g5y)*0.5),Array(-g3y*0.3333333333333333,(g3z-2*g3y)*0.16666666666666666,(g3z-g3y)*0.3333333333333333,-(3*g7z+g7y-3*g3z+g3y)*0.16666666666666666,-(g7z+g7y)*0.3333333333333333,-(g7z+2*g7y)*0.16666666666666666,-g7y*0.3333333333333333),Array(-
+g3y*0.16666666666666666,(g3z-g3y)*0.16666666666666666,(2*g3z-g3y)*0.16666666666666666,-(6*g7z+g7y-6*g3z+g3y)*0.08333333333333333,-(2*g7z+g7y)*0.16666666666666666,-(g7z+g7y)*0.16666666666666666,-g7y*0.16666666666666666),Array(0,g3z*0.16666666666666666,g3z*0.3333333333333333,-(g7z-g3z)*0.5,-g7z*0.3333333333333333,-g7z*0.16666666666666666,0)))		
 
 
-		val n = bezierheights.size
+		val n = 7
 
+		var i = 0; var j = 0; var k = 0; var p = 0
+		var points =  Array.ofDim[Double](7)
+		
 		// Split Curves in X-Direction
-		for( i <- 0 until n; j <- 0 until n ) {
-			val points = slice((0 until n).map( p => bezierheights(p)(i)(j) ).toArray,relx0,relx1)
-			for( p <- 0 until n ) bezierheights(p)(i)(j) = points(p)
+		i = 0
+		while( i < n ) {
+			j = 0
+			while( j < n ) {
+				p = 0; while( p < n ) { points(p) = bezierheights(p)(i)(j); p+= 1 }
+				points = slice(points, relx0, relx1)
+				p = 0; while( p < n ) { bezierheights(p)(i)(j) = points(p); p+= 1 }
+				j += 1
+			}
+			i += 1
 		}
 
 		// Split Curves in Y-Direction
-		for( i <- 0 until n; j <- 0 until n ) {
-			val points = slice((0 until n).map( p => bezierheights(i)(p)(j) ).toArray,rely0,rely1)
-			for( p <- 0 until n ) bezierheights(i)(p)(j) = points(p)
+		i = 0
+		while( i < n ) {
+			j = 0
+			while( j < n ) {
+				p = 0; while( p < n ) { points(p) = bezierheights(i)(p)(j); p+= 1 }
+				points = slice(points, rely0, rely1)
+				p = 0; while( p < n ) { bezierheights(i)(p)(j) = points(p); p+= 1 }
+				j += 1
+			}
+			i += 1
 		}
 
 		// Split Curves in Z-Direction
-		for( i <- 0 until n; j <- 0 until n ) {
-			val points = slice((0 until n).map( p => bezierheights(i)(j)(p) ).toArray,relz0,relz1)
-			for( p <- 0 until n ) bezierheights(i)(j)(p) = points(p)
+		i = 0
+		while( i < n ) {
+			j = 0
+			while( j < n ) {
+				p = 0; while( p < n ) { points(p) = bezierheights(i)(j)(p); p+= 1 }
+				points = slice(points, relz0, relz1)
+				p = 0; while( p < n ) { bezierheights(i)(j)(p) = points(p); p+= 1 }
+				j += 1
+			}
+			i += 1
 		}
 		
 		// Extract minimum and maximum possible value
 		// This works because the polynomial is inside the convex hull of the control points
 		var imin = scala.Double.MaxValue
 		var imax = scala.Double.MinValue
-		for( i <- 0 until n; j <- 0 until n; k <- 0 until n ) {
-			val value = bezierheights(i)(j)(k)
-			imin = min(imin, value)
-			imax = max(imax, value)
+		i = 0
+		while( i < n ) {
+			j = 0
+			while( j < n ) {
+				k = 0
+				while( k < n ) {
+
+					val value = bezierheights(i)(j)(k)
+					imin = min(imin, value)
+					imax = max(imax, value)
+
+					k += 1
+				}
+				j += 1
+			}
+			i += 1
 		}
-		
-		Interval(imin,imax)
+				
+		Interval(max(imin,-1), min(imax,1))
 	}
 	
-	/////////////////////////////////////////
+////////////////////////////////////////////////////////
 	
 	def isEven(a:Int) = (a & 1) == 0
 	def isOdd(a:Int) = (a & 1) == 1
@@ -509,9 +528,9 @@ g3y/6,(g3z-g3y)/6,(2*g3z-g3y)/6,-(6*g7z+g7y-6*g3z+g3y)/12,-(2*g7z+g7y)/6,-(g7z+g
 		val (yl,yh) = (rely0, rely1)
 		val (zl,zh) = (relz0, relz1)
 
-		val (x0,x1) = ((xh+xl)/2, (xh-xl)/2)
-		val (y0,y1) = ((yh+yl)/2, (yh-yl)/2)
-		val (z0,z1) = ((zh+zl)/2, (zh-zl)/2)
+		val (x0,x1) = ((xh+xl)*0.5, (xh-xl)*0.5)
+		val (y0,y1) = ((yh+yl)*0.5, (yh-yl)*0.5)
+		val (z0,z1) = ((zh+zl)*0.5, (zh-zl)*0.5)
 		
 		val A = new Tensor3(
 Array(Array(Array(0,g0z,0,-10*g4z,5*(5*g4z-2*g0z),-3*(7*g4z-5*g0z),6*(g4z-g0z)),Array(g0y,0,0,10*(g4y-g0y),-15*(g4y-g0y),6*(g4y-g0y),0),Array(0,
@@ -656,57 +675,5 @@ g6y-15*g6x-21*g5z-4*g5y-21*g5x+21*g4z+4*g4y+15*g4x-15*g3z-10*g3y-21*g3x+15*g2z+1
 								grad(hash(BA+1), relx-1, rely  , relz-1 )), // OF CUBE
 						lerp(u, grad(hash(AB+1), relx  , rely-1, relz-1 ),
 								grad(hash(BB+1), relx-1, rely-1, relz-1 ))))
-	}
-	
-	//TODO: in src/test/scala schieben
-	def test {
-		class Timer {
-			var starttime = 0L
-			var passedtime = 0L
-
-			def getTime = System.nanoTime
-
-			def start  { starttime = getTime }
-			def stop   { passedtime += getTime - starttime }
-			def measure[A](function: => A) = {
-				start
-				val returnvalue = function
-				stop
-				returnvalue
-			}
-			def reset  { passedtime = 0 }
-			def read =   passedtime/1000000000.0
-		}
-		val noisetimer = new Timer
-		val predictiontimer = new Timer
-		val n = 2000
-		val samples = 10
-		for( i <- 0 until n )
-		{
-			// Test-Interval
-			import scala.util.Random.{nextDouble => r}
-		
-			val x0 = 1/r
-			val y0 = 1/r
-			val z0 = 1/r
-			val x1 = x0 + r/30
-			val y1 = y0 + r/30
-			val z1 = z0 + r/30
-		
-			val prediction = predictiontimer.measure {
-				noise3_prediction(Volume(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
-			}
-		
-			//println("Prediction: " + prediction + "Interval: " + (x0,y0,z0) + " - " + (x1,y1,z1) )
-			// Sample Interval
-			for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){ 
-				val x = x0 + u / samples.toDouble * (x1 - x0)
-				val y = y0 + v / samples.toDouble * (y1 - y0)
-				val z = z0 + w / samples.toDouble * (z1 - z0)
-				val noise = noisetimer.measure{noise3(x,y,z)}
-				assert(prediction(noise),"Wrong Prediction:\n" + prediction + ", \nInterval: " + (x0,y0,z0) + " - " + (x1,y1,z1) + "\nPosition: " + (x,y,z) + "Value: " + noise)
-			}
-		}
-		println("noise: " + noisetimer.read/(n*pow(samples,3)) + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read*pow(samples,3)/noisetimer.read)
 	}
 }

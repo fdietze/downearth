@@ -5,11 +5,11 @@ import simplex3d.math.float._
 import scala.collection.mutable.Stack
 
 class GenerationBenchmark extends FunSuite {
-	test("test1") {
+	test("parameter combinations") {
 		val configs = Map(
-			'minMeshNodeSize -> Seq(4,8,16,32,64),
-			'minPredictionSize -> Seq(4,8,16,32,64),
-			'worldWindowSize -> Seq(128)
+			'minMeshNodeSize -> Seq(16,8,4),
+			'minPredictionSize -> Seq(16,8,4),
+			'worldWindowSize -> Seq(64)
 		)
 		
 		val timer = new Util.Timer
@@ -46,7 +46,7 @@ class GenerationBenchmark extends FunSuite {
 			//TODO: figure out, when the generation is finished
 			while( running )
 			{
-				Thread.sleep(100)
+				Thread.sleep(20)
 				if( WorldNodeGenerator.Master.activeJobs.isEmpty )
 					running = false
 			}
