@@ -124,8 +124,6 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 		//while(Util.indexInRange(worldWindowPos,worldWindowSize,Vec3i(pos))
 		
-		assert((worldWindowSize / minMeshNodeSize) % 2 == 0)
-		
 		val lowerVertex = wpos + wsize/2 - msize/2
 		val upperVertex = wpos + wsize/2 + msize/2
 		

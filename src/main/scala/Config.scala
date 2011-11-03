@@ -9,6 +9,10 @@ import org.lwjgl.opengl.{Display, DisplayMode}
 object Config{
 	import ConfigLoader._
 	
+	// TODO: minMeshNodeSize wird nurnoch fürs Streaming verwendet (?).
+	// => umbenennen oder entfernen.
+	// Wenn die Größe gleich der worldWindowSize gesetzt wird,
+	// erhält man automatisch ein hierarchisches streaming.
 	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
 	var minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
 	
@@ -102,6 +106,6 @@ object Config{
 
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
-	assert( (worldWindowSize / minMeshNodeSize) % 2 == 0 )
+	assert( Util.isPowerOfTwo(worldWindowSize / minMeshNodeSize) )
 }
 

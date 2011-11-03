@@ -5,30 +5,15 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
+import Util.Timer
+
 import noise.Noise._
 import noise.interval.{Interval, Volume}
 
 class NoisePrediction extends FunSuite {
 
 	//TODO: add accuracy test
-	test("speed") {
-		class Timer {
-			var starttime = 0L
-			var passedtime = 0L
-
-			def getTime = System.nanoTime
-
-			def start  { starttime = getTime }
-			def stop   { passedtime += getTime - starttime }
-			def measure[A](function: => A) = {
-				start
-				val returnvalue = function
-				stop
-				returnvalue
-			}
-			def reset  { passedtime = 0 }
-			def read =   passedtime/1000000000.0
-		}
+	test("noise prediction speed") {
 		
 		val noisetimer = new Timer
 		val predictiontimer = new Timer

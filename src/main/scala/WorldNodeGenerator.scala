@@ -109,7 +109,8 @@ object WorldNodeGenerator {
 					case nodeinfo @ NodeInfo(nodepos, nodesize) =>
 						isActive = true
 						// println("Ich habe eine NodeInfo " + nodeinfo + " empfangen")
-						val interval = Util.time("predicten"){ Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	}
+						//val interval = Util.time("predicten"){ Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))	}
+						val interval = Config.prediction(Vec3(nodepos),Vec3(nodepos+nodesize))
 						
 						if(interval.isPositive) {
 							// println(nodeinfo + ": Prediction war Positiv")
