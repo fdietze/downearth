@@ -91,7 +91,7 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 			// wenn das Blatt einen größeren Bereich abdeckt der voll, 
 			// bzw leer ist:
 			if(info.size >= 2) {
-				val replacement = new InnerNode(h)
+				val replacement = new InnerNode(this)
 				replacement.updated(info, p, newLeaf)
 			}
 			else {
@@ -418,7 +418,7 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 }
 
 class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
-	def this(h:Polyeder) = this( Array.fill[OctantUnderMesh](8)(Leaf(h)) )
+	def this(l:Leaf) = this( Array.fill[OctantUnderMesh](8)(l) )
 	val vvertcount = new Array[Int](8)
 	
 	// ist nur dann wahr, wenn alle Kindknoten das selbe Blatt sind.
