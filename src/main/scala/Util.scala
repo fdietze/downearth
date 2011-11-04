@@ -378,7 +378,7 @@ object Util {
 			try {
 				ImageIO.write(image, format, file);
 				println("datei "+ fullName +" erforgreich gespeichert")
-				DisplayEventManager.showEventText("Screenshot "+ fullName +" saved")
+				DisplayEventManager.showEventText("File "+ fullName +" saved")
 			} catch {
 			 case e : IOException => e.printStackTrace
 			}

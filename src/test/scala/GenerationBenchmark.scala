@@ -23,11 +23,7 @@ class GenerationBenchmark extends FunSuite {
 			kdTreePrediction <- configs('kdTreePrediction);
 			worldWindowSize <- configs('worldWindowSize)
 		) {
-			println("Running Config combination %d of %d...".format(currentcombination, combinations))
-			println("minMeshNodeSize:   " + minMeshNodeSize )
-			println("minPredictionSize: " + minPredictionSize )
-			println("kdTreePrediction:  " + kdTreePrediction )
-			println("worldWindowSize:   " + worldWindowSize )
+			println("Configuration %d of %d...".format(currentcombination, combinations))
 
 			//overwrite global Config
 			Config.minMeshNodeSize = minMeshNodeSize.asInstanceOf[Int]
@@ -57,7 +53,11 @@ class GenerationBenchmark extends FunSuite {
 			
 			timer.stop
 			if( timer.read < besttime ) {
-				println("---- FASTEST COMBINATION so far! ----")
+				println("minMeshNodeSize:   " + minMeshNodeSize )
+				println("minPredictionSize: " + minPredictionSize )
+				println("kdTreePrediction:  " + kdTreePrediction )
+				println("worldWindowSize:   " + worldWindowSize )
+				println("---- FASTEST CONFIGURATION so far! ----")
 				besttime = timer.read
 			}
 			println(">> Time: " + timer.read + "s")

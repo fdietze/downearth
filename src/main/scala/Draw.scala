@@ -165,7 +165,7 @@ object Draw {
 		}
 	}
 	
-	def drawDispayEvent(event:DisplayEvent,pos:Int){
+	def drawDispayEvent(event:DisplayEvent, pos:Int) {
 		import org.newdawn.slick.Color.white
 		
 		val posx = Config.screenWidth - 150
