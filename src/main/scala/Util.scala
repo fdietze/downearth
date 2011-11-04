@@ -20,6 +20,7 @@ import javax.imageio.ImageIO
 import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
 import java.text.DateFormat._
+import scala.actors.Futures.future
 
 object Util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x,in.y,in.z)
@@ -337,53 +338,50 @@ object Util {
 	
 	var counter = 0
 	
-	def screenShot(name:String){
+	def screenShot(name:String) {
 		counter += 1
 		glReadBuffer(GL_FRONT)
 		val bpp = 4
 		val buffer = BufferUtils.createByteBuffer(screenWidth * screenHeight * bpp)
 		glReadPixels(0, 0, screenWidth, screenHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
-		val format = "PNG"
-		val now = new Date
-		val df = new SimpleDateFormat("yyyy-MM-dd")
-		val fullName = (df format now) + "-" + name + "-%03d." + format.toLowerCase
-		val file = {
-			var f:File = new File("screenshots" , fullName format counter )
-			while(f.exists){
-				counter += 1
-				f = new File("screenshots" , fullName format counter )
+		
+		future { // save picture in background
+			val format = "PNG"
+			val now = new Date
+			val df = new SimpleDateFormat("yyyy-MM-dd")
+			val fullName = (df format now) + "-" + name + "-%03d." + format.toLowerCase
+			val file = {
+				var f:File = new File("screenshots" , fullName format counter )
+				while(f.exists) {
+					counter += 1
+					f = new File("screenshots" , fullName format counter )
+				}
+				f
 			}
-			f
-		}
 		
-		val image = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB)
+			val image = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB)
 		
-		var i      = 0
-		val end    = screenHeight * screenWidth * bpp
-		val width  = screenWidth
-		val height = screenHeight
+			var i      = 0
+			val end    = screenHeight * screenWidth * bpp
+			val width  = screenWidth
+			val height = screenHeight
 		
-		while(i < end){
-			val r = buffer.get(i) & 0xFF;
-			val g = buffer.get(i + 1) & 0xFF;
-			val b = buffer.get(i + 2) & 0xFF;
-			val p = (i/bpp)
-			image.setRGB( p % width , p / width , (0xFF << 24) | (r << 16) | (g << 8) | b)
-			i += bpp
-		}
+			while(i < end){
+				val r = buffer.get(i) & 0xFF;
+				val g = buffer.get(i + 1) & 0xFF;
+				val b = buffer.get(i + 2) & 0xFF;
+				val p = (i/bpp)
+				image.setRGB( p % width , p / width , (0xFF << 24) | (r << 16) | (g << 8) | b)
+				i += bpp
+			}
 		
-		for( y ← 0 until screenHeight; x ← 0 until screenWidth ) {
-			val i = (x + (screenWidth * y)) * bpp;
-			val r = buffer.get(i) & 0xFF;
-			val g = buffer.get(i + 1) & 0xFF;
-			val b = buffer.get(i + 2) & 0xFF;
-			image.setRGB(x, screenHeight - (y + 1), (0xFF << 24) | (r << 16) | (g << 8) | b)
-		}
-		try {
-			ImageIO.write(image, format, file);
-			println("datei "+ fullName +" erforgreich gespeichert")
-		} catch {
-		 case e : IOException => e.printStackTrace
+			try {
+				ImageIO.write(image, format, file);
+				println("datei "+ fullName +" erforgreich gespeichert")
+				DisplayEventManager.showEventText("File "+ fullName +" saved")
+			} catch {
+			 case e : IOException => e.printStackTrace
+			}
 		}
 	}
 	
