@@ -150,10 +150,10 @@ object BuildInterface{
 		val mousedest = World.raytracer(position, direction, buildStatus, 100)
 		mousedest match {
 			case Some(pos) =>
-				inventoryMass += World(pos).volume
+				inventoryMass += World(pos).h.volume
 				val replacement = if(buildStatus) current else EmptyHexaeder
 				inventoryMass -= replacement.volume
-				World(pos) = replacement
+				World(pos) = Leaf(replacement, 3)
 			case _ =>
 		}
 	}
@@ -170,7 +170,7 @@ object BuildInterface{
 			if(buildStatus)
 				current
 			else
-				World(v)
+				World(v).h
 			
 			glDisable(GL_LIGHTING)
 			glDisable(GL_TEXTURE_2D)

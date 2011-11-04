@@ -16,7 +16,7 @@ trait Octant extends Serializable {
 	// Information in Form einer Instanz von NodeInfo weitergereicht.
 	
 	// Greift mit absoluten Koordinaten auf den Oktant zu
-	def apply(info:NodeInfo, p:Vec3i) : Polyeder
+	def apply(info:NodeInfo, p:Vec3i) : Leaf
 }
 
 // im Octree wird unterschieden, ob sich der Octant oberhalb oder unterhalb des 
@@ -26,7 +26,7 @@ trait OctantOverMesh extends Octant {
 	def isSet(info:NodeInfo, pos:NodeInfo):Boolean
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Polyeder):OctantOverMesh
+	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):OctantOverMesh
 	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
@@ -57,7 +57,7 @@ trait OctantUnderMesh extends Octant {
 	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int	
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:NodeInfo, p:Vec3i, newHexaeder:Polyeder):OctantUnderMesh
+	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):OctantUnderMesh
 	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
@@ -70,7 +70,7 @@ trait OctantUnderMesh extends Octant {
 	
 	// Ähnlich zu updated, aber diese Funktion generierd auch Updates für das 
 	// Mesh, welches sich verändert.
-	def patchWorld(info:NodeInfo, p:Vec3i, nh:Polyeder, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData])
+	def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData])
 }
 
 
@@ -82,20 +82,20 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 	
 	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Octant) = insertnode
 
-	override def apply(info:NodeInfo, p:Vec3i) = h
+	override def apply(info:NodeInfo, p:Vec3i) = this
 
-	override def updated(info:NodeInfo, p:Vec3i, newHexaeder:Polyeder) = {
-		if(h == newHexaeder)
+	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) = {
+		if(h == newLeaf.h)
 			this
 		else{
 			// wenn das Blatt einen größeren Bereich abdeckt der voll, 
 			// bzw leer ist:
 			if(info.size >= 2) {
 				val replacement = new InnerNode(h)
-				replacement.updated(info, p, newHexaeder)
+				replacement.updated(info, p, newLeaf)
 			}
 			else {
-				Leaf(newHexaeder)
+				newLeaf
 			}
 		}
 	}
@@ -114,7 +114,7 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 	// erzeugt aus Zwei aneinender grenzenden Hexaedern die Polygone, die nicht verdeckt werden.
 	// performance kritischer bereich, weil es für jedes benachberte Hexaederpaar aufgerufen wird
 	def addSurface(from:Polyeder, to:Polyeder, pos:Vec3i, dir:Int ,meshBuilder:TextureMeshBuilder) = {
-		if(to != UndefHexaeder){
+		if(to != UndefHexaeder) {
 			assert(from != EmptyHexaeder)
 			
 			import meshBuilder._
@@ -142,18 +142,20 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 			}
 			
 			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3){
+				val matid = if( material >= 0 ) material else materialfunction(pos + 0.5f).id
+				
 				vertexBuilder += (Vec3(pos) + v0)
-				//texCoordBuilder += Vec2( v0(axisa)/2f + (direction & (axis >> 1))/2f , v0(axisb)/2f )
-				vertexCounter += 1
+				texCoordBuilder += Vec2( v0(axisa)/4f + matid/4f , v0(axisb) )
 				
 				vertexBuilder += (Vec3(pos) + v1)
-				//texCoordBuilder += Vec2( v1(axisa)/2f + (direction & (axis >> 1))/2f , v1(axisb)/2f )
-				vertexCounter += 1
+				texCoordBuilder += Vec2( v1(axisa)/4f + matid/4f , v1(axisb) )
 				
 				vertexBuilder += (Vec3(pos) + v2)
-				//texCoordBuilder += Vec2( v2(axisa)/2f + (direction & (axis >> 1))/2f , v2(axisb)/2f )
-				vertexCounter += 1
+				texCoordBuilder += Vec2( v2(axisa)/4f + matid/4f , v2(axisb) )
 				
+				vertexCounter += 3
+				
+				/*
 				if( vertexMaterials ) {
 					colorBuilder += materialfunction(Vec3(pos) + v0).vec4
 					colorBuilder += materialfunction(Vec3(pos) + v1).vec4
@@ -165,6 +167,7 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 					colorBuilder += centerColor
 					colorBuilder += centerColor
 				}
+				*/
 
 				normalBuilder += normalize(cross(v2-v1,v0-v1))
 			}
@@ -243,18 +246,18 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 		vertexCounter
 	}
 	
-	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Polyeder, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData]) = {
-		val replacement = updated(info, p, nh)
+	override def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData]) = {
+		val replacement = updated(info, p, newLeaf)
 		
 		val builder = new TextureMeshBuilder
-		replacement.genPolygons(info,builder,World.apply _)
+		replacement.genPolygons(info,builder, v => World.apply(v).h )
 		val update = Update(vertpos,vertcount,builder.result)
 		(replacement,update)
 	}
 
 	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData] = {
 		val builder = new TextureMeshBuilder 
-		genPolygons(info, builder, World.apply _ )
+		genPolygons(info, builder, v => World.apply(v).h )
 		Update(vertpos,vertcount,builder.result)
 	}
 
@@ -267,15 +270,39 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 	override def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
 		(from,to)
 	}
+	
+	def material = -1
 }
 
-object Leaf{
+// Leaf that is set by a user, contains a material
+class UserLeaf(_h:Polyeder, m:Byte) extends Leaf(_h) {
+	override def material:Int = m
+	
+	override def equals(that:Any) = {
+		that match {
+			case l:UserLeaf =>
+				h == l.h && material == l.material
+			case _ =>
+				false
+		}
+	}
+
+}
+
+object Leaf {
 	def apply(h:Polyeder) = {
 		h match{
 			case EmptyHexaeder => EmptyLeaf
 			case FullHexaeder => FullLeaf
 			case _ => new Leaf(h)
 		}
+	}
+	
+	def apply(h:Polyeder, material:Int) = {
+		if(h eq EmptyHexaeder)
+			EmptyLeaf
+		else
+			new UserLeaf(h, material.toByte )
 	}
 }
 
@@ -300,9 +327,9 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 		data(index)(nodeinfo,p)
 	}
 	
-	override def updated(info:NodeInfo, p:Vec3i, nh:Polyeder):OctantOverMesh = {
+	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):OctantOverMesh = {
 		val (index,childinfo) = info(p)
-		data(index) = data(index).updated(childinfo,p, nh)
+		data(index) = data(index).updated(childinfo,p, newLeaf)
 		
 		// TODO refactor diesen teil so weit es geht nach NodeInfo auslagern
 		import info.{pos => nodepos, size => nodesize}
@@ -416,9 +443,9 @@ class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
 		data(index)(nodeinfo,p)
 	}
 	
-	def updated(info:NodeInfo, p:Vec3i,h:Polyeder) = {
+	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) = {
 		val (index,childinfo) = info(p)
-		data(index) = data(index).updated(childinfo,p,h)
+		data(index) = data(index).updated(childinfo,p,newLeaf)
 		merge
 	}
 	
@@ -428,13 +455,13 @@ class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
 		vvertcount.sum
 	}
 	
-	override def patchWorld(info:NodeInfo, p:Vec3i, nh:Polyeder, vertpos:Int, vertcount:Int) = {
+	override def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) = {
 		val (index,childinfo) = info(p)
 		
 		val newvertpos = vertpos + vvertcount.view(0,index).sum
 		val newvertcount = vvertcount(index)
 
-		val (newNode,patch) = data(index).patchWorld(childinfo,p,nh,newvertpos,newvertcount)
+		val (newNode,patch) = data(index).patchWorld(childinfo,p,newLeaf,newvertpos,newvertcount)
 
 		data(index) = newNode
 		
@@ -442,9 +469,9 @@ class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
 
 		if(merge_?){
 			val mb = new TextureMeshBuilder
-			val replacement = Leaf(nh)
-			replacement.genPolygons(info,mb, World.apply _)
-			( replacement, Update(vertpos,vertcount,mb.result) )
+			// replace with newLeaf
+			newLeaf.genPolygons(info,mb, v => World.apply(v).h )
+			( newLeaf, Update(vertpos,vertcount,mb.result) )
 		}
 		else
 			(this,patch)
@@ -511,14 +538,14 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 		this
 	}
 	
-	override def draw(info:NodeInfo, test:FrustumTest){
+	override def draw(info:NodeInfo, test:FrustumTest) {
 		if( test testNode info )
 			mesh.draw
 	}
 	
-	override def updated(info:NodeInfo, p:Vec3i, nh:Polyeder) : OctantOverMesh = {
+	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
 		
-		val (replacement,patch) = node.patchWorld(info, p, nh, 0, mesh.size)
+		val (replacement,patch) = node.patchWorld(info, p, newLeaf, 0, mesh.size)
 		node = replacement
 		var patches = patch :: Nil
 		
@@ -527,7 +554,7 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 		for(i <- 0 until 6) {
 			val npos = p.clone
 			npos(i >> 1) += ((i&1) << 1)-1
-			if( info.indexInRange(npos) ){
+			if( info.indexInRange(npos) ) {
 				val newpatch = node.repolyWorld(info, npos, 0, newsize)
 				patches ::=  newpatch
 				newsize += newpatch.sizedifference
@@ -581,7 +608,7 @@ object DeadInnerNode extends OctantOverMesh {
 	def apply(info:NodeInfo, p:Vec3i) = Config.ungeneratedDefault
 	
 	//similar to updated, but this function also generates patches to update the mesh
-	override def updated(info:NodeInfo, p:Vec3i, nh:Polyeder) : OctantOverMesh = {
+	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
 		println("dead nodes can't be patched")
 		this
 	}

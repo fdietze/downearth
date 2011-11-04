@@ -26,7 +26,7 @@ object Config{
 	
 	val skybox = loadBoolean("skybox") getOrElse false
 	
-	val ungeneratedDefault = UndefHexaeder
+	val ungeneratedDefault = Leaf(UndefHexaeder,-1)
 	val startpos = Vec3(0,0,0) // TODO: Fix streaming with other start position
 	
 	val fpsLimit = loadInt("fpsLimit") getOrElse 60

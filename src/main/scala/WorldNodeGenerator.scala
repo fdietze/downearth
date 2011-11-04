@@ -7,7 +7,7 @@ package openworld
 import scala.actors.{DaemonActor, OutputChannel, Actor, Future}
 
 import simplex3d.math.Vec3i
-import simplex3d.math.float.{Vec3, Vec4}
+import simplex3d.math.float.{Vec2, Vec3, Vec4}
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 
@@ -37,7 +37,6 @@ object WorldNodeGenerator {
 						idleWorkers.dequeue ! cuboid //Verteilen
 					else
 						jobqueue enqueue cuboid //Warteschlange
-
 
 				// Worker meldet abgeschlossenen Job (als nodeinfo)
 				case ( oldjob:NodeInfo, node:OctantOverMesh ) =>
@@ -74,8 +73,9 @@ object WorldNodeGenerator {
 	val emptyTextureMeshData = {
 		val vertexArray = new Array[Vec3](0)
 		val normalArray = new Array[Vec3](0)
-		val colorArray  = new Array[Vec4](0)
-		TextureMeshData(vertexArray,normalArray,colorArray)
+		val texCoordArray = new Array[Vec2](0)
+//		val colorArray  = new Array[Vec4](0)
+		TextureMeshData(vertexArray,normalArray,texCoordArray)
 	}
 	
 	class Worker (id:Int) extends Actor {

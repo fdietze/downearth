@@ -74,7 +74,7 @@ object World {
 				}
 			}
 
-			h = apply(pos)
+			h = apply(pos).h
 
 			if(!Util.rayPolyederIntersect(from-pos,direction,h))
 				h = null
@@ -95,8 +95,8 @@ object World {
 			None
 	}
 	
-	def update(pos:Vec3i,h:Polyeder){
-		octree(pos) = h
+	def update(pos:Vec3i, l:Leaf) {
+		octree(pos) = l
 		BulletPhysics.worldChange(pos)
 	}
 	
@@ -104,7 +104,7 @@ object World {
 		if(octree != null)
 			octree(pos)
 		else
-			UndefHexaeder
+			Config.ungeneratedDefault
 		
 	def draw(test:FrustumTest){
 		drawcalls = 0

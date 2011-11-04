@@ -10,7 +10,7 @@ import collection.Map
 import Config.minMeshNodeSize
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Polyeder] with Serializable{
+class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Leaf] with Serializable{
 	var worldWindowPos:Vec3i = rootNodePos.clone
 	val worldWindowSize:Int = rootNodeSize
 	
@@ -36,13 +36,13 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			Config.ungeneratedDefault
 	}
 
-	def update(p:Vec3i,h:Polyeder) {
+	def update(p:Vec3i,l:Leaf) {
 		if(rootNodeInfo.indexInRange(p)) {
 			// TODO, kann auf updated zurückgeführt werden
 			if(meshGenerated)
-				root = rootB.updated(rootNodeInfo, p,h)
+				root = rootB.updated(rootNodeInfo, p,l)
 			else 
-				root = rootA.updated(rootNodeInfo, p,h)
+				root = rootA.updated(rootNodeInfo, p,l)
 		}
 		else{
 			printf("update out of world at %s, %s\n",p.toString,rootNodeInfo.toString)
@@ -76,9 +76,9 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		}
 	}
 	
-	def genMesh(f:(Vec3i => Polyeder) = World.apply _) {
+	def genMesh(f:(Vec3i => Polyeder) = v => World.apply(v).h ) {
 		assert(! meshGenerated)
-		root = rootA.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x) else f(x) }) )
+		root = rootA.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x).h else f(x) }) )
 		meshGenerated = true
 	}
 	
@@ -166,7 +166,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		root = rootB.insertNode(rootNodeInfo, nodeinfo, that)
 	}
 
-	override def fill( foo: Vec3i => Polyeder ) {
+	override def fill( foo: Vec3i => Leaf ) {
 		for( v <- rootNodePos until rootNodePos + rootNodeSize ) {
 			this(v) = foo(v)
 		}

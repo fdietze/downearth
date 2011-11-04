@@ -70,12 +70,13 @@ case class Cuboid(pos:Vec3i, size:Vec3i) {
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
 	
 	def longestedge:Int = {
-		if( size.x >= size.y && size.x >= size.z )
-			0
-		else if( size.y >= size.x && size.y >= size.z )
-			1
-		else // if( size.z >= size.x && size.z >= size.y )
+		// Z als erstes, da es Sinn macht als ers
+		if( size.z >= size.x && size.z >= size.y )
 			2
+		else if( size.x >= size.y && size.x >= size.z )
+			0
+		else// if( size.y >= size.x && size.y >= size.z )
+			1
 	}
 
 	def shortestedge:Int = {

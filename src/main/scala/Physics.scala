@@ -190,7 +190,7 @@ object BulletPhysics {
 		
 		def fillfunc(v:Vec3i) = {
 			
-			val vertexdata = World(pos+v).vertices.distinct
+			val vertexdata = World(pos+v).h.vertices.distinct
 			
 			if(!vertexdata.isEmpty){
 				val center = (vertexdata.reduce(_+_))/vertexdata.size

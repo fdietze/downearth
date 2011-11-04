@@ -13,14 +13,15 @@ object TextureManager{
 			throw new java.io.FileNotFoundException("that resource is not available: " + filename)
 		
 		val texture = TextureLoader.getTexture( format, is)
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		
 		
 		texture
 	}
 	
-	lazy val box = loadImage("box2.png")
-	lazy val skybox = loadImage("stormydays_rearrange_lowres.jpg")
+	lazy val box       = loadImage("box2.png")
+	lazy val skybox    = loadImage("stormydays_rearrange_lowres.jpg")
+	lazy val materials = loadImage("materials.png")
 }
 

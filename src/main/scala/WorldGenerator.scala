@@ -90,14 +90,13 @@ object WorldGenerator {
 
 			if( h.noVolume )
 				EmptyHexaeder
-			else h
+			else 
+				h
 		}
 		
-		val fillfunction = fillfun _
-		
 		// Octree mit Hexaedern füllen
-		octree.fill( fillfunction )
-		octree.genMesh( fillfunction )
+		octree.fill( v => Leaf(fillfun(v)) )
+		octree.genMesh( fillfun _ )
 		assert(octree.rootNodePos == nodepos)
 		assert(octree.rootNodeSize == nodesize)
 

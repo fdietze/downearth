@@ -5,7 +5,7 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 
-import simplex3d.math.float.{Vec3,Vec4}
+import simplex3d.math.float.{Vec2,Vec3,Vec4}
 import simplex3d.math.Vec3i
 import simplex3d.math.float.functions.normalize
 
@@ -40,8 +40,8 @@ trait MeshBuilder[T <: MeshData] {
 case class TextureMeshData(
 			vertexArray:Array[Vec3],
 			normalArray:Array[Vec3],
-//			texcoordsArray:Array[Vec2]
-			colorArray:Array[Vec4]
+			texcoordsArray:Array[Vec2]
+//			colorArray:Array[Vec4]
 		) extends MeshData{
 	def size = vertexArray.size
 }
@@ -51,14 +51,14 @@ import scala.collection.mutable.ArrayBuilder
 case class TextureMeshBuilder(
 			vertexBuilder:ArrayBuilder[Vec3] = ArrayBuilder.make[Vec3],
 			normalBuilder:ArrayBuilder[Vec3] = ArrayBuilder.make[Vec3],
-//			texCoordBuilder:ArrayBuilder[Vec2] = ArrayBuilder.make[Vec2]
-			colorBuilder:ArrayBuilder[Vec4] = ArrayBuilder.make[Vec4]
+			texCoordBuilder:ArrayBuilder[Vec2] = ArrayBuilder.make[Vec2]
+//			colorBuilder:ArrayBuilder[Vec4] = ArrayBuilder.make[Vec4]
 			) extends MeshBuilder[TextureMeshData] {
 	def result = TextureMeshData(
 					vertexBuilder.result,
 					normalBuilder.result,
-//					texCoordBuilder.result
-					colorBuilder.result
+					texCoordBuilder.result
+//					colorBuilder.result
 					)
 }
 
@@ -79,8 +79,8 @@ object EmptyPatch extends Patch[Nothing](0,0,null)
 object MutableTextureMesh {
 	
 	def apply(data:TextureMeshData) = {
-//	import data.{vertexArray,texcoordsArray}
-	import data.{vertexArray, colorArray}
+	import data.{vertexArray,texcoordsArray}
+//	import data.{vertexArray, colorArray}
 	
 	val normalArray = if(Config.smoothShading) new Array[Vec3](vertexArray.size) else (data.normalArray flatMap (x => Seq(x,x,x)))
 	
@@ -117,31 +117,31 @@ object MutableTextureMesh {
 	}
 	
 	
-//	val (vertices,normals,texcoords) = interleave(
-	val (vertices,normals,colors) = interleave(
+	val (vertices,normals,texcoords) = interleave(
+//	val (vertices,normals,colors) = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
-//			DataSeq[Vec2, RFloat]
-			DataSeq[Vec4, RFloat]
+			DataSeq[Vec2, RFloat]
+//			DataSeq[Vec4, RFloat]
 		)(vertexArray.size)
 		for(i <- 0 until vertexArray.size){
 			vertices(i) = vertexArray(i)
 			normals(i) = normalArray(i)
-//			texcoords(i) = texcoordsArray(i)
-			colors(i) = colorArray(i)
+			texcoords(i) = texcoordsArray(i)
+//			colors(i) = colorArray(i)
 		}
-//		new MutableTextureMesh(vertices,normals,texcoords)
-		new MutableTextureMesh(vertices,normals,colors)
+		new MutableTextureMesh(vertices,normals,texcoords)
+//		new MutableTextureMesh(vertices,normals,colors)
 	}
 	
 	def apply(meshes:Array[MutableTextureMesh]) = {
 		val size = meshes.map(_.size).sum
-//		val (vertices,normals,texcoords) = interleave(
-		val (vertices,normals,colors) = interleave(
+		val (vertices,normals,texcoords) = interleave(
+//		val (vertices,normals,colors) = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
-//			DataSeq[Vec2, RFloat]
-			DataSeq[Vec4, RFloat]
+			DataSeq[Vec2, RFloat]
+//			DataSeq[Vec4, RFloat]
 		)(size)
 		
 		var currentpos = 0
@@ -153,8 +153,8 @@ object MutableTextureMesh {
 				mesh.vertices.bindingBufferSubData(0,currentsize)
 			currentpos += currentsize
 		}
-//		new MutableTextureMesh(vertices,normals,texcoords)
-		new MutableTextureMesh(vertices,normals,colors)
+		new MutableTextureMesh(vertices,normals,texcoords)
+//		new MutableTextureMesh(vertices,normals,colors)
 	}
 }
 
@@ -163,10 +163,10 @@ object MutableTextureMesh {
 // zu verändern.
 class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat], 
                          normals_ :DataView[Vec3,RFloat], 
-                         //texcoords_ :DataView[Vec2,RFloat]
-                         colors_ :DataView[Vec4,RFloat]
+                         texcoords_ :DataView[Vec2,RFloat]
+//                         colors_ :DataView[Vec4,RFloat]
                          ) 
-    	extends TextureMesh(vertices_, normals_, colors_)//, texcoords_)
+    	extends TextureMesh(vertices_, normals_, texcoords_) // colors_), 
     	with MutableMesh[TextureMeshData] {
 
 	private var msize = vertices_.size
@@ -190,14 +190,14 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 		val t = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
-//			DataSeq[Vec2, RFloat]
-			DataSeq[Vec4, RFloat]
+			DataSeq[Vec2, RFloat]
+//			DataSeq[Vec4, RFloat]
 			)( newsize )
 
 		vertices  = t._1
 		normals   = t._2
-//		texcoords = t._3
-		colors = t._3
+		texcoords = t._3
+//		colors = t._3
 
 		case class View(offset:Int,size:Int,data:TextureMeshData){
 			def split(splitpos:Int) = {
@@ -242,8 +242,8 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 				for(i <- offset until (offset+size) ) {
 					vertices(index) = data.vertexArray(i)
 					normals(index) = data.normalArray(i/3)
-					//texcoords(index) = data.texcoordsArray(i)
-					colors(index) = data.colorArray(i)
+					texcoords(index) = data.texcoordsArray(i)
+					//colors(index) = data.colorArray(i)
 					index += 1
 				}
 			}
@@ -260,17 +260,17 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 	def split(chunksizes:Array[Int]) = {
 		var index = 0
 		for(chunksize ← chunksizes) yield {
-//			val (newvertices, newnormals, newtexcoords) = interleave(
-			val (newvertices, newnormals, newcolors) = interleave(
+			val (newvertices, newnormals, newtexcoords) = interleave(
+//			val (newvertices, newnormals, newcolors) = interleave(
 				DataSeq[Vec3, RFloat],
 				DataSeq[Vec3, RFloat],
-//				DataSeq[Vec2, RFloat]
-				DataSeq[Vec4, RFloat]
+				DataSeq[Vec2, RFloat]
+//				DataSeq[Vec4, RFloat]
 				)( chunksize )
 			newvertices.bindingBuffer.put(vertices.bindingBufferSubData(index,chunksize))
 			index += chunksize
-//			new MutableTextureMesh(newvertices,newnormals,newtexcoords)
-			new MutableTextureMesh(newvertices,newnormals,newcolors)
+			new MutableTextureMesh(newvertices,newnormals,newtexcoords)
+//			new MutableTextureMesh(newvertices,newnormals,newcolors)
 		}
 	}
 }
@@ -278,21 +278,21 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 object TextureMesh{
 	def apply(data:TextureMeshData) = {
 	import data._
-//	val (vertices,normals,texcoords) = interleave(
-	val (vertices,normals,colors) = interleave(
+	val (vertices,normals,texcoords) = interleave(
+//	val (vertices,normals,colors) = interleave(
 			DataSeq[Vec3, RFloat],
 			DataSeq[Vec3, RFloat],
-//			DataSeq[Vec2, RFloat]
-			DataSeq[Vec4, RFloat]
+			DataSeq[Vec2, RFloat]
+//			DataSeq[Vec4, RFloat]
 		)(vertexArray.size)
 		for(i <- 0 until vertexArray.size){
 			vertices(i) = vertexArray(i)
 			normals(i) = normalArray(i/3)
-//			texcoords(i) = texcoordsArray(i)
-			colors(i) = colorArray(i)
+			texcoords(i) = texcoordsArray(i)
+//			colors(i) = colorArray(i)
 		}
-//		new TextureMesh(vertices,normals,texcoords)
-		new TextureMesh(vertices,normals,colors)
+		new TextureMesh(vertices,normals,texcoords)
+//		new TextureMesh(vertices,normals,colors)
 	}
 }
 
@@ -300,8 +300,8 @@ object TextureMesh{
 // Festplatte gespeichert werden.
 class TextureMesh(@transient var vertices:DataView[Vec3,RFloat], 
                   @transient var normals:DataView[Vec3,RFloat], 
-                  //@transient var texcoords:DataView[Vec2,RFloat]
-                  @transient var colors:DataView[Vec4,RFloat]
+                  @transient var texcoords:DataView[Vec2,RFloat]
+                  //@transient var colors:DataView[Vec4,RFloat]
                   ) 
                        extends Mesh with Serializable {
   
@@ -309,8 +309,8 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	@throws(classOf[IOException])
 	private[this] def writeObject(out:ObjectOutputStream) {
 		out.writeInt(msize)
-//		out.writeObject(new InterleavedData(vertices,normals,texcoords))
-		out.writeObject(new InterleavedData(vertices,normals,colors))
+		out.writeObject(new InterleavedData(vertices,normals,texcoords))
+//		out.writeObject(new InterleavedData(vertices,normals,colors))
 	}
 	
 	@throws(classOf[IOException]) @throws(classOf[ClassNotFoundException])
@@ -319,8 +319,8 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 		val data = in.readObject.asInstanceOf[InterleavedData]
 		vertices = data(0).asInstanceOf[DataView[Vec3,RFloat]]
 		normals  = data(1).asInstanceOf[DataView[Vec3,RFloat]]
-//		texcoords= data(2).asInstanceOf[DataView[Vec2,RFloat]]
-		colors   = data(2).asInstanceOf[DataView[Vec4,RFloat]]
+		texcoords= data(2).asInstanceOf[DataView[Vec2,RFloat]]
+//		colors   = data(2).asInstanceOf[DataView[Vec4,RFloat]]
 	}
 	
 	@transient private var msize = vertices.size
@@ -328,6 +328,7 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	
 	def draw {
 		//TextureManager.box.bind
+		TextureManager.materials.bind
 		
 		if(vertexBufferObject == 0)
 			genvbo
@@ -338,20 +339,20 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 
 			glEnableClientState(GL_VERTEX_ARRAY)
 			glEnableClientState(GL_NORMAL_ARRAY)
-			//glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-			glEnableClientState(GL_COLOR_ARRAY)
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+			//glEnableClientState(GL_COLOR_ARRAY)
 
 			glVertexPointer(vertices.components, vertices.rawType, vertices.byteStride, vertices.byteOffset)
 			glNormalPointer(normals.rawType, normals.byteStride, normals.byteOffset)
-//			glTexCoordPointer(texcoords.components, texcoords.rawType, texcoords.byteStride, texcoords.byteOffset)
-			glColorPointer(colors.components, colors.rawType, colors.byteStride, colors.byteOffset)
+			glTexCoordPointer(texcoords.components, texcoords.rawType, texcoords.byteStride, texcoords.byteOffset)
+//			glColorPointer(colors.components, colors.rawType, colors.byteStride, colors.byteOffset)
 
 			glDrawArrays(GL_TRIANGLES, 0, vertices.size)
 
 			glDisableClientState(GL_VERTEX_ARRAY)
 			glDisableClientState(GL_NORMAL_ARRAY)
-			//glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-			glDisableClientState(GL_COLOR_ARRAY)
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+//			glDisableClientState(GL_COLOR_ARRAY)
 
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
 		}
