@@ -127,6 +127,50 @@ object Volume {
 def dot(a:Volume, b:Volume) = a.x*b.x + a.y*b.y + a.z*b.z
 def length(v:Volume) = sqrt(square(v.x) + square(v.y) + square(v.z))
 
+
+case class Interval4D(x:Interval = Interval(), y:Interval = Interval(), z:Interval = Interval(), w:Interval) {
+	def low  = Vec4(x.low , y.low , z.low,  w.low )
+	def high = Vec4(x.high, y.high, z.high, w.high)
+	
+	def isDegenerate = x.isDegenerate || y.isDegenerate || z.isDegenerate || w.isDegenerate
+	def apply(v:Vec4) = x(v.x) && y(v.y) && z(v.z) && w(v.w)
+	
+	// -Interval4D
+	def unary_- = Interval4D(-x, -y, -z, -w)
+
+	// Interval4D <op> Interval4D
+	def + (that:Interval4D) = Interval4D(this.x + that.x, this.y + that.y, this.z + that.z, this.w + that.w)
+	def - (that:Interval4D) = Interval4D(this.x - that.x, this.y - that.y, this.z - that.z, this.w - that.w)
+	def * (that:Interval4D) = Interval4D(this.x * that.x, this.y * that.y, this.z * that.z, this.w * that.w)
+	def / (that:Interval4D) = Interval4D(this.x / that.x, this.y / that.y, this.z / that.z, this.w / that.w)
+
+	// Interval4D <op> Scalar
+	def + (that:Double) = Interval4D(this.x + that, this.y + that, this.z + that, this.w + that)
+	def - (that:Double) = Interval4D(this.x - that, this.y - that, this.z - that, this.w - that)
+	def * (that:Double) = Interval4D(this.x * that, this.y * that, this.z * that, this.w * that)
+	def / (that:Double) = Interval4D(this.x / that, this.y / that, this.z / that, this.w / that)
+
+	// Interval4D <op> Interval
+	def + (that:Interval) = Interval4D(this.x + that, this.y + that, this.z + that, this.w + that)
+	def - (that:Interval) = Interval4D(this.x - that, this.y - that, this.z - that, this.w - that)
+	def * (that:Interval) = Interval4D(this.x * that, this.y * that, this.z * that, this.w * that)
+	def / (that:Interval) = Interval4D(this.x / that, this.y / that, this.z / that, this.w / that)
+}
+
+object Interval4D {
+	def apply(v1:Vec4, v2:Vec4):Interval4D = {
+		Interval4D(
+			Interval(v1.x, v2.x),
+			Interval(v1.y, v2.y),
+			Interval(v1.z, v2.z),
+			Interval(v1.w, v2.w)
+		)
+	}
+	def apply(v:Vec4):Interval4D = Interval4D(v,v)
+	def apply(x:Double, y:Double, z:Double, w:Double):Interval4D = Interval4D(Interval(x), Interval(y), Interval(z), Interval(w))
+	def apply(value:Double):Interval4D = Interval4D(value, value, value, value)
+}
+
 // Scalar <op> Interval
 /*implicit def scalarplusinterval(value:Double)  = new { def + (i:Interval):Interval = i + value }
 implicit def scalarminusinterval(value:Double) = new { def - (i:Interval):Interval = -i + value }
