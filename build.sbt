@@ -18,7 +18,19 @@ scalacOptions in Compile += "-unchecked"
 
 scalacOptions in Compile += "-deprecation"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+libraryDependencies ++= Seq(
+	"org.scalatest" %% "scalatest" % "1.6.1" % "test",
+	"com.nativelibs4java" % "scalacl" % "0.2"
+)
+
+// ScalaCL:
+
+resolvers += "NativeLibs4Java Repository" at "http://nativelibs4java.sourceforge.net/maven/"
+
+autoCompilerPlugins := true
+
+addCompilerPlugin("com.nativelibs4java" % "scalacl-compiler-plugin" % "0.2")
+
 
 //initialCommands := """
 //import simplex3d.math._
