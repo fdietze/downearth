@@ -1,5 +1,7 @@
 package noise
 
+import interval.{Interval, Volume, Interval4D}
+
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
@@ -27,7 +29,16 @@ object Worley {
 		3, 3, 2, 0, 2, 1, 1, 4, 2, 1, 3, 2, 1, 2, 2, 3, 2, 5, 5, 3, 4, 5, 5, 
 		2, 4, 4, 5, 3, 2, 2, 2, 1, 4, 2, 3, 3, 4, 2, 5, 4, 2, 4, 2, 2, 2, 4, 
 		5, 3, 2 )
-
+	
+	
+	def cellnoise_prediction = cellnoise_prediction_simple _
+	def cellnoise_prediction_simple(v:Volume):Interval4D = {
+		val center = (v.high + v.low)*0.5
+		val radius = sqrt(dot(center - v.low,center - v.low))
+		val sample = cellnoise(center)
+		Interval4D(max(Vec4(0), sample-radius), sample+radius)
+	}
+	
 	def cellnoise(v:Vec3):Vec4 = cellnoise(v.x, v.y, v.z)
 	
 	def cellnoise(x:Double,y:Double,z:Double):Vec4 = {
@@ -128,6 +139,6 @@ object Worley {
 			}
 		}
 
-		return mindistances
+		return sqrt(mindistances)
 	}
 }
