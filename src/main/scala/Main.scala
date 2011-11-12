@@ -196,7 +196,7 @@ object Main {
 		
 		if(turbo) {
 			if( Mouse isButtonDown 0 )
-				BuildInterface.build(Player.position, Player.direction)
+				Player.leftclick
 		}
 		
 		while( Mouse.next ) {
@@ -206,17 +206,19 @@ object Main {
 					if( !(Mouse isGrabbed) )
 						Mouse setGrabbed true
 					else
-						if(!turbo)
-							BuildInterface.build(Player.position, Player.direction)
+						if(!turbo) {
+							Player.leftclick
+						}
 				case 1 => // Right Click
-					BuildInterface.buildStatus = !BuildInterface.buildStatus
+					Player.rightclick
 				case _ =>
 				}
 			}
 		}
 		
 		//TODO: why 120?
-		BuildInterface.rotate( Mouse.getDWheel / 120 )
+		Player.mousewheel( Mouse.getDWheel / 120 )
+		//BuildInterface.rotate( Mouse.getDWheel / 120 )
 	}
 
 	def draw {
@@ -226,7 +228,7 @@ object Main {
 		
 		Player.camera.renderScene
 		
-		Draw.addText("Inventory: " + BuildInterface.inventoryMass)
+		Draw.addText("Inventory: " + Player.inventory.materials)
 		
 		GUI.renderScene
 	}

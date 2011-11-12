@@ -8,7 +8,7 @@ import Util._
 import Config._
 
 import Polyeder.planelookup
-import collection.Map
+
 
 trait Octant extends Serializable {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
@@ -141,7 +141,7 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 				(v0(axis) == direction) && (v1(axis) == direction) && (v2(axis) == direction)
 			}
 			
-			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3){
+			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
 				val matid = if( material >= 0 ) material else materialfunction(pos + 0.5f).id
 				
 				vertexBuilder += (Vec3(pos) + v0)

@@ -38,6 +38,7 @@ object Config{
 	val cameraSpeed = 2f
 	val cameraTurboSpeed = 32f
 	val startAsGhost = true
+	val buildrange = 100
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
 	def materialfunction(v:Vec3) = gen.material(v)

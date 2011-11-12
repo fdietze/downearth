@@ -111,7 +111,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		Draw.addText("frustum culled nodes: " + frustumtest.falsecount)
 		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
 		
-		BuildInterface.highlightHexaeder(position, direction)
+		Player.draw
 		
 		if(Config.debugDraw) {
 			BulletPhysics.debugDrawWorld

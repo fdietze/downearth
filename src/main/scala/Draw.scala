@@ -97,6 +97,22 @@ object Draw {
 				throw e
 		}
 	}
+	
+	def highlight(pos:Vec3i, polyeder:Polyeder) {
+		glPushMatrix
+			glTranslatev(pos)
+			glDisable(GL_LIGHTING)
+			glDisable(GL_TEXTURE_2D)
+			glDisable(GL_DEPTH_TEST)
+			glEnable(GL_BLEND)
+			glColor4f(1,1,1,0.25f)
+			renderPolyeder(polyeder)
+			glDisable(GL_BLEND)
+			glEnable(GL_DEPTH_TEST)
+			renderPolyeder(polyeder)
+		glPopMatrix
+		glEnable(GL_LIGHTING)
+	}
 
 	def drawNodeInfo(nodeinfo:NodeInfo) {
 		import nodeinfo.{pos,size}
@@ -168,7 +184,7 @@ object Draw {
 	def drawDispayEvent(event:DisplayEvent, pos:Int) {
 		import org.newdawn.slick.Color.white
 		
-		val posx = Config.screenWidth - 150
+		val posx = Config.screenWidth - 10 - MyFont.font.getWidth(event.textMessage)
 		val posy = 20 + 20 * pos
 		
 		glEnable(GL_BLEND)

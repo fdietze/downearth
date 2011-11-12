@@ -15,10 +15,14 @@ import com.bulletphysics.linearmath.Transform
 import com.bulletphysics.collision.shapes._
 
 import Util._
-import Config.startpos
+import Config._
 import javax.vecmath.{Vector3f, Quat4f}
 
 object Player {
+	/////////////////////////////////
+	// Physics, rotation and position	
+	/////////////////////////////////
+	
 	val camDistFromCenter = Vec3(0,0,0.8f)
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
@@ -42,9 +46,7 @@ object Player {
 		body.setLinearVelocity(v)
 		body getCenterOfMassPosition v
 		v.negate
-		v.x += newpos.x
-		v.y += newpos.y
-		v.z += newpos.z
+		v += newpos
 		body translate v
 	}
 
@@ -54,7 +56,6 @@ object Player {
 		position = startpos
 	}
 
-	// CapsuleShape(0.3f,1.2f)
 	val body = BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )
 	body setAngularFactor 0
 	
@@ -105,9 +106,108 @@ object Player {
 			isGhost = true
 		}
 	}
+	//////////////////////////////////
+	// Tools, Inventory, Menu Controls
+	//////////////////////////////////
+	val inventory = new Inventory
+	var activetool:PlayerTool = inventory.tools(0)
+	def selecttool(tool:Int) = activetool = inventory.tools(tool)
+	def selectnexttool {
+		selecttool(
+			(inventory.tools.indexOf(activetool) + 1) % inventory.tools.size
+		)
+	}
+	
+
+	def mousewheel(direction:Int) = activetool.mousewheel(direction:Int)
+	def leftclick = activetool.leftclick
+	def rightclick = selectnexttool
+	def draw {
+		// draw other stuff
+		activetool.draw
+	}
 }
 
-object BuildInterface{
+class Inventory {
+	val materials = new collection.mutable.HashMap[Int,Double] {
+		override def default(key:Int) = 0.0
+	}
+	val tools = IndexedSeq(Scoop,Constructor)
+}
+
+
+trait PlayerTool {
+	def leftclick {}
+	def mousewheel(direction:Int) {}
+	def draw {}
+	
+	def selectedpos(top:Boolean) = World.raytracer(Player.position, Player.direction, top, buildrange)
+}
+
+object Scoop extends PlayerTool {
+	override def leftclick = removeblock
+	override def draw = highlightblock
+	
+	def removeblock {
+		selectedpos(top=false) match {
+			case Some(pos) =>
+				val block = World(pos)
+				//TODO: the evaluation of the materialfunction should be in the Leaf itself
+				val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
+				Player.inventory.materials(material) += block.h.volume
+				World(pos) = Leaf(EmptyHexaeder)
+			case _ =>
+		}
+	}
+	
+	def highlightblock {
+		selectedpos(top=false) match {
+			case Some(pos) =>
+				Draw.addText("Selected Block: " + Vec3i(pos) )
+				Draw.highlight(pos, World(pos).h)
+			case _ =>
+		}
+	}
+}
+
+object Constructor extends PlayerTool {
+	override def leftclick = addblock
+	override def draw = highlightblock
+	
+	var selectedmaterial = 3 //TODO: read from inventory
+	var selectedblock = FullHexaeder //TODO: read from cunstruction list
+	
+	def addblock {
+		selectedpos(top=true) match {
+			case Some(pos) =>
+				if( Player.inventory.materials(selectedmaterial) >= selectedblock.volume ) {
+					val block = World(pos)
+					//TODO: the evaluation of the materialfunction should be in the Leaf itself
+					val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
+					Player.inventory.materials(material) += block.h.volume
+					Player.inventory.materials(selectedmaterial) -= selectedblock.volume
+					World(pos) = Leaf(selectedblock, selectedmaterial)
+				}
+				else {
+					DisplayEventManager.showEventText("Not enough Material " + selectedmaterial + ".")
+				}
+			case _ =>
+		}
+	}
+	
+	def highlightblock {
+		selectedpos(top=true) match {
+			case Some(pos) =>
+				Draw.addText("Selected Block: " + Vec3i(pos) )
+				Draw.highlight(pos, selectedblock)
+			case _ =>
+		}
+	}
+}
+
+
+
+object BuildInterface {
 	val full = FullHexaeder
 	val half = new Hexaeder(Z = 0x44440000)
 	val quarter = new Hexaeder(Z = 0x44440000, Y = 0x44004400)
@@ -147,7 +247,7 @@ object BuildInterface{
 	}
 	
 	def build(position:Vec3,direction:Vec3) {
-		val mousedest = World.raytracer(position, direction, buildStatus, 100)
+		val mousedest = World.raytracer(position, direction, buildStatus, buildrange)
 		mousedest match {
 			case Some(pos) =>
 				inventoryMass += World(pos).h.volume
@@ -159,7 +259,7 @@ object BuildInterface{
 	}
 	
 	def highlightHexaeder(position:Vec3, direction:Vec3) {
-		val selection = World.raytracer(position,direction,buildStatus,100)
+		val selection = World.raytracer(position,direction,buildStatus, buildrange)
 		selection match {
 		case Some(v) =>
 			Draw.addText("Selected Voxel: " + Vec3i(v) )
