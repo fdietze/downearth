@@ -196,7 +196,7 @@ object Main {
 		
 		if(turbo) {
 			if( Mouse isButtonDown 0 )
-				Player.leftclick
+				Player.secondarybutton
 		}
 		
 		while( Mouse.next ) {
@@ -207,18 +207,17 @@ object Main {
 						Mouse setGrabbed true
 					else
 						if(!turbo) {
-							Player.leftclick
+							Player.secondarybutton
 						}
 				case 1 => // Right Click
-					Player.rightclick
+					Player.secondarybutton
 				case _ =>
 				}
 			}
 		}
 		
 		//TODO: why 120?
-		Player.mousewheel( Mouse.getDWheel / 120 )
-		//BuildInterface.rotate( Mouse.getDWheel / 120 )
+		Player.updownbutton( Mouse.getDWheel / 120 )
 	}
 
 	def draw {

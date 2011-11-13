@@ -119,9 +119,9 @@ object Player {
 	}
 	
 
-	def mousewheel(direction:Int) = activetool.mousewheel(direction:Int)
-	def leftclick = activetool.leftclick
-	def rightclick = selectnexttool
+	def updownbutton(direction:Int) = activetool.updownbutton(direction:Int)
+	def primarybutton = activetool.primarybutton
+	def secondarybutton = selectnexttool
 	def draw {
 		// draw other stuff
 		activetool.draw
@@ -137,15 +137,15 @@ class Inventory {
 
 
 trait PlayerTool {
-	def leftclick {}
-	def mousewheel(direction:Int) {}
+	def primarybutton {}
+	def updownbutton(direction:Int) {}
 	def draw {}
 	
 	def selectedpos(top:Boolean) = World.raytracer(Player.position, Player.direction, top, buildrange)
 }
 
 object Scoop extends PlayerTool {
-	override def leftclick = removeblock
+	override def primarybutton = removeblock
 	override def draw = highlightblock
 	
 	def removeblock {
@@ -171,7 +171,7 @@ object Scoop extends PlayerTool {
 }
 
 object Constructor extends PlayerTool {
-	override def leftclick = addblock
+	override def primarybutton = addblock
 	override def draw = highlightblock
 	
 	var selectedmaterial = 3 //TODO: read from inventory
