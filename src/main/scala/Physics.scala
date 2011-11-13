@@ -180,7 +180,7 @@ object BulletPhysics {
 		
 		def draw {
 			glPushMatrix
-			glTranslatef(pos.x,pos.y,pos.z)
+			glTranslatev(pos)
 			Draw.renderCube(size)
 			glPopMatrix
 		}
@@ -263,11 +263,11 @@ object BulletPhysics {
 	}
 	
 	def debugDrawWorld {
-		glPushMatrix
 		glDisable(GL_LIGHTING)
-		dynamicsWorld.debugDrawWorld
-		glColor3b(127,127,127)
-		glEnable(GL_LIGHTING)
+
+		glPushMatrix
+			dynamicsWorld.debugDrawWorld
+			glColor3b(127,127,127)
 		glPopMatrix
 	}
 }

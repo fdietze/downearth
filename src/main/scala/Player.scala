@@ -259,33 +259,6 @@ object BuildInterface {
 	}
 	
 	def highlightHexaeder(position:Vec3, direction:Vec3) {
-		val selection = World.raytracer(position,direction,buildStatus, buildrange)
-		selection match {
-		case Some(v) =>
-			Draw.addText("Selected Voxel: " + Vec3i(v) )
-			// malt die Markierung der angewählten Zelle
-			glPushMatrix
-			glTranslatef(v.x,v.y,v.z)
-			val hexaeder = 
-			if(buildStatus)
-				current
-			else
-				World(v).h
-			
-			glDisable(GL_LIGHTING)
-			glDisable(GL_TEXTURE_2D)
-			glDisable(GL_DEPTH_TEST)
-			glEnable(GL_BLEND)
-			glColor4f(1,1,1,0.25f)
-			Draw renderPolyeder hexaeder
-			glDisable(GL_BLEND)
-			//TODO: Disable Depth-test and draw only the side of the hexaeder which has polygons
-			glEnable(GL_DEPTH_TEST)
-			Draw renderPolyeder hexaeder
-			glPopMatrix
-			glEnable(GL_LIGHTING)
-		case None =>
-		}
 	}
 }
 

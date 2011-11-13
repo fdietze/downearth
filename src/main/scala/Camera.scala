@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL11._
 import Config._
 import Util._
 
-abstract class Camera{
+abstract class Camera {
 	def renderScene
 }
 
@@ -43,6 +43,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
+	
 	def frustumBuffer = {
 		val buffer = DataBuffer[Mat4,RFloat](1)
 		buffer(0) = frustum
@@ -56,47 +57,46 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		m_modelviewBuffer.buffer
 	}
 	
-	val m_skyboxBuffer = DataBuffer[Mat4,RFloat](1)
-	def skyboxBuffer = {
-		m_skyboxBuffer(0) = skybox
-		m_skyboxBuffer.buffer
-	}
-	def skybox = Mat4(inverse(Mat3x4 rotate(directionQuat)))
-	
 	def lighting{
-		//Add ambient light
-		glLightModel(GL_LIGHT_MODEL_AMBIENT, Seq(0.2f, 0.2f, 0.2f, 1.0f))
-		//Add positioned light
-		glLight(GL_LIGHT0, GL_POSITION, Vec4(position, 1f))
-		//Add directed light
-		//glLight(GL_LIGHT1, GL_DIFFUSE, Seq(0.5f, 0.2f, 0.2f, 1.0f));
-		//glLight(GL_LIGHT1, GL_POSITION, Seq(-1.0f, 0.5f, 0.5f, 0.0f));
+		if( wireframe ) {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+			glDisable(GL_LIGHTING)
+		}
+		else {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
+			glEnable(GL_LIGHTING)
+
+			//Add positioned light
+			glLight(GL_LIGHT0, GL_POSITION, Vec4(position, 1f))
+			glEnable(GL_LIGHT0)
+
+			//Add ambient light
+			glLightModel(GL_LIGHT_MODEL_AMBIENT, Vec4(0.2f, 0.2f, 0.2f, 1f))
+		}
 	}
 	
 	def renderScene {
-		glViewport(0,0,screenWidth,screenHeight)
-		glMatrixMode(GL_PROJECTION)
+		glViewport(0, 0, screenWidth, screenHeight)
+		
+		glEnable(GL_CULL_FACE)
+		glEnable(GL_COLOR_MATERIAL)
+
+		
+		glMatrixMode( GL_PROJECTION )
 		glLoadMatrix( frustumBuffer )
-		glMatrixMode(GL_MODELVIEW)
-		glDisable(GL_BLEND)
 		
-		if(Config.skybox) {
-			glLoadMatrix( skyboxBuffer )
-			glDisable( GL_DEPTH_TEST )
-			glDisable( GL_LIGHTING )
-			Skybox.render
-		}
-		
+		Skybox.render
+
+		glMatrixMode( GL_MODELVIEW )
 		glLoadMatrix( modelviewBuffer )
-		
+
 		lighting
 		
 		glEnable(GL_DEPTH_TEST)
-		glEnable(GL_LIGHTING)
 		
 		val frustumtest:FrustumTest =
 		if( Config.frustumCulling )
-			new FrustumTestImpl(frustum,modelview)
+			new FrustumTestImpl(frustum, modelview)
 		else {
 			new FrustumTest {
 				def testNode( info:NodeInfo ) = true 
@@ -104,14 +104,12 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 			}
 		}
 		
-		Main.activateShader{
-			World.draw(frustumtest)
-		}
+		World.draw(frustumtest)
+		Player.draw
 		
 		Draw.addText("frustum culled nodes: " + frustumtest.falsecount)
 		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
 		
-		Player.draw
 		
 		if(Config.debugDraw) {
 			BulletPhysics.debugDrawWorld
@@ -121,59 +119,49 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 	def makeRelative(v:Vec3) = directionQuat.rotateVector(v)
 	
-	def move(delta:Vec3){
+	def move(delta:Vec3) {
 		position += makeRelative(delta)
 	}
 	
-	def rotate(rot:Vec3){
+	def rotate(rot:Vec3) {
 		directionQuat *= Quat4 rotateX(rot.x) rotateY(rot.y) rotateZ(rot.z)
 	}
 	
 }
 
 // die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
-object GUI extends Camera{
+object GUI extends Camera {
 	
-	def applyortho{
+	def applyortho {
 		glDisable(GL_DEPTH_TEST)
 		glDisable(GL_LIGHTING)
+		
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity
-		glOrtho(0,screenWidth,screenHeight,0,-100,100)
+		
+		glOrtho(0, screenWidth, screenHeight, 0, -100, 100)
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity
-		glViewport(0,0,screenWidth,screenHeight)
+		
+		glViewport(0, 0, screenWidth, screenHeight)
 	}
 	
 	def renderScene {
-		// Disable Wireframe for GUI
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
-		glEnable(GL_LIGHTING)
-
 		applyortho
+
 		Main.showfps
+		Draw.addText("Inventory: " + Player.inventory.materials)
+
 		Draw.drawTexts
 		DisplayEventManager.draw
+
 		glPushMatrix
-		glTranslatef(screenWidth/2,screenHeight/2,0)
-		glDisable(GL_LIGHTING)
-		glDisable(GL_TEXTURE_2D)
-		glColor3f(1,1,1)
-		Draw.crossHair
+			glTranslatef(screenWidth/2,screenHeight/2,0)
+			glDisable(GL_LIGHTING)
+			glDisable(GL_TEXTURE_2D)
+			glColor3f(1,1,1)
+			Draw.crossHair
 		glPopMatrix
-		
-		/*
-		// rendert den aktuell ausgewählten Hexaeder zum Bauen
-		val α = math.atan2( Player.direction.y, Player.direction.x ).toFloat.toDegrees - 90
-		glTranslatef(screenWidth - 64, 64, 0)
-		glScalef(32,32,32)
-		glRotatef(30,1,0,0)
-		glRotatef(α,0,1,0)
-		glRotatef(90,1,0,0)
-		glTranslatef(-0.5f,-0.5f,-0.5f)
-		Draw.renderHexaeder( BuildInterface.current )
-		*/
-		
 	}
 }
 

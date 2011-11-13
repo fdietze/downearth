@@ -366,19 +366,23 @@ object Util {
 			val width  = screenWidth
 			val height = screenHeight
 		
-			while(i < end){
+			while(i < end) {
 				val r = buffer.get(i) & 0xFF;
 				val g = buffer.get(i + 1) & 0xFF;
 				val b = buffer.get(i + 2) & 0xFF;
 				val p = (i/bpp)
-				image.setRGB( p % width , p / width , (0xFF << 24) | (r << 16) | (g << 8) | b)
+				image.setRGB(
+					p % width,
+					height - 1 - (p / width),
+					(0xFF << 24) | (r << 16) | (g << 8) | b
+				)
+				
 				i += bpp
 			}
 		
 			try {
 				ImageIO.write(image, format, file);
-				println("datei "+ fullName +" erforgreich gespeichert")
-				DisplayEventManager.showEventText("File "+ fullName +" saved")
+				DisplayEventManager.showEventText("File "+ file.getName +" saved.")
 			} catch {
 			 case e : IOException => e.printStackTrace
 			}

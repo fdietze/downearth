@@ -99,19 +99,24 @@ object Draw {
 	}
 	
 	def highlight(pos:Vec3i, polyeder:Polyeder) {
+		glDisable(GL_LIGHTING)
+		glDisable(GL_TEXTURE_2D)
+
 		glPushMatrix
 			glTranslatev(pos)
-			glDisable(GL_LIGHTING)
-			glDisable(GL_TEXTURE_2D)
+
+			// Transparent
 			glDisable(GL_DEPTH_TEST)
 			glEnable(GL_BLEND)
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 			glColor4f(1,1,1,0.25f)
 			renderPolyeder(polyeder)
 			glDisable(GL_BLEND)
+			
+			// Not Transparent
 			glEnable(GL_DEPTH_TEST)
 			renderPolyeder(polyeder)
 		glPopMatrix
-		glEnable(GL_LIGHTING)
 	}
 
 	def drawNodeInfo(nodeinfo:NodeInfo) {
@@ -190,5 +195,6 @@ object Draw {
 		glEnable(GL_BLEND)
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 		MyFont.font.drawString(posx, posy, event.textMessage, white)
+		glDisable(GL_BLEND)
 	}
 }

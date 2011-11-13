@@ -54,13 +54,6 @@ object Main {
 		if(useshaders)
 			initshaders
 		
-		glEnable(GL_CULL_FACE)
-		
-		// TODO: in die Kamera?
-		glEnable(GL_LIGHTING)
-		glEnable(GL_COLOR_MATERIAL)
-		glEnable(GL_LIGHT0)
-
 		//initilisiert die Welt, um danach erst die Maus zu fangen.
 		World 
 		
@@ -122,15 +115,6 @@ object Main {
 		
 		if(Mouse.isGrabbed) 
 			Player.rotate(2f*delta_angle)
-		
-		if( wireframe ){
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
-			glDisable(GL_LIGHTING)
-		}
-		else {
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
-			glEnable(GL_LIGHTING)
-		}
 		
 		while ( Keyboard.next ) {
 			if (getEventKeyState) {
@@ -196,7 +180,7 @@ object Main {
 		
 		if(turbo) {
 			if( Mouse isButtonDown 0 )
-				Player.secondarybutton
+				Player.primarybutton
 		}
 		
 		while( Mouse.next ) {
@@ -207,7 +191,7 @@ object Main {
 						Mouse setGrabbed true
 					else
 						if(!turbo) {
-							Player.secondarybutton
+							Player.primarybutton
 						}
 				case 1 => // Right Click
 					Player.secondarybutton
@@ -226,9 +210,6 @@ object Main {
 		BulletPhysics.update
 		
 		Player.camera.renderScene
-		
-		Draw.addText("Inventory: " + Player.inventory.materials)
-		
 		GUI.renderScene
 	}
 
