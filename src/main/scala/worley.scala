@@ -30,14 +30,15 @@ object Worley {
 		2, 4, 4, 5, 3, 2, 2, 2, 1, 4, 2, 3, 3, 4, 2, 5, 4, 2, 4, 2, 2, 2, 4, 
 		5, 3, 2 )
 	
-	val maxvalue = 2*sqrt(3) //TODO: assume that every cell contains at least one point
+	val minvalue = Vec4(0)
+	val maxvalue = Vec4(1.1242269084951875, 1.1555402454923787, 1.2139070974183257, 1.2354559268805023)
 	
 	def cellnoise_prediction = cellnoise_prediction_simple _
 	def cellnoise_prediction_simple(v:Volume):Interval4D = {
 		val center = (v.high + v.low)*0.5
-		val radius = sqrt(dot(center - v.low,center - v.low))
+		val radius = length(center - v.low)
 		val sample = cellnoise(center)
-		Interval4D(max(Vec4(0), sample-radius), min(Vec4(maxvalue),sample+radius))
+		Interval4D(max(minvalue, sample-radius), min(maxvalue, sample+radius))
 	}
 	
 	def cellnoise(v:Vec3):Vec4 = cellnoise(v.x, v.y, v.z)
