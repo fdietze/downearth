@@ -51,6 +51,12 @@ object Player {
 	}
 
 	def direction:Vec3 = camera.direction
+	
+	def velocity:Vec3 = {
+		val v = new Vector3f
+		body getLinearVelocity v
+		v
+	}
 
 	def resetPos {
 		position = startpos
@@ -59,26 +65,20 @@ object Player {
 	val body = BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )
 	body setAngularFactor 0
 	
-	def move(dir:Vec3){
-		if( isGhost ){
+	def move(dir:Vec3) {
+		if( isGhost )
 			m_camera move dir*4
-		}
 		else {
-			val flatdir = m_camera makeRelative dir
+			val flatdir = m_camera rotateVector dir
 			flatdir *= 4
 			flatdir.z = 0
 			body.applyCentralImpulse( flatdir )
-			val v = new Vector3f
-			body getCenterOfMassPosition v
-			Draw.addText("Player Position: " + round10(v)  )
-			body getLinearVelocity v
-			Draw.addText("Player Velocity: " + round10(v) )
 		}
 	}
 	
 	var dir = Vec2(Pi/2)
 	
-	def rotate(rot:Vec3){
+	def rotate(rot:Vec3) {
 		// TODO hier entstehen noch starke rotationsartefakte
 		m_camera.rotate(rot)
 		m_camera.lerpUp(1-m_camera.direction.z.abs)
@@ -95,8 +95,8 @@ object Player {
 	if( Config.startAsGhost )
 		toggleGhost
 	
-	def toggleGhost{
-		if( isGhost ){
+	def toggleGhost {
+		if( isGhost ) {
 			position = camera.position - camDistFromCenter
 			BulletPhysics.addBody(body)
 			isGhost = false
@@ -163,7 +163,6 @@ object Scoop extends PlayerTool {
 	def highlightblock {
 		selectedpos(top=false) match {
 			case Some(pos) =>
-				Draw.addText("Selected Block: " + Vec3i(pos) )
 				Draw.highlight(pos, World(pos).h)
 			case _ =>
 		}
@@ -198,7 +197,6 @@ object Constructor extends PlayerTool {
 	def highlightblock {
 		selectedpos(top=true) match {
 			case Some(pos) =>
-				Draw.addText("Selected Block: " + Vec3i(pos) )
 				Draw.highlight(pos, selectedblock)
 			case _ =>
 		}

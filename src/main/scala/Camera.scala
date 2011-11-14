@@ -23,15 +23,26 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	def camera = this
 	
 	def direction = directionQuat.rotateVector(-worldUpVector)
+	def rotateVector(v:Vec3) = directionQuat.rotateVector(v)
 	
+	def move(delta:Vec3) {
+		position += rotateVector(delta)
+	}
+	
+	def rotate(rot:Vec3) {
+		directionQuat *= Quat4 rotateX(rot.x) rotateY(rot.y) rotateZ(rot.z)
+	}
+	
+
 	// rotiert die Kamera, damit der worldUpVector auch für die Kamera oben ist
-	def lerpUp(factor:Float){
+	def lerpUp(factor:Float) {
 		val up = inverse(directionQuat) rotateVector worldUpVector
 		val α = atan(up.y, up.x) - Pi/2
 		
-		directionQuat *= Quat4 rotateZ(α*pow(factor,1.5f))
+		directionQuat *= Quat4 rotateZ(α*pow(factor, 1.5f))
 	}
 	
+
 	def frustum = {
 		val v = screenWidth.toFloat / screenHeight.toFloat	
 		
@@ -43,20 +54,21 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
-	
-	def frustumBuffer = {
-		val buffer = DataBuffer[Mat4,RFloat](1)
-		buffer(0) = frustum
-		buffer.buffer
-	}
-	
-	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
 	def modelview = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
+	
+	val m_frustumBuffer = DataBuffer[Mat4,RFloat](1)
+	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
+
+	def frustumBuffer = {
+		m_frustumBuffer(0) = frustum
+		m_frustumBuffer.buffer
+	}
 	def modelviewBuffer = {
 		m_modelviewBuffer(0) = modelview
 		m_modelviewBuffer.buffer
 	}
 	
+
 	def lighting{
 		if( wireframe ) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
@@ -76,8 +88,6 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	}
 	
 	def renderScene {
-		glViewport(0, 0, screenWidth, screenHeight)
-		
 		glEnable(GL_CULL_FACE)
 		glEnable(GL_COLOR_MATERIAL)
 
@@ -100,74 +110,22 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		else {
 			new FrustumTest {
 				def testNode( info:NodeInfo ) = true 
-				val falsecount = 0
 			}
 		}
 		
 		World.draw(frustumtest)
 		Player.draw
 		
-		Draw.addText("frustum culled nodes: " + frustumtest.falsecount)
-		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
-		
-		
 		if(Config.debugDraw) {
 			BulletPhysics.debugDrawWorld
 			Draw.drawSampledNodes
 		}
 	}
-	
-	def makeRelative(v:Vec3) = directionQuat.rotateVector(v)
-	
-	def move(delta:Vec3) {
-		position += makeRelative(delta)
-	}
-	
-	def rotate(rot:Vec3) {
-		directionQuat *= Quat4 rotateX(rot.x) rotateY(rot.y) rotateZ(rot.z)
-	}
-	
 }
 
-// die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
-object GUI extends Camera {
-	
-	def applyortho {
-		glDisable(GL_DEPTH_TEST)
-		glDisable(GL_LIGHTING)
-		
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity
-		
-		glOrtho(0, screenWidth, screenHeight, 0, -100, 100)
-		glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity
-		
-		glViewport(0, 0, screenWidth, screenHeight)
-	}
-	
-	def renderScene {
-		applyortho
-
-		Main.showfps
-		Draw.addText("Inventory: " + Player.inventory.materials)
-
-		Draw.drawTexts
-		DisplayEventManager.draw
-
-		glPushMatrix
-			glTranslatef(screenWidth/2,screenHeight/2,0)
-			glDisable(GL_LIGHTING)
-			glDisable(GL_TEXTURE_2D)
-			glColor3f(1,1,1)
-			Draw.crossHair
-		glPopMatrix
-	}
-}
 
 trait FrustumTest {
 	def testNode( info:NodeInfo ):Boolean
-	def falsecount:Int
 }
 
 // Frustum Culling
@@ -183,12 +141,8 @@ class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
 	planes(4) = normalize(rows(3) - rows(2)) //far plane
 	planes(5) = normalize(rows(3) + rows(2)) //near plane
 
-	var falsecount = 0
-
 	def testNode( info:NodeInfo ):Boolean = {
 		val inside = testCube(info.pos + info.size / 2, info.size / 2)
-		if( !inside )
-			falsecount += 1
 		return inside
 	}
 	

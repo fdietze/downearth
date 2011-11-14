@@ -363,6 +363,8 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 				i += 1
 			}
 		}
+		else
+			World.frustumculls += 1
 	}
 	
 	override def toString = data.mkString("(",",",")")
@@ -541,6 +543,8 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 	override def draw(info:NodeInfo, test:FrustumTest) {
 		if( test testNode info )
 			mesh.draw
+		else
+			World.frustumculls += 1
 	}
 	
 	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {

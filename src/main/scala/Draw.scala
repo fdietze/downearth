@@ -10,6 +10,7 @@ import simplex3d.data.float._
 import org.lwjgl.opengl.GL11._
 
 import Util._
+import Config._
 
 object MyFont{
 	import org.newdawn.slick.UnicodeFont
@@ -67,17 +68,23 @@ object Draw {
 	}
 	
 	def crossHair{
-		glBegin(GL_LINES)
-		glVertex2i(-15, 0)
-		glVertex2i( -5, 0)
-		glVertex2i(  5, 0)
-		glVertex2i( 15, 0)
+		glPushMatrix
+			glTranslatef(screenWidth/2,screenHeight/2,0)
+			glDisable(GL_LIGHTING)
+			glDisable(GL_TEXTURE_2D)
+			glColor3f(1,1,1)
+			glBegin(GL_LINES)
+				glVertex2i(-15, 0)
+				glVertex2i( -5, 0)
+				glVertex2i(  5, 0)
+				glVertex2i( 15, 0)
 		
-		glVertex2i(0, -15)
-		glVertex2i(0,  -5)
-		glVertex2i(0,   5)
-		glVertex2i(0,  15)
-		glEnd
+				glVertex2i(0, -15)
+				glVertex2i(0,  -5)
+				glVertex2i(0,   5)
+				glVertex2i(0,  15)
+			glEnd
+		glPopMatrix
 	}
 	
 	// rendert den Umriss eines Hexaeders, um ihn für die Selektion hervorheben zu können.
@@ -164,10 +171,10 @@ object Draw {
 
 
 	// simuliert ein Konsolenähnliches verhalten, um Text auf dem Bildschirm darzustellen
-	var textCache:List[String] = Nil
+	val textCache = collection.mutable.ArrayBuffer[String]()
 	
 	def addText(msg:Any) {
-		textCache ::= msg.toString
+		textCache += msg.toString
 	}
 	
 	def drawTexts {
@@ -182,7 +189,7 @@ object Draw {
 				posy += 20
 			}
 			glDisable(GL_BLEND)
-			textCache = Nil
+			textCache.clear
 		}
 	}
 	

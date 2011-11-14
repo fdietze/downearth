@@ -53,6 +53,8 @@ object Main {
 		
 		if(useshaders)
 			initshaders
+
+		glViewport(0, 0, screenWidth, screenHeight)
 		
 		//initilisiert die Welt, um danach erst die Maus zu fangen.
 		World 
@@ -83,11 +85,6 @@ object Main {
 		Display.update
 	}
 
-	def showfps {
-		val fps = "%3d fps" format currentfps
-		Draw addText fps
-	}
-	 
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
 	def logic {
 		if(Display.isCloseRequested)

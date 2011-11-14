@@ -8,9 +8,9 @@ import org.lwjgl.opengl.GL11._
 import Util._
 
 object World {
-	
 	var drawcalls = 0
 	var emptydrawcalls = 0
+	var frustumculls = 0
 	
 	val octree = {
 		WorldSerializer.load match {
@@ -19,10 +19,8 @@ object World {
 		}
 	}
 	
-
-	Runtime.getRuntime.gc
-	
-	//raytracer zum anclicken von Zellen
+	var lastraytraycedblock:Option[Vec3i] = None	
+	//raytracer zum anklicken von Zellen
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Float):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
 		for(i <- 0 until 3) {
@@ -85,7 +83,7 @@ object World {
 		val prepos = pos.clone
 		prepos(axis) -= step(axis)
 		
-		if(h != null){
+		lastraytraycedblock = if(h != null){
 			if(top && rayCellTest(from-pos,direction,h.asInstanceOf[Hexaeder]))
 				Some(prepos)
 			else
@@ -93,6 +91,8 @@ object World {
 		}
 		else
 			None
+		
+		lastraytraycedblock
 	}
 	
 	def update(pos:Vec3i, l:Leaf) {
@@ -109,7 +109,10 @@ object World {
 	def draw(test:FrustumTest){
 		drawcalls = 0
 		emptydrawcalls = 0
+		frustumculls = 0
+		
 		octree.draw(test)
+		
 		if(Config.streamWorld)
 			octree stream Player.position
 	}
