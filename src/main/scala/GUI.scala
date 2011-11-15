@@ -41,10 +41,53 @@ object GUI extends Camera {
 			Draw.addText("Player Velocity: " + round10(Player.velocity) )
 		}
 
-
+		val w = new Widget(Vec2i(20,200), Vec2i(80,60)) with Background with Border
+		w.draw
+		
+		
 		Draw.drawTexts
 		DisplayEventManager.draw
 
 		Draw.crossHair
+	}
+}
+
+class Widget(val position:Vec2i, val size:Vec2i) {
+	def draw {
+		glDisable(GL_LIGHTING)
+		glDisable(GL_TEXTURE_2D)
+	}
+}
+
+trait Border extends Widget {
+	override def draw {
+		super.draw
+		//TODO: Draw with slick?
+		glColor3f(1,1,1)
+		
+		glBegin(GL_LINE_LOOP)
+			glVertex2i(position.x         , position.y)
+			glVertex2i(position.x         , position.y + size.y)
+			glVertex2i(position.x + size.x, position.y + size.y)
+			glVertex2i(position.x + size.x, position.y)
+		glEnd
+	}
+}
+
+trait Background extends Widget {
+	override def draw {
+		super.draw
+		//TODO: Draw with slick?
+		glColor4f(1,1,1,0.25f)
+
+		glEnable(GL_BLEND)
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+			glBegin(GL_QUADS)
+				glVertex2i(position.x         , position.y)
+				glVertex2i(position.x         , position.y + size.y)
+				glVertex2i(position.x + size.x, position.y + size.y)
+				glVertex2i(position.x + size.x, position.y)
+			glEnd
+		glDisable(GL_BLEND)
 	}
 }
