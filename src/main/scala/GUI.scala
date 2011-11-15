@@ -30,7 +30,7 @@ object GUI extends Camera {
 		applyortho
 
 
-		Draw.addText("%2d fps" format Main.currentfps)
+		Draw.addText("%d fps" format Main.currentfps)
 		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
 		Draw.addText("frustum culled nodes: " + World.frustumculls)
 		Draw.addText("")

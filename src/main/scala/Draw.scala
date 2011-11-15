@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL11._
 import Util._
 import Config._
 
-object MyFont{
+object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
 	import org.newdawn.slick.font.effects._
 	import java.awt.{Font,Color};
@@ -24,6 +24,8 @@ object MyFont{
 	effects add new ShadowEffect
 	effects add new ColorEffect(Color.WHITE)
 	font.loadGlyphs
+	
+	def height = font.getLineHeight
 }
 
 // nützliche Methoden, um verschiedene Objekte zu zeichnen.
@@ -185,8 +187,8 @@ object Draw {
 			val posx = 20
 			var posy = 20
 			for( msg <- textCache ) {
-				MyFont.font.drawString(posx, posy, msg, white)
-				posy += 20
+				ConsoleFont.font.drawString(posx, posy, msg, white)
+				posy += ConsoleFont.height
 			}
 			glDisable(GL_BLEND)
 			textCache.clear
@@ -196,12 +198,12 @@ object Draw {
 	def drawDispayEvent(event:DisplayEvent, pos:Int) {
 		import org.newdawn.slick.Color.white
 		
-		val posx = Config.screenWidth - 10 - MyFont.font.getWidth(event.textMessage)
-		val posy = 20 + 20 * pos
+		val posx = Config.screenWidth - 20 - ConsoleFont.font.getWidth(event.textMessage)
+		val posy = 20 + ConsoleFont.height * pos
 		
 		glEnable(GL_BLEND)
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-		MyFont.font.drawString(posx, posy, event.textMessage, white)
+		ConsoleFont.font.drawString(posx, posy, event.textMessage, white)
 		glDisable(GL_BLEND)
 	}
 }
