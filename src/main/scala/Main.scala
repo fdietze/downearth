@@ -54,8 +54,6 @@ object Main {
 		if(useshaders)
 			initshaders
 
-		glViewport(0, 0, screenWidth, screenHeight)
-		
 		//initilisiert die Welt, um danach erst die Maus zu fangen.
 		World 
 		

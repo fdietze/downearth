@@ -88,6 +88,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	}
 	
 	def renderScene {
+		glViewport(0, 0, screenWidth, screenHeight)
 		glEnable(GL_CULL_FACE)
 		glEnable(GL_COLOR_MATERIAL)
 
