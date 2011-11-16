@@ -82,7 +82,8 @@ object Main {
 		Display.sync(fpsLimit)
 		Display.update
 	}
-
+	
+	var lastmousepos = Vec2i(0)
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
 	def logic {
 		if(Display.isCloseRequested)
@@ -92,9 +93,16 @@ object Main {
 		val delta_angle = Vec3(0)
 		
 		import Mouse._
+		val mouseDelta = Vec2i(getDX, getDY)
+		val mousePos = Vec2i(getX, screenHeight-Mouse.getY)
 		
-		delta_angle.y -= getDX/300f
-		delta_angle.x = getDY/300f
+		delta_angle.y -= mouseDelta.x/300f
+		delta_angle.x = mouseDelta.y/300f
+		
+		if( !Mouse.isGrabbed && mouseDelta != Vec2i(0) ) {
+			MainWidget.invokeMouseMoved(lastmousepos, mousePos)
+			lastmousepos = mousePos
+		}
 		
 		if(isKeyDown(keyForward))
 			delta.z -= 1
@@ -182,12 +190,13 @@ object Main {
 			if( getEventButtonState ) {
 				getEventButton match {
 				case 0 => // Left Click
-					if( !(Mouse isGrabbed) )
-						Mouse setGrabbed true
-					else
-						if(!turbo) {
+					if( Mouse isGrabbed ){
+						if(!turbo)
 							Player.primarybutton
-						}
+					}
+					else {
+						MainWidget.invokeMouseClicked(Vec2i(Mouse.getX,screenHeight-Mouse.getY))
+					}
 				case 1 => // Right Click
 					Player.secondarybutton
 				case _ =>
@@ -195,7 +204,6 @@ object Main {
 			}
 		}
 		
-		//TODO: why 120?
 		Player.updownbutton( Mouse.getDWheel / 120 )
 	}
 

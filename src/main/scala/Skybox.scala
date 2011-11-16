@@ -51,6 +51,8 @@ object Skybox{
 
 			TextureManager.skybox.bind
 			//TextureManager.box.bind
+			
+			glColor4f(1,1,1,1)
 			glBegin( GL_QUADS )
 			for( (Vec3(x,y,z), Vec2(u,v)) <- vertices zip texcoords ){
 				glTexCoord2f(u,v)

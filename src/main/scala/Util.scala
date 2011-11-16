@@ -51,6 +51,8 @@ object Util {
 	}
 	
 	def glTranslatev(v:Vec3) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, v.z)
+	def glTranslatev(v:Vec2i) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, 0)
+	def glColor4v(v:Vec4) = org.lwjgl.opengl.GL11.glColor4f(v.r, v.g, v.b, v.a)
 	def glScalev(v:Vec3) = org.lwjgl.opengl.GL11.glScalef(v.x, v.y, v.z)
 	def glScale(s:Float) = org.lwjgl.opengl.GL11.glScalef(s,s,s)
 	
@@ -72,6 +74,13 @@ object Util {
 		i.x < nodepos.x + nodesize.x &&
 		i.y < nodepos.y + nodesize.y &&
 		i.z < nodepos.z + nodesize.z
+	}
+	
+	def indexInRange(i:Vec2i, pos:Vec2i, size:Vec2i) = {
+		i.x >= pos.x &&
+		i.y >= pos.y &&
+		i.x  < pos.x + size.x &&
+		i.y  < pos.y + size.y
 	}
 
 	def printLogInfo(obj:Int) {

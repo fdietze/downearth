@@ -31,7 +31,8 @@ object GUI extends Camera {
 
 
 		Draw.addText("%d fps" format Main.currentfps)
-		Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
+		Draw.addText("drawcalls: " + World.drawcalls +
+			", empty: " + World.emptydrawcalls + "")
 		Draw.addText("frustum culled nodes: " + World.frustumculls)
 		Draw.addText("")
 		Draw.addText("Inventory: " + Player.inventory.materials)
@@ -41,53 +42,49 @@ object GUI extends Camera {
 			Draw.addText("Player Velocity: " + round10(Player.velocity) )
 		}
 
-		val w = new Widget(Vec2i(20,200), Vec2i(80,60)) with Background with Border
-		w.draw
-		
+		glDisable(GL_LIGHTING)
+		glDisable(GL_TEXTURE_2D)
 		
 		Draw.drawTexts
 		DisplayEventManager.draw
 
 		Draw.crossHair
+
+		MainWidget.invokeDraw()
 	}
 }
 
-class Widget(val position:Vec2i, val size:Vec2i) {
-	def draw {
-		glDisable(GL_LIGHTING)
-		glDisable(GL_TEXTURE_2D)
-	}
-}
-
-trait Border extends Widget {
-	override def draw {
-		super.draw
-		//TODO: Draw with slick?
-		glColor3f(1,1,1)
+object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
+	children += new FreePanel(Vec2i(20,200), Vec2i(120,100)) {
+		border = new LineBorder
+		background = new ColorBackground
 		
-		glBegin(GL_LINE_LOOP)
-			glVertex2i(position.x         , position.y)
-			glVertex2i(position.x         , position.y + size.y)
-			glVertex2i(position.x + size.x, position.y + size.y)
-			glVertex2i(position.x + size.x, position.y)
-		glEnd
+		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) {
+			border = new LineBorder(Vec4(0,1,0,1))
+			background = new ColorBackground(Vec4(0,0,1,0.25f))
+		}
+		
 	}
-}
 
-trait Background extends Widget {
-	override def draw {
-		super.draw
-		//TODO: Draw with slick?
-		glColor4f(1,1,1,0.25f)
+	children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) {
+		border = new LineBorder
+		background = new ColorBackground
+		
+		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) {
+			border = new LineBorder(Vec4(0,1,0,1))
+			background = new ColorBackground(Vec4(0,0,1,0.25f))
 
-		glEnable(GL_BLEND)
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-			glBegin(GL_QUADS)
-				glVertex2i(position.x         , position.y)
-				glVertex2i(position.x         , position.y + size.y)
-				glVertex2i(position.x + size.x, position.y + size.y)
-				glVertex2i(position.x + size.x, position.y)
-			glEnd
-		glDisable(GL_BLEND)
+			children += new FreePanel(Vec2i(20,20), Vec2i(20,20)) {
+				border = new LineBorder(Vec4(1,0,0,1))
+				background = new ColorBackground(Vec4(1,0,0,0.25f))
+			
+			}
+			override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+				background = new ColorBackground(Vec4(0,1,0,0.25f))
+			}
+			override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+				background = new ColorBackground(Vec4(0,0,1,0.25f))
+			}
+		}
 	}
 }
