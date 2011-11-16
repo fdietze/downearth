@@ -66,15 +66,15 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 		
 	}
 
-	children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) {
+	children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) with Dragable {
 		border = new LineBorder
 		background = new ColorBackground
 		
-		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) {
+		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) with Dragable {
 			border = new LineBorder(Vec4(0,1,0,1))
 			background = new ColorBackground(Vec4(0,0,1,0.25f))
 
-			children += new FreePanel(Vec2i(20,20), Vec2i(20,20)) {
+			children += new FreePanel(Vec2i(20,20), Vec2i(20,20)) with Dragable {
 				border = new LineBorder(Vec4(1,0,0,1))
 				background = new ColorBackground(Vec4(1,0,0,0.25f))
 			
@@ -84,6 +84,12 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 			}
 			override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
 				background = new ColorBackground(Vec4(0,0,1,0.25f))
+			}
+			override def mouseDown(mousePos:Vec2i) {
+				border = new LineBorder(Vec4(1,0,0,1))
+			}
+			override def mouseUp(mousePos:Vec2i) {
+				border = new LineBorder(Vec4(0,1,0,1))
 			}
 		}
 	}

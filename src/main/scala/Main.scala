@@ -5,7 +5,6 @@ import org.lwjgl.opengl.{
   Display, ARBShaderObjects, ARBVertexShader, ARBFragmentShader
 }
 import org.lwjgl.input._
-import Keyboard._
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -36,7 +35,7 @@ object Main {
 	def main(args:Array[String]) {
 		init
 		while(!finished) {
-			logic
+			input
 			draw
 			frame
 		}
@@ -54,15 +53,14 @@ object Main {
 		if(useshaders)
 			initshaders
 
-		//initilisiert die Welt, um danach erst die Maus zu fangen.
-		World 
+		World
 		
-		Mouse.setGrabbed(true)
+		Mouse setGrabbed true
 	}
 
 	def terminate {
 		Display.destroy()
-		WorldSerializer.save(World.octree)
+		//WorldSerializer.save(World.octree)
 		sys.exit(0)
 	}
 	
@@ -83,128 +81,143 @@ object Main {
 		Display.update
 	}
 	
-	var lastmousepos = Vec2i(0)
+	def setFullscreen(set:Boolean = true) {
+		fullscreen = set
+		Display.setFullscreen(fullscreen)
+		Display.setDisplayMode(displayMode)
+		if( fullscreen ) {
+			Mouse setGrabbed true
+		}
+	}
+	
+
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
-	def logic {
+	def input {
+		import Mouse._
+		import Keyboard._
+
 		if(Display.isCloseRequested)
 			finished = true
-		
-		val delta = Vec3(0)
-		val delta_angle = Vec3(0)
-		
-		import Mouse._
+
 		val mouseDelta = Vec2i(getDX, getDY)
-		val mousePos = Vec2i(getX, screenHeight-Mouse.getY)
 		
-		delta_angle.y -= mouseDelta.x/300f
-		delta_angle.x = mouseDelta.y/300f
+		if( Mouse isGrabbed ) {
+			// Move and rotate player
+			val delta = Vec3(0)
+			val delta_angle = Vec3(0)
 		
-		if( !Mouse.isGrabbed && mouseDelta != Vec2i(0) ) {
-			MainWidget.invokeMouseMoved(lastmousepos, mousePos)
-			lastmousepos = mousePos
-		}
-		
-		if(isKeyDown(keyForward))
-			delta.z -= 1
-		if(isKeyDown(keyBackward))
-			delta.z += 1
-		if(isKeyDown(keyLeft))
-			delta.x -= 1
-		if(isKeyDown(keyRight))
-			delta.x += 1
-		
-		val factor = if(turbo) cameraTurboSpeed else cameraSpeed
-		Player.move(factor*(delta/max(1,length(delta)))*timestep)
-		
-		if(Mouse.isGrabbed) 
+			delta_angle.y -= mouseDelta.x/300f
+			delta_angle.x = mouseDelta.y/300f
+
+			if(isKeyDown(keyForward))
+				delta.z -= 1
+			if(isKeyDown(keyBackward))
+				delta.z += 1
+			if(isKeyDown(keyLeft))
+				delta.x -= 1
+			if(isKeyDown(keyRight))
+				delta.x += 1
+
+			val factor = if(turbo) cameraTurboSpeed else cameraSpeed
+			Player.move(factor*(delta/max(1,length(delta)))*timestep)
 			Player.rotate(2f*delta_angle)
-		
-		while ( Keyboard.next ) {
-			if (getEventKeyState) {
-				getEventKey match {
-				case `keyMouseGrab` =>
-					Mouse setGrabbed !(Mouse isGrabbed)
-				case `keyPlayerReset` =>
-					Player.resetPos
-				case `keyStreaming` =>
-					streamWorld = !streamWorld
-				case `keyWireframe` =>
-					wireframe = !wireframe
-				case `keyFrustumCulling` =>
-					frustumCulling = !frustumCulling
-				case `keyFullScreen` =>
-					fullscreen = !fullscreen
-					Display.setFullscreen(fullscreen)
-					Display.setDisplayMode(displayMode)
-					if( fullscreen ) {
-						Mouse setGrabbed true
-					}
-				case `keyScreenshot` =>
-					screenShot( "screenshot" )
-				case `keyTurbo` =>
-					turbo = ! turbo
-					DisplayEventManager.showEventText("turbo is "+(if(turbo) "on" else "off"))
-				case `keyQuit` =>
-					finished = true
-				case `keyPausePhysics` =>
-					BulletPhysics.togglePause
-				case `keyDebugDraw` =>
-					debugDraw = !debugDraw
-				case `keyToggleGhostPlayer` =>
-					Player.toggleGhost
-				case `keyJump` =>
-					Player.jump
-				case `keyChooseHex0` =>
-					BuildInterface.id = 0
-				case `keyChooseHex1` =>
-					BuildInterface.id = 1
-				case `keyChooseHex2` =>
-					BuildInterface.id = 2
-				case `keyChooseHex3` =>
-					BuildInterface.id = 3
-				case `keyChooseHex4` =>
-					BuildInterface.id = 4
-				case `keyChooseHex5` =>
-					BuildInterface.id = 5
-				case `keyChooseHex6` =>
-					BuildInterface.id = 6
-				case `keyChooseHex7` =>
-					BuildInterface.id = 7
-				case `keyChooseHex8` =>
-					BuildInterface.id = 8
-				case `keyChooseHex9` =>
-					BuildInterface.id = 9
-				case _ =>
-				}
-			}
-		}
-		
-		// Mouse Event Input
-		
-		if(turbo) {
-			if( Mouse isButtonDown 0 )
+			
+			// Turbo mode
+			if( turbo && Mouse.isButtonDown(0) )
 				Player.primarybutton
-		}
-		
-		while( Mouse.next ) {
-			if( getEventButtonState ) {
-				getEventButton match {
-				case 0 => // Left Click
-					if( Mouse isGrabbed ){
-						if(!turbo)
-							Player.primarybutton
+			
+			
+			// Keyboard Events
+			while ( Keyboard.next ) {
+				if (getEventKeyState) {
+					getEventKey match {
+					case `keyMouseGrab` =>
+						Mouse setGrabbed false
+					case `keyPlayerReset` =>
+						Player.resetPos
+					case `keyStreaming` =>
+						streamWorld = !streamWorld
+					case `keyWireframe` =>
+						wireframe = !wireframe
+					case `keyFrustumCulling` =>
+						frustumCulling = !frustumCulling
+					case `keyFullScreen` =>
+						setFullscreen(!fullscreen)
+					case `keyScreenshot` =>
+						screenShot( "screenshot" )
+					case `keyTurbo` =>
+						turbo = ! turbo
+						DisplayEventManager.showEventText("Turbo is "+(if(turbo) "on" else "off")+"." )
+					case `keyQuit` =>
+						finished = true
+					case `keyPausePhysics` =>
+						BulletPhysics.togglePause
+					case `keyDebugDraw` =>
+						debugDraw = !debugDraw
+					case `keyToggleGhostPlayer` =>
+						Player.toggleGhost
+					case `keyJump` =>
+						Player.jump
+					case _ =>
 					}
-					else {
-						MainWidget.invokeMouseClicked(Vec2i(Mouse.getX,screenHeight-Mouse.getY))
-					}
-				case 1 => // Right Click
-					Player.secondarybutton
-				case _ =>
+				}
+			}
+			
+			// Mouse events
+			while( Mouse.next ) {
+				( getEventButton, getEventButtonState ) match {
+					case (0 , true) => // left down
+					case (0 , false) => // left up
+						Player.primarybutton
+					case (1 , true) => // right down
+					case (1 , false) => // right up
+						Player.secondarybutton
+					case (-1, false) => // wheel
+						Player.updownbutton( Mouse.getDWheel / 120 )
+					case _ =>
 				}
 			}
 		}
+		else { // if Mouse is not grabbed
+
+			if( mouseDelta != Vec2i(0) ) { // if Mouse is moved
+				val mousePos = Vec2i(getX, screenHeight-Mouse.getY)
+				var lastmousepos = mousePos - mouseDelta*Vec2i(1,-1)
+				MainWidget.invokeMouseMoved(lastmousepos, mousePos)
+			}
 		
-		Player.updownbutton( Mouse.getDWheel / 120 )
+			// Keyboard Events
+			while ( Keyboard.next ) {
+				if (getEventKeyState) {
+					getEventKey match {
+					case `keyMouseGrab` =>
+						Mouse setGrabbed true
+					case `keyFullScreen` =>
+						setFullscreen(!fullscreen)
+					case `keyScreenshot` =>
+						screenShot( "screenshot" )
+					case `keyQuit` =>
+						finished = true
+					case _ =>
+					}
+				}
+			}
+		
+			// Mouse events
+			while( Mouse.next ) {
+				( getEventButton, getEventButtonState ) match {
+					case (0 , true) => // left down
+						MainWidget.invokeMouseDown(Vec2i(Mouse.getX, screenHeight-Mouse.getY))
+					case (0 , false) => // left up
+						MainWidget.invokeMouseUp(Vec2i(Mouse.getX, screenHeight-Mouse.getY))
+					case (1 , true) => // right down
+					case (1 , false) => // right up
+					case (-1, false) => // wheel
+					case _ =>
+				}
+			}
+		
+		}
 	}
 
 	def draw {

@@ -73,17 +73,6 @@ object Config{
 	val keyRight    = loadKey("right") getOrElse KEY_D
 	val keyJump     = loadKey("jump") getOrElse KEY_SPACE
 	
-	val keyChooseHex0 = loadKey("choseHex01") getOrElse KEY_1
-	val keyChooseHex1 = loadKey("choseHex02") getOrElse KEY_2
-	val keyChooseHex2 = loadKey("choseHex03") getOrElse KEY_3
-	val keyChooseHex3 = loadKey("choseHex04") getOrElse KEY_4
-	val keyChooseHex4 = loadKey("choseHex05") getOrElse KEY_5
-	val keyChooseHex5 = loadKey("choseHex06") getOrElse KEY_6
-	val keyChooseHex6 = loadKey("choseHex07") getOrElse KEY_7
-	val keyChooseHex7 = loadKey("choseHex08") getOrElse KEY_8
-	val keyChooseHex8 = loadKey("choseHex09") getOrElse KEY_9
-	val keyChooseHex9 = loadKey("choseHex10") getOrElse KEY_0
-	
 	val keyMouseGrab         = loadKey("mouse_grab") getOrElse KEY_G
 	val keyPlayerReset       = loadKey("reset_pos") getOrElse KEY_R
 	val keyTurbo             = loadKey("turbo") getOrElse KEY_T
