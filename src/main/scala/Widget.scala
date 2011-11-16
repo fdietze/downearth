@@ -11,11 +11,23 @@ import Util._
 
 
 class Widget(val position:Vec2i, val size:Vec2i) {
+	var parent:Widget = null
 	var border:Border = new NoBorder
 	var background:Background = new NoBackground
 	var mousePressed = false
 	var dragstart:Vec2i = null
 	def clickDelta = Vec2i(2)
+	
+	def setSafePosition(pos:Vec2i) {
+		val newpos = 
+			if( parent != null )
+				min(max(Vec2i(0), pos), parent.size - size)
+			else
+				pos
+				
+		position.x = newpos.x
+		position.y = newpos.y
+	}
 	
 	def invokeDraw(offset:Vec2i = Vec2i(0)) {
 		background.draw(offset + position, size)
@@ -72,7 +84,6 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 	}
 	
 	def invokeMouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-		mousePressed = false
 		mouseOut(mousePos0, mousePos1)
 	}
 	
@@ -111,7 +122,14 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 }
 
 class Panel(position:Vec2i, size:Vec2i) extends Widget(position, size) {
-	val children = new collection.mutable.ArrayBuffer[Widget]
+	private def thispanel = this
+	val children = new collection.mutable.ArrayBuffer[Widget] {
+		override def +=(child:Widget) = {
+			child.parent = thispanel
+			super.+=(child)
+			this
+		}
+	}
 	override def toString = "Panel(%s, %s)" format( position, size )
 }
 
@@ -145,7 +163,8 @@ class FreePanel(position:Vec2i, size:Vec2i) extends Panel(position,size) {
 		super.invokeMouseMoved(mousePos0, mousePos1)
 		for(child <- children)
 			if( indexInRange(mousePos0, position + child.position, child.size)  
-			 || indexInRange(mousePos1, position + child.position, child.size) )
+			 || indexInRange(mousePos1, position + child.position, child.size)
+ 			 || child.mousePressed )
 				child.invokeMouseMoved(mousePos0 - position, mousePos1 - position)
 	}
 }
@@ -154,7 +173,7 @@ class FreePanel(position:Vec2i, size:Vec2i) extends Panel(position,size) {
 trait Dragable extends Widget {
 	override def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {
 		val delta = mousePos1 - mousePos0
-		position += delta
+		setSafePosition(position + delta)
 	}
 }
 
