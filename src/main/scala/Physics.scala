@@ -180,7 +180,7 @@ object BulletPhysics {
 		
 		def draw {
 			glPushMatrix
-			glTranslatev(pos)
+			glTranslate3fv(pos)
 			Draw.renderCube(size)
 			glPopMatrix
 		}

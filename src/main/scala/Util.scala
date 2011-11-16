@@ -50,11 +50,11 @@ object Util {
 		buffer
 	}
 	
-	def glTranslatev(v:Vec3) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, v.z)
-	def glTranslatev(v:Vec2i) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, 0)
-	def glColor4v(v:Vec4) = org.lwjgl.opengl.GL11.glColor4f(v.r, v.g, v.b, v.a)
-	def glScalev(v:Vec3) = org.lwjgl.opengl.GL11.glScalef(v.x, v.y, v.z)
-	def glScale(s:Float) = org.lwjgl.opengl.GL11.glScalef(s,s,s)
+	def glTranslate3fv(v:Vec3) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, v.z)
+	def glTranslate2iv(v:Vec2i) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, 0)
+	def glColor4fv(v:Vec4) = org.lwjgl.opengl.GL11.glColor4f(v.r, v.g, v.b, v.a)
+	def glScale3fv(v:Vec3) = org.lwjgl.opengl.GL11.glScalef(v.x, v.y, v.z)
+	def glScale1f(s:Float) = org.lwjgl.opengl.GL11.glScalef(s,s,s)
 	
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))

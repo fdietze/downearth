@@ -91,7 +91,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		glViewport(0, 0, screenWidth, screenHeight)
 		glEnable(GL_CULL_FACE)
 		glEnable(GL_COLOR_MATERIAL)
-
+		glEnable(GL_TEXTURE_2D)
 		
 		glMatrixMode( GL_PROJECTION )
 		glLoadMatrix( frustumBuffer )

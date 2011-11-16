@@ -132,7 +132,7 @@ class Inventory {
 	val materials = new collection.mutable.HashMap[Int,Double] {
 		override def default(key:Int) = 0.0
 	}
-	val tools = IndexedSeq(Scoop,Constructor)
+	val tools = IndexedSeq(Scoop,ConstructionTool)
 }
 
 
@@ -169,26 +169,26 @@ object Scoop extends PlayerTool {
 	}
 }
 
-object Constructor extends PlayerTool {
+object ConstructionTool extends PlayerTool {
 	override def primarybutton = addblock
 	override def draw = highlightblock
 	
-	var selectedmaterial = 3 //TODO: read from inventory
-	var selectedblock = FullHexaeder //TODO: read from cunstruction list
+	var selectedMaterial = 3 //TODO: read from inventory
+	var selectedBlock = FullHexaeder //TODO: read from cunstruction list
 	
 	def addblock {
 		selectedpos(top=true) match {
 			case Some(pos) =>
-				if( Player.inventory.materials(selectedmaterial) >= selectedblock.volume ) {
+				if( Player.inventory.materials(selectedMaterial) >= selectedBlock.volume ) {
 					val block = World(pos)
 					//TODO: the evaluation of the materialfunction should be in the Leaf itself
 					val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
 					Player.inventory.materials(material) += block.h.volume
-					Player.inventory.materials(selectedmaterial) -= selectedblock.volume
-					World(pos) = Leaf(selectedblock, selectedmaterial)
+					Player.inventory.materials(selectedMaterial) -= selectedBlock.volume
+					World(pos) = Leaf(selectedBlock, selectedMaterial)
 				}
 				else {
-					DisplayEventManager.showEventText("Not enough Material " + selectedmaterial + ".")
+					DisplayEventManager.showEventText("Not enough Material " + selectedMaterial + ".")
 				}
 			case _ =>
 		}
@@ -197,7 +197,7 @@ object Constructor extends PlayerTool {
 	def highlightblock {
 		selectedpos(top=true) match {
 			case Some(pos) =>
-				Draw.highlight(pos, selectedblock)
+				Draw.highlight(pos, selectedBlock)
 			case _ =>
 		}
 	}

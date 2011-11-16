@@ -63,13 +63,13 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			glDisable(GL_TEXTURE_2D)
 		
 			glPushMatrix
-			glTranslatev(rootNodePos)
+			glTranslate3fv(rootNodePos)
 			glColor3f(1,0,0)
 			Draw.renderCube(rootNodeSize)
 			glPopMatrix
 		
 			glPushMatrix
-			glTranslatev(worldWindowPos + 0.05f)
+			glTranslate3fv(worldWindowPos + 0.05f)
 			glColor3f(0,1,0)
 			Draw.renderCube(worldWindowSize - 0.1f)
 			glPopMatrix

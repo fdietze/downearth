@@ -55,7 +55,7 @@ object Main {
 
 		World
 		
-		Mouse setGrabbed true
+		Mouse setGrabbed false
 	}
 
 	def terminate {

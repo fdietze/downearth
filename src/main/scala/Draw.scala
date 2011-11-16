@@ -46,14 +46,14 @@ object Draw {
 	
 	def renderCube(size:Float) {
 		glPushMatrix
-			glScale(size)
+			glScale1f(size)
 			plaincube
 		glPopMatrix
 	}
 	
 	def renderCuboid(size:Vec3) {
 		glPushMatrix
-			glScalev(size)
+			glScale3fv(size)
 			plaincube
 		glPopMatrix
 	}
@@ -112,7 +112,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslatev(pos)
+			glTranslate3fv(pos)
 
 			// Transparent
 			glDisable(GL_DEPTH_TEST)
@@ -134,7 +134,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslatev(pos + 0.1f)
+			glTranslate3fv(pos + 0.1f)
 			Draw.renderCube(size - 0.2f)
 		glPopMatrix
 	}
@@ -145,7 +145,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslatev(pos + 0.1f)
+			glTranslate3fv(pos + 0.1f)
 			Draw.renderCuboid(cuboid.size - 0.2f)
 		glPopMatrix
 	}

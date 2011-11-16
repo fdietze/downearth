@@ -93,4 +93,34 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 			}
 		}
 	}
+	
+	children ++= Range(0,4).map(i => new MaterialWidget(i,Vec2i(screenWidth-48,i*48+16)) )
+}
+
+class MaterialWidget(val matId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) {
+	override def draw(offset:Vec2i = Vec2i(0)) {
+		glTranslate2iv(offset)
+		glColor4f(1,1,1,1)
+		
+		TextureManager.materials.bind
+		glEnable(GL_TEXTURE_2D)
+		glBegin(GL_QUADS)
+		
+		glTexCoord2f(matId/4f, 0)
+		glVertex2i(position.x         , position.y         )
+		glTexCoord2f(matId/4f,1)
+		glVertex2i(position.x         , position.y + size.y)
+		glTexCoord2f(matId/4f+0.25f,1)
+		glVertex2i(position.x + size.x, position.y + size.y)
+		glTexCoord2f(matId/4f+0.25f,0)
+		glVertex2i(position.x + size.x, position.y         )
+		
+		glEnd
+		glDisable(GL_TEXTURE_2D)
+		
+	}
+	
+	override def mouseClicked(mousePos:Vec2i){
+		ConstructionTool.selectedMaterial = matId
+	}
 }
