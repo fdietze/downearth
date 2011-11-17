@@ -55,6 +55,7 @@ object GUI extends Camera {
 }
 
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
+	override def toString = "MainWidget"
 	children += new FreePanel(Vec2i(20,200), Vec2i(120,100)) {
 		border = new LineBorder
 		background = new ColorBackground
@@ -67,14 +68,17 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 	}
 
 	children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) with Dragable {
+		override def toString = "WhiteWidget"
 		border = new LineBorder
 		background = new ColorBackground
 		
 		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) with Dragable {
+			override def toString = "BlueWidget"
 			border = new LineBorder(Vec4(0,1,0,1))
 			background = new ColorBackground(Vec4(0,0,1,0.25f))
 
 			children += new FreePanel(Vec2i(20,20), Vec2i(20,20)) with Dragable {
+				override def toString = "RedWidget"
 				border = new LineBorder(Vec4(1,0,0,1))
 				background = new ColorBackground(Vec4(1,0,0,0.25f))
 			
