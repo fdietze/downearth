@@ -19,9 +19,9 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 	val dragStartPos = Vec2i(0)
 	var dragging = false
 	
-	def dragStart {	}
+	def dragStart {}
 	
-	def dragStop(mousePos:Vec2i) {	}
+	def dragStop(mousePos:Vec2i) {}
 	
 	def getAbsolutePosition:Vec2i = {
 		if( parent == null )
