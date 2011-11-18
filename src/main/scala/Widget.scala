@@ -43,9 +43,9 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 	}
 	
 	def invokeDraw(offset:Vec2i = Vec2i(0)) {
-		background.draw(offset + position, size)
+		background.draw(offset, size)
 		draw(offset)
-		border.draw(offset + position, size)
+		border.draw(offset, size)
 	}
 
 	def invokeMouseDown(mousePos:Vec2i) {
@@ -123,7 +123,7 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 	override def toString = "Widget(%s, %s)" format( position, size )
 }
 
-class Panel(position:Vec2i, size:Vec2i) extends Widget(position, size) {
+abstract class Panel(position:Vec2i, size:Vec2i) extends Widget(position, size) {
 	private def thispanel = this
 	val children = new collection.mutable.Buffer[Widget] {
 		val buffer = new collection.mutable.ArrayBuffer[Widget]
@@ -171,6 +171,8 @@ class Panel(position:Vec2i, size:Vec2i) extends Widget(position, size) {
 		def iterator = buffer.iterator
 	}
 	
+	def getChildPosition(child:Int) = children(child).position
+	
 	override def toString = "Panel(%s, %s)" format( position, size )
 }
 
@@ -178,13 +180,17 @@ class FreePanel(position:Vec2i, size:Vec2i) extends Panel(position,size) {
 	var pressedWidget:Widget = this
 	
 	override def invokeDraw(offset:Vec2i = Vec2i(0)) {
-		super.invokeDraw(offset)
-		for( c <- children )
-			c.invokeDraw(position + offset)
+		background.draw(offset, size)
+		draw(offset)
+		for( child <- children )
+			child.invokeDraw(offset + child.position)
+		border.draw(offset, size)
 	}
 	
 	override def invokeMouseDown(mousePos:Vec2i) {
-		children.find( child => indexInRange(mousePos, position + child.position, child.size) ) match {
+		children.find(
+			child => indexInRange(mousePos, position + child.position, child.size)
+		) match {
 		case Some(child) =>
 			pressedWidget = child
 			child.invokeMouseDown(mousePos - position)
@@ -209,6 +215,16 @@ class FreePanel(position:Vec2i, size:Vec2i) extends Panel(position,size) {
 			 || indexInRange(mousePos1, position + child.position, child.size)
  			 || (child eq pressedWidget) )
 				child.invokeMouseMoved(mousePos0 - position, mousePos1 - position)
+	}
+}
+
+class AutoPanel(position:Vec2i, size:Vec2i) extends FreePanel(position, size) {
+	override def invokeDraw(offset:Vec2i = Vec2i(0)) {
+		background.draw(offset, size)
+		draw(offset)
+		for( child <- children )
+			child.invokeDraw(offset + child.position)
+		border.draw(offset, size)
 	}
 }
 
