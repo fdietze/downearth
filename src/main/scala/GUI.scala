@@ -28,8 +28,7 @@ object GUI extends Camera {
 	def renderScene {
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) // no wireframes
 		applyortho
-
-
+		
 		Draw.addText("%d fps" format Main.currentfps)
 		Draw.addText("drawcalls: " + World.drawcalls +
 			", empty: " + World.emptydrawcalls + "")
@@ -37,20 +36,26 @@ object GUI extends Camera {
 		Draw.addText("")
 		Draw.addText("Inventory: " + Player.inventory.materials)
 		Draw.addText("Selected Block: " + World.lastraytraycedblock )
+		
 		if( !Player.isGhost ) {
 			Draw.addText("Player Position: " + round10(Player.position) )
 			Draw.addText("Player Velocity: " + round10(Player.velocity) )
 		}
-
-		glDisable(GL_LIGHTING)
-		glDisable(GL_TEXTURE_2D)
+		
+		glDisable( GL_LIGHTING )
+		glDisable( GL_TEXTURE_2D )
+		glEnable(GL_BLEND)
+		
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 		
 		Draw.drawTexts
 		DisplayEventManager.draw
-
+		
 		Draw.crossHair
-
-		MainWidget.invokeDraw()
+		
+		MainWidget.invokeDraw
+		
+		glDisable(GL_BLEND)
 	}
 }
 
@@ -60,7 +65,7 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 		border = new LineBorder
 		background = new ColorBackground
 		
-		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) {
+		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) {
 			border = new LineBorder(Vec4(0,1,0,1))
 			background = new ColorBackground(Vec4(0,0,1,0.25f))
 		}
@@ -72,12 +77,12 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 		border = new LineBorder
 		background = new ColorBackground
 		
-		children += new FreePanel(Vec2i(20,20), Vec2i(80,60)) with Dragable {
+		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) with Dragable {
 			override def toString = "BlueWidget"
 			border = new LineBorder(Vec4(0,1,0,1))
 			background = new ColorBackground(Vec4(0,0,1,0.25f))
 
-			children += new FreePanel(Vec2i(20,20), Vec2i(20,20)) with Dragable {
+			children += new FreePanel(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
 				override def toString = "RedWidget"
 				border = new LineBorder(Vec4(1,0,0,1))
 				background = new ColorBackground(Vec4(1,0,0,0.25f))
@@ -102,7 +107,7 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 }
 
 class MaterialWidget(val matId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) {
-	override def draw(offset:Vec2i = Vec2i(0)) {
+	override def draw {
 		glColor4f(1,1,1,1)
 		
 		TextureManager.materials.bind
@@ -110,13 +115,13 @@ class MaterialWidget(val matId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) 
 		glBegin(GL_QUADS)
 		
 		glTexCoord2f(matId/4f, 0)
-		glVertex2i(offset.x         , offset.y          )
+		glVertex2i(position.x         , position.y          )
 		glTexCoord2f(matId/4f, 1)
-		glVertex2i(offset.x         , offset.y + size.y )
+		glVertex2i(position.x         , position.y + size.y )
 		glTexCoord2f(matId/4f + 0.25f, 1)
-		glVertex2i(offset.x + size.x, offset.y + size.y )
+		glVertex2i(position.x + size.x, position.y + size.y )
 		glTexCoord2f(matId/4f + 0.25f, 0)
-		glVertex2i(offset.x + size.x, offset.y          )
+		glVertex2i(position.x + size.x, position.y          )
 		
 		glEnd
 		glDisable(GL_TEXTURE_2D)

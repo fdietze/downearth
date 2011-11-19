@@ -10,7 +10,15 @@ import Config._
 import Util._
 
 
-class Widget(val position:Vec2i, val size:Vec2i) {
+class Widget( _position:Vec2i, val size:Vec2i) {
+	def position = _position
+	def position_=(newpos:Vec2i) {
+		if(parent != null)
+			_position := min( max(parent.position, newpos), parent.position + parent.size - size)
+		else
+			_position := newpos
+	}
+	
 	var parent:Widget = null
 	var border:Border = new NoBorder
 	var background:Background = new NoBackground
@@ -23,29 +31,12 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 	
 	def dragStop(mousePos:Vec2i) {}
 	
-	def getAbsolutePosition:Vec2i = {
-		if( parent == null )
-			position
-		else
-			position + parent.getAbsolutePosition
-	}
-	
 	def clickDelta = 2f
 	
-	def setSafePosition(pos:Vec2i) {
-		val newpos = 
-			if( parent != null )
-				min(max(Vec2i(0), pos), parent.size - size)
-			else
-				pos
-				
-		position := newpos
-	}
-	
-	def invokeDraw(offset:Vec2i = Vec2i(0)) {
-		background.draw(offset, size)
-		draw(offset)
-		border.draw(offset, size)
+	def invokeDraw {
+		background.draw(position, size)
+		draw
+		border.draw(position, size)
 	}
 
 	def invokeMouseDown(mousePos:Vec2i) {
@@ -90,41 +81,42 @@ class Widget(val position:Vec2i, val size:Vec2i) {
 		 		mouseOut(mousePos0, mousePos1)
 	}
 	
-	def draw(offset:Vec2i = Vec2i(0)) {}
+	def draw {}
 
-	def mouseClicked(mousePos:Vec2i) {
-		//DisplayEventManager.showEventText("mouseClicked: " + this)
-	}
+	def mouseClicked(mousePos:Vec2i) {}
 
-	def mouseDown(mousePos:Vec2i) {
-		//DisplayEventManager.showEventText("mouseDown: " + mousePos)
-	}
+	def mouseDown(mousePos:Vec2i) {}
 	
-	def mouseUp(mousePos:Vec2i) {
-		//DisplayEventManager.showEventText("mouseUp: " + mousePos)
-	}
+	def mouseUp(mousePos:Vec2i) {}
 
-	def mouseMoved(mousePos0:Vec2i, mousePos1:Vec2i) {
-		//DisplayEventManager.showEventText("mouseMoved: " + this)
-	}
+	def mouseMoved(mousePos0:Vec2i, mousePos1:Vec2i) {}
 
-	def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-		//DisplayEventManager.showEventText("mouseIn: " + mousePos0 + ", " + mousePos1)
-	}
+	def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {}
 	
-	def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-		//DisplayEventManager.showEventText("mouseOut: " + mousePos0 + ", " + mousePos1)
-	}
+	def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {}
 	
-	def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {
-		//DisplayEventManager.showEventText("mouseDragged: " + this)
-	}
+	def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {}
 	
 	override def toString = "Widget(%s, %s)" format( position, size )
 }
 
-abstract class Panel(position:Vec2i, size:Vec2i) extends Widget(position, size) {
+class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i( ConsoleFont.font.getWidth(_text), ConsoleFont.height ) ) {
+	private var m_text = _text
+	def text = m_text
+	def	text_=(s:String){
+		m_text = s
+	
+	}
+	override def draw {
+		import org.newdawn.slick.Color.white
+		ConsoleFont.font.drawString( position.x, position.y, text, white )
+	}
+}
+
+
+abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _size) {
 	private def thispanel = this
+	
 	val children = new collection.mutable.Buffer[Widget] {
 		val buffer = new collection.mutable.ArrayBuffer[Widget]
 		// trait Buffer implementieren, um automatisch die Parents eines
@@ -171,38 +163,46 @@ abstract class Panel(position:Vec2i, size:Vec2i) extends Widget(position, size) 
 		def iterator = buffer.iterator
 	}
 	
-	def getChildPosition(child:Int) = children(child).position
+	// def getChildPosition(child:Int) = children(child).position TODO wofür wenn man auch direkt auf children zugreifen kann ?
+	
+	override def position_=(pos:Vec2i){
+		val prepos = position.clone
+		super.position_=(pos)
+		for(child <- children){
+			child.position = child.position + position - prepos
+		}
+	}
 	
 	override def toString = "Panel(%s, %s)" format( position, size )
 }
 
-class FreePanel(position:Vec2i, size:Vec2i) extends Panel(position,size) {
+class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size) {
 	var pressedWidget:Widget = this
 	
-	override def invokeDraw(offset:Vec2i = Vec2i(0)) {
-		background.draw(offset, size)
-		draw(offset)
+	override def invokeDraw {
+		background.draw(position, size)
+		draw
 		for( child <- children )
-			child.invokeDraw(offset + child.position)
-		border.draw(offset, size)
+			child.invokeDraw
+		border.draw(position, size)
 	}
 	
 	override def invokeMouseDown(mousePos:Vec2i) {
 		children.find(
-			child => indexInRange(mousePos, position + child.position, child.size)
+			child => indexInRange(mousePos, child.position, child.size)
 		) match {
 		case Some(child) =>
 			pressedWidget = child
-			child.invokeMouseDown(mousePos - position)
+			child.invokeMouseDown(mousePos)
 		case None =>
 			pressedWidget = this
 			super.invokeMouseDown(mousePos)
 		}
 	}
-
+	
 	override def invokeMouseUp(mousePos:Vec2i) {
 		if (pressedWidget != this){
-			pressedWidget.invokeMouseUp(mousePos - position)
+			pressedWidget.invokeMouseUp(mousePos)
 		} else {
 			super.invokeMouseUp(mousePos)
 		}
@@ -211,23 +211,22 @@ class FreePanel(position:Vec2i, size:Vec2i) extends Panel(position,size) {
 	override def invokeMouseMoved(mousePos0:Vec2i, mousePos1:Vec2i) {
 		super.invokeMouseMoved(mousePos0, mousePos1)
 		for(child <- children)
-			if( indexInRange(mousePos0, position + child.position, child.size)  
-			 || indexInRange(mousePos1, position + child.position, child.size)
+			if( indexInRange(mousePos0, child.position, child.size)  
+			 || indexInRange(mousePos1, child.position, child.size)
  			 || (child eq pressedWidget) )
-				child.invokeMouseMoved(mousePos0 - position, mousePos1 - position)
+				child.invokeMouseMoved(mousePos0, mousePos1)
 	}
 }
 
 class AutoPanel(position:Vec2i, size:Vec2i) extends FreePanel(position, size) {
-	override def invokeDraw(offset:Vec2i = Vec2i(0)) {
-		background.draw(offset, size)
-		draw(offset)
+	override def invokeDraw {
+		background.draw(position, size)
+		draw
 		for( child <- children )
-			child.invokeDraw(offset + child.position)
-		border.draw(offset, size)
+			child.invokeDraw
+		border.draw(position, size)
 	}
 }
-
 
 trait Dragable extends Widget {
 	// Drag-Start-Widget-Position
@@ -239,54 +238,8 @@ trait Dragable extends Widget {
 	
 	override def mouseDragged(mousePos0:Vec2i, mousePos1:Vec2i) {
 		super.mouseDragged(mousePos0, mousePos1)
-		setSafePosition(dragOriginalPosition - dragStartPos + mousePos1)
+		// TODO hier könnte sich was geändert haben
+		position = dragOriginalPosition - dragStartPos + mousePos1
 	}
 }
 
-abstract class Border {
-	def draw(position:Vec2i, size:Vec2i)
-}
-
-class NoBorder extends Border {
-	def draw(position:Vec2i, size:Vec2i) {}
-}
-
-class LineBorder(color:Vec4 = Vec4(1)) extends Border {
-	def draw(position:Vec2i, size:Vec2i) {
-		glColor4fv(color)
-		
-		glEnable(GL_BLEND)
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-			glBegin(GL_LINE_LOOP)
-				glVertex2i(position.x-1       , position.y)
-				glVertex2i(position.x         , position.y + size.y)
-				glVertex2i(position.x + size.x, position.y + size.y)
-				glVertex2i(position.x + size.x, position.y)
-			glEnd
-		glDisable(GL_BLEND)
-	}
-}
-
-abstract class Background {
-	def draw(position:Vec2i, size:Vec2i)
-}
-
-class NoBackground extends Background {
-	def draw(position:Vec2i, size:Vec2i) {}
-}
-
-class ColorBackground(color:Vec4 = Vec4(1,1,1,0.25f)) extends Background {
-	def draw(position:Vec2i, size:Vec2i) {
-		glColor4fv(color)
-
-		glEnable(GL_BLEND)
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-			glBegin(GL_QUADS)
-				glVertex2i(position.x         , position.y)
-				glVertex2i(position.x         , position.y + size.y)
-				glVertex2i(position.x + size.x, position.y + size.y)
-				glVertex2i(position.x + size.x, position.y)
-			glEnd
-		glDisable(GL_BLEND)
-	}
-}

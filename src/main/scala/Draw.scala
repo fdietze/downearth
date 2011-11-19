@@ -182,15 +182,12 @@ object Draw {
 	def drawTexts {
 		import org.newdawn.slick.Color.white
 		if( textCache.size > 0 ) {
-			glEnable(GL_BLEND)
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 			val posx = 20
 			var posy = 20
 			for( msg <- textCache ) {
 				ConsoleFont.font.drawString(posx, posy, msg, white)
 				posy += ConsoleFont.height
 			}
-			glDisable(GL_BLEND)
 			textCache.clear
 		}
 	}
@@ -201,9 +198,7 @@ object Draw {
 		val posx = Config.screenWidth - 20 - ConsoleFont.font.getWidth(event.textMessage)
 		val posy = 20 + ConsoleFont.height * pos
 		
-		glEnable(GL_BLEND)
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 		ConsoleFont.font.drawString(posx, posy, event.textMessage, white)
-		glDisable(GL_BLEND)
 	}
 }
+
