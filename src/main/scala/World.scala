@@ -19,7 +19,7 @@ object World {
 		}
 	}
 	
-	var lastraytraycedblock:Option[Vec3i] = None	
+	
 	//raytracer zum anklicken von Zellen
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Float):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
@@ -83,7 +83,7 @@ object World {
 		val prepos = pos.clone
 		prepos(axis) -= step(axis)
 		
-		lastraytraycedblock = if(h != null){
+		if(h != null){
 			if(top && rayCellTest(from-pos,direction,h.asInstanceOf[Hexaeder]))
 				Some(prepos)
 			else
@@ -91,8 +91,6 @@ object World {
 		}
 		else
 			None
-		
-		lastraytraycedblock
 	}
 	
 	def update(pos:Vec3i, l:Leaf) {

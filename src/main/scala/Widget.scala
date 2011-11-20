@@ -1,4 +1,4 @@
-package openworld
+package openworld.gui
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -7,14 +7,27 @@ import simplex3d.math.float.functions._
 import org.lwjgl.opengl.GL11._
 import org.newdawn.slick.opengl.Texture
 
-import Config._
-import Util._
+import openworld.Config._
+import openworld.Util._
+import openworld._
 
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 	border = NoBorder
 	background = NoBackground
 	override def toString = "MainWidget"
 	override def setPosition(newPos:Vec2i) {}
+	override def mouseClicked(pos:Vec2i) {
+		Player.primaryAction
+	}
+	override def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {
+		val mouseDelta = mousePos1 - mousePos0
+		val delta_angle = Vec3(0)
+		
+		delta_angle.y = mouseDelta.x/300f
+		delta_angle.x = mouseDelta.y/300f
+		
+		Player.rotate(delta_angle)
+	}
 }
 
 class Widget( val position:Vec2i, val size:Vec2i) {
@@ -30,10 +43,6 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	
 	val dragStartPos = Vec2i(0)
 	var dragging = false
-	
-	def dragStart {}
-	
-	def dragStop(mousePos:Vec2i) {}
 	
 	def clickDelta = 2f
 	
@@ -105,20 +114,35 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {}
 	
 	def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {}
+
+	def dragStart {}
+	
+	def dragStop(mousePos:Vec2i) {}
+	
 	
 	override def toString = "Widget(%s, %s)" format( position, size )
 }
 
-class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i( ConsoleFont.font.getWidth(_text), ConsoleFont.height ) ) {
-	private var m_text = _text
-	def text = m_text
-	def	text_=(s:String){
-		m_text = s
-	
+class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i(0)) {
+
+	def updateSize {
+		size.x = ConsoleFont.font.getWidth(m_text)
+		size.y = ConsoleFont.height
 	}
+	
+	
+	private var m_text = _text
+	updateSize
+
+	def text = m_text
+	def	text_=(s:Any) {
+		m_text = s.toString
+		updateSize
+		
+	}
+
 	override def draw {
-		import org.newdawn.slick.Color.white
-		ConsoleFont.font.drawString( position.x, position.y, text, white )
+		Draw.drawString( position, text)
 	}
 }
 
@@ -144,7 +168,7 @@ class TextureWidget(_position:Vec2i, _size:Vec2i, texture:Texture, texPosition:V
 	}
 }
 
-
+// TODO: Typparameter übergeben
 abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _size) {
 	private def thispanel = this
 	
@@ -269,7 +293,46 @@ class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(pos
 }
 
 
-trait Dragable extends Widget {
+class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel(position, size) {
+	
+	override def invokeDraw {
+		drawLines
+		super.invokeDraw
+	}
+	
+	def drawLines {
+		border match {
+			case b:LineBorder =>
+				glColor4fv(Vec4(b.color.rgb,0.5f))
+				glBegin(GL_LINES)
+				var x = 0
+				while( x < size.x ) {
+					glVertex2i(position.x + x, position.y + 0)
+					glVertex2i(position.x + x, position.y + size.y)
+					x += cellsize
+				}
+				var y = 0
+				while( y < size.y ) {
+					glVertex2i(position.x + 0     , position.y + y)
+					glVertex2i(position.x + size.x, position.y + y)
+					y += cellsize
+				}
+				glEnd
+			case _ =>
+		}
+	}
+	
+	override def arrangeChildren {
+		for( child <- children ) {
+			val childRelCenter = -position + child.position + child.size / 2
+			val newRelCenter = Vec2i(round((childRelCenter - cellsize / 2) / cellsize.toFloat)) * cellsize + cellsize / 2
+			child.setPosition( position + newRelCenter - child.size / 2 )
+		}
+	}
+}
+
+
+trait Draggable extends Widget {
 	// Drag-Start-Widget-Position
 	val dragOriginalPosition = Vec2i(0)
 	
@@ -283,3 +346,63 @@ trait Dragable extends Widget {
 	}
 }
 
+/*
+
+	MainWidget.children += new FreePanel(Vec2i(20,200), Vec2i(120,100)) {
+		border = new LineBorder
+		background = new ColorBackground
+		
+		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) {
+			border = new LineBorder(Vec4(0,1,0,1))
+			background = new ColorBackground(Vec4(0,0,1,0.25f))
+		}
+		
+	}
+
+	MainWidget.children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) with Dragable {
+		override def toString = "WhiteWidget"
+		border = new LineBorder
+		background = new ColorBackground
+		
+		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) with Dragable {
+			override def toString = "BlueWidget"
+			border = new LineBorder(Vec4(0,1,0,1))
+			background = new ColorBackground(Vec4(0,0,1,0.25f))
+
+			children += new FreePanel(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
+				override def toString = "RedWidget"
+				border = new LineBorder(Vec4(1,0,0,1))
+				background = new ColorBackground(Vec4(1,0,0,0.25f))
+			
+			}
+			override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+				background = new ColorBackground(Vec4(0,1,0,0.25f))
+			}
+			override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+				background = new ColorBackground(Vec4(0,0,1,0.25f))
+			}
+			override def mouseDown(mousePos:Vec2i) {
+				border = new LineBorder(Vec4(1,0,0,1))
+			}
+			override def mouseUp(mousePos:Vec2i) {
+				border = new LineBorder(Vec4(0,1,0,1))
+			}
+		}
+	}
+	MainWidget.children += new GridPanel(Vec2i(20, 320), Vec2i(105,105)) with Dragable {
+		
+		def newWidget = new Widget(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
+			override def toString = "RedWidget"
+			border = new LineBorder(Vec4(1,0,0,1))
+			background = new ColorBackground(Vec4(1,0,0,0.25f))
+			override def dragStop(mousePos:Vec2i) = parent.arrangeChildren
+		}
+		
+		for( i <- 0 until 5 )
+			children += newWidget
+		
+		arrangeChildren
+	}
+
+
+*/

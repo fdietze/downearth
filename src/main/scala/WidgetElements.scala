@@ -1,9 +1,12 @@
-package openworld
+package openworld.gui
 
 import simplex3d.math._
 import simplex3d.math.float._
 import org.lwjgl.opengl.GL11._
-import Util._
+
+import openworld.Config._
+import openworld.Util._
+import openworld._
 
 trait Border {
 	def draw(position:Vec2i, size:Vec2i)
@@ -13,7 +16,7 @@ object NoBorder extends Border {
 	def draw(position:Vec2i, size:Vec2i) {}
 }
 
-class LineBorder(color:Vec4 = Vec4(1)) extends Border {
+class LineBorder(val color:Vec4 = Vec4(1)) extends Border {
 	def draw(position:Vec2i, size:Vec2i) {
 		glColor4fv(color)
 		

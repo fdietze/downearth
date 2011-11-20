@@ -1,78 +1,40 @@
-package openworld
+package openworld.gui
 
 import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
 import org.lwjgl.opengl.GL11._
+import org.newdawn.slick.opengl.Texture
+import org.lwjgl.input.Mouse
 
-import Config._
-import Util._
-
+import openworld.Config._
+import openworld.Util._
+import openworld._
 
 // die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
 object GUI extends Camera {
-
-	MainWidget.children += new FreePanel(Vec2i(20,200), Vec2i(120,100)) {
-		border = new LineBorder
-		background = new ColorBackground
+	
+	val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
+		children += new Hammer(position+Vec2i(0 , 0))
+		children += new Shovel(position+Vec2i(40, 0))
+		children ++= Range(0,4).map(
+			i => new MaterialWidget(i, position + Vec2i(i * 40, 40) )
+		)
 		
-		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) {
-			border = new LineBorder(Vec4(0,1,0,1))
-			background = new ColorBackground(Vec4(0,0,1,0.25f))
-		}
+		//children += new Label(position, "Test")
 		
-	}
-
-	MainWidget.children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) with Dragable {
-		override def toString = "WhiteWidget"
-		border = new LineBorder
-		background = new ColorBackground
+		arrangeChildren
+		setTopRight
 		
-		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) with Dragable {
-			override def toString = "BlueWidget"
-			border = new LineBorder(Vec4(0,1,0,1))
-			background = new ColorBackground(Vec4(0,0,1,0.25f))
-
-			children += new FreePanel(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
-				override def toString = "RedWidget"
-				border = new LineBorder(Vec4(1,0,0,1))
-				background = new ColorBackground(Vec4(1,0,0,0.25f))
-			
-			}
-			override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-				background = new ColorBackground(Vec4(0,1,0,0.25f))
-			}
-			override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-				background = new ColorBackground(Vec4(0,0,1,0.25f))
-			}
-			override def mouseDown(mousePos:Vec2i) {
-				border = new LineBorder(Vec4(1,0,0,1))
-			}
-			override def mouseUp(mousePos:Vec2i) {
-				border = new LineBorder(Vec4(0,1,0,1))
-			}
-		}
+		var moved = false
+		def setTopRight = setPosition(Vec2i(screenWidth - size.x - 20, 20))
+		override def dragStop(mousePos:Vec2i) { moved = true }
 	}
 	
-	MainWidget.children += new AutoPanel(Vec2i(200, 20), Vec2i(100,100)) with Dragable {
-		
-		def newWidget = new Widget(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
-			override def toString = "RedWidget"
-			border = new LineBorder(Vec4(1,0,0,1))
-			background = new ColorBackground(Vec4(1,0,0,0.25f))
-		}
-		
-		for( i <- 0 until 5 )
-			children += newWidget
-		
-		override def mouseClicked(mousePos:Vec2i) = arrangeChildren
-	}
+	MainWidget.children += inventory
 	
-	MainWidget.children ++= Range(0,4).map(
-		i => new MaterialWidget(i,Vec2i( screenWidth - i * 48 - 48  , screenHeight - 48 ) )
-	)
-
+		
 	def applyortho {
 		glDisable(GL_DEPTH_TEST)
 		glDisable(GL_LIGHTING)
@@ -95,7 +57,6 @@ object GUI extends Camera {
 		Draw.addText("frustum culled nodes: " + World.frustumculls)
 		Draw.addText("")
 		Draw.addText("Inventory: " + Player.inventory.materials)
-		Draw.addText("Selected Block: " + World.lastraytraycedblock )
 		
 		if( !Player.isGhost ) {
 			Draw.addText("Player Position: " + round10(Player.position) )
@@ -105,13 +66,13 @@ object GUI extends Camera {
 		glDisable( GL_LIGHTING )
 		glDisable( GL_TEXTURE_2D )
 		glEnable(GL_BLEND)
-		
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 		
 		Draw.drawTexts
 		DisplayEventManager.draw
-		
-		Draw.crossHair
+
+		if( Mouse.isGrabbed )
+			Draw.crossHair
 		
 		MainWidget.invokeDraw
 		
@@ -121,10 +82,74 @@ object GUI extends Camera {
 
 
 class MaterialWidget(val matId:Int, _pos:Vec2i)
-	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4f,0), Vec2(0.25f,1) ) {
+	extends InventoryItem(_pos, TextureManager.materials, Vec2(matId/4f,0), Vec2(0.25f,1) ) {
 	
-	override def mouseDown(mousePos:Vec2i) {
+	override def mouseClicked(mousePos:Vec2i) {
+		super.mouseClicked(mousePos)
 		ConstructionTool.selectedMaterial = matId
 		DisplayEventManager.showEventText("Material " + matId)
 	}
+	
+	override def draw {
+		super.draw
+
+		val text = floor(Player.inventory.materials(matId).toFloat).toInt
+		val textSize = Vec2i(ConsoleFont.font.getWidth(text.toString) + 2, ConsoleFont.height)
+		val textPos = position + size - textSize
+		import org.newdawn.slick.Color.white
+		Draw.drawString(textPos, text, white)
+	}
 }
+
+class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Vec2)
+	extends InventoryItem(_pos, TextureManager.tools, _texPosition, _texSize) {
+	
+	override def mouseClicked(mousePos:Vec2i) {
+		super.mouseClicked(mousePos)
+		Player.selectTool(tool)
+		DisplayEventManager.showEventText("Tool " + tool)
+	}
+}
+
+//TODO: class ShapeWidget(val shape:Polyeder, _pos:Vec2i) extends InventoryItem(_pos)
+
+
+class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5f) )
+class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5f,0), Vec2(0.5f) )
+
+
+class InventoryItem(_pos:Vec2i, texture:Texture, _texPosition:Vec2, _texSize:Vec2)
+	extends TextureWidget(_pos, Vec2i(32), texture, _texPosition, _texSize )
+	with Draggable {
+	
+	var selected = false
+	def select { selected = true; border = new LineBorder(Vec4(0.2f,0.4f,1f,1)) }
+	def deselect { selected = false; border = new LineBorder(Vec4(1,1,1,1)) }
+	
+	override def dragStop(mousePos:Vec2i) = parent.arrangeChildren
+	
+	override def mouseClicked(mousePos:Vec2i) {
+		if( selected )
+			deselect
+		else
+			select
+	}
+}
+
+class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable {
+/* TODO
+	def deselectOfType[T] {
+		for( child <- children; if( child.isInstanceOf[T] ) )
+			child.deselect
+	}*/
+
+}
+
+
+
+
+
+
+
+
+

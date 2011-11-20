@@ -9,6 +9,7 @@ import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.util.glu._
+import org.lwjgl.input.Mouse
 import GLU._
 
 import com.bulletphysics.linearmath.Transform
@@ -110,46 +111,59 @@ object Player {
 	// Tools, Inventory, Menu Controls
 	//////////////////////////////////
 	val inventory = new Inventory
-	var activetool:PlayerTool = inventory.tools(0)
-	def selecttool(tool:Int) = activetool = inventory.tools(tool)
-	def selectnexttool {
-		selecttool(
-			(inventory.tools.indexOf(activetool) + 1) % inventory.tools.size
+	var activeTool:PlayerTool = inventory.tools(0)
+	def selectTool(tool:Int) = activeTool = inventory.tools(tool)
+	def selectTool(tool:PlayerTool) = {
+		if( inventory.tools contains tool )
+			activeTool = tool
+	}
+	def selectNextTool {
+		selectTool(
+			(inventory.tools.indexOf(activeTool) + 1) % inventory.tools.size
 		)
 	}
 	
-
-	def updownbutton(direction:Int) = activetool.updownbutton(direction:Int)
-	def primarybutton = activetool.primarybutton
-	def secondarybutton = selectnexttool
-	def draw {
-		// draw other stuff
-		activetool.draw
-	}
+	def primaryAction   = activeTool.primary
+	def secondaryAction = selectNextTool
 }
 
 class Inventory {
 	val materials = new collection.mutable.HashMap[Int,Double] {
 		override def default(key:Int) = 0.0
 	}
-	val tools = IndexedSeq(Scoop,ConstructionTool)
+	val tools = IndexedSeq(Shovel, ConstructionTool)
 }
 
 
 trait PlayerTool {
-	def primarybutton {}
-	def updownbutton(direction:Int) {}
-	def draw {}
+	def primary
+	def top:Boolean
+	def range = 100
+	def selectPoly(pos:Vec3i):Polyeder
 	
-	def selectedpos(top:Boolean) = World.raytracer(Player.position, Player.direction, top, buildrange)
+	def draw {
+		// if( Mouse.isGrabbed ) {
+			selectPos match {
+				case Some(pos) =>
+					Draw.highlight( pos, selectPoly(pos) )
+				case _ =>
+			}
+		// }
+	}
+	
+	def selectPos = {
+		World.raytracer(Player.position, Player.direction, top, range)
+	}
 }
 
-object Scoop extends PlayerTool {
-	override def primarybutton = removeblock
-	override def draw = highlightblock
+object Shovel extends PlayerTool {
+	// removes a block
+	def top = false
 	
-	def removeblock {
-		selectedpos(top=false) match {
+	def selectPoly(pos:Vec3i) = World(pos).h
+	
+	override def primary{
+		selectPos match {
 			case Some(pos) =>
 				val block = World(pos)
 				//TODO: the evaluation of the materialfunction should be in the Leaf itself
@@ -160,24 +174,15 @@ object Scoop extends PlayerTool {
 		}
 	}
 	
-	def highlightblock {
-		selectedpos(top=false) match {
-			case Some(pos) =>
-				Draw.highlight(pos, World(pos).h)
-			case _ =>
-		}
-	}
+	override def toString = getClass.getName
 }
 
 object ConstructionTool extends PlayerTool {
-	override def primarybutton = addblock
-	override def draw = highlightblock
+	// adds a block
+	def selectPoly(pos:Vec3i) = BuildInterface.current
 	
-	var selectedMaterial = 3 //TODO: read from inventory
-	var selectedBlock = FullHexaeder //TODO: read from cunstruction list
-	
-	def addblock {
-		selectedpos(top=true) match {
+	override def primary = {
+		selectPos match {
 			case Some(pos) =>
 				if( Player.inventory.materials(selectedMaterial) >= selectedBlock.volume ) {
 					val block = World(pos)
@@ -194,16 +199,11 @@ object ConstructionTool extends PlayerTool {
 		}
 	}
 	
-	def highlightblock {
-		selectedpos(top=true) match {
-			case Some(pos) =>
-				Draw.highlight(pos, selectedBlock)
-			case _ =>
-		}
-	}
+	override def top = true
+	
+	var selectedMaterial = 3 //TODO: read from inventory
+	var selectedBlock = FullHexaeder //TODO: read from cunstruction list
 }
-
-
 
 object BuildInterface {
 	val full = FullHexaeder
@@ -254,9 +254,6 @@ object BuildInterface {
 				World(pos) = Leaf(replacement, 3)
 			case _ =>
 		}
-	}
-	
-	def highlightHexaeder(position:Vec3, direction:Vec3) {
 	}
 }
 

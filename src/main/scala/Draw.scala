@@ -9,6 +9,8 @@ import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
 
+import org.newdawn.slick.Color
+
 import Util._
 import Config._
 
@@ -72,8 +74,6 @@ object Draw {
 	def crossHair{
 		glPushMatrix
 			glTranslatef(screenWidth/2,screenHeight/2,0)
-			glDisable(GL_LIGHTING)
-			glDisable(GL_TEXTURE_2D)
 			glColor3f(1,1,1)
 			glBegin(GL_LINES)
 				glVertex2i(-15, 0)
@@ -172,6 +172,12 @@ object Draw {
 	}
 
 
+	def drawString(pos:Vec2i, text:Any, color:Color = Color.white) {
+		ConsoleFont.font.drawString( pos.x, pos.y, text.toString, color )
+		glDisable( GL_LIGHTING )
+		glDisable( GL_TEXTURE_2D )
+	}
+	
 	// simuliert ein Konsolenähnliches verhalten, um Text auf dem Bildschirm darzustellen
 	val textCache = collection.mutable.ArrayBuffer[String]()
 	
@@ -180,13 +186,11 @@ object Draw {
 	}
 	
 	def drawTexts {
-		import org.newdawn.slick.Color.white
 		if( textCache.size > 0 ) {
-			val posx = 20
-			var posy = 20
+			val pos = Vec2i(20)
 			for( msg <- textCache ) {
-				ConsoleFont.font.drawString(posx, posy, msg, white)
-				posy += ConsoleFont.height
+				drawString(pos, msg)
+				pos.y += ConsoleFont.height
 			}
 			textCache.clear
 		}
@@ -195,10 +199,10 @@ object Draw {
 	def drawDispayEvent(event:DisplayEvent, pos:Int) {
 		import org.newdawn.slick.Color.white
 		
-		val posx = Config.screenWidth - 20 - ConsoleFont.font.getWidth(event.textMessage)
-		val posy = 20 + ConsoleFont.height * pos
+		val textPos = Vec2i(Config.screenWidth - 20 - ConsoleFont.font.getWidth(event.textMessage),
+			250 + ConsoleFont.height * pos)
 		
-		ConsoleFont.font.drawString(posx, posy, event.textMessage, white)
+		drawString(textPos, event.textMessage)
 	}
 }
 

@@ -13,6 +13,8 @@ import simplex3d.math.float.functions._
 import Util._
 import Config._
 
+import gui.{MainWidget, GUI}
+
 object Main {
 	var finished = false
 	
@@ -88,6 +90,11 @@ object Main {
 		if( fullscreen ) {
 			Mouse setGrabbed true
 		}
+		
+		MainWidget.size := Vec2i(screenWidth, screenHeight)
+		
+		if( ! GUI.inventory.moved )
+			GUI.inventory.setTopRight
 	}
 	
 
@@ -100,31 +107,29 @@ object Main {
 			finished = true
 
 		val mouseDelta = Vec2i(getDX, getDY)
+		// Move and rotate player
+		val delta = Vec3(0)
+		val delta_angle = Vec3(0)
+
+		if(isKeyDown(keyForward))
+			delta.z -= 1
+		if(isKeyDown(keyBackward))
+			delta.z += 1
+		if(isKeyDown(keyLeft))
+			delta.x -= 1
+		if(isKeyDown(keyRight))
+			delta.x += 1
+
 		
 		if( Mouse isGrabbed ) {
-			// Move and rotate player
-			val delta = Vec3(0)
-			val delta_angle = Vec3(0)
 		
-			delta_angle.y -= mouseDelta.x/300f
+			// rotate with mouse
+			delta_angle.y = -mouseDelta.x/300f
 			delta_angle.x = mouseDelta.y/300f
-
-			if(isKeyDown(keyForward))
-				delta.z -= 1
-			if(isKeyDown(keyBackward))
-				delta.z += 1
-			if(isKeyDown(keyLeft))
-				delta.x -= 1
-			if(isKeyDown(keyRight))
-				delta.x += 1
-
-			val factor = if(turbo) cameraTurboSpeed else cameraSpeed
-			Player.move(factor*(delta/max(1,length(delta)))*timestep)
-			Player.rotate(2f*delta_angle)
 			
 			// Turbo mode
 			if( turbo && Mouse.isButtonDown(0) )
-				Player.primarybutton
+				Player.primaryAction
 			
 			
 			// Keyboard Events
@@ -168,12 +173,14 @@ object Main {
 				( getEventButton, getEventButtonState ) match {
 					case (0 , true) => // left down
 					case (0 , false) => // left up
-						Player.primarybutton
+						Player.primaryAction
 					case (1 , true) => // right down
 					case (1 , false) => // right up
-						Player.secondarybutton
+						//Player.secondarybutton
+						Mouse setGrabbed false
+						Mouse setCursorPosition(screenWidth / 2, screenHeight / 2)
 					case (-1, false) => // wheel
-						Player.updownbutton( Mouse.getDWheel / 120 )
+						// Player.updownbutton( Mouse.getDWheel / 120 )
 					case _ =>
 				}
 			}
@@ -212,12 +219,18 @@ object Main {
 						MainWidget.invokeMouseUp(Vec2i(Mouse.getX, screenHeight-Mouse.getY))
 					case (1 , true) => // right down
 					case (1 , false) => // right up
+						Mouse setGrabbed true
 					case (-1, false) => // wheel
 					case _ =>
 				}
 			}
 		
 		}
+		
+		val factor = if(turbo) cameraTurboSpeed else cameraSpeed
+		Player.move(factor*(delta/max(1,length(delta)))*timestep)
+		Player.rotate(2f*delta_angle)
+
 	}
 
 	def draw {

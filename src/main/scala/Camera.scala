@@ -8,6 +8,7 @@ import simplex3d.data._
 import simplex3d.data.float._
 
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.input.Mouse
 
 import Config._
 import Util._
@@ -22,7 +23,16 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 	def camera = this
 	
-	def direction = directionQuat.rotateVector(-worldUpVector)
+	def direction = {
+		if( Mouse.isGrabbed ){
+			directionQuat.rotateVector(-worldUpVector)
+		}
+		else {
+			val rx = (Mouse.getX * 2f - screenWidth ) / screenHeight
+			val ry = (Mouse.getY * 2f - screenHeight) / screenHeight
+			directionQuat.rotateVector( Vec3(rx,ry,-1) )
+		}
+	}
 	def rotateVector(v:Vec3) = directionQuat.rotateVector(v)
 	
 	def move(delta:Vec3) {
@@ -115,7 +125,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		}
 		
 		World.draw(frustumtest)
-		Player.draw
+		Player.activeTool.draw
 		
 		if(Config.debugDraw) {
 			BulletPhysics.debugDrawWorld
