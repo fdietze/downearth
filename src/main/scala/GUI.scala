@@ -12,7 +12,67 @@ import Util._
 
 // die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
 object GUI extends Camera {
+
+	MainWidget.children += new FreePanel(Vec2i(20,200), Vec2i(120,100)) {
+		border = new LineBorder
+		background = new ColorBackground
+		
+		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) {
+			border = new LineBorder(Vec4(0,1,0,1))
+			background = new ColorBackground(Vec4(0,0,1,0.25f))
+		}
+		
+	}
+
+	MainWidget.children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) with Dragable {
+		override def toString = "WhiteWidget"
+		border = new LineBorder
+		background = new ColorBackground
+		
+		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) with Dragable {
+			override def toString = "BlueWidget"
+			border = new LineBorder(Vec4(0,1,0,1))
+			background = new ColorBackground(Vec4(0,0,1,0.25f))
+
+			children += new FreePanel(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
+				override def toString = "RedWidget"
+				border = new LineBorder(Vec4(1,0,0,1))
+				background = new ColorBackground(Vec4(1,0,0,0.25f))
+			
+			}
+			override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+				background = new ColorBackground(Vec4(0,1,0,0.25f))
+			}
+			override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+				background = new ColorBackground(Vec4(0,0,1,0.25f))
+			}
+			override def mouseDown(mousePos:Vec2i) {
+				border = new LineBorder(Vec4(1,0,0,1))
+			}
+			override def mouseUp(mousePos:Vec2i) {
+				border = new LineBorder(Vec4(0,1,0,1))
+			}
+		}
+	}
 	
+	MainWidget.children += new AutoPanel(Vec2i(200, 20), Vec2i(100,100)) with Dragable {
+		
+		def newWidget = new Widget(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
+			override def toString = "RedWidget"
+			border = new LineBorder(Vec4(1,0,0,1))
+			background = new ColorBackground(Vec4(1,0,0,0.25f))
+		}
+		
+		for( i <- 0 until 5 )
+			children += newWidget
+		
+		override def mouseClicked(mousePos:Vec2i) = arrangeChildren
+	}
+	
+	MainWidget.children ++= Range(0,4).map(
+		i => new MaterialWidget(i,Vec2i( screenWidth - i * 48 - 48  , screenHeight - 48 ) )
+	)
+
 	def applyortho {
 		glDisable(GL_DEPTH_TEST)
 		glDisable(GL_LIGHTING)
@@ -59,73 +119,9 @@ object GUI extends Camera {
 	}
 }
 
-object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
-	override def toString = "MainWidget"
-	children += new FreePanel(Vec2i(20,200), Vec2i(120,100)) {
-		border = new LineBorder
-		background = new ColorBackground
-		
-		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) {
-			border = new LineBorder(Vec4(0,1,0,1))
-			background = new ColorBackground(Vec4(0,0,1,0.25f))
-		}
-		
-	}
 
-	children += new FreePanel(Vec2i(150,200), Vec2i(120,100)) with Dragable {
-		override def toString = "WhiteWidget"
-		border = new LineBorder
-		background = new ColorBackground
-		
-		children += new FreePanel(position + Vec2i(20,20), Vec2i(80,60)) with Dragable {
-			override def toString = "BlueWidget"
-			border = new LineBorder(Vec4(0,1,0,1))
-			background = new ColorBackground(Vec4(0,0,1,0.25f))
-
-			children += new FreePanel(position + Vec2i(20,20), Vec2i(20,20)) with Dragable {
-				override def toString = "RedWidget"
-				border = new LineBorder(Vec4(1,0,0,1))
-				background = new ColorBackground(Vec4(1,0,0,0.25f))
-			
-			}
-			override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-				background = new ColorBackground(Vec4(0,1,0,0.25f))
-			}
-			override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-				background = new ColorBackground(Vec4(0,0,1,0.25f))
-			}
-			override def mouseDown(mousePos:Vec2i) {
-				border = new LineBorder(Vec4(1,0,0,1))
-			}
-			override def mouseUp(mousePos:Vec2i) {
-				border = new LineBorder(Vec4(0,1,0,1))
-			}
-		}
-	}
-	
-	children ++= Range(0,4).map( i => new MaterialWidget(i,Vec2i( screenWidth - i * 48 - 48  , screenHeight - 48 ) ) )
-}
-
-class MaterialWidget(val matId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) {
-	override def draw {
-		glColor4f(1,1,1,1)
-		
-		TextureManager.materials.bind
-		glEnable(GL_TEXTURE_2D)
-		glBegin(GL_QUADS)
-		
-		glTexCoord2f(matId/4f, 0)
-		glVertex2i(position.x         , position.y          )
-		glTexCoord2f(matId/4f, 1)
-		glVertex2i(position.x         , position.y + size.y )
-		glTexCoord2f(matId/4f + 0.25f, 1)
-		glVertex2i(position.x + size.x, position.y + size.y )
-		glTexCoord2f(matId/4f + 0.25f, 0)
-		glVertex2i(position.x + size.x, position.y          )
-		
-		glEnd
-		glDisable(GL_TEXTURE_2D)
-	}
+class MaterialWidget(val matId:Int, _pos:Vec2i)
+	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4f,0), Vec2(0.25f,1) ) {
 	
 	override def mouseDown(mousePos:Vec2i) {
 		ConstructionTool.selectedMaterial = matId

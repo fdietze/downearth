@@ -9,7 +9,7 @@ trait Border {
 	def draw(position:Vec2i, size:Vec2i)
 }
 
-class NoBorder extends Border {
+object NoBorder extends Border {
 	def draw(position:Vec2i, size:Vec2i) {}
 }
 
@@ -30,7 +30,7 @@ trait Background {
 	def draw(position:Vec2i, size:Vec2i)
 }
 
-class NoBackground extends Background {
+object NoBackground extends Background {
 	def draw(position:Vec2i, size:Vec2i) {}
 }
 
