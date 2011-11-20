@@ -30,7 +30,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		else {
 			val rx = (Mouse.getX * 2f - screenWidth ) / screenHeight
 			val ry = (Mouse.getY * 2f - screenHeight) / screenHeight
-			directionQuat.rotateVector( Vec3(rx,ry,-1) )
+			directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
 		}
 	}
 	def rotateVector(v:Vec3) = directionQuat.rotateVector(v)

@@ -43,7 +43,9 @@ object World {
 		tDelta.y = 1/abs(t.y)
 		tDelta.z = 1/abs(t.z)
 		
-		var h:Polyeder = null
+		var h:Polyeder = apply(pos).h
+		if(!Util.rayPolyederIntersect(from-pos,direction,h))
+			h = null
 		var i = 0
 		
 		// todo octreeoptimierung

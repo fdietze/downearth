@@ -22,6 +22,10 @@ object GUI extends Camera {
 			i => new MaterialWidget(i, position + Vec2i(i * 40, 40) )
 		)
 		
+		children ++= Range(0, ConstructionTool.all.size).map(
+			i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
+		)
+		
 		//children += new Label(position, "Test")
 		
 		arrangeChildren
@@ -55,8 +59,8 @@ object GUI extends Camera {
 		Draw.addText("drawcalls: " + World.drawcalls +
 			", empty: " + World.emptydrawcalls + "")
 		Draw.addText("frustum culled nodes: " + World.frustumculls)
-		Draw.addText("")
-		Draw.addText("Inventory: " + Player.inventory.materials)
+		//Draw.addText("")
+		//Draw.addText("Inventory: " + Player.inventory.materials)
 		
 		if( !Player.isGhost ) {
 			Draw.addText("Player Position: " + round10(Player.position) )
@@ -80,9 +84,13 @@ object GUI extends Camera {
 	}
 }
 
+class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5f) )
+class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5f,0), Vec2(0.5f) )
+
 
 class MaterialWidget(val matId:Int, _pos:Vec2i)
-	extends InventoryItem(_pos, TextureManager.materials, Vec2(matId/4f,0), Vec2(0.25f,1) ) {
+	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4f,0), Vec2(0.25f,1) )
+	with InventoryItem {
 	
 	override def mouseClicked(mousePos:Vec2i) {
 		super.mouseClicked(mousePos)
@@ -99,53 +107,77 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 		import org.newdawn.slick.Color.white
 		Draw.drawString(textPos, text, white)
 	}
+	
+	override def selected = ConstructionTool.selectedMaterial == matId
 }
 
+
 class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Vec2)
-	extends InventoryItem(_pos, TextureManager.tools, _texPosition, _texSize) {
+	extends TextureWidget(_pos, Vec2i(32), TextureManager.tools, _texPosition, _texSize)
+	with InventoryItem {
 	
 	override def mouseClicked(mousePos:Vec2i) {
 		super.mouseClicked(mousePos)
 		Player.selectTool(tool)
 		DisplayEventManager.showEventText("Tool " + tool)
 	}
+
+	override def selected = Player.activeTool eq tool
 }
 
-//TODO: class ShapeWidget(val shape:Polyeder, _pos:Vec2i) extends InventoryItem(_pos)
-
-
-class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5f) )
-class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5f,0), Vec2(0.5f) )
-
-
-class InventoryItem(_pos:Vec2i, texture:Texture, _texPosition:Vec2, _texSize:Vec2)
-	extends TextureWidget(_pos, Vec2i(32), texture, _texPosition, _texSize )
-	with Draggable {
+class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) with InventoryItem {
+	override def draw {
+		super.draw
+		
+		glPushMatrix
+			glColor4f(1,1,1,1)
+			glTranslate3fv(Vec3(position+size/2,0))
+			glScalef(20,20,20)
+			glRotatef(72,1,0,0)
+			if( mouseOver )
+				glRotatef(Main.uptime/15f,0,0,1)
+			else
+				glRotatef(30f,0,0,1)
+			glTranslatef(-0.5f,-0.5f,-0.5f)
+			Draw.renderPolyeder(ConstructionTool.all(shapeId)(0))
+		glPopMatrix
+	}
 	
-	var selected = false
-	def select { selected = true; border = new LineBorder(Vec4(0.2f,0.4f,1f,1)) }
-	def deselect { selected = false; border = new LineBorder(Vec4(1,1,1,1)) }
-	
-	override def dragStop(mousePos:Vec2i) = parent.arrangeChildren
-	
+	def selected = ConstructionTool.id == shapeId
+
 	override def mouseClicked(mousePos:Vec2i) {
-		if( selected )
-			deselect
-		else
-			select
+		super.mouseClicked(mousePos)
+		ConstructionTool.id = shapeId
+		DisplayEventManager.showEventText("Shape " + shapeId)
 	}
 }
 
-class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable {
-/* TODO
-	def deselectOfType[T] {
-		for( child <- children; if( child.isInstanceOf[T] ) )
-			child.deselect
-	}*/
 
+trait InventoryItem extends Draggable {
+	def selected:Boolean
+	
+	override def dragStop(mousePos:Vec2i) = {
+		// draw this item last to not interrupt the positioning of the others
+		val inventory = parent
+		inventory.children -= this
+		inventory.children += this
+		inventory.arrangeChildren
+	}
+	
+	override def draw {
+		border match {
+			case b:LineBorder =>
+				if( selected )
+					b.color := Vec4(0.2f,0.4f,1f,1)
+				else
+					b.color := Vec4(1f)
+		}
+		super.draw
+	}
 }
 
 
+class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable
 
 
 

@@ -14,12 +14,12 @@ import openworld._
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 	border = NoBorder
 	background = NoBackground
+	mouseOver = true
 	override def toString = "MainWidget"
 	override def setPosition(newPos:Vec2i) {}
-	override def mouseClicked(pos:Vec2i) {
-		Player.primaryAction
-	}
-	override def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {
+	override def mouseClicked(pos:Vec2i) = Player.primaryAction
+	
+	override def mouseDragged(mousePos0:Vec2i, mousePos1:Vec2i) {
 		val mouseDelta = mousePos1 - mousePos0
 		val delta_angle = Vec3(0)
 		
@@ -40,11 +40,12 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	var border:Border = new LineBorder()
 	var background:Background = new ColorBackground()
 	var mousePressed = false
+	var mouseOver = false
 	
 	val dragStartPos = Vec2i(0)
 	var dragging = false
 	
-	def clickDelta = 2f
+	def clickDelta = 5f
 	
 	def invokeDraw {
 		background.draw(position, size)
@@ -77,8 +78,12 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 		
 		
 		if( !indexInRange(mousePos0, position, size)
-		 &&  indexInRange(mousePos1, position, size) )
+		 &&  indexInRange(mousePos1, position, size) ) {
 		 	mouseIn(mousePos0, mousePos1)
+			mouseOver = true
+		 	parent.mouseOut(mousePos0, mousePos1)
+		 	parent.mouseOver = false
+		 }
 		else { // if mouse is not moved from out to in, but moved
 			if( mousePressed ) {
 				if(!dragging) {
@@ -95,8 +100,12 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 		
 		if(  indexInRange(mousePos0, position, size)
 		 && !indexInRange(mousePos1, position, size) )
-		 	if( !mousePressed )
+		 	if( !mousePressed ) {
 		 		mouseOut(mousePos0, mousePos1)
+				mouseOver = false
+			 	parent.mouseIn(mousePos0, mousePos1)
+ 			 	parent.mouseOver = true
+			 }
 	}
 	
 	def draw {}
@@ -323,10 +332,16 @@ class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel
 	}
 	
 	override def arrangeChildren {
+		val raster = new collection.mutable.HashMap[Vec2i,Widget]
 		for( child <- children ) {
 			val childRelCenter = -position + child.position + child.size / 2
-			val newRelCenter = Vec2i(round((childRelCenter - cellsize / 2) / cellsize.toFloat)) * cellsize + cellsize / 2
-			child.setPosition( position + newRelCenter - child.size / 2 )
+			val closestCell = Vec2i(round((childRelCenter - cellsize / 2) / cellsize.toFloat))
+			
+			// filter out all already used cells and select the closest one
+			val newCell = (((Vec2i(0) until size/cellsize) map ( x => Vec2i(x) )).toSet -- raster.keys).minBy( p => length( closestCell - p ) )
+
+			raster(newCell) = child
+			child.setPosition( position + newCell * cellsize - child.size / 2 + cellsize / 2 )
 		}
 	}
 }

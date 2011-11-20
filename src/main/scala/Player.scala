@@ -17,6 +17,7 @@ import com.bulletphysics.collision.shapes._
 
 import Util._
 import Config._
+import gui.MainWidget
 import javax.vecmath.{Vector3f, Quat4f}
 
 object Player {
@@ -139,20 +140,23 @@ trait PlayerTool {
 	def primary
 	def top:Boolean
 	def range = 100
-	def selectPoly(pos:Vec3i):Polyeder
+	def selectPolyeder(pos:Vec3i):Polyeder
 	
 	def draw {
 		// if( Mouse.isGrabbed ) {
 			selectPos match {
 				case Some(pos) =>
-					Draw.highlight( pos, selectPoly(pos) )
+					Draw.highlight( pos, selectPolyeder(pos) )
 				case _ =>
 			}
 		// }
 	}
 	
 	def selectPos = {
-		World.raytracer(Player.position, Player.direction, top, range)
+		if( MainWidget.mouseOver )
+			World.raytracer(Player.position, Player.direction, top, range)
+		else
+			None
 	}
 }
 
@@ -160,7 +164,7 @@ object Shovel extends PlayerTool {
 	// removes a block
 	def top = false
 	
-	def selectPoly(pos:Vec3i) = World(pos).h
+	def selectPolyeder(pos:Vec3i) = World(pos).h
 	
 	override def primary{
 		selectPos match {
@@ -179,33 +183,8 @@ object Shovel extends PlayerTool {
 
 object ConstructionTool extends PlayerTool {
 	// adds a block
-	def selectPoly(pos:Vec3i) = BuildInterface.current
+	def selectPolyeder(pos:Vec3i) = current
 	
-	override def primary = {
-		selectPos match {
-			case Some(pos) =>
-				if( Player.inventory.materials(selectedMaterial) >= selectedBlock.volume ) {
-					val block = World(pos)
-					//TODO: the evaluation of the materialfunction should be in the Leaf itself
-					val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
-					Player.inventory.materials(material) += block.h.volume
-					Player.inventory.materials(selectedMaterial) -= selectedBlock.volume
-					World(pos) = Leaf(selectedBlock, selectedMaterial)
-				}
-				else {
-					DisplayEventManager.showEventText("Not enough Material " + selectedMaterial + ".")
-				}
-			case _ =>
-		}
-	}
-	
-	override def top = true
-	
-	var selectedMaterial = 3 //TODO: read from inventory
-	var selectedBlock = FullHexaeder //TODO: read from cunstruction list
-}
-
-object BuildInterface {
 	val full = FullHexaeder
 	val half = new Hexaeder(Z = 0x44440000)
 	val quarter = new Hexaeder(Z = 0x44440000, Y = 0x44004400)
@@ -215,12 +194,6 @@ object BuildInterface {
 	val rampC = new Hexaeder(Z = 0x00880000)
 	val test = new Polyeder10
 	
-	// wird benötigt um den Korrekten Hexaeder hervorzuheben
-	// true: Momentan am Bauen
-	// false: Momentan am Buddeln
-	var inventoryMass = 0f
-	var buildStatus = false
-
 	def makeRotations(h:Polyeder) = {
 		val h1 = h.rotateZ
 		val h2 = h1.rotateZ
@@ -237,23 +210,31 @@ object BuildInterface {
 		val dir = Player.direction
 		(math.atan2(dir.y, dir.x) * 2 / math.Pi + 5.5).toInt % 4
 	}
+
 	def current = all(id)(rotation)
-	def rotate(num:Int){
-		if(num != 0)
-			buildStatus = true
-		id = (id+num+all.size) % all.size
-	}
+
 	
-	def build(position:Vec3,direction:Vec3) {
-		val mousedest = World.raytracer(position, direction, buildStatus, buildrange)
-		mousedest match {
+	override def top = true
+	
+	var selectedMaterial = 3
+
+	override def primary = {
+		selectPos match {
 			case Some(pos) =>
-				inventoryMass += World(pos).h.volume
-				val replacement = if(buildStatus) current else EmptyHexaeder
-				inventoryMass -= replacement.volume
-				World(pos) = Leaf(replacement, 3)
+				if( Player.inventory.materials(selectedMaterial) >= current.volume ) {
+					val block = World(pos)
+					//TODO: the evaluation of the materialfunction should be in the Leaf itself
+					val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
+					Player.inventory.materials(material) += block.h.volume
+					Player.inventory.materials(selectedMaterial) -= current.volume
+					World(pos) = Leaf(current, selectedMaterial)
+				}
+				else {
+					DisplayEventManager.showEventText("Not enough Material " + selectedMaterial + ".")
+				}
 			case _ =>
 		}
 	}
+	
 }
 

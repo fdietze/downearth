@@ -85,13 +85,13 @@ object Config{
 	val keyStreaming      = loadKey("streaming") getOrElse KEY_F3
 	val keyFrustumCulling = loadKey("frustum_culling") getOrElse KEY_F4
 
-	val keyScreenshot     = loadKey("screesshot") getOrElse KEY_F10
+	val keyScreenshot     = loadKey("screenshot") getOrElse KEY_F10
 	val keyFullScreen     = loadKey("fullscreen") getOrElse KEY_F11
 
 	// settings changeable at runtime:
 	var debugDraw = false
 	var wireframe = false
-	var streamWorld = false
+	var streamWorld = loadBoolean("streamWorld") getOrElse false
 	var frustumCulling = true
 	var turbo = false
 
