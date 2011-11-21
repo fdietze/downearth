@@ -126,6 +126,9 @@ class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Ve
 }
 
 class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) with InventoryItem {
+	var offset = 30f
+	def time = Main.uptime/15f
+	
 	override def draw {
 		super.draw
 		
@@ -135,12 +138,20 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
 			glScalef(20,20,20)
 			glRotatef(72,1,0,0)
 			if( mouseOver )
-				glRotatef(Main.uptime/15f,0,0,1)
+				glRotatef(time + offset,0,0,1)
 			else
-				glRotatef(30f,0,0,1)
+				glRotatef(offset,0,0,1)
 			glTranslatef(-0.5f,-0.5f,-0.5f)
 			Draw.renderPolyeder(ConstructionTool.all(shapeId)(0))
 		glPopMatrix
+	}
+	
+	override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+		offset -= time
+	}
+	
+	override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+		offset += time
 	}
 	
 	def selected = ConstructionTool.id == shapeId
