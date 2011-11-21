@@ -56,6 +56,8 @@ object Util {
 	def glScale3fv(v:Vec3) = org.lwjgl.opengl.GL11.glScalef(v.x, v.y, v.z)
 	def glScale1f(s:Float) = org.lwjgl.opengl.GL11.glScalef(s,s,s)
 	
+	def lerpVec2(a:Vec2, b:Vec2, t:Float) = a + t * (b - a)
+	
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
 	def indexInRange(i:Vec3i, nodepos:Vec3i, nodesize:Int) = {

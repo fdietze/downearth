@@ -26,9 +26,7 @@ object GUI extends Camera {
 			i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
 		)
 		
-		//children += new Label(position, "Test")
-		
-		arrangeChildren
+		arrangeChildren()
 		setTopRight
 		
 		var moved = false
@@ -125,8 +123,12 @@ class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Ve
 }
 
 class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) with InventoryItem {
-	var offset = 30f
-	def time = Main.uptime/15f
+	val preferredAngle = 30f
+	val degPerSec = 180f
+	var inOffset = 0f
+	var outOffset = 0f
+	def degTime = Main.uptime*degPerSec/1000f
+	var lastMouseOut = degTime - 360f
 	
 	override def draw {
 		super.draw
@@ -136,21 +138,23 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
 			glTranslate3fv(Vec3(position+size/2,0))
 			glScalef(20,20,20)
 			glRotatef(72,1,0,0)
-			if( mouseOver )
-				glRotatef(time + offset,0,0,1)
+			if( mouseOver || (degTime - lastMouseOut + outOffset) < 360f )
+				glRotatef(degTime - inOffset + preferredAngle,0,0,1)
 			else
-				glRotatef(offset,0,0,1)
+				glRotatef(preferredAngle,0,0,1)
 			glTranslatef(-0.5f,-0.5f,-0.5f)
 			Draw.renderPolyeder(ConstructionTool.all(shapeId)(0))
 		glPopMatrix
 	}
 	
 	override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-		offset -= time
+		if( (degTime - lastMouseOut + outOffset) >= 360f )	
+			inOffset = mod(degTime, 360f)
 	}
 	
 	override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-		offset += time
+		lastMouseOut = degTime
+		outOffset = mod(degTime - inOffset, 360f)
 	}
 	
 	def selected = ConstructionTool.id == shapeId
@@ -170,8 +174,9 @@ trait InventoryItem extends Draggable {
 		// draw this item last to not interrupt the positioning of the others
 		val inventory = parent
 		inventory.children -= this
-		inventory.children += this
-		inventory.arrangeChildren
+		//inventory.children += this
+		inventory.children.prepend(this)
+		inventory.arrangeChildren(300)
 	}
 	
 	override def draw {
@@ -180,7 +185,20 @@ trait InventoryItem extends Draggable {
 				if( selected )
 					b.color := Vec4(0.2f,0.4f,1f,1)
 				else
-					b.color := Vec4(1f)
+					if( mouseOver )
+						b.color := Vec4(0.6f,0.8f,1f,1)
+					else
+						b.color := Vec4(1)
+		}
+		background match {
+			case b:ColorBackground =>
+				if( selected )
+					b.color := Vec4(0.7f,0.8f,1f,0.25f)
+				else
+					if( mouseOver )
+						b.color := Vec4(0.8f,0.9f,1f,0.25f)
+					else
+						b.color := Vec4(1,1,1,0.25f)
 		}
 		super.draw
 	}

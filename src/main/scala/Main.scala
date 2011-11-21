@@ -98,7 +98,7 @@ object Main {
 	}
 	
 	var mousePos = Vec2i(Mouse.getX, screenHeight-Mouse.getY)
-	var lastMousePos = mousePos
+	var lastMousePos = mousePos.clone
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
 	def input {
 		import Mouse._
@@ -107,8 +107,8 @@ object Main {
 		if(Display.isCloseRequested)
 			finished = true
 
-		lastMousePos = mousePos
-		mousePos = Vec2i(getX, screenHeight-Mouse.getY)
+		lastMousePos := mousePos
+		mousePos := Vec2i(getX, screenHeight-Mouse.getY)
 
 
 		val mouseDelta = Vec2i(getDX, getDY)
@@ -217,9 +217,9 @@ object Main {
 			while( Mouse.next ) {
 				( getEventButton, getEventButtonState ) match {
 					case (0 , true) => // left down
-						MainWidget.invokeMouseDown(Vec2i(Mouse.getX, screenHeight-Mouse.getY))
+						MainWidget.invokeMouseDown(mousePos)
 					case (0 , false) => // left up
-						MainWidget.invokeMouseUp(Vec2i(Mouse.getX, screenHeight-Mouse.getY))
+						MainWidget.invokeMouseUp(mousePos)
 					case (1 , true) => // right down
 					case (1 , false) => // right up
 						Mouse setGrabbed true

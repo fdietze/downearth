@@ -37,7 +37,7 @@ object NoBackground extends Background {
 	def draw(position:Vec2i, size:Vec2i) {}
 }
 
-class ColorBackground(color:Vec4 = Vec4(1,1,1,0.25f)) extends Background {
+class ColorBackground(val color:Vec4 = Vec4(1,1,1,0.25f)) extends Background {
 	def draw(position:Vec2i, size:Vec2i) {
 		glColor4fv(color)
 		

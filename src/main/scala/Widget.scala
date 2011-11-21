@@ -15,7 +15,7 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 	border = NoBorder
 	background = NoBackground
 	mouseOver = true
-	override def setPosition(newPos:Vec2i) {}
+	override def setPosition(newPos:Vec2i, delay:Int) {}
 	override def mouseClicked(pos:Vec2i) = Player.primaryAction
 	
 	override def mouseDragged(mousePos0:Vec2i, mousePos1:Vec2i) {
@@ -31,8 +31,28 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 
 class Widget( val position:Vec2i, val size:Vec2i) {
 	
-	def setPosition(newPos:Vec2i) {
-		position := min( max(parent.position, newPos), parent.position + parent.size - size)
+	def time = System.currentTimeMillis
+	var animationStartTime:Long = 0
+	var animationEndTime:Long = 0
+	val animationStartPosition = position.clone
+	val animationEndPosition = position.clone
+	
+	def safePosition(newPos:Vec2i) = {
+		min( max(parent.position, newPos), parent.position + parent.size - size)
+	}
+	
+	def setPosition(newPos:Vec2i, delay:Int = 0) {
+		val newSafePos = safePosition(newPos)
+		animationEndPosition := newSafePos
+		if( delay <= 0 ) {
+			position := newSafePos
+			animationEndTime = time
+		}
+		else {
+			animationStartTime = time
+			animationEndTime = time + delay
+			animationStartPosition := position
+		}
 	}
 	
 	var parent:Panel = MainWidget
@@ -46,7 +66,17 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	
 	def clickDelta = 5f
 	
+	def invokeAnimation {
+		if( animationEndTime <= time )
+			position := animationEndPosition
+		else {
+			val progress = (time - animationStartTime).toFloat / (animationEndTime - animationStartTime)
+			position := Vec2i(lerpVec2(animationStartPosition, animationEndPosition, progress))
+		}
+	}
+	
 	def invokeDraw {
+		invokeAnimation		
 		background.draw(position, size)
 		draw
 		border.draw(position, size)
@@ -182,15 +212,19 @@ class TextureWidget(_position:Vec2i, _size:Vec2i, texture:Texture, texPosition:V
 abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _size) {
 	private def thispanel = this
 	
-	override def setPosition(newPos:Vec2i) {
+	override def setPosition(newPos:Vec2i, delay:Int) {
 		val oldPos = position.clone
 		super.setPosition(newPos)
 		val delta = position - oldPos
-		for( child <- children )
-			child.setPosition( child.position + delta )
+		for( child <- children ) {
+			// We can be sure that (child.position + delta) is still safe
+			child.position += delta
+			child.animationStartPosition += delta
+			child.animationEndPosition += delta
+		}
 	}
 	
-	def arrangeChildren {}
+	def arrangeChildren(delay:Int = 0) {}
 
 	val children = new collection.mutable.Buffer[Widget] {
 		val buffer = new collection.mutable.ArrayBuffer[Widget]
@@ -243,6 +277,7 @@ class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size) {
 	var pressedWidget:Widget = this
 	
 	override def invokeDraw {
+		invokeAnimation		
 		background.draw(position, size)
 		draw
 		for( child <- children )
@@ -287,7 +322,7 @@ class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size) {
 }
 
 class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(position, size) {
-	override def arrangeChildren {
+	override def arrangeChildren(delay:Int = 0) {
 		var x = space
 		var y = space
 		var maxHeight = 0
@@ -298,7 +333,7 @@ class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(pos
 				maxHeight = 0
 			}
 			
-			child.setPosition( position + Vec2i(x,y) )
+			child.setPosition( position + Vec2i(x,y), delay )
 			maxHeight = max(maxHeight, child.size.y)
 			x += child.size.x + space
 		}
@@ -309,8 +344,13 @@ class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(pos
 class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel(position, size) {
 	
 	override def invokeDraw {
+		invokeAnimation		
+		background.draw(position, size)
 		drawLines
-		super.invokeDraw
+		draw
+		for( child <- children )
+			child.invokeDraw
+		border.draw(position, size)
 	}
 	
 	def drawLines {
@@ -335,7 +375,7 @@ class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel
 		}
 	}
 	
-	override def arrangeChildren {
+	override def arrangeChildren(delay:Int = 0) {
 		val raster = new collection.mutable.HashMap[Vec2i,Widget]
 		for( child <- children ) {
 			val childRelCenter = -position + child.position + child.size / 2
@@ -345,7 +385,7 @@ class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel
 			val newCell = (((Vec2i(0) until size/cellsize) map ( x => Vec2i(x) )).toSet -- raster.keys).minBy( p => length( closestCell - p ) )
 
 			raster(newCell) = child
-			child.setPosition( position + newCell * cellsize - child.size / 2 + cellsize / 2 )
+			child.setPosition( position + newCell * cellsize - child.size / 2 + cellsize / 2, delay )
 		}
 	}
 }
