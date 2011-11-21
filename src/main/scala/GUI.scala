@@ -172,10 +172,10 @@ trait InventoryItem extends Draggable {
 	
 	override def dragStop(mousePos:Vec2i) = {
 		// draw this item last to not interrupt the positioning of the others
+		// TODO: let item stay on top
 		val inventory = parent
 		inventory.children -= this
-		//inventory.children += this
-		inventory.children.prepend(this)
+		inventory.children += this
 		inventory.arrangeChildren(300)
 	}
 	
