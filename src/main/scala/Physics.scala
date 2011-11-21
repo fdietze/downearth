@@ -1,12 +1,15 @@
 package openworld
 
-import com.bulletphysics.{collision,dynamics,util}
-import collision._
-import dynamics._
-import util.ObjectArrayList
+import com.bulletphysics.collision._
+import com.bulletphysics.dynamics._
+import com.bulletphysics.util.ObjectArrayList
+import com.bulletphysics.dynamics.character.KinematicCharacterController
+import com.bulletphysics.collision.dispatch.PairCachingGhostObject
+import com.bulletphysics.collision.broadphase.{BroadphaseProxy, CollisionFilterGroups}
+
 import broadphase.DbvtBroadphase
 import constraintsolver.SequentialImpulseConstraintSolver
-import dispatch.{CollisionObject, CollisionDispatcher, DefaultCollisionConfiguration}
+import dispatch.{CollisionObject, CollisionFlags, CollisionDispatcher, DefaultCollisionConfiguration}
 import javax.vecmath.Vector3f
 import shapes._
 import simplex3d.math.float.functions._
@@ -35,8 +38,10 @@ object BulletPhysics {
 		}
 	}
 	
+	val gravity = new Vector3f(0,0,-9.81f)
+	
 	dynamicsWorld.setInternalTickCallback(tickCallback, null)
-	dynamicsWorld.setGravity(new Vector3f(0,0,-9.81f))
+	dynamicsWorld.setGravity(gravity)
 	dynamicsWorld.setDebugDrawer(DirectDrawer)
 	
 	var pause = false
@@ -101,6 +106,33 @@ object BulletPhysics {
 		}
 		
 		body
+	}
+	
+	def addCharacter(pos:Vec3) = {
+		val startTransform = new Transform
+		startTransform.setIdentity
+		startTransform.origin.set(pos)
+		
+		
+		val capsule = new CapsuleShape(0.3f,1.2f)
+		val ghostObject = new PairCachingGhostObject
+		ghostObject.setWorldTransform(startTransform)
+		ghostObject.setCollisionShape(capsule)
+		ghostObject.setCollisionFlags(CollisionFlags.CHARACTER_OBJECT) // CF_CHARACTER_OBJECT
+		
+		val stepHeight  = 0.35f
+		val character = new KinematicCharacterController(ghostObject, capsule, stepHeight)
+
+
+
+		character.setGravity(-gravity.z)
+		character.setUpAxis(2)
+		character.setFallSpeed(55)
+		
+		dynamicsWorld.addCollisionObject(ghostObject, CollisionFilterGroups.CHARACTER_FILTER, CollisionFilterGroups.ALL_FILTER)
+		dynamicsWorld.addAction(character)
+		
+		(character, ghostObject)
 	}
 
 	def removeBody( body: RigidBody ) {

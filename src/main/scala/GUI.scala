@@ -61,7 +61,7 @@ object GUI extends Camera {
 		
 		if( !Player.isGhost ) {
 			Draw.addText("Player Position: " + round10(Player.position) )
-			Draw.addText("Player Velocity: " + round10(Player.velocity) )
+			//Draw.addText("Player Velocity: " + round10(Player.velocity) )
 		}
 		
 		glDisable( GL_LIGHTING )

@@ -89,7 +89,7 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	}
 
 	def invokeMouseUp(mousePos:Vec2i) {
-		if( mousePressed )
+		if( mousePressed && !indexInRange(mousePos, position, size) )
 			invokeMouseOut(dragStartPos, mousePos)
 
 		mousePressed = false
