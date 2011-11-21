@@ -178,7 +178,7 @@ object Shovel extends PlayerTool {
 		}
 	}
 	
-	override def toString = getClass.getName
+	override def toString = getClass.getName.split('.').last
 }
 
 object ConstructionTool extends PlayerTool {

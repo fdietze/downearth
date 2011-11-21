@@ -97,7 +97,8 @@ object Main {
 			GUI.inventory.setTopRight
 	}
 	
-
+	var mousePos = Vec2i(Mouse.getX, screenHeight-Mouse.getY)
+	var lastMousePos = mousePos
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
 	def input {
 		import Mouse._
@@ -105,6 +106,10 @@ object Main {
 
 		if(Display.isCloseRequested)
 			finished = true
+
+		lastMousePos = mousePos
+		mousePos = Vec2i(getX, screenHeight-Mouse.getY)
+
 
 		val mouseDelta = Vec2i(getDX, getDY)
 		// Move and rotate player
@@ -188,9 +193,7 @@ object Main {
 		else { // if Mouse is not grabbed
 
 			if( mouseDelta != Vec2i(0) ) { // if Mouse is moved
-				val mousePos = Vec2i(getX, screenHeight-Mouse.getY)
-				var lastmousepos = mousePos - mouseDelta*Vec2i(1,-1)
-				MainWidget.invokeMouseMoved(lastmousepos, mousePos)
+				MainWidget.invokeMouseMoved(lastMousePos, mousePos)
 			}
 		
 			// Keyboard Events

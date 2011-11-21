@@ -15,7 +15,6 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 	border = NoBorder
 	background = NoBackground
 	mouseOver = true
-	override def toString = "MainWidget"
 	override def setPosition(newPos:Vec2i) {}
 	override def mouseClicked(pos:Vec2i) = Player.primaryAction
 	
@@ -60,8 +59,9 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	}
 
 	def invokeMouseUp(mousePos:Vec2i) {
-		if( mousePressed && !indexInRange(mousePos, position, size) )
-			mouseOut(dragStartPos, mousePos)
+		if( mousePressed )
+			invokeMouseOut(dragStartPos, mousePos)
+
 		mousePressed = false
 		mouseUp(mousePos)
 		
@@ -74,16 +74,14 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	}
 	
 	def invokeMouseMoved(mousePos0:Vec2i, mousePos1:Vec2i) {
-		mouseMoved(mousePos0, mousePos1)
-		
-		
 		if( !indexInRange(mousePos0, position, size)
 		 &&  indexInRange(mousePos1, position, size) ) {
-		 	mouseIn(mousePos0, mousePos1)
-			mouseOver = true
-		 	parent.mouseOut(mousePos0, mousePos1)
-		 	parent.mouseOver = false
-		 }
+		 	if( mouseOver != true ) {
+			 	invokeMouseIn(mousePos0, mousePos1)
+				if( parent != null )
+				 	parent.invokeMouseOut(mousePos0, mousePos1)
+			}
+		}
 		else { // if mouse is not moved from out to in, but moved
 			if( mousePressed ) {
 				if(!dragging) {
@@ -101,35 +99,38 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 		if(  indexInRange(mousePos0, position, size)
 		 && !indexInRange(mousePos1, position, size) )
 		 	if( !mousePressed ) {
-		 		mouseOut(mousePos0, mousePos1)
-				mouseOver = false
-			 	parent.mouseIn(mousePos0, mousePos1)
- 			 	parent.mouseOver = true
-			 }
+		 		invokeMouseOut(mousePos0, mousePos1)
+				if( parent != null )
+				 	parent.invokeMouseIn(mousePos0, mousePos1)
+			}
+
+		mouseMoved(mousePos0, mousePos1)
 	}
 	
+	def invokeMouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+		mouseOver = true
+		mouseIn(mousePos0, mousePos1)
+	}
+
+	def invokeMouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+		mouseOver = false
+		mouseOut(mousePos0, mousePos1)
+	}
+	
+	// Methods to be overridden
 	def draw {}
-
 	def mouseClicked(mousePos:Vec2i) {}
-
 	def mouseDown(mousePos:Vec2i) {}
-	
 	def mouseUp(mousePos:Vec2i) {}
-
 	def mouseMoved(mousePos0:Vec2i, mousePos1:Vec2i) {}
-
 	def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {}
-	
 	def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {}
-	
 	def mouseDragged(mousePos0:Vec2i,mousePos1:Vec2i) {}
-
 	def dragStart {}
-	
 	def dragStop(mousePos:Vec2i) {}
 	
 	
-	override def toString = "Widget(%s, %s)" format( position, size )
+	override def toString = getClass.getName.split('.').last //"%s(%s, %s)" format( getClass.getName, position, size )
 }
 
 class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i(0)) {
@@ -236,8 +237,6 @@ abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _si
 		def apply (n: Int) = buffer(n)
 		def iterator = buffer.iterator
 	}
-	
-	override def toString = "Panel(%s, %s)" format( position, size )
 }
 
 class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size) {
@@ -267,6 +266,8 @@ class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size) {
 	override def invokeMouseUp(mousePos:Vec2i) {
 		if (pressedWidget != this){
 			pressedWidget.invokeMouseUp(mousePos)
+			invokeMouseMoved(pressedWidget.dragStartPos, mousePos)
+			pressedWidget = this
 		} else {
 			super.invokeMouseUp(mousePos)
 		}
@@ -274,11 +275,14 @@ class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size) {
 
 	override def invokeMouseMoved(mousePos0:Vec2i, mousePos1:Vec2i) {
 		super.invokeMouseMoved(mousePos0, mousePos1)
-		for(child <- children)
-			if( indexInRange(mousePos0, child.position, child.size)  
-			 || indexInRange(mousePos1, child.position, child.size)
- 			 || (child eq pressedWidget) )
-				child.invokeMouseMoved(mousePos0, mousePos1)
+		if( pressedWidget == this ) {
+			for(child <- children)
+				if( indexInRange(mousePos0, child.position, child.size)  
+				 || indexInRange(mousePos1, child.position, child.size) )
+					child.invokeMouseMoved(mousePos0, mousePos1)
+		}
+		else
+			pressedWidget.invokeMouseMoved(mousePos0, mousePos1)
 	}
 }
 

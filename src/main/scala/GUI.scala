@@ -38,7 +38,6 @@ object GUI extends Camera {
 	
 	MainWidget.children += inventory
 	
-		
 	def applyortho {
 		glDisable(GL_DEPTH_TEST)
 		glDisable(GL_LIGHTING)
