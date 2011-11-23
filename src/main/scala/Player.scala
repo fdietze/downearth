@@ -143,13 +143,11 @@ trait PlayerTool {
 	def selectPolyeder(pos:Vec3i):Polyeder
 	
 	def draw {
-		// if( Mouse.isGrabbed ) {
-			selectPos match {
-				case Some(pos) =>
-					Draw.highlight( pos, selectPolyeder(pos) )
-				case _ =>
-			}
-		// }
+		selectPos match {
+			case Some(pos) =>
+				Draw.highlight( pos, selectPolyeder(pos) )
+			case _ =>
+		}
 	}
 	
 	def selectPos = {
@@ -236,5 +234,12 @@ object ConstructionTool extends PlayerTool {
 		}
 	}
 	
+	override def draw {
+		selectPos match {
+			case Some(pos) =>
+				Draw.highlight( pos, selectPolyeder(pos), false )
+			case _ =>
+		}
+	}
 }
 

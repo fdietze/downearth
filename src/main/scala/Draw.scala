@@ -107,7 +107,7 @@ object Draw {
 		}
 	}
 	
-	def highlight(pos:Vec3i, polyeder:Polyeder) {
+	def highlight(pos:Vec3i, polyeder:Polyeder, transparent:Boolean = true) {
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
@@ -115,12 +115,14 @@ object Draw {
 			glTranslate3fv(pos)
 
 			// Transparent
-			glDisable(GL_DEPTH_TEST)
-			glEnable(GL_BLEND)
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-			glColor4f(1,1,1,0.25f)
-			renderPolyeder(polyeder)
-			glDisable(GL_BLEND)
+			if( transparent ) {
+				glDisable(GL_DEPTH_TEST)
+				glEnable(GL_BLEND)
+				glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+				glColor4f(1,1,1,0.25f)
+				renderPolyeder(polyeder)
+				glDisable(GL_BLEND)
+			}
 			
 			// Not Transparent
 			glEnable(GL_DEPTH_TEST)
