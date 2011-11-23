@@ -32,49 +32,66 @@ object Player {
 		m_camera.position = position
 		m_camera
 	}
-
+	
+	val (body,ghostObject) = BulletPhysics.addCharacter(startpos)//BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )	
+	
 	def position:Vec3 = {
 		if( isGhost )
 			m_camera.position
-		else
-			body.getCenterOfMassTransform(new Transform).origin + camDistFromCenter
+		else {
+			assert(ghostObject != null,"nääää")
+			ghostObject.getWorldTransform(new Transform).origin + camDistFromCenter
+		} // body.getCenterOfMassTransform(new Transform).origin + camDistFromCenter
 	}
-
-	def position_= (newpos:Vec3) {
-		m_camera.position := newpos
+	
+	def position_= (newPos:Vec3) {
+		println("Position setzen...")
+		println(ghostObject.getWorldTransform(new Transform).origin)
+		m_camera.position := newPos
 		m_camera.position += camDistFromCenter
 
-		val v = new Vector3f
+		/*val v = new Vector3f
 		body.setLinearVelocity(v)
 		body getCenterOfMassPosition v
 		v.negate
 		v += newpos
-		body translate v
+		body translate v*/
+		
+		
+		val transform = new Transform
+		transform.origin.set(newPos)
+		ghostObject.setWorldTransform(transform)
+		
+		//body.reset
+		body.warp(newPos)
+		println(ghostObject.getWorldTransform(new Transform).origin)
 	}
 
 	def direction:Vec3 = camera.direction
 	
-	def velocity:Vec3 = {
+/*	def velocity:Vec3 = {
 		val v = new Vector3f
 		body getLinearVelocity v
 		v
-	}
+	}*/
 
 	def resetPos {
+		DisplayEventManager.showEventText("reset Position")
 		position = startpos
 	}
 
-	val body = BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )
-	body setAngularFactor 0
+	//body setAngularFactor 0
 	
 	def move(dir:Vec3) {
 		if( isGhost )
 			m_camera move dir*4
 		else {
-			val flatdir = m_camera rotateVector dir
+		/*	val flatdir = m_camera rotateVector dir
 			flatdir *= 4
 			flatdir.z = 0
-			body.applyCentralImpulse( flatdir )
+			body.applyCentralImpulse( flatdir )*/
+			body.setWalkDirection(dir)
+			body.playerStep(BulletPhysics.dynamicsWorld, 1/30f)
 		}
 	}
 	
@@ -89,15 +106,14 @@ object Player {
 	
 	def jump{
 		if( !isGhost )
-			body.applyCentralImpulse(new Vector3f(0,0,5))
+			//body.applyCentralImpulse(new Vector3f(0,0,5))
+			body.jump
 	}
 	
-	var isGhost = false
-	
-	if( Config.startAsGhost )
-		toggleGhost
+	var isGhost = Config.startAsGhost
 	
 	def toggleGhost {
+		/*
 		if( isGhost ) {
 			position = camera.position - camDistFromCenter
 			BulletPhysics.addBody(body)
@@ -106,7 +122,7 @@ object Player {
 		else {
 			BulletPhysics.removeBody(body)
 			isGhost = true
-		}
+		}*/
 	}
 	//////////////////////////////////
 	// Tools, Inventory, Menu Controls
@@ -126,6 +142,7 @@ object Player {
 	
 	def primaryAction   = activeTool.primary
 	def secondaryAction = selectNextTool
+	
 }
 
 class Inventory {

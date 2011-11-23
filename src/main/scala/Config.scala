@@ -27,7 +27,7 @@ object Config{
 	val skybox = loadBoolean("skybox") getOrElse false
 	
 	val ungeneratedDefault = Leaf(UndefHexaeder,-1)
-	val startpos = Vec3(0,0,0) // TODO: Fix streaming with other start position
+	val startpos = Vec3(0,0,2000) // TODO: Fix streaming with other start position
 	
 	val fpsLimit = loadInt("fpsLimit") getOrElse 60
 	
@@ -37,7 +37,7 @@ object Config{
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2f
 	val cameraTurboSpeed = 32f
-	val startAsGhost = true
+	val startAsGhost = false
 	val buildrange = 100
 	
 	def densityfunction(v:Vec3) = gen.density(v).toFloat
