@@ -6,6 +6,7 @@ import com.bulletphysics.util.ObjectArrayList
 import com.bulletphysics.dynamics.character.KinematicCharacterController
 import com.bulletphysics.collision.dispatch.PairCachingGhostObject
 import com.bulletphysics.collision.broadphase.{BroadphaseProxy, CollisionFilterGroups}
+import com.bulletphysics.collision.dispatch.GhostPairCallback
 
 import broadphase.DbvtBroadphase
 import constraintsolver.SequentialImpulseConstraintSolver
@@ -31,7 +32,10 @@ object BulletPhysics {
 
 	val sol = new SequentialImpulseConstraintSolver
 	val dynamicsWorld = new DiscreteDynamicsWorld(dispatcher,broadPhase,sol,collisionConfig)
+	
+	dynamicsWorld.getPairCache.setInternalGhostPairCallback(new GhostPairCallback())
 
+	
 	val tickCallback = new InternalTickCallback{
 		override def internalTick( world:DynamicsWorld, timeStep:Float){
 			prepareGroundMesh2
@@ -114,12 +118,12 @@ object BulletPhysics {
 		startTransform.origin.set(pos)
 		
 		
-		val capsule = new CapsuleShape(0.3f,1.2f)
 		val ghostObject = new PairCachingGhostObject
 		ghostObject.setWorldTransform(startTransform)
-		ghostObject.setCollisionShape(capsule)
-		ghostObject.setCollisionFlags(CollisionFlags.CHARACTER_OBJECT) // CF_CHARACTER_OBJECT
 		
+		val capsule = new CapsuleShape(0.3f,1.2f)
+		ghostObject.setCollisionShape(capsule)
+		ghostObject.setCollisionFlags(CollisionFlags.CHARACTER_OBJECT)
 		val stepHeight  = 0.35f
 		val character = new KinematicCharacterController(ghostObject, capsule, stepHeight)
 
@@ -127,11 +131,10 @@ object BulletPhysics {
 
 		character.setGravity(-gravity.z)
 		character.setUpAxis(2)
-		character.setFallSpeed(55)
 		
-		dynamicsWorld.addCollisionObject(ghostObject, CollisionFilterGroups.CHARACTER_FILTER, CollisionFilterGroups.ALL_FILTER)
+		dynamicsWorld.addCollisionObject(ghostObject, CollisionFilterGroups.CHARACTER_FILTER, CollisionFilterGroups.STATIC_FILTER | CollisionFilterGroups.DEFAULT_FILTER)
 		dynamicsWorld.addAction(character)
-		
+
 		(character, ghostObject)
 	}
 
@@ -232,7 +235,7 @@ object BulletPhysics {
 				val shape = new ConvexHullShape(points)
 			
 				val body = addShape(0,pos+v+center, shape)
-			
+				
 				Some(body)
 			}
 			else

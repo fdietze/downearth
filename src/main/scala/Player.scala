@@ -33,20 +33,17 @@ object Player {
 		m_camera
 	}
 	
-	val (body,ghostObject) = BulletPhysics.addCharacter(startpos)//BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )	
+	val (body, ghostObject) = BulletPhysics.addCharacter(startpos)//BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )	
 	
 	def position:Vec3 = {
 		if( isGhost )
 			m_camera.position
 		else {
-			assert(ghostObject != null,"nääää")
 			ghostObject.getWorldTransform(new Transform).origin + camDistFromCenter
 		} // body.getCenterOfMassTransform(new Transform).origin + camDistFromCenter
 	}
 	
 	def position_= (newPos:Vec3) {
-		println("Position setzen...")
-		println(ghostObject.getWorldTransform(new Transform).origin)
 		m_camera.position := newPos
 		m_camera.position += camDistFromCenter
 
@@ -58,13 +55,13 @@ object Player {
 		body translate v*/
 		
 		
-		val transform = new Transform
+		/*val transform = new Transform
 		transform.origin.set(newPos)
-		ghostObject.setWorldTransform(transform)
+		ghostObject.setWorldTransform(transform)*/
 		
 		//body.reset
 		body.warp(newPos)
-		println(ghostObject.getWorldTransform(new Transform).origin)
+		//println(ghostObject.getWorldTransform(new Transform).origin)
 	}
 
 	def direction:Vec3 = camera.direction
@@ -76,7 +73,7 @@ object Player {
 	}*/
 
 	def resetPos {
-		DisplayEventManager.showEventText("reset Position")
+		DisplayEventManager.showEventText("reset")
 		position = startpos
 	}
 
@@ -86,12 +83,12 @@ object Player {
 		if( isGhost )
 			m_camera move dir*4
 		else {
-		/*	val flatdir = m_camera rotateVector dir
+			val flatdir = m_camera rotateVector dir
 			flatdir *= 4
 			flatdir.z = 0
-			body.applyCentralImpulse( flatdir )*/
-			body.setWalkDirection(dir)
-			body.playerStep(BulletPhysics.dynamicsWorld, 1/30f)
+			//body.applyCentralImpulse( flatdir )*/
+			body.setWalkDirection(flatdir)
+			//body.playerStep(BulletPhysics.dynamicsWorld, 1/30f)
 		}
 	}
 	
@@ -105,9 +102,11 @@ object Player {
 	}
 	
 	def jump{
-		if( !isGhost )
+		if( !isGhost ) {
 			//body.applyCentralImpulse(new Vector3f(0,0,5))
+			DisplayEventManager.showEventText("jump")
 			body.jump
+		}
 	}
 	
 	var isGhost = Config.startAsGhost
