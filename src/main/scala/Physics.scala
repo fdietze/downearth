@@ -48,18 +48,16 @@ object BulletPhysics {
 	dynamicsWorld.setGravity(gravity)
 	dynamicsWorld.setDebugDrawer(DirectDrawer)
 	
-	var pause = false
-	
-	def togglePause {
-		if(pause){
-			pause = false
-			simtime = getTime
-		}
-		else
-			pause = true
+	var m_pause = false
+	def pause = m_pause
+	def pause_=(p:Boolean) {
+		if(!p)
+			simTime = getTime
+		m_pause = p
 	}
 	
-	case class Body[T](body:RigidBody,radius:Float,stream:StreamingBox[T])
+	
+	case class Body[T](body:CollisionObject,radius:Float,stream:StreamingBox[T])
 	
 	var bodies:List[Body[Option[RigidBody]]] = Nil
 	//var groundBody:Option[RigidBody] = None
@@ -79,9 +77,12 @@ object BulletPhysics {
 		}
 	}
 	
+	// addShape(0,Vec3(0,0,-1),new BoxShape(new Vector3f(10,10,2)))
+	
 	// TODO diese Methode muss noch sauberer implementiert werden.
 	// Spielerverhalen kann so noch nicht realistisch simuliert werden.
 	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape):RigidBody = {
+		DisplayEventManager.showEventText("addShape")
 		val startTransform = new Transform();
 		startTransform.setIdentity
 		startTransform.origin.set(pos.x,pos.y,pos.z)
@@ -95,8 +96,8 @@ object BulletPhysics {
 		val myMotionState = new DefaultMotionState(startTransform)
 		val rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape, localInertia)
 		
-		rbInfo.friction = 0.5f
-		rbInfo.linearDamping = 0.40f
+		//rbInfo.friction = 0.5f
+		//rbInfo.linearDamping = 0.40f
 
 		val body = new RigidBody(rbInfo)
 		dynamicsWorld.addRigidBody(body,1,-1)
@@ -121,16 +122,17 @@ object BulletPhysics {
 		val ghostObject = new PairCachingGhostObject
 		ghostObject.setWorldTransform(startTransform)
 		
-		val capsule = new CapsuleShape(0.3f,1.2f)
+		val capsule = new CapsuleShapeZ(0.3f,1.2f)
 		ghostObject.setCollisionShape(capsule)
 		ghostObject.setCollisionFlags(CollisionFlags.CHARACTER_OBJECT)
-		val stepHeight  = 0.35f
+		val stepHeight  = 0.55f
 		val character = new KinematicCharacterController(ghostObject, capsule, stepHeight)
-
-
+		
+		bodies ::= Body(ghostObject,1.3f,new StreamingHexaederBox(Vec3i(round(pos)),2))
 
 		character.setGravity(-gravity.z)
 		character.setUpAxis(2)
+		character.setJumpSpeed(3)
 		
 		dynamicsWorld.addCollisionObject(ghostObject, CollisionFilterGroups.CHARACTER_FILTER, CollisionFilterGroups.STATIC_FILTER | CollisionFilterGroups.DEFAULT_FILTER)
 		dynamicsWorld.addAction(character)
@@ -272,28 +274,27 @@ object BulletPhysics {
 	}
 	
 	def prepareGroundMesh2 {
-		for( Body(body, _ , stream) <- bodies ){
-			val tmp = new Vector3f
-			body getCenterOfMassPosition tmp
+		for( Body(body, _ , stream) <- bodies ) {
+			val transform = body.getWorldTransform(new Transform)
+			val tmp = transform.origin
+			// body getCenterOfMassPosition tmp
 			val pos = Vec3(tmp.x,tmp.y,tmp.z)
 			stream moveTo pos
 		}
 	}
 	
 	def getTime = System.nanoTime / 1000000000.0
-	var simtime = getTime
+	var simTime = getTime
 	
 	def simStep(timestep:Float) {
 		dynamicsWorld stepSimulation timestep
 	}
 	
-	def update{
-		if(!pause){
+	def update {
+		if(!pause) {
 			val currentTime = getTime
-			while(simtime < currentTime) {
-				dynamicsWorld stepSimulation (currentTime - simtime).toFloat
-				simtime = currentTime
-			}
+			dynamicsWorld stepSimulation (currentTime - simTime).toFloat
+			simTime = currentTime
 		}
 	}
 	

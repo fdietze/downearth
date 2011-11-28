@@ -161,7 +161,7 @@ object Main {
 					case `keyQuit` =>
 						finished = true
 					case `keyPausePhysics` =>
-						BulletPhysics.togglePause
+						BulletPhysics.pause = !BulletPhysics.pause
 					case `keyDebugDraw` =>
 						debugDraw = !debugDraw
 					case `keyToggleGhostPlayer` =>
