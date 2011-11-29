@@ -7,6 +7,7 @@ import com.bulletphysics.dynamics.character.KinematicCharacterController
 import com.bulletphysics.collision.dispatch.PairCachingGhostObject
 import com.bulletphysics.collision.broadphase.{BroadphaseProxy, CollisionFilterGroups}
 import com.bulletphysics.collision.dispatch.GhostPairCallback
+import com.bulletphysics.collision.dispatch.CollisionWorld
 
 import broadphase.DbvtBroadphase
 import constraintsolver.SequentialImpulseConstraintSolver
@@ -42,7 +43,7 @@ object BulletPhysics {
 		}
 	}
 	
-	val gravity = new Vector3f(0,0,-9.81f)
+	val gravity = new Vector3f(0,0,-35f)
 	
 	dynamicsWorld.setInternalTickCallback(tickCallback, null)
 	dynamicsWorld.setGravity(gravity)
@@ -82,7 +83,6 @@ object BulletPhysics {
 	// TODO diese Methode muss noch sauberer implementiert werden.
 	// Spielerverhalen kann so noch nicht realistisch simuliert werden.
 	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape):RigidBody = {
-		DisplayEventManager.showEventText("addShape")
 		val startTransform = new Transform();
 		startTransform.setIdentity
 		startTransform.origin.set(pos.x,pos.y,pos.z)
@@ -125,14 +125,14 @@ object BulletPhysics {
 		val capsule = new CapsuleShapeZ(0.3f,1.2f)
 		ghostObject.setCollisionShape(capsule)
 		ghostObject.setCollisionFlags(CollisionFlags.CHARACTER_OBJECT)
-		val stepHeight  = 0.55f
+		val stepHeight  = 0.51f
 		val character = new KinematicCharacterController(ghostObject, capsule, stepHeight)
 		
 		bodies ::= Body(ghostObject,1.3f,new StreamingHexaederBox(Vec3i(round(pos)),2))
 
 		character.setGravity(-gravity.z)
 		character.setUpAxis(2)
-		character.setJumpSpeed(3)
+		character.setJumpSpeed(10)
 		
 		dynamicsWorld.addCollisionObject(ghostObject, CollisionFilterGroups.CHARACTER_FILTER, CollisionFilterGroups.STATIC_FILTER | CollisionFilterGroups.DEFAULT_FILTER)
 		dynamicsWorld.addAction(character)

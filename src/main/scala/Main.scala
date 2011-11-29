@@ -37,6 +37,7 @@ object Main {
 	def main(args:Array[String]) {
 		init
 		while(!finished) {
+			BulletPhysics.update
 			input
 			draw
 			frame
@@ -238,8 +239,6 @@ object Main {
 
 	def draw {
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-		
-		BulletPhysics.update
 		
 		Player.camera.renderScene
 		GUI.renderScene

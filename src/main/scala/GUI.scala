@@ -16,6 +16,9 @@ import openworld._
 object GUI extends Camera {
 	
 	val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
+		background = new ColorBackground(Vec4(0.1f,0.1f,0.1f,0.7f))
+		border = new LineBorder(Vec4(0f,0f,0f,1f))
+		
 		children += new Hammer(position+Vec2i(0 , 0))
 		children += new Shovel(position+Vec2i(40, 0))
 		children ++= Range(0,4).map(
@@ -91,6 +94,7 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 	
 	override def mouseClicked(mousePos:Vec2i) {
 		super.mouseClicked(mousePos)
+		Player.selectTool(ConstructionTool)
 		ConstructionTool.selectedMaterial = matId
 		DisplayEventManager.showEventText("Material " + matId)
 	}
@@ -161,6 +165,7 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
 
 	override def mouseClicked(mousePos:Vec2i) {
 		super.mouseClicked(mousePos)
+		Player.selectTool(ConstructionTool)
 		ConstructionTool.id = shapeId
 		DisplayEventManager.showEventText("Shape " + shapeId)
 	}

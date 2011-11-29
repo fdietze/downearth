@@ -84,7 +84,7 @@ object Player {
 			m_camera move dir*4
 		else {
 			val flatdir = m_camera rotateVector dir
-			flatdir *= 4
+			flatdir *= 2
 			flatdir.z = 0
 			//body.applyCentralImpulse( flatdir )*/
 			body.setWalkDirection(flatdir)
