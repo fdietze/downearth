@@ -47,7 +47,7 @@ object Main {
 
 	def init {
 		Display	setTitle "Open World"
-		if(fullscreen)
+		if(fullscreen) //TODO: reset mousegrab after switching fullscreen
 			Display.setDisplayModeAndFullscreen(displayMode)
 		else
 			Display.setDisplayMode(displayMode)

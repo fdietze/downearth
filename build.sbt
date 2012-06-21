@@ -4,7 +4,7 @@ organization := "fdad"
 
 version := "0.2.0"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
 seq( LWJGLPlugin.lwjglSettings: _*)
 
