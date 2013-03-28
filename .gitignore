@@ -4,10 +4,6 @@ project/boot/
 *~
 worldoctree
 
-worldfunction.scala
-worldprediction.scala
-worldmaterial.scala
-screen.frag
 
 screenshots
 config.xml
