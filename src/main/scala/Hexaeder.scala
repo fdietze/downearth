@@ -2,8 +2,8 @@ package openworld
 
 //import Util._
 import simplex3d.math.{Vec3i,Vec3b,ConstVec2i,all}
-import simplex3d.math.float.functions.{lessThanEqual,greaterThanEqual,normalize,cross,dot,Pi,round,length}
-import simplex3d.math.float.{Vec4,Vec3,Vec2,Mat3x4}
+import simplex3d.math.double.functions.{lessThanEqual,greaterThanEqual,normalize,cross,dot,Pi,round,length}
+import simplex3d.math.double.{Vec4,Vec3,Vec2,Mat4x3}
 
 import collection.immutable.VectorBuilder
 // Konstanten zur Verwendung im Hexaeder

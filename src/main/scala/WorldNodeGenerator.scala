@@ -7,7 +7,7 @@ package openworld
 import scala.actors.{DaemonActor, OutputChannel, Actor, Future}
 
 import simplex3d.math.Vec3i
-import simplex3d.math.float.{Vec2, Vec3, Vec4}
+import simplex3d.math.double.{Vec2, Vec3, Vec4}
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 

@@ -1,8 +1,8 @@
 package openworld
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
 import simplex3d.math._
-import simplex3d.math.float._
+import simplex3d.math.double._
 
 import Util._
 

@@ -1,8 +1,8 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import Util._
 import collection.Map
@@ -63,13 +63,13 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			glDisable(GL_TEXTURE_2D)
 		
 			glPushMatrix
-			glTranslate3fv(rootNodePos)
+			glTranslate3dv(Vec3(rootNodePos))
 			glColor3f(1,0,0)
 			Draw.renderCube(rootNodeSize)
 			glPopMatrix
 		
 			glPushMatrix
-			glTranslate3fv(worldWindowPos + 0.05f)
+			glTranslate3dv(worldWindowPos + 0.05f)
 			glColor3f(0,1,0)
 			Draw.renderCube(worldWindowSize - 0.1f)
 			glPopMatrix
@@ -82,7 +82,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		meshGenerated = true
 	}
 	
-	import scala.actors.Future
+	import scala.concurrent.Future
 
 	def generateStartArea {
 		root = DeadInnerNode // TODO GeneratingNode
@@ -187,7 +187,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			}
 		}
 		catch{
-			case x => println(x)
+			case x:Throwable => println(x)
 				return true
 		}
 		if(rootNodeInfo indexInRange info)

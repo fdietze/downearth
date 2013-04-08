@@ -1,6 +1,6 @@
 package openworld
 
-import simplex3d.math.float.Vec3
+import simplex3d.math.double.Vec3
 import simplex3d.math.doublex.Vec3d
 import noise.Noise.{noise3, noise3_prediction}
 import noise.interval.{Interval, Volume}

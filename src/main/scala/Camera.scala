@@ -1,17 +1,20 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import integration.RFloat
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.input.Mouse
 
 import Config._
 import Util._
+import org.lwjgl.BufferUtils
+import java.nio.FloatBuffer
 
 abstract class Camera {
 	def renderScene
@@ -45,11 +48,11 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 
 	// rotiert die Kamera, damit der worldUpVector auch für die Kamera oben ist
-	def lerpUp(factor:Float) {
+	def lerpUp(factor:Double) {
 		val up = inverse(directionQuat) rotateVector worldUpVector
 		val α = atan(up.y, up.x) - Pi/2
 		
-		directionQuat *= Quat4 rotateZ(α*pow(factor, 1.5f))
+		directionQuat *= Quat4 rotateZ(α*pow(factor, 1.5))
 	}
 	
 
@@ -64,18 +67,19 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
-	def modelview = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
+
+	def modelview = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))
 	
 	val m_frustumBuffer = DataBuffer[Mat4,RFloat](1)
 	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
 
 	def frustumBuffer = {
 		m_frustumBuffer(0) = frustum
-		m_frustumBuffer.buffer
+		m_frustumBuffer.buffer.asInstanceOf[FloatBuffer]
 	}
 	def modelviewBuffer = {
 		m_modelviewBuffer(0) = modelview
-		m_modelviewBuffer.buffer
+		m_modelviewBuffer.buffer.asInstanceOf[FloatBuffer]
 	}
 	
 
@@ -153,7 +157,7 @@ class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
 	planes(5) = normalize(rows(3) + rows(2)) //near plane
 
 	def testNode( info:NodeInfo ):Boolean = {
-		val inside = testCube(info.pos + info.size / 2, info.size / 2)
+		val inside = testCube(Vec3(info.pos + info.size / 2), info.size / 2)
 		return inside
 	}
 	

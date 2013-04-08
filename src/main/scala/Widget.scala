@@ -1,8 +1,8 @@
 package openworld.gui
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
 import org.newdawn.slick.opengl.Texture
@@ -71,7 +71,7 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 			position := animationEndPosition
 		else {
 			val progress = (time - animationStartTime).toFloat / (animationEndTime - animationStartTime)
-			position := Vec2i(lerpVec2(animationStartPosition, animationEndPosition, progress))
+			position := Vec2i(lerpVec2i(animationStartPosition, animationEndPosition, progress))
 		}
 	}
 	
@@ -194,13 +194,13 @@ class TextureWidget(_position:Vec2i, _size:Vec2i, texture:Texture, texPosition:V
 		glEnable(GL_TEXTURE_2D)
 		glBegin(GL_QUADS)
 		
-		glTexCoord2f(texPosition.x, texPosition.y)
+		glTexCoord2d(texPosition.x, texPosition.y)
 		glVertex2i(position.x         , position.y          )
-		glTexCoord2f(texPosition.x, texPosition.y + texSize.y)
+		glTexCoord2d(texPosition.x, texPosition.y + texSize.y)
 		glVertex2i(position.x         , position.y + size.y )
-		glTexCoord2f(texPosition.x + texSize.x, texPosition.y + texSize.y)
+		glTexCoord2d(texPosition.x + texSize.x, texPosition.y + texSize.y)
 		glVertex2i(position.x + size.x, position.y + size.y )
-		glTexCoord2f(texPosition.x + texSize.x, texPosition.y)
+		glTexCoord2d(texPosition.x + texSize.x, texPosition.y)
 		glVertex2i(position.x + size.x, position.y          )
 		
 		glEnd
@@ -356,7 +356,7 @@ class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel
 	def drawLines {
 		border match {
 			case b:LineBorder =>
-				glColor4fv(Vec4(b.color.rgb,0.5f))
+				glColor4dv(Vec4(b.color.rgb,0.5f))
 				glBegin(GL_LINES)
 				var x = 0
 				while( x < size.x ) {

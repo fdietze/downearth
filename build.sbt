@@ -4,7 +4,7 @@ organization := "fdad"
 
 version := "0.2.0"
 
-scalaVersion := "2.9.2"
+scalaVersion := "2.10.1"
 
 seq( LWJGLPlugin.lwjglSettings: _*)
 
@@ -14,22 +14,22 @@ javaOptions in run += "-Xmx512m"
 
 //fork in run := true
 
-scalacOptions in Compile += "-unchecked"
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Yinline-warnings")
 
-scalacOptions in Compile += "-deprecation"
+scalacOptions ++= Seq("-language:_")
 
 libraryDependencies ++= Seq(
-	"org.scalatest" %% "scalatest" % "1.6.1" % "test",
-	"com.nativelibs4java" % "scalacl" % "0.2"
+	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
+	//"com.nativelibs4java" % "scalacl" % "0.2"
 )
 
 // ScalaCL:
 
-resolvers += "NativeLibs4Java Repository" at "http://nativelibs4java.sourceforge.net/maven/"
+// resolvers += "NativeLibs4Java Repository" at "http://nativelibs4java.sourceforge.net/maven/"
 
-autoCompilerPlugins := true
+// autoCompilerPlugins := true
 
-addCompilerPlugin("com.nativelibs4java" % "scalacl-compiler-plugin" % "0.2")
+// addCompilerPlugin("com.nativelibs4java" % "scalacl-compiler-plugin" % "0.2")
 
 
 //initialCommands := """

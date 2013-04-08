@@ -1,8 +1,8 @@
 
 package openworld
 
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 import scala.collection.mutable._
 
 object ConvexHull3d {

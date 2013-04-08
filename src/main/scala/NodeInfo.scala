@@ -1,8 +1,8 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import Util._
 
@@ -54,12 +54,12 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 	}
 	
 	def cuboid = Cuboid(pos, Vec3i(size))
-	def volume = Volume(pos, pos+size)
+	def volume = Volume(Vec3(pos), Vec3(pos+size))
 }
 
 
 case class Cuboid(pos:Vec3i, size:Vec3i) {
-	def volume = Volume(pos, pos + size)
+	def volume = Volume(Vec3(pos), Vec3(pos + size))
 	def isCube = size.x == size.y && size.y == size.z
 	def nodeinfo = {
 		assert(isCube)

@@ -1,11 +1,11 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
 
 import org.lwjgl.opengl.GL11._
 
@@ -48,14 +48,14 @@ object Draw {
 	
 	def renderCube(size:Float) {
 		glPushMatrix
-			glScale1f(size)
+			glScale1d(size)
 			plaincube
 		glPopMatrix
 	}
 	
 	def renderCuboid(size:Vec3) {
 		glPushMatrix
-			glScale3fv(size)
+			glScale3dv(size)
 			plaincube
 		glPopMatrix
 	}
@@ -97,7 +97,7 @@ object Draw {
 		try {
 			glBegin(GL_LINES)
 			for(v <- indices map verts)
-				glVertex3f(v.x,v.y,v.z)
+				glVertex3f(v.x.toFloat,v.y.toFloat,v.z.toFloat)
 			glEnd
 		}
 		catch {
@@ -112,7 +112,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3fv(pos)
+			glTranslate3dv(Vec3(pos))
 
 			// Transparent
 			if( transparent ) {
@@ -136,7 +136,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3fv(pos + 0.1f)
+			glTranslate3dv(pos + 0.1f)
 			Draw.renderCube(size - 0.2f)
 		glPopMatrix
 	}
@@ -147,7 +147,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3fv(pos + 0.1f)
+			glTranslate3dv(pos + 0.1f)
 			Draw.renderCuboid(cuboid.size - 0.2f)
 		glPopMatrix
 	}

@@ -1,8 +1,8 @@
 package openworld.gui
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
 import org.newdawn.slick.opengl.Texture
@@ -127,38 +127,38 @@ class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Ve
 }
 
 class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) with InventoryItem {
-	val preferredAngle = 30f
-	val degPerSec = 180f
-	var inOffset = 0f
-	var outOffset = 0f
-	def degTime = Main.uptime*degPerSec/1000f
-	var lastMouseOut = degTime - 360f
+	val preferredAngle = 30.0
+	val degPerSec = 180.0
+	var inOffset = 0.0
+	var outOffset = 0.0
+	def degTime = Main.uptime*degPerSec/1000.0
+	var lastMouseOut = degTime - 360.0
 	
 	override def draw {
 		super.draw
 		
 		glPushMatrix
 			glColor4f(1,1,1,1)
-			glTranslate3fv(Vec3(position+size/2,0))
+			glTranslate3dv(Vec3(position+size/2,0))
 			glScalef(20,20,20)
 			glRotatef(72,1,0,0)
-			if( mouseOver || (degTime - lastMouseOut + outOffset) < 360f )
-				glRotatef(degTime - inOffset + preferredAngle,0,0,1)
+			if( mouseOver || (degTime - lastMouseOut + outOffset) < 360.0 )
+				glRotated(degTime - inOffset + preferredAngle,0,0,1)
 			else
-				glRotatef(preferredAngle,0,0,1)
+				glRotated(preferredAngle,0,0,1)
 			glTranslatef(-0.5f,-0.5f,-0.5f)
 			Draw.renderPolyeder(ConstructionTool.all(shapeId)(0))
 		glPopMatrix
 	}
 	
 	override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-		if( (degTime - lastMouseOut + outOffset) >= 360f )	
-			inOffset = mod(degTime, 360f)
+		if( (degTime - lastMouseOut + outOffset) >= 360.0 )
+			inOffset = mod(degTime, 360.0)
 	}
 	
 	override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
 		lastMouseOut = degTime
-		outOffset = mod(degTime - inOffset, 360f)
+		outOffset = mod(degTime - inOffset, 360.0)
 	}
 	
 	def selected = ConstructionTool.id == shapeId

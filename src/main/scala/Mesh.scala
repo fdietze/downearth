@@ -5,12 +5,13 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 
-import simplex3d.math.float.{Vec2,Vec3,Vec4}
+import simplex3d.math.double.{Vec2,Vec3,Vec4}
 import simplex3d.math.Vec3i
-import simplex3d.math.float.functions.normalize
+import simplex3d.math.double.functions.normalize
 
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
+import simplex3d.math.integration.RFloat
 
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen

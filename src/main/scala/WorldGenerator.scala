@@ -1,22 +1,14 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
+import simplex3d.math.double._
 
-import simplex3d.noise._
 
 import Util._
 import Config._
 
-final class FloatNoise(source: NoiseSource) {
-	def apply(x: Double) :Float = source(x).toFloat
-	def apply(u: inVec2) :Float = source(u.x, u.y).toFloat
-	def apply(u: inVec3) :Float = source(u.x, u.y, u.z).toFloat
-	def apply(u: inVec4) :Float = source(u.x, u.y, u.z, u.w).toFloat
-}
 
 object WorldGenerator {
-	val noise1 = new FloatNoise(ClassicalGradientNoise)
 	import Config.{worldWindowSize => cubesize}
 	
 	def genWorld:WorldOctree = {
@@ -42,7 +34,7 @@ object WorldGenerator {
 		// Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
 		val originalNoiseData = new Array3D[Float](Vec3i(nodesize+3))
 		// Füllen der Datenpunkte mit Hilfe der Dichtefunktion
-		originalNoiseData.fill(v =>	densityfunction(nodepos+v-1) )
+		originalNoiseData.fill(v =>	densityfunction(Vec3(nodepos+v-1)))
 		val modifiedNoiseData = originalNoiseData.clone
 		val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 	

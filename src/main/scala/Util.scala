@@ -1,10 +1,11 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import integration.RFloat
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
 import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
 import org.lwjgl.BufferUtils
@@ -20,44 +21,48 @@ import javax.imageio.ImageIO
 import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
 import java.text.DateFormat._
-import scala.actors.Futures.future
+import scala.concurrent.Future
 
 object Util {
-	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x,in.y,in.z)
+	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
-	implicit def q2qf(in:Quat4) = new Quat4f(in.a,in.b,in.c,in.d)
+	implicit def q2qf(in:Quat4) = new Quat4f(in.a.toFloat,in.b.toFloat,in.c.toFloat,in.d.toFloat)
 	implicit def qf2q(in:Quat4f) = Quat4(in.w,in.x,in.y,in.z)
 	implicit def mat2buffer(in:Mat4):FloatBuffer = {
 		val data = DataBuffer[Mat4,RFloat](1)
 		data(0) = in
-		data.buffer
+		data.buffer.asInstanceOf[FloatBuffer]
 	}
+
 	implicit def vec3_2buffer(in:Vec3):FloatBuffer = {
 		val data = DataBuffer[Vec3,RFloat](1)
 		data(0) = in
-		data.buffer
+		data.buffer.asInstanceOf[FloatBuffer]
 	}
+
 	implicit def vec4_2buffer(in:Vec4):FloatBuffer = {
 		val data = DataBuffer[Vec4,RFloat](1)
 		data(0) = in
-		data.buffer
+		data.buffer.asInstanceOf[FloatBuffer]
 	}
 	
 	implicit def sequence2FloatBuffer(s:Seq[Float]):FloatBuffer = {
 		val buffer = BufferUtils.createFloatBuffer(s.size)
 		s.foreach(buffer.put)
 		buffer.flip
-		buffer
+		buffer.asInstanceOf[FloatBuffer]
 	}
-	
-	def glTranslate3fv(v:Vec3) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, v.z)
-	def glTranslate2iv(v:Vec2i) = org.lwjgl.opengl.GL11.glTranslatef(v.x, v.y, 0)
-	def glColor4fv(v:Vec4) = org.lwjgl.opengl.GL11.glColor4f(v.r, v.g, v.b, v.a)
-	def glScale3fv(v:Vec3) = org.lwjgl.opengl.GL11.glScalef(v.x, v.y, v.z)
-	def glScale1f(s:Float) = org.lwjgl.opengl.GL11.glScalef(s,s,s)
-	
-	def lerpVec2(a:Vec2, b:Vec2, t:Float) = a + t * (b - a)
-	
+
+  def glTranslate3dv(v:Vec3) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, v.z)
+  def glTranslate3iv(v:Vec3i) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, v.z)
+	def glTranslate2iv(v:Vec2i) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, 0)
+	def glColor4dv(v:Vec4) = org.lwjgl.opengl.GL11.glColor4d(v.r, v.g, v.b, v.a)
+	def glScale3dv(v:Vec3) = org.lwjgl.opengl.GL11.glScaled(v.x, v.y, v.z)
+	def glScale1d(s:Float) = org.lwjgl.opengl.GL11.glScaled(s,s,s)
+
+  def lerpVec2(a:Vec2, b:Vec2, t:Float) = a + t * (b - a)
+  def lerpVec2i(a:Vec2i, b:Vec2i, t:Float) = a + t * (b - a)
+
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
 	def indexInRange(i:Vec3i, nodepos:Vec3i, nodesize:Int) = {
@@ -143,7 +148,9 @@ object Util {
 	class PermVec3i(val from: inVec3i, val to: inVec3i) extends Iterable[Vec3i] {
 		def iterator: Iterator[Vec3i] = new Iterator[Vec3i] {
 			val cur = Vec3i(from)
-			def hasNext: Boolean = all(lessThan(cur, to))
+			def hasNext: Boolean = {
+        all(lessThan(cur, to))
+      }
 			def next(): Vec3i = {
 				if (!hasNext) throw new NoSuchElementException
 
@@ -210,7 +217,7 @@ object Util {
 	def time[A](msg:String)(foo: => A) = {
 		val start = System.nanoTime
 		val f = foo
-		val t = (System.nanoTime-start)/1000000.
+		val t = (System.nanoTime-start)/1000000.0
 		printf("%s: %6.2f ms\n",msg,t)
 		f
 	}

@@ -1,11 +1,11 @@
 package openworld
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.util.glu._

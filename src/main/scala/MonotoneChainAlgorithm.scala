@@ -8,7 +8,7 @@ package openworld
 //     Output: H[] = an array of the convex hull vertices (max is n)
 //     Return: the number of points in H[]
 
-import simplex3d.math.float._
+import simplex3d.math.double._
 import collection.mutable.Stack
 
 object ChainHull2D {

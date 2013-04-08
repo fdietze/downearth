@@ -1,7 +1,7 @@
 package openworld.gui
 
 import simplex3d.math._
-import simplex3d.math.float._
+import simplex3d.math.double._
 import org.lwjgl.opengl.GL11._
 
 import openworld.Config._
@@ -18,7 +18,7 @@ object NoBorder extends Border {
 
 class LineBorder(val color:Vec4 = Vec4(1)) extends Border {
 	def draw(position:Vec2i, size:Vec2i) {
-		glColor4fv(color)
+		glColor4dv(color)
 		
 		glBegin(GL_LINE_LOOP)
 			glVertex2i(position.x-1       , position.y)
@@ -39,7 +39,7 @@ object NoBackground extends Background {
 
 class ColorBackground(val color:Vec4 = Vec4(1,1,1,0.25f)) extends Background {
 	def draw(position:Vec2i, size:Vec2i) {
-		glColor4fv(color)
+		glColor4dv(color)
 		
 		glBegin(GL_QUADS)
 			glVertex2i(position.x         , position.y)

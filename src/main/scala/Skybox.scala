@@ -1,14 +1,16 @@
 package openworld
 
-import simplex3d.math.float._
+import simplex3d.math.double._
 import org.lwjgl.opengl.GL11._
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import integration.RFloat
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import simplex3d.data._
-import simplex3d.data.float._
+import simplex3d.data.double._
+import java.nio.FloatBuffer
 
 object Skybox{
 	val vertices = Array( 
@@ -32,12 +34,12 @@ object Skybox{
 		Vec2(0.25f,1.0f),Vec2(0.50f,1.0f),Vec2(0.50f,0.5f),Vec2(0.25f,0.5f)
 	)
 	
-	def skybox = Mat4(inverse(Mat3x4 rotate(Player.camera.directionQuat)))
+	def skybox = Mat4(inverse(Mat4x3 rotate(Player.camera.directionQuat)))
 
 	val m_skyboxBuffer = DataBuffer[Mat4,RFloat](1)
 	def skyboxBuffer = {
 		m_skyboxBuffer(0) = skybox
-		m_skyboxBuffer.buffer
+		m_skyboxBuffer.buffer.asInstanceOf[FloatBuffer]
 	}
 	
 	def render{
@@ -55,8 +57,8 @@ object Skybox{
 			glColor4f(1,1,1,1)
 			glBegin( GL_QUADS )
 			for( (Vec3(x,y,z), Vec2(u,v)) <- vertices zip texcoords ){
-				glTexCoord2f(u,v)
-				glVertex3f(x,y,z)
+				glTexCoord2d(u,v)
+				glVertex3d(x,y,z)
 			}
 			glEnd
 		}

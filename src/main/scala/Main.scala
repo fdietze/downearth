@@ -7,8 +7,8 @@ import org.lwjgl.opengl.{
 import org.lwjgl.input._
 
 import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import Util._
 import Config._

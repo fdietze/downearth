@@ -54,7 +54,7 @@ object DirectDrawer extends IDebugDraw{
 		glEnd
 	}
 	
-	import simplex3d.math.float.Vec3
+	import simplex3d.math.double.Vec3
 	
 	override def drawContactPoint(pointOnB:Vector3f , normalOnB:Vector3f , distance:Float , lifeTime:Int, color:Vector3f ) {
 		if ((debugMode & DebugDrawModes.DRAW_CONTACT_POINTS) != 0) {
@@ -63,7 +63,7 @@ object DirectDrawer extends IDebugDraw{
 			glBegin(GL_LINES)
 			glColor3f(color.x,color.y,color.z)
 			glVertex3f(from.x,from.y,from.z)
-			glVertex3f(to.x,to.y,to.z)
+			glVertex3d(to.x,to.y,to.z)
 			glEnd
 		}
 	}

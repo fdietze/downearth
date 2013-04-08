@@ -14,8 +14,8 @@ import constraintsolver.SequentialImpulseConstraintSolver
 import dispatch.{CollisionObject, CollisionFlags, CollisionDispatcher, DefaultCollisionConfiguration}
 import javax.vecmath.Vector3f
 import shapes._
-import simplex3d.math.float.functions._
-import simplex3d.math.float._
+import simplex3d.math.double.functions._
+import simplex3d.math.double._
 import simplex3d.math._
 //import java.nio.{ByteOrder,ByteBuffer}
 
@@ -85,7 +85,7 @@ object BulletPhysics {
 	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape):RigidBody = {
 		val startTransform = new Transform();
 		startTransform.setIdentity
-		startTransform.origin.set(pos.x,pos.y,pos.z)
+		startTransform.origin.set(pos.x.toFloat,pos.y.toFloat,pos.z.toFloat)
 
 		val localInertia = new Vector3f(0, 0, 1)
 		if (mass != 0f){
@@ -217,7 +217,7 @@ object BulletPhysics {
 		
 		def draw {
 			glPushMatrix
-			glTranslate3fv(pos)
+			glTranslate3iv(pos)
 			Draw.renderCube(size)
 			glPopMatrix
 		}
