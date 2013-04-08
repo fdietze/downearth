@@ -71,7 +71,7 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 			position := animationEndPosition
 		else {
 			val progress = (time - animationStartTime).toFloat / (animationEndTime - animationStartTime)
-			position := Vec2i(lerpVec2(animationStartPosition, animationEndPosition, progress))
+			position := Vec2i(lerpVec2( Vec2(animationStartPosition) , Vec2(animationEndPosition), progress))
 		}
 	}
 	

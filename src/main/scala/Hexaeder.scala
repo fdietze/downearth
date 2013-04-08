@@ -123,14 +123,11 @@ abstract class APolyeder extends Polyeder {
 	}
 	
 	def apply(p:Vec3b):Vec3 = {
-		// implicit def int2byte(i:Int) = i.toByte
-		implicit def bool2int(b:Boolean) = if(b) 1 else 0
-		apply(p.x + (p.y << 1) + (p.z << 2))
+		apply( (if(p.x) 1 else 0) | (if(p.y) 2 else 0) | (if(p.z) 4 else 0) )
 	}
 	
 	def apply(p:Vec3b, axis:Int):Float = {
-		implicit def bool2int(b:Boolean) = if(b) 1 else 0
-		apply(p.x + (p.y << 1) + (p.z << 2), axis)
+		apply( (if(p.x) 1 else 0) | (if(p.y) 2 else 0) | (if(p.z) 4 else 0) , axis)
 	}
 
 	

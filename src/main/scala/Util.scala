@@ -19,10 +19,11 @@ import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
-import java.text.DateFormat._
-import scala.actors.Futures.future
+import concurrent.{ExecutionContext, Future}
+import ExecutionContext.Implicits.global
 
 object Util {
+
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x,in.y,in.z)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
 	implicit def q2qf(in:Quat4) = new Quat4f(in.a,in.b,in.c,in.d)
@@ -140,20 +141,20 @@ object Util {
 
 	
 	class RichVec3i(private[this] val v: inVec3i) { def until(u: inVec3i) = new PermVec3i(v, u) }
-	class PermVec3i(val from: inVec3i, val to: inVec3i) extends Iterable[Vec3i] {
+	class PermVec3i(val from: inVec3i, val target: inVec3i) extends Iterable[Vec3i] {
 		def iterator: Iterator[Vec3i] = new Iterator[Vec3i] {
 			val cur = Vec3i(from)
-			def hasNext: Boolean = all(lessThan(cur, to))
+			def hasNext: Boolean = all(lessThan(cur, target))
 			def next(): Vec3i = {
 				if (!hasNext) throw new NoSuchElementException
 
 				val res = Vec3i(cur)
 
 				cur.z += 1
-				if (cur.z >= to.z) {
+				if (cur.z >= target.z) {
 					cur.z = from.z
 					cur.y += 1
-					if (cur.y >= to.y) {
+					if (cur.y >= target.y) {
 						cur.y = from.y
 						cur.x += 1
 					}
@@ -167,17 +168,17 @@ object Util {
 	implicit def toRichVec2i(u: Vec2i) = new RichVec2i(u)
 
 	class RichVec2i(private[this] val v: inVec2i) { def until(u: inVec2i) = new PermVec2i(v, u) }
-	class PermVec2i(val from: inVec2i, val to: inVec2i) extends Iterable[Vec2i] {
+	class PermVec2i(val from: inVec2i, val target: inVec2i) extends Iterable[Vec2i] {
 		def iterator: Iterator[Vec2i] = new Iterator[Vec2i] {
 			val cur = Vec2i(from)
-			def hasNext: Boolean = all(lessThan(cur, to))
+			def hasNext: Boolean = all(lessThan(cur, target))
 			def next(): Vec2i = {
 				if (!hasNext) throw new NoSuchElementException
 
 				val res = Vec2i(cur)
 
 				cur.y += 1
-				if (cur.y >= to.y) {
+				if (cur.y >= target.y) {
 					cur.y = from.y
 					cur.x += 1
 				}
@@ -210,7 +211,7 @@ object Util {
 	def time[A](msg:String)(foo: => A) = {
 		val start = System.nanoTime
 		val f = foo
-		val t = (System.nanoTime-start)/1000000.
+		val t = (System.nanoTime-start)/1000000.0
 		printf("%s: %6.2f ms\n",msg,t)
 		f
 	}
@@ -252,7 +253,7 @@ object Util {
 
 			val x = normalize( cross(q,rayDirection) )
 			val y = normalize( cross(x,rayDirection) )
-			val m = transpose( Mat3x2(x,y) )
+			val m = transpose( Mat2x3(x,y) )
 
 			// alle Vertices werden in richtung des Strahls projeziert
 			val projected = Vector.concat( Seq(rayStart), h.vertices ).map( m * _ )
@@ -272,9 +273,9 @@ object Util {
 	// trifft oder nicht.
 	def rayCellTest(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder):Boolean = {
 		val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,rayDirection)) )
-		val x = normalize( cross(q,rayDirection) )
-		val y = normalize( cross(x,rayDirection) )
-		val m = transpose( Mat3x2(x,y) )
+		val x:Vec3 = normalize( cross(q,rayDirection) )
+		val y:Vec3 = normalize( cross(x,rayDirection) )
+		val m = transpose( Mat2x3(x,y) )
 		
 		for(i ← 0 until 6) {
 			val axis = i >> 1
@@ -334,7 +335,7 @@ object Util {
 		body getCenterOfMassTransform transform //write to transform
 		transform getOpenGLMatrix matrixArray //write to matrixArray
 		matrixBuffer put matrixArray
-		matrixBuffer flip
+		matrixBuffer.flip()
 
 		glMultMatrix(matrixBuffer)
 	}
@@ -355,8 +356,8 @@ object Util {
 		val bpp = 4
 		val buffer = BufferUtils.createByteBuffer(screenWidth * screenHeight * bpp)
 		glReadPixels(0, 0, screenWidth, screenHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
-		
-		future { // save picture in background
+
+    Future.apply { // save picture in background
 			val format = "PNG"
 			val now = new Date
 			val df = new SimpleDateFormat("yyyy-MM-dd")

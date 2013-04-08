@@ -8,7 +8,7 @@ object ConfigLoader {
 		Some( XML.load( getClass.getClassLoader.getResourceAsStream("config.xml") ) )
 	}
 	catch {
-		case _ => 
+		case _:Throwable =>
 			System.err.println("keine config.xml angegeben, oder konnte nicht gefunden werden")
 			None
 	}
@@ -54,7 +54,7 @@ object ConfigLoader {
 			loadValue(name) map ( _.toInt )
 		}
 		catch {
-			case _ => 
+			case _ : Throwable =>
 				System.err.println("can't parse " + option.get + " as Int for key " + name)
 				None
 		}

@@ -5,9 +5,14 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 
 import Util._
-import collection.Map
+import akka.pattern.ask
 
 import Config.minMeshNodeSize
+import scala.util.{Success, Failure}
+import akka.util.Timeout
+import concurrent.Await
+import concurrent.duration.Duration
+import java.util.concurrent.TimeUnit
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Leaf] with Serializable{
@@ -63,7 +68,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			glDisable(GL_TEXTURE_2D)
 		
 			glPushMatrix
-			glTranslate3fv(rootNodePos)
+			glTranslatef(rootNodePos.x, rootNodePos.y, rootNodePos.z)
 			glColor3f(1,0,0)
 			Draw.renderCube(rootNodeSize)
 			glPopMatrix
@@ -81,27 +86,37 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 		root = rootA.genMesh(rootNodeInfo,minMeshNodeSize,(x => {if(indexInRange(x)) apply(x).h else f(x) }) )
 		meshGenerated = true
 	}
-	
-	import scala.actors.Future
+
 
 	def generateStartArea {
 		root = DeadInnerNode // TODO GeneratingNode
-		WorldNodeGenerator.Master ! rootNodeInfo.cuboid
+		WorldNodeGenerator.master ! rootNodeInfo.cuboid
 		meshGenerated = true
 	}
 	
 	def generateNode(info:NodeInfo) {
 		if(!isSet(info)) {
-			WorldNodeGenerator.Master ! info.cuboid
+			WorldNodeGenerator.master ! info.cuboid
 		}
 	}
 	
 	def makeUpdates = {
-		while( ! WorldNodeGenerator.Master.done.isEmpty ){
-			val ( nodeinfo, node) = WorldNodeGenerator.Master.done.dequeue
-			insert( nodeinfo, node )
-			BulletPhysics.worldChange(nodeinfo)
-		}
+
+    implicit val timeout = Timeout(1000)
+    val future = WorldNodeGenerator.master ? GetFinishedJobs
+
+    future.value match {
+      case Some(Success(s)) =>
+        for( (nodeinfo, node) <- s.asInstanceOf[Seq[(NodeInfo, OctantOverMesh)]] ) {
+          insert( nodeinfo, node )
+          BulletPhysics.worldChange(nodeinfo)
+        }
+      case Some(Failure(_)) =>
+        assert(false, "failed")
+      case None =>
+        assert(false, "timeout too low")
+    }
+
 	}
 
 	def move(dir:Vec3i){
@@ -175,22 +190,18 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
 	def isSet(info:NodeInfo):Boolean = {
 		//TODO: generating Node einführen und linearzeitabfrage rauswerfen
-		for( job <- WorldNodeGenerator.Master.activeJobs ){
-			if(job indexInRange info)
-				return true
-		}
+    import akka.pattern.ask
+    implicit val timeout = akka.util.Timeout(1000)
 
-		try{
-			for( job <- WorldNodeGenerator.Master.done ){
-				if(job._1 indexInRange info)
-					return true
-			}
-		}
-		catch{
-			case x => println(x)
-				return true
-		}
-		if(rootNodeInfo indexInRange info)
+    val future = WorldNodeGenerator.master ? info
+
+    // asks weather the Area is currently processed
+    val answer = Await.result( future, Duration(1, TimeUnit.SECONDS) ).asInstanceOf[Boolean]
+
+    if ( answer )
+      return true
+
+    if(rootNodeInfo indexInRange info)
 			return rootB.isSet(rootNodeInfo,info)
 		else
 			return false

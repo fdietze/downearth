@@ -42,7 +42,7 @@ object WorldGenerator {
 		// Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
 		val originalNoiseData = new Array3D[Float](Vec3i(nodesize+3))
 		// Füllen der Datenpunkte mit Hilfe der Dichtefunktion
-		originalNoiseData.fill(v =>	densityfunction(nodepos+v-1) )
+		originalNoiseData.fill(v =>	densityfunction(Vec3(nodepos+v-1)) )
 		val modifiedNoiseData = originalNoiseData.clone
 		val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 	

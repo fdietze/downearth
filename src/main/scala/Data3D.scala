@@ -1,10 +1,9 @@
 package openworld
 
 import simplex3d.math.Vec3i
-import simplex3d.math.float.functions.{lessThan,lessThanEqual,greaterThanEqual}
-import simplex3d.math.{all}
 
 import Util._
+import reflect.ClassTag
 
 object Data3D{
 	// Abbildung der flachen Indices der Vertizes auf ihre 3D Indizes als Vec3i
@@ -36,7 +35,7 @@ trait Data3D[A]{
 	}
 }
 
-class Array3D[@specialized(Byte,Short,Float,Double) A:ClassManifest](val vsize:Vec3i, val data:Array[A]) 
+class Array3D[@specialized(Byte,Short,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])
 extends Data3D[A] with Iterable[A] with Serializable{
 	def this(vsize:Vec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
 

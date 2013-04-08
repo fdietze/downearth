@@ -127,7 +127,7 @@ object Main {
 			delta.x += 1
 
 		
-		if( Mouse isGrabbed ) {
+		if( Mouse.isGrabbed ) {
 		
 			// rotate with mouse
 			delta_angle.y = -mouseDelta.x/300f

@@ -117,14 +117,12 @@ object MutableTextureMesh {
 	}
 	
 	
-	val (vertices,normals,texcoords) = interleave(
+	val (vertices,normals,texcoords) = interleave[Vec3, RFloat, Vec3, RFloat, Vec2, RFloat](vertexArray.length)
 //	val (vertices,normals,colors) = interleave(
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec2, RFloat]
+
 //			DataSeq[Vec4, RFloat]
-		)(vertexArray.size)
-		for(i <- 0 until vertexArray.size){
+
+		for(i <- 0 until vertexArray.length){
 			vertices(i) = vertexArray(i)
 			normals(i) = normalArray(i)
 			texcoords(i) = texcoordsArray(i)
@@ -208,7 +206,7 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 
 		var dataview = List(View(0,oldvertices.size,null))
 
-		implicit def richviewsplit(viewlist:List[View]) = new {
+		implicit class RichViewSplit(viewlist:List[View]) {
 			def viewsplit(pos:Int) = {
 				var destoffset = 0
 				val (pre,other) = viewlist.span {
@@ -342,9 +340,9 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 			//glEnableClientState(GL_COLOR_ARRAY)
 
-			glVertexPointer(vertices.components, vertices.rawType, vertices.byteStride, vertices.byteOffset)
-			glNormalPointer(normals.rawType, normals.byteStride, normals.byteOffset)
-			glTexCoordPointer(texcoords.components, texcoords.rawType, texcoords.byteStride, texcoords.byteOffset)
+			glVertexPointer(vertices.components, vertices.rawEnum, vertices.byteStride, vertices.byteOffset)
+			glNormalPointer(normals.rawEnum, normals.byteStride, normals.byteOffset)
+			glTexCoordPointer(texcoords.components, texcoords.rawEnum, texcoords.byteStride, texcoords.byteOffset)
 //			glColorPointer(colors.components, colors.rawType, colors.byteStride, colors.byteOffset)
 
 			glDrawArrays(GL_TRIANGLES, 0, vertices.size)

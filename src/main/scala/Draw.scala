@@ -112,7 +112,7 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3fv(pos)
+			glTranslatef(pos.x,pos.y,pos.z)
 
 			// Transparent
 			if( transparent ) {

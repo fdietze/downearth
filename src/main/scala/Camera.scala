@@ -64,8 +64,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
-	def modelview = Mat4(inverse(Mat3x4 rotate(directionQuat) translate(position)))
-	
+	def modelview = Mat4(  inverse(Mat4x3 rotate(directionQuat) translate(position)))
+
 	val m_frustumBuffer = DataBuffer[Mat4,RFloat](1)
 	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
 
@@ -153,7 +153,7 @@ class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
 	planes(5) = normalize(rows(3) + rows(2)) //near plane
 
 	def testNode( info:NodeInfo ):Boolean = {
-		val inside = testCube(info.pos + info.size / 2, info.size / 2)
+		val inside = testCube(Vec3(info.pos + info.size / 2), info.size / 2 )
 		return inside
 	}
 	

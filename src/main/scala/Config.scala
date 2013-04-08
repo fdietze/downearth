@@ -40,8 +40,8 @@ object Config{
 	val startAsGhost = false
 	val buildrange = 100
 	
-	def densityfunction(v:Vec3) = gen.density(v).toFloat
-	def materialfunction(v:Vec3) = gen.material(v)
+	def densityfunction(v:Vec3) = gen.density(Vec3d(v)).toFloat
+	def materialfunction(v:Vec3) = gen.material(Vec3d(v))
 	def prediction(v:Volume) = gen.prediction(v)
 	val saveWorld = false
 

@@ -32,7 +32,7 @@ object Skybox{
 		Vec2(0.25f,1.0f),Vec2(0.50f,1.0f),Vec2(0.50f,0.5f),Vec2(0.25f,0.5f)
 	)
 	
-	def skybox = Mat4(inverse(Mat3x4 rotate(Player.camera.directionQuat)))
+	def skybox = Mat4(inverse(Mat4x3 rotate(Player.camera.directionQuat)))
 
 	val m_skyboxBuffer = DataBuffer[Mat4,RFloat](1)
 	def skyboxBuffer = {
