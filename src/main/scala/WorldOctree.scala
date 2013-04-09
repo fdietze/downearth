@@ -101,7 +101,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	def makeUpdates = {
 
-    implicit val timeout = Timeout(1000)
+    implicit val timeout = Timeout(100000)
     val future = WorldNodeGenerator.master ? GetFinishedJobs
 
     future.value match {

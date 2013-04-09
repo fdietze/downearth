@@ -13,7 +13,7 @@ import scala.Tuple2
 
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 object WorldNodeGenerator {
-  val actorSystem = ActorSystem.create("world node generator")
+  val actorSystem = ActorSystem.create("worldNodeGenerator")
   val master = actorSystem.actorOf( Props(new Master) )
 }
 

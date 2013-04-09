@@ -23,7 +23,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 libraryDependencies ++= Seq(
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test",
-	"com.typesafe.akka" %% "akka-actor" % "2.1.2"
+	"com.typesafe.akka" %% "akka-actor" % "2.2-M2",
+	"org.scala-lang" % "scala-reflect" % "2.10.1"
 	//"com.nativelibs4java" % "scalacl" % "0.2"
 )
 

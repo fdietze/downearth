@@ -12,6 +12,7 @@ import simplex3d.math.double.functions.normalize
 import simplex3d.data._
 import simplex3d.data.double._
 import simplex3d.math.integration.RFloat
+import org.lwjgl.BufferUtils
 
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
@@ -116,9 +117,12 @@ object MutableTextureMesh {
 		if(equals != Nil)
 			makeSmooth
 	}
-	
-	
-	val (vertices,normals,texcoords) = interleave[Vec3, RFloat, Vec3, RFloat, Vec2, RFloat](vertexArray.length)
+
+
+    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * 8 * 4)
+    val vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
+    val normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
+    val texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
 //	val (vertices,normals,colors) = interleave(
 
 //			DataSeq[Vec4, RFloat]
@@ -135,14 +139,12 @@ object MutableTextureMesh {
 	
 	def apply(meshes:Array[MutableTextureMesh]) = {
 		val size = meshes.map(_.size).sum
-		val (vertices,normals,texcoords) = interleave(
-//		val (vertices,normals,colors) = interleave(
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec2, RFloat]
-//			DataSeq[Vec4, RFloat]
-		)(size)
-		
+
+    val byteBuffer = BufferUtils.createByteBuffer(size * 8 * 4)
+    val vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
+    val normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
+    val texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+
 		var currentpos = 0
 		var currentsize = 0
 		
@@ -185,17 +187,12 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 		}
 		
 		assert(newsize >= 0,"newsize must be greater than or equal to 0")
-		
-		val t = interleave(
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec2, RFloat]
-//			DataSeq[Vec4, RFloat]
-			)( newsize )
 
-		vertices  = t._1
-		normals   = t._2
-		texcoords = t._3
+    val byteBuffer = BufferUtils.createByteBuffer(newsize * 8 * 4)
+    vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
+    normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
+    texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+
 //		colors = t._3
 
 		case class View(offset:Int,size:Int,data:TextureMeshData){
@@ -259,13 +256,12 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 	def split(chunksizes:Array[Int]) = {
 		var index = 0
 		for(chunksize ← chunksizes) yield {
-			val (newvertices, newnormals, newtexcoords) = interleave(
-//			val (newvertices, newnormals, newcolors) = interleave(
-				DataSeq[Vec3, RFloat],
-				DataSeq[Vec3, RFloat],
-				DataSeq[Vec2, RFloat]
-//				DataSeq[Vec4, RFloat]
-				)( chunksize )
+      val byteBuffer = BufferUtils.createByteBuffer(chunksize * 8 * 4)
+      val newvertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
+      val newnormals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
+      val newtexcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+
+
 			newvertices.bindingBuffer.put(vertices.bindingBufferSubData(index,chunksize))
 			index += chunksize
 			new MutableTextureMesh(newvertices,newnormals,newtexcoords)
@@ -277,13 +273,11 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 object TextureMesh{
 	def apply(data:TextureMeshData) = {
 	import data._
-	val (vertices,normals,texcoords) = interleave(
-//	val (vertices,normals,colors) = interleave(
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec3, RFloat],
-			DataSeq[Vec2, RFloat]
-//			DataSeq[Vec4, RFloat]
-		)(vertexArray.size)
+    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * 8 * 4)
+    val vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
+    val normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
+    val texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+
 		for(i <- 0 until vertexArray.size){
 			vertices(i) = vertexArray(i)
 			normals(i) = normalArray(i/3)
