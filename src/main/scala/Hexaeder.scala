@@ -12,8 +12,7 @@ object Polyeder {
 	val detail = Config.hexaederResolution
 	assert( 0 < detail && detail <= 15 )
 	
-	val detailf =  detail.toFloat
-	val mask = detail << 0  | detail << 4  | detail << 8  | detail << 12 | 
+	val mask = detail << 0  | detail << 4  | detail << 8  | detail << 12 |
 	           detail << 16 | detail << 20 | detail << 24 | detail << 28
 
 	def apply(vertices: Seq[Vec3]): Polyeder = {
@@ -21,7 +20,7 @@ object Polyeder {
 			val h = new Hexaeder
 			var i = 0
 			for(v ← vertices){
-				h(i) = v
+				h(i) = Vec3(v)
 				i += 1
 			}
 			h
@@ -57,13 +56,13 @@ object Polyeder {
 import Polyeder._
 
 trait Polyeder extends Serializable {
-	def apply(p:Int,axis:Int):Float
+	def apply(p:Int,axis:Int):Double
 	def apply(p:Int):Vec3
 	def vertices:Seq[Vec3]
 	def numVerts:Int
 
 	def noVolume:Boolean
-	def volume:Float
+	def volume:Double
 	def planemax(axis:Int, direction:Int):Boolean
 	def planecoords(axis:Int, direction:Int):Seq[Vec2]
 	
@@ -114,46 +113,43 @@ abstract class APolyeder extends Polyeder {
 
 	def apply(p:Int) = {
 		assert(checkrange(p))
-		Vec3(readVertex(p)) / detailf
+		Vec3(readVertex(p)) / detail
 	}
 
 	def apply(p:Int,axis:Int) = {
 		assert(checkrange(p))
-		readComponent(p, axis) / detailf
+		readComponent(p, axis) / detail
 	}
 	
 	def apply(p:Vec3b):Vec3 = {
-		// implicit def int2byte(i:Int) = i.toByte
-		implicit def bool2int(b:Boolean) = if(b) 1 else 0
-		apply(p.x + (p.y << 1) + (p.z << 2))
+		apply( (if(p.x) 1 else 0) | (if(p.y) 2 else 0) | (if(p.z) 4 else 0) )
 	}
 	
-	def apply(p:Vec3b, axis:Int):Float = {
-		implicit def bool2int(b:Boolean) = if(b) 1 else 0
-		apply(p.x + (p.y << 1) + (p.z << 2), axis)
+	def apply(p:Vec3b, axis:Int):Double = {
+		apply( (if(p.x) 1 else 0) | (if(p.y) 2 else 0) | (if(p.z) 4 else 0) , axis)
 	}
 
 	
 	def update(p:Int,v:Vec3) = {
 		assert(checkrange(p))
 		assert(checkvertex(v))
-		val ivec = Vec3i(round(v*detailf))
+		val ivec = Vec3i(round(v*detail))
 		assert(chechvertexi(ivec))
 		
 		writeVertex(p, ivec)
 	}
 
-	def update(p:Int, axis:Int, v:Float) = {
+	def update(p:Int, axis:Int, v:Double) = {
 		assert(checkrange(p))
 		assert(checkvalue(v))
-		writeComponent(p, axis, (round(v*detailf)).toInt)
+		writeComponent(p, axis, (round(v*detail)).toInt)
 	}
 
 	//def update(p:Vec3b,v:Vec3){ update(p.x + (p.y << 1) + (p.z << 2),v) }
 	//def update(p:Vec3b,axis:Int,v:Int){ update(p.x + (p.y << 1) + (p.z << 2),axis,v) }
 	
 	def checkrange(p:Int) = 0 <= p && p < numVerts
-	def checkvalue(v:Float) = 0 <= v && v <= 1f
+	def checkvalue(v:Double) = 0 <= v && v <= 1.0
 	def checkvertex(v:Vec3) = all(greaterThanEqual(v,Vec3.Zero)) && all(lessThanEqual(v,Vec3.One))
 	def chechvertexi(v:Vec3i) = all( greaterThanEqual(v,Vec3i.Zero) ) && all(lessThanEqual(v,Vec3i(detail)))
 	
@@ -187,14 +183,14 @@ abstract class APolyeder extends Polyeder {
 	}
 	
 	def volume = {
-		var vol = 0f
+		var vol = 0.0
 		val t = allTriangles
 		for(i ← Range(0,t.size,3) ) {
 			val normal = cross(t(i+2)-t(i+1),t(i+0)-t(i+1)) // Normale nach aussen
 			val v3 = t(i+1)+normal
 			val h = normalize( cross(t(i+2) - t(i+1), v3 - t(i+1)) )
 			val height = dot(h, t(i+1)) - dot(h, t(i+0))
-			val area = length(t(i+2)-t(i+1))*height*(0.5f)
+			val area = length(t(i+2)-t(i+1))*height*(0.5)
 			vol += area * dot(normalize(normal),t(i+0)) / 3
 		}
 		vol
@@ -324,8 +320,8 @@ class Hexaeder(
 		val (axisa,axisb) = Util.otherAxis( axis )
 		
 		plane(axis, direction).map( p => Vec2(
-				readComponent(p, axisa)/detailf,
-				readComponent(p, axisb)/detailf )
+				readComponent(p, axisa)/detail,
+				readComponent(p, axisb)/detail )
 			)
 	}
 	
@@ -373,7 +369,7 @@ class Hexaeder(
 		var i = 0
 		while(i < 6){
 			val axis = (i >> 1)
-			val direction = (i & 1).toFloat
+			val direction = (i & 1).toDouble
 			val p = plane(axis,i&1)
 			
 			val indices =

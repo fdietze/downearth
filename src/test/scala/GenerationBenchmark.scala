@@ -1,7 +1,7 @@
 import org.scalatest.FunSuite
 
 import openworld._
-import simplex3d.math.float._
+import simplex3d.math.double._
 import scala.collection.mutable.Stack
 
 class GenerationBenchmark extends FunSuite {

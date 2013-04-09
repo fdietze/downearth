@@ -21,11 +21,11 @@ object World {
 	
 	
 	//raytracer zum anklicken von Zellen
-	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Float):Option[Vec3i] = {
+	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Double):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
 		for(i <- 0 until 3) {
 			if(from(i) == floor(from(i)))
-				from(i) += 0.000001f
+				from(i) += 0.000001
 		}
 	
 		val t = direction

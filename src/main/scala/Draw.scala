@@ -46,7 +46,7 @@ object Draw {
 		glEnd
 	}
 	
-	def renderCube(size:Float) {
+	def renderCube(size:Double) {
 		glPushMatrix
 			glScale1d(size)
 			plaincube
@@ -97,7 +97,7 @@ object Draw {
 		try {
 			glBegin(GL_LINES)
 			for(v <- indices map verts)
-				glVertex3f(v.x.toFloat,v.y.toFloat,v.z.toFloat)
+				glVertex3d(v.x,v.y,v.z)
 			glEnd
 		}
 		catch {
@@ -136,8 +136,8 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3dv(pos + 0.1f)
-			Draw.renderCube(size - 0.2f)
+			glTranslate3dv(pos + 0.1)
+			Draw.renderCube(size - 0.2)
 		glPopMatrix
 	}
 	
@@ -147,8 +147,8 @@ object Draw {
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3dv(pos + 0.1f)
-			Draw.renderCuboid(cuboid.size - 0.2f)
+			glTranslate3dv(pos + 0.1)
+			Draw.renderCuboid(cuboid.size - 0.2)
 		glPopMatrix
 	}
 

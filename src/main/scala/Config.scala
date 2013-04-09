@@ -35,12 +35,12 @@ object Config{
 	// gesetzt werden (10000)
 	val maxMeshVertexCount = 30000
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
-	val cameraSpeed = 2f
-	val cameraTurboSpeed = 32f
+	val cameraSpeed = 2
+	val cameraTurboSpeed = 32
 	val startAsGhost = false
 	val buildrange = 100
 	
-	def densityfunction(v:Vec3) = gen.density(v).toFloat
+	def densityfunction(v:Vec3) = gen.density(v)
 	def materialfunction(v:Vec3) = gen.material(v)
 	def prediction(v:Volume) = gen.prediction(v)
 	val saveWorld = false

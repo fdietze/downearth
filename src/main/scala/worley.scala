@@ -13,7 +13,7 @@ object Worley {
 	def coordhash(X:Int,Y:Int,Z:Int) = (702395077*X + 915488749*Y + 2120969693*Z) & 0x7FFFFFFF
 	def nextrandom(last:Int) = (1402024253*last + 586950981) & 0x7FFFFFFF
 	def distance(x0:Double,y0:Double,z0:Double,x1:Double,y1:Double,z1:Double) = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1) + (z0-z1)*(z0-z1)
-	def randomfloat(rand:Int) = rand / 2147483647.0 // maxRand
+	def randomDouble(rand:Int) = rand / 2147483647.0 // maxRand
 
 
 	val pointspercube = Array(
@@ -109,11 +109,11 @@ object Worley {
 			val pointcount = pointspercube(rng & 0xFF)
 			while( p < pointcount ) {
 				rng = nextrandom(rng)
-				val pointx = cubex + randomfloat(rng)
+				val pointx = cubex + randomDouble(rng)
 				rng = nextrandom(rng)
-				val pointy = cubey + randomfloat(rng)
+				val pointy = cubey + randomDouble(rng)
 				rng = nextrandom(rng)
-				val pointz = cubez + randomfloat(rng)
+				val pointz = cubez + randomDouble(rng)
 
 				val dst = distance(x, y, z, pointx, pointy, pointz)
 				

@@ -142,16 +142,16 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 			}
 			
 			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
-				val matid = if( material >= 0 ) material else materialfunction(pos + 0.5f).id
+				val matid = if( material >= 0 ) material else materialfunction(pos + 0.5).id
 				
 				vertexBuilder += (Vec3(pos) + v0)
-				texCoordBuilder += Vec2( v0(axisa)/4f + matid/4f , v0(axisb) )
+				texCoordBuilder += Vec2( v0(axisa)/4.0 + matid/4.0 , v0(axisb) )
 				
 				vertexBuilder += (Vec3(pos) + v1)
-				texCoordBuilder += Vec2( v1(axisa)/4f + matid/4f , v1(axisb) )
+				texCoordBuilder += Vec2( v1(axisa)/4.0 + matid/4.0 , v1(axisb) )
 				
 				vertexBuilder += (Vec3(pos) + v2)
-				texCoordBuilder += Vec2( v2(axisa)/4f + matid/4f , v2(axisb) )
+				texCoordBuilder += Vec2( v2(axisa)/4.0 + matid/4.0 , v2(axisb) )
 				
 				vertexCounter += 3
 				

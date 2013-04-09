@@ -58,7 +58,7 @@ object DirectDrawer extends IDebugDraw{
 	
 	override def drawContactPoint(pointOnB:Vector3f , normalOnB:Vector3f , distance:Float , lifeTime:Int, color:Vector3f ) {
 		if ((debugMode & DebugDrawModes.DRAW_CONTACT_POINTS) != 0) {
-			val to = Vec3(pointOnB.x,pointOnB.y,pointOnB.z)*(distance*100f);
+			val to = Vec3(pointOnB.x,pointOnB.y,pointOnB.z)*(distance*100f)
 			val from = pointOnB
 			glBegin(GL_LINES)
 			glColor3f(color.x,color.y,color.z)

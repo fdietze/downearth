@@ -79,22 +79,22 @@ object HexaederMC {
 	
 	// Die Nullstelle zwischen der Gerade, die durch (0,a) und (1,b) verläuft
 	// Wenn flip = true, dann durch (1,a) und (0,b)
-	def interpolate(a:Float,b:Float,flip:Boolean):Float = {
+	def interpolate(a:Double,b:Double,flip:Boolean):Double = {
 		if( a == b )
 			if( flip )
-				0f
+				0.0
 			else
-				1f
+				1.0
 		else {
 			val l = a/(a-b)
 			if( flip )
-				1f-l
+				1.0-l
 			else l
 		}
 	}
 	
 	// wandelt die Noise-Daten in einen der 256 MC-Fälle um
-	def dataToCase(data: IndexedSeq[Float]) = {
+	def dataToCase(data: IndexedSeq[Double]) = {
 		var result = 0
 		for( i <- 0 until data.size){
 			result |= (if(data(i) > 0) (1 << i) else 0)
@@ -108,7 +108,7 @@ object HexaederMC {
 	
 	def isStableCase(caseType:CaseType) = stableCases contains caseType
 
-	def transformToStable(data:IndexedSeq[Float], oldCase:Int):(IndexedSeq[Float],Int) = {
+	def transformToStable(data:IndexedSeq[Double], oldCase:Int):(IndexedSeq[Double],Int) = {
 		// Wenn instabiler Fall: Werte auf 0 setzen (Dichtefunktion verzerren), je nach Fall, um auf stabilen fall zu kommen
 		
 		// dies sind die Ausgangsdaten der Dichtefunktion, die auf null gesetzt werden können, um sie mit Hexaedern darstellen zu können.
@@ -136,14 +136,14 @@ object HexaederMC {
 
 		// Berechnet die absolute Abweichung von den Originaldaten,
 		// wenn alle Vertices auf Null gesetzt werden würden
-		val error:(Int => Float) = pos => data(pos).abs
-		val errorSum:(Seq[Int] => Float) =  poslist => {
-			var sum = 0f
+		val error:(Int => Double) = pos => data(pos).abs
+		val errorSum:(Seq[Int] => Double) =  poslist => {
+			var sum = 0.0
 			for( p <- poslist )
 				sum += error(p)
 			sum
 		}
-		val errorTupleSum: ((Seq[Int],Seq[Int])) => Float = poslist => {
+		val errorTupleSum: ((Seq[Int],Seq[Int])) => Double = poslist => {
 			errorSum(poslist._1) + errorSum(poslist._2)
 		}
 		
@@ -699,7 +699,7 @@ object HexaederMC {
 	}
 	
 	// Erzeugt aus den Daten für Stabile Fälle die eigentlichen Hexaeder
-	def data2hexaeder(data: IndexedSeq[Float], exactCase:Int): Polyeder = {
+	def data2hexaeder(data: IndexedSeq[Double], exactCase:Int): Polyeder = {
 		caseTypeLookup(exactCase) match{
 			case `allNegative` =>
 				return EmptyHexaeder

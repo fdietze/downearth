@@ -32,7 +32,7 @@ object WorldGenerator {
 		// Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 		// Marching-Cubes für n Cubes: n+1 Datenpunkte
 		// Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-		val originalNoiseData = new Array3D[Float](Vec3i(nodesize+3))
+		val originalNoiseData = new Array3D[Double](Vec3i(nodesize+3))
 		// Füllen der Datenpunkte mit Hilfe der Dichtefunktion
 		originalNoiseData.fill(v =>	densityfunction(Vec3(nodepos+v-1)))
 		val modifiedNoiseData = originalNoiseData.clone

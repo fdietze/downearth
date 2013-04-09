@@ -25,7 +25,7 @@ object Player {
 	// Physics, rotation and position	
 	/////////////////////////////////
 	
-	val camDistFromCenter = Vec3(0,0,0.8f)
+	val camDistFromCenter = Vec3(0,0,0.8)
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
 	def camera = {
@@ -185,7 +185,7 @@ object Shovel extends PlayerTool {
 			case Some(pos) =>
 				val block = World(pos)
 				//TODO: the evaluation of the materialfunction should be in the Leaf itself
-				val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
+				val material = if( block.material == -1 ) materialfunction(pos + 0.5).id else block.material
 				Player.inventory.materials(material) += block.h.volume
 				World(pos) = Leaf(EmptyHexaeder)
 			case _ =>
@@ -238,7 +238,7 @@ object ConstructionTool extends PlayerTool {
 				if( Player.inventory.materials(selectedMaterial) >= current.volume ) {
 					val block = World(pos)
 					//TODO: the evaluation of the materialfunction should be in the Leaf itself
-					val material = if( block.material == -1 ) materialfunction(pos + 0.5f).id else block.material
+					val material = if( block.material == -1 ) materialfunction(pos + 0.5).id else block.material
 					Player.inventory.materials(material) += block.h.volume
 					Player.inventory.materials(selectedMaterial) -= current.volume
 					World(pos) = Leaf(current, selectedMaterial)

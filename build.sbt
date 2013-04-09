@@ -18,8 +18,12 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Yinline-warnin
 
 scalacOptions ++= Seq("-language:_")
 
+
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+
 libraryDependencies ++= Seq(
-	"org.scalatest" %% "scalatest" % "1.9.1" % "test"
+	"org.scalatest" %% "scalatest" % "1.9.1" % "test",
+	"com.typesafe.akka" %% "akka-actor" % "2.1.2"
 	//"com.nativelibs4java" % "scalacl" % "0.2"
 )
 
@@ -30,7 +34,6 @@ libraryDependencies ++= Seq(
 // autoCompilerPlugins := true
 
 // addCompilerPlugin("com.nativelibs4java" % "scalacl-compiler-plugin" % "0.2")
-
 
 //initialCommands := """
 //import simplex3d.math._

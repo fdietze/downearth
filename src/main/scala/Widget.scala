@@ -22,8 +22,8 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
 		val mouseDelta = mousePos1 - mousePos0
 		val delta_angle = Vec3(0)
 		
-		delta_angle.y = mouseDelta.x/300f
-		delta_angle.x = mouseDelta.y/300f
+		delta_angle.y = mouseDelta.x/300.0
+		delta_angle.x = mouseDelta.y/300.0
 		
 		Player.rotate(delta_angle)
 	}
@@ -64,13 +64,13 @@ class Widget( val position:Vec2i, val size:Vec2i) {
 	val dragStartPos = Vec2i(0)
 	var dragging = false
 	
-	def clickDelta = 5f
+	def clickDelta = 5.0
 	
 	def invokeAnimation {
 		if( animationEndTime <= time )
 			position := animationEndPosition
 		else {
-			val progress = (time - animationStartTime).toFloat / (animationEndTime - animationStartTime)
+			val progress = (time - animationStartTime).toDouble / (animationEndTime - animationStartTime)
 			position := Vec2i(lerpVec2i(animationStartPosition, animationEndPosition, progress))
 		}
 	}
@@ -356,7 +356,7 @@ class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel
 	def drawLines {
 		border match {
 			case b:LineBorder =>
-				glColor4dv(Vec4(b.color.rgb,0.5f))
+				glColor4dv(Vec4(b.color.rgb,0.5))
 				glBegin(GL_LINES)
 				var x = 0
 				while( x < size.x ) {
@@ -379,7 +379,7 @@ class GridPanel(position:Vec2i, size:Vec2i, cellsize:Int = 30) extends FreePanel
 		val raster = new collection.mutable.HashMap[Vec2i,Widget]
 		for( child <- children ) {
 			val childRelCenter = -position + child.position + child.size / 2
-			val closestCell = Vec2i(round((childRelCenter - cellsize / 2) / cellsize.toFloat))
+			val closestCell = Vec2i(round((childRelCenter - cellsize / 2) / cellsize.toDouble))
 			
 			// filter out all already used cells and select the closest one
 			val newCell = (((Vec2i(0) until size/cellsize) map ( x => Vec2i(x) )).toSet -- raster.keys).minBy( p => length( closestCell - p ) )

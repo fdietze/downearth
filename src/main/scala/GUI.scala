@@ -16,8 +16,8 @@ import openworld._
 object GUI extends Camera {
 	
 	val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
-		background = new ColorBackground(Vec4(0.1f,0.1f,0.1f,0.7f))
-		border = new LineBorder(Vec4(0f,0f,0f,1f))
+		background = new ColorBackground(Vec4(0.1,0.1,0.1,0.7))
+		border = new LineBorder(Vec4(0,0,0,1))
 		
 		children += new Hammer(position+Vec2i(0 , 0))
 		children += new Shovel(position+Vec2i(40, 0))
@@ -84,12 +84,12 @@ object GUI extends Camera {
 	}
 }
 
-class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5f) )
-class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5f,0), Vec2(0.5f) )
+class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5) )
+class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5,0), Vec2(0.5) )
 
 
 class MaterialWidget(val matId:Int, _pos:Vec2i)
-	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4f,0), Vec2(0.25f,1) )
+	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4,0), Vec2(0.25,1) )
 	with InventoryItem {
 	
 	override def mouseClicked(mousePos:Vec2i) {
@@ -102,7 +102,7 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 	override def draw {
 		super.draw
 
-		val text = floor(Player.inventory.materials(matId).toFloat).toInt
+		val text = floor(Player.inventory.materials(matId)).toInt
 		val textSize = Vec2i(ConsoleFont.font.getWidth(text.toString) + 2, ConsoleFont.height)
 		val textPos = position + size - textSize
 		import org.newdawn.slick.Color.white
@@ -188,22 +188,22 @@ trait InventoryItem extends Draggable {
 		border match {
 			case b:LineBorder =>
 				if( selected )
-					b.color := Vec4(0.2f,0.4f,1f,1)
+					b.color := Vec4(0.2,0.4,1,1)
 				else
 					if( mouseOver )
-						b.color := Vec4(0.6f,0.8f,1f,1)
+						b.color := Vec4(0.6,0.8,1,1)
 					else
 						b.color := Vec4(1)
 		}
 		background match {
 			case b:ColorBackground =>
 				if( selected )
-					b.color := Vec4(0.7f,0.8f,1f,0.25f)
+					b.color := Vec4(0.7,0.8,1,0.25)
 				else
 					if( mouseOver )
-						b.color := Vec4(0.8f,0.9f,1f,0.25f)
+						b.color := Vec4(0.8,0.9,1,0.25)
 					else
-						b.color := Vec4(1,1,1,0.25f)
+						b.color := Vec4(1,1,1,0.25)
 		}
 		super.draw
 	}

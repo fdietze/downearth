@@ -1,7 +1,6 @@
 package openworld
 
 import simplex3d.math._
-import integration.RFloat
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
@@ -31,8 +30,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 			directionQuat.rotateVector(-worldUpVector)
 		}
 		else {
-			val rx = (Mouse.getX * 2f - screenWidth ) / screenHeight
-			val ry = (Mouse.getY * 2f - screenHeight) / screenHeight
+			val rx = (Mouse.getX * 2.0 - screenWidth ) / screenHeight
+			val ry = (Mouse.getY * 2.0 - screenHeight) / screenHeight
 			directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
 		}
 	}
@@ -57,29 +56,27 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 
 	def frustum = {
-		val v = screenWidth.toFloat / screenHeight.toFloat	
+		val v = screenWidth.toDouble / screenHeight.toDouble
 		
-		val n = 0.05f //near
-		val f = 1000   //far
+		val n = 0.05 //near
+		val f = 1000.0   //far
 		val r = v*n   //right
 		val t = n     //top
 		//l = -r; b = -t
 		
 		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
 	}
-
 	def modelview = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))
-	
 	val m_frustumBuffer = DataBuffer[Mat4,RFloat](1)
 	val m_modelviewBuffer = DataBuffer[Mat4,RFloat](1)
 
 	def frustumBuffer = {
 		m_frustumBuffer(0) = frustum
-		m_frustumBuffer.buffer.asInstanceOf[FloatBuffer]
+		m_frustumBuffer.buffer
 	}
 	def modelviewBuffer = {
 		m_modelviewBuffer(0) = modelview
-		m_modelviewBuffer.buffer.asInstanceOf[FloatBuffer]
+		m_modelviewBuffer.buffer
 	}
 	
 
@@ -93,11 +90,11 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 			glEnable(GL_LIGHTING)
 
 			//Add positioned light
-			glLight(GL_LIGHT0, GL_POSITION, Vec4(position, 1f))
+			glLight(GL_LIGHT0, GL_POSITION, Vec4(position, 1.0))
 			glEnable(GL_LIGHT0)
 
 			//Add ambient light
-			glLightModel(GL_LIGHT_MODEL_AMBIENT, Vec4(0.2f, 0.2f, 0.2f, 1f))
+			glLightModel(GL_LIGHT_MODEL_AMBIENT, Vec4(0.2, 0.2, 0.2, 1))
 		}
 	}
 	
@@ -161,7 +158,7 @@ class FrustumTestImpl(projection:Mat4, modelview:Mat4) extends FrustumTest {
 		return inside
 	}
 	
-	private def testCube( pos:Vec3, radius:Float ):Boolean = {
+	private def testCube( pos:Vec3, radius:Double ):Boolean = {
 		// TODO: Give the information, if a cube is completely in the frustum
 		var p = 0
 		import pos.{x,y,z}

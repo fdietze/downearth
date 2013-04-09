@@ -25,7 +25,7 @@ object Main {
 	def uptime = time - starttime
 
 	var lastframe = uptime
-	var timestep = 0f
+	var timestep = 0.0
 	var currentfps = 0
 	var timestamp = starttime
 	var framecounter = 0
@@ -77,7 +77,7 @@ object Main {
 		else
 			framecounter += 1	
 	
-		timestep = (uptime - lastframe)/1000f
+		timestep = (uptime - lastframe)/1000.0
 		lastframe = uptime
 		
 		Display.sync(fpsLimit)
@@ -127,11 +127,11 @@ object Main {
 			delta.x += 1
 
 		
-		if( Mouse isGrabbed ) {
+		if( Mouse.isGrabbed ) {
 		
 			// rotate with mouse
-			delta_angle.y = -mouseDelta.x/300f
-			delta_angle.x = mouseDelta.y/300f
+			delta_angle.y = -mouseDelta.x/300.0
+			delta_angle.x = mouseDelta.y/300.0
 			
 			// Turbo mode
 			if( turbo && Mouse.isButtonDown(0) )
@@ -233,7 +233,7 @@ object Main {
 		
 		val factor = if(turbo) cameraTurboSpeed else cameraSpeed
 		Player.move(factor*(delta/max(1,length(delta)))*timestep)
-		Player.rotate(2f*delta_angle)
+		Player.rotate(2.0*delta_angle)
 
 	}
 
@@ -282,7 +282,7 @@ object Main {
 		val useshaders = shader != 0 && vertshader != 0 && fragshader != 0
 		if(useshaders) {
 			glUseProgramObjectARB(shader)
-			glUniform1fARB( glGetUniformLocationARB( shader, "time" ), uptime.toFloat/1000f )
+			glUniform1fARB( glGetUniformLocationARB( shader, "time" ), (uptime / 1000.0).toFloat )
 		}
 		
 		func
