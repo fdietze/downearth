@@ -13,6 +13,7 @@ import akka.util.Timeout
 import concurrent.Await
 import concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Leaf] with Serializable{
@@ -101,21 +102,14 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	def makeUpdates = {
 
-    implicit val timeout = Timeout(100000)
-    val future = WorldNodeGenerator.master ? GetFinishedJobs
+    implicit val timeout = Timeout(1000 seconds)
+    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(NodeInfo, OctantOverMesh)]]
+    val s = Await.result(future, 1000 seconds)
 
-    future.value match {
-      case Some(Success(s)) =>
-        for( (nodeinfo, node) <- s.asInstanceOf[Seq[(NodeInfo, OctantOverMesh)]] ) {
-          insert( nodeinfo, node )
-          BulletPhysics.worldChange(nodeinfo)
-        }
-      case Some(Failure(_)) =>
-        assert(false, "failed")
-      case None =>
-        assert(false, "timeout too low")
+    for( (nodeinfo, node) <- s ) {
+      insert( nodeinfo, node )
+      BulletPhysics.worldChange(nodeinfo)
     }
-
 	}
 
 	def move(dir:Vec3i){

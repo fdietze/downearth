@@ -120,18 +120,14 @@ object MutableTextureMesh {
 
 
     val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * 8 * 4)
-    val vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
-    val normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
-    val texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
-//	val (vertices,normals,colors) = interleave(
-
-//			DataSeq[Vec4, RFloat]
+    val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
+    val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
+    val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
 
 		for(i <- 0 until vertexArray.length){
 			vertices(i) = vertexArray(i)
 			normals(i) = normalArray(i)
 			texcoords(i) = texcoordsArray(i)
-//			colors(i) = colorArray(i)
 		}
 		new MutableTextureMesh(vertices,normals,texcoords)
 //		new MutableTextureMesh(vertices,normals,colors)
@@ -141,9 +137,9 @@ object MutableTextureMesh {
 		val size = meshes.map(_.size).sum
 
     val byteBuffer = BufferUtils.createByteBuffer(size * 8 * 4)
-    val vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
-    val normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
-    val texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+    val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
+    val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
+    val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
 
 		var currentpos = 0
 		var currentsize = 0
@@ -189,9 +185,9 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 		assert(newsize >= 0,"newsize must be greater than or equal to 0")
 
     val byteBuffer = BufferUtils.createByteBuffer(newsize * 8 * 4)
-    vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
-    normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
-    texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+    vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
+    normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
+    texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
 
 //		colors = t._3
 
@@ -257,9 +253,9 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 		var index = 0
 		for(chunksize ← chunksizes) yield {
       val byteBuffer = BufferUtils.createByteBuffer(chunksize * 8 * 4)
-      val newvertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
-      val newnormals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
-      val newtexcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+      val newvertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
+      val newnormals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
+      val newtexcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
 
 
 			newvertices.bindingBuffer.put(vertices.bindingBufferSubData(index,chunksize))
@@ -274,9 +270,9 @@ object TextureMesh{
 	def apply(data:TextureMeshData) = {
 	import data._
     val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * 8 * 4)
-    val vertices = DataView[Vec3,RFloat](byteBuffer,  0 ,8*4)
-    val normals  = DataView[Vec3,RFloat](byteBuffer,3*4 ,8*4)
-    val texcoords= DataView[Vec2,RFloat](byteBuffer,6*4 ,8*4)
+    val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
+    val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
+    val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
 
 		for(i <- 0 until vertexArray.size){
 			vertices(i) = vertexArray(i)

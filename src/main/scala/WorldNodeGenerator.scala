@@ -31,8 +31,8 @@ class Master extends Actor {
 
   def receive = {
     case GetFinishedJobs =>
-      sender ! done.dequeueAll( _ => true)
-
+      val result = done.dequeueAll( _ => true)
+      sender ! result
     case nodeInfo:NodeInfo =>
       sender ! (activeJobs.find( _ indexInRange nodeInfo ).isDefined || done.find( _._1 indexInRange nodeInfo).isDefined)
 
