@@ -113,12 +113,12 @@ abstract class APolyeder extends Polyeder {
 
 	def apply(p:Int) = {
 		assert(checkrange(p))
-		Vec3(readVertex(p)) / detail
+		Vec3(readVertex(p)) / detail.toDouble
 	}
 
 	def apply(p:Int,axis:Int) = {
 		assert(checkrange(p))
-		readComponent(p, axis) / detail
+		readComponent(p, axis) / detail.toDouble
 	}
 	
 	def apply(p:Vec3b):Vec3 = {
