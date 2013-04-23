@@ -5,11 +5,13 @@ import org.lwjgl.input.Keyboard.getKeyIndex
 
 object ConfigLoader {
 	val config = try {
-		Some( XML.load( getClass.getClassLoader.getResourceAsStream("config.xml") ) )
+		Some( XML.load( getClass.getResourceAsStream("config.xml") ) )
+
 	}
 	catch {
-		case _:Throwable =>
+		case x:Throwable =>
 			System.err.println("keine config.xml angegeben, oder konnte nicht gefunden werden")
+      System.err.println(x)
 			None
 	}
 	
