@@ -14,7 +14,7 @@ import javafx.scene.control.{Label, Button}
 import javafx.scene.image.{PixelFormat, WritableImage, ImageView}
 import javafx.scene.layout.AnchorPane
 import javafx.scene.Scene
-import javafx.stage.Stage
+import javafx.stage.{WindowEvent, Stage}
 import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
 import org.lwjgl.opengl.GL11._
 
@@ -139,6 +139,14 @@ class JavafxTest extends Application {
         })
       }
     }
+
+    primaryStage.setOnCloseRequest( new EventHandler[WindowEvent] {
+      def handle(p1: WindowEvent) {
+        p1.consume()
+        game.finished = true
+      }
+    })
+
     renderer.start()
 
     primaryStage.setScene(new Scene(root, 640, 480))

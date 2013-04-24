@@ -140,6 +140,7 @@ class GameLoop(val readHandler: StreamHandler) {
       renderStream.swapBuffers()
       Display.sync(fpsLimit)
 		}
+
 		destroy()
 	}
 
@@ -155,6 +156,8 @@ class GameLoop(val readHandler: StreamHandler) {
 	def destroy() {
     renderStream.destroy()
     pbuffer.destroy()
+
+    WorldNodeGenerator.actorSystem.shutdown()
 
     println("all destroyed")
 
