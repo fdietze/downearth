@@ -11,7 +11,7 @@ import openworld.Config._
 import openworld.Util._
 import openworld._
 
-object MainWidget extends FreePanel(Vec2i(0),Vec2i(screenWidth,screenHeight)) {
+object MainWidget extends FreePanel(Vec2i(0),Vec2i(JavaFxMain.width.toInt,JavaFxMain.height.toInt)) {
 	border = NoBorder
 	background = NoBackground
 	mouseOver = true

@@ -33,7 +33,7 @@ object GUI extends Camera {
 		setTopRight
 		
 		var moved = false
-		def setTopRight = setPosition(Vec2i(screenWidth - size.x - 20, 20))
+		def setTopRight = setPosition(Vec2i(JavaFxMain.width.toInt - size.x - 20, 20))
 		override def dragStop(mousePos:Vec2i) { moved = true }
 	}
 	
@@ -45,7 +45,7 @@ object GUI extends Camera {
 		
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity
-		glOrtho(0, screenWidth, screenHeight, 0, -100, 100)
+		glOrtho(0, JavaFxMain.width, JavaFxMain.height, 0, -100, 100)
 		
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity
@@ -55,7 +55,7 @@ object GUI extends Camera {
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) // no wireframes
 		applyortho
 		
-		Draw.addText("%d fps" format Main.currentfps)
+		// Draw.addText("%d fps" format Main.currentfps)
 		Draw.addText("drawcalls: " + World.drawcalls +
 			", empty: " + World.emptydrawcalls + "")
 		Draw.addText("frustum culled nodes: " + World.frustumculls)
@@ -131,7 +131,8 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
 	val degPerSec = 180.0
 	var inOffset = 0.0
 	var outOffset = 0.0
-	def degTime = Main.uptime*degPerSec/1000.0
+	//def degTime = Main.uptime*degPerSec/1000.0
+  val degTime = 0
 	var lastMouseOut = degTime - 360.0
 	
 	override def draw {

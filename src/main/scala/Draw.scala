@@ -73,7 +73,7 @@ object Draw {
 	
 	def crossHair{
 		glPushMatrix
-			glTranslatef(screenWidth/2,screenHeight/2,0)
+			glTranslated(JavaFxMain.width/2,JavaFxMain.height/2,0)
 			glColor3f(1,1,1)
 			glBegin(GL_LINES)
 				glVertex2i(-15, 0)
@@ -201,7 +201,7 @@ object Draw {
 	def drawDispayEvent(event:DisplayEvent, pos:Int) {
 		import org.newdawn.slick.Color.white
 		
-		val textPos = Vec2i(Config.screenWidth - 20 - ConsoleFont.font.getWidth(event.textMessage),
+		val textPos = Vec2i(JavaFxMain.width.toInt - 20 - ConsoleFont.font.getWidth(event.textMessage),
 			250 + ConsoleFont.height * pos)
 		
 		drawString(textPos, event.textMessage)

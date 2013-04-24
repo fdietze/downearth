@@ -1,4 +1,4 @@
-name := "worldgen"
+name := "downearth"
 
 organization := "fdad"
 
@@ -7,6 +7,8 @@ version := "0.2.0"
 scalaVersion := "2.10.1"
 
 seq( LWJGLPlugin.lwjglSettings: _*)
+
+lwjgl.version := "2.9.0"
 
 javaOptions in run += "-XX:+ExplicitGCInvokesConcurrent"
 
@@ -18,23 +20,13 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Yinline-warnin
 
 scalacOptions ++= Seq("-language:_")
 
-
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 libraryDependencies ++= Seq(
 	"org.scalatest" %% "scalatest" % "1.9.1" % "test",
 	"com.typesafe.akka" %% "akka-actor" % "2.2-M2",
 	"org.scala-lang" % "scala-reflect" % "2.10.1"
-	//"com.nativelibs4java" % "scalacl" % "0.2"
 )
-
-// ScalaCL:
-
-// resolvers += "NativeLibs4Java Repository" at "http://nativelibs4java.sourceforge.net/maven/"
-
-// autoCompilerPlugins := true
-
-// addCompilerPlugin("com.nativelibs4java" % "scalacl-compiler-plugin" % "0.2")
 
 //initialCommands := """
 //import simplex3d.math._
@@ -42,4 +34,3 @@ libraryDependencies ++= Seq(
 //import simplex3d.math.float.functions._
 //import openworld._
 //"""
-

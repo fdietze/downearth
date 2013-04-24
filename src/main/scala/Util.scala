@@ -360,8 +360,8 @@ object Util {
 		counter += 1
 		glReadBuffer(GL_FRONT)
 		val bpp = 4
-		val buffer = BufferUtils.createByteBuffer(screenWidth * screenHeight * bpp)
-		glReadPixels(0, 0, screenWidth, screenHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
+		val buffer = BufferUtils.createByteBuffer(JavaFxMain.width.toInt * JavaFxMain.height.toInt * bpp)
+		glReadPixels(0, 0, JavaFxMain.width.toInt, JavaFxMain.height.toInt, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
 
     Future.apply { // save picture in background
 			val format = "PNG"
@@ -377,12 +377,14 @@ object Util {
 				f
 			}
 		
-			val image = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB)
+
 		
 			var i      = 0
-			val end    = screenHeight * screenWidth * bpp
-			val width  = screenWidth
-			val height = screenHeight
+			val width  = JavaFxMain.width.toInt
+			val height = JavaFxMain.height.toInt
+      val end    = width * height * bpp
+
+      val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
 		
 			while(i < end) {
 				val r = buffer.get(i) & 0xFF;

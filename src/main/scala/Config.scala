@@ -46,23 +46,12 @@ object Config{
 	val saveWorld = false
 
 	var fullscreen = loadBoolean("fullscreen") getOrElse false
-	
-	
+
 	// Vollbild-Modus mit höchster Auflösung
 	def fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
 	
 	val windowResolutionWidth  = loadInt("windowResolutionWidth")  getOrElse 1024
 	val windowResolutionHeight = loadInt("windowResolutionHeight") getOrElse  768
-	lazy val windowDisplayMode     = new DisplayMode(windowResolutionWidth, windowResolutionHeight)
-	
-	def displayMode =
-		if(fullscreen) 
-			fullscreenDisplayMode
-		else
-			windowDisplayMode
-	
-	def screenWidth  = displayMode.getWidth
-	def screenHeight = displayMode.getHeight
 
 	val worldUpVector = Vec3.UnitZ
 	

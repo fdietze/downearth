@@ -30,8 +30,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 			directionQuat.rotateVector(-worldUpVector)
 		}
 		else {
-			val rx = (Mouse.getX * 2.0 - screenWidth ) / screenHeight
-			val ry = (Mouse.getY * 2.0 - screenHeight) / screenHeight
+			val rx = (Mouse.getX * 2.0 - JavaFxMain.width   ) / JavaFxMain.height
+			val ry = (Mouse.getY * 2.0 - JavaFxMain.height  ) / JavaFxMain.height
 			directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
 		}
 	}
@@ -56,7 +56,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 
 	def frustum = {
-		val v = screenWidth.toDouble / screenHeight.toDouble
+		val v = JavaFxMain.width.toDouble / JavaFxMain.height.toDouble
 		
 		val n = 0.05 //near
 		val f = 1000.0   //far
@@ -78,7 +78,6 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 		m_modelviewBuffer(0) = modelview
 		m_modelviewBuffer.buffer
 	}
-	
 
 	def lighting{
 		if( wireframe ) {
@@ -99,7 +98,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	}
 	
 	def renderScene {
-		glViewport(0, 0, screenWidth, screenHeight)
+		glViewport(0, 0, JavaFxMain.width.toInt, JavaFxMain.height.toInt)
 		glEnable(GL_CULL_FACE)
 		glEnable(GL_COLOR_MATERIAL)
 		glEnable(GL_TEXTURE_2D)

@@ -1,9 +1,7 @@
 package openworld
 
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.{
-  Display, ARBShaderObjects, ARBVertexShader, ARBFragmentShader
-}
+import org.lwjgl.opengl._
 import org.lwjgl.input._
 
 import simplex3d.math._
@@ -14,11 +12,105 @@ import Util._
 import Config._
 
 import gui.{MainWidget, GUI}
+import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
+import java.util.concurrent.ConcurrentLinkedQueue
+import javafx.beans.property.ReadOnlyIntegerWrapper
+import openworld.Util.screenShot
+import openworld.Util.printLogInfo
+import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL11.glGetInteger
+import org.lwjgl.opengl.AMDDebugOutput._
+import org.lwjgl.opengl.ARBDebugOutput._
+import java.util.concurrent.atomic.AtomicLong
+import org.lwjgl.util.stream.StreamUtil.RenderStreamFactory
 
-object Main {
+class GameLoop(val readHandler: StreamHandler) {
+
+  /* adopted from Gears.java */
+
+  val pendingRunnables = new ConcurrentLinkedQueue[Runnable]
+  val fps = new ReadOnlyIntegerWrapper(this, "fps", 0);
+
+  if ((Pbuffer.getCapabilities & Pbuffer.PBUFFER_SUPPORTED) == 0)
+    throw new UnsupportedOperationException("Support for pbuffers is required.")
+
+  val pbuffer = new Pbuffer(1, 1, new PixelFormat(), null, null, new ContextAttribs())
+  pbuffer.makeCurrent()
+
+  val drawable = pbuffer // wofür auch immer
+
+  val caps = GLContext.getCapabilities
+  val maxSamples =
+  if (caps.OpenGL30 || (caps.GL_EXT_framebuffer_multisample && caps.GL_EXT_framebuffer_blit))
+    glGetInteger(GL_MAX_SAMPLES)
+  else
+    1
+
+  if ( caps.GL_ARB_debug_output )
+	  glDebugMessageCallbackARB(new ARBDebugOutputCallback())
+  else if ( caps.GL_AMD_debug_output )
+    glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
+
+  private var m_transfersToBuffer = 3
+  def transfersToBuffer = m_transfersToBuffer
+  def transfersToBuffer_=(transfersToBuffer: Int) {
+    if (m_transfersToBuffer != transfersToBuffer) {
+      m_transfersToBuffer = transfersToBuffer
+    }
+    resetStreams
+  }
+
+  private var m_samples = 1
+  def samples = m_samples
+  def samples_=(samples:Int) {
+    if (m_samples != samples) {
+      m_samples = samples
+      resetStreams
+    }
+  }
+
+  private var m_renderStreamFactory = StreamUtil.getRenderStreamImplementation
+  var renderStream = m_renderStreamFactory.create(readHandler, 1, transfersToBuffer)
+  def renderStreamFactory = m_renderStreamFactory
+  def renderStreamFactory_=(renderStreamFactory: RenderStreamFactory){
+    pendingRunnables.offer(new Runnable {
+      override def run {
+        if (renderStream ne null)
+          renderStream.destroy
+        m_renderStreamFactory = renderStreamFactory
+        renderStream = renderStreamFactory.create(renderStream.getHandler, samples, transfersToBuffer)
+      }
+    })
+  }
+
+  private def resetStreams {
+    pendingRunnables.offer(new Runnable {
+      override def run {
+        renderStream.destroy
+        renderStream = renderStreamFactory.create(renderStream.getHandler, samples, transfersToBuffer)
+        updateSnapshot()
+      }
+    })
+  }
+
+  def updateSnapshot() {
+    snapshotRequest.incrementAndGet
+  }
+
+  private def drainPendingActionsQueue() {
+    var runnable: Runnable = pendingRunnables.poll()
+    while (runnable != null) {
+      runnable.run()
+      runnable = pendingRunnables.poll()
+    }
+  }
+
+  val snapshotRequest = new AtomicLong
+  var snapshotCurrent = -1L
+
+
+
 	var finished = false
-	
-	var textCache:List[(Vec2i,String)] = Nil
 	
 	def time = System.currentTimeMillis
 	val starttime = time
@@ -34,25 +126,24 @@ object Main {
 	var vertshader = 0
 	var fragshader = 0
 	
-	def main(args:Array[String]) {
+	def run() {
 		init
 		while(!finished) {
-			BulletPhysics.update
-			input
-			draw
-			frame
+      drainPendingActionsQueue()
+      renderStream.bind()
+
+			BulletPhysics.update()
+//		input
+			draw()
+			frame()
+
+      renderStream.swapBuffers()
+      Display.sync(fpsLimit)
 		}
-		terminate
+		destroy()
 	}
 
 	def init {
-		Display	setTitle "Open World"
-		if(fullscreen) //TODO: reset mousegrab after switching fullscreen
-			Display.setDisplayModeAndFullscreen(displayMode)
-		else
-			Display.setDisplayMode(displayMode)
-		Display.create()
-		
 		if(useshaders)
 			initshaders
 
@@ -61,14 +152,18 @@ object Main {
 		Mouse setGrabbed true
 	}
 
-	def terminate {
-		Display.destroy()
-		//WorldSerializer.save(World.octree)
-		sys.exit(0)
+	def destroy() {
+    renderStream.destroy()
+    pbuffer.destroy()
+
+    println("all destroyed")
+
+		// WorldSerializer.save(World.octree)
+		// sys.exit(0)
 	}
 	
 	// Berechnet die Aktuelle Framerate
-	def frame {
+	def frame() {
 		if(time - timestamp > 1000){
 			currentfps = framecounter
 			timestamp = time
@@ -79,29 +174,12 @@ object Main {
 	
 		timestep = (uptime - lastframe)/1000.0
 		lastframe = uptime
-		
-		Display.sync(fpsLimit)
-		Display.update
 	}
 	
-	def setFullscreen(set:Boolean = true) {
-		fullscreen = set
-		Display.setFullscreen(fullscreen)
-		Display.setDisplayMode(displayMode)
-		if( fullscreen ) {
-			Mouse setGrabbed true
-		}
-		
-		MainWidget.size := Vec2i(screenWidth, screenHeight)
-		
-		if( ! GUI.inventory.moved )
-			GUI.inventory.setTopRight
-	}
-	
-	var mousePos = Vec2i(Mouse.getX, screenHeight-Mouse.getY)
+	var mousePos = Vec2i(0,0)
 	var lastMousePos = mousePos.clone
 	// Behandelt alle Benutzereingaben über Maus und Tastatur
-	def input {
+	def input() {
 		import Mouse._
 		import Keyboard._
 
@@ -109,7 +187,7 @@ object Main {
 			finished = true
 
 		lastMousePos := mousePos
-		mousePos := Vec2i(getX, screenHeight-Mouse.getY)
+		mousePos := Vec2i(getX, JavaFxMain.height.toInt-Mouse.getY)
 
 
 		val mouseDelta = Vec2i(getDX, getDY)
@@ -152,8 +230,6 @@ object Main {
 						wireframe = !wireframe
 					case `keyFrustumCulling` =>
 						frustumCulling = !frustumCulling
-					case `keyFullScreen` =>
-						setFullscreen(!fullscreen)
 					case `keyScreenshot` =>
 						screenShot( "screenshot" )
 					case `keyTurbo` =>
@@ -184,7 +260,7 @@ object Main {
 					case (1 , false) => // right up
 						//Player.secondarybutton
 						Mouse setGrabbed false
-						Mouse setCursorPosition(screenWidth / 2, screenHeight / 2)
+						Mouse setCursorPosition(JavaFxMain.width.toInt / 2, JavaFxMain.height.toInt / 2)
 					case (-1, false) => // wheel
 						// Player.updownbutton( Mouse.getDWheel / 120 )
 					case _ =>
@@ -203,8 +279,6 @@ object Main {
 					getEventKey match {
 					case `keyMouseGrab` =>
 						Mouse setGrabbed true
-					case `keyFullScreen` =>
-						setFullscreen(!fullscreen)
 					case `keyScreenshot` =>
 						screenShot( "screenshot" )
 					case `keyQuit` =>
@@ -237,7 +311,7 @@ object Main {
 
 	}
 
-	def draw {
+	def draw() {
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 		
 		Player.camera.renderScene

@@ -290,7 +290,7 @@ object BulletPhysics {
 		dynamicsWorld stepSimulation timestep
 	}
 	
-	def update {
+	def update() {
 		if(!pause) {
 			val currentTime = getTime
 			dynamicsWorld stepSimulation (currentTime - simTime).toFloat
