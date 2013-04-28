@@ -44,8 +44,6 @@ object Player {
 	}
 	
 	def position_= (newPos:Vec3) {
-		m_camera.position := newPos
-		m_camera.position += camDistFromCenter
 
 		/*val v = new Vector3f
 		body.setLinearVelocity(v)
@@ -53,8 +51,7 @@ object Player {
 		v.negate
 		v += newpos
 		body translate v*/
-		
-		
+
 		/*val transform = new Transform
 		transform.origin.set(newPos)
 		ghostObject.setWorldTransform(transform)*/

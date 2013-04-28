@@ -15,16 +15,16 @@ import gui.{MainWidget, GUI}
 import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
 import java.util.concurrent.ConcurrentLinkedQueue
 import javafx.beans.property.ReadOnlyIntegerWrapper
-import openworld.Util.screenShot
-import openworld.Util.printLogInfo
+import openworld.Util._
 import org.lwjgl.opengl.GL30._
 import org.lwjgl.opengl.GL11.glGetInteger
 import org.lwjgl.opengl.AMDDebugOutput._
 import org.lwjgl.opengl.ARBDebugOutput._
 import java.util.concurrent.atomic.AtomicLong
 import org.lwjgl.util.stream.StreamUtil.RenderStreamFactory
+import scala.compat.Platform
 
-class GameLoop(val readHandler: StreamHandler) {
+class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
 
   /* adopted from Gears.java */
 
@@ -116,15 +116,11 @@ class GameLoop(val readHandler: StreamHandler) {
 	val starttime = time
 	def uptime = time - starttime
 
-	var lastframe = uptime
-	var timestep = 0.0
-	var currentfps = 0
+	var lastFrame = uptime
+	var timeStep = 0.0
+	var currentFps = 0
 	var timestamp = starttime
-	var framecounter = 0
-	
-	var shader = 0
-	var vertshader = 0
-	var fragshader = 0
+	var frameCounter = 0
 	
 	def run() {
 		init
@@ -146,7 +142,7 @@ class GameLoop(val readHandler: StreamHandler) {
 
 	def init {
 		if(useshaders)
-			initshaders
+			Renderer.initshaders
 
 		World
 		
@@ -168,15 +164,15 @@ class GameLoop(val readHandler: StreamHandler) {
 	// Berechnet die Aktuelle Framerate
 	def frame() {
 		if(time - timestamp > 1000){
-			currentfps = framecounter
+			currentFps = frameCounter
 			timestamp = time
-			framecounter = 0
+			frameCounter = 0
 		}
 		else
-			framecounter += 1	
+			frameCounter += 1
 	
-		timestep = (uptime - lastframe)/1000.0
-		lastframe = uptime
+		timeStep = (uptime - lastFrame)/1000.0
+		lastFrame = uptime
 	}
 	
 	var mousePos = Vec2i(0,0)
@@ -309,62 +305,25 @@ class GameLoop(val readHandler: StreamHandler) {
 		}
 		
 		val factor = if(turbo) cameraTurboSpeed else cameraSpeed
-		Player.move(factor*(delta/max(1,length(delta)))*timestep)
+		Player.move(factor*(delta/max(1,length(delta)))*timeStep)
 		Player.rotate(2.0*delta_angle)
 
 	}
 
 	def draw() {
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-		
-		Player.camera.renderScene
+		Renderer.renderScene( Player.camera )
+
+    // these updates need to be done from the javaFx thread
+    guiController.runLater {
+      guiController.playerPosition.setText( "Player Position: " + round10(Player.position) )
+      guiController.drawcalls.setText( "drawcalls: " + Renderer.drawcalls + ", empty: " + Renderer.emptydrawcalls + "" )
+//      guiController.frustumCulledNodes.setText( "frustum culled nodes: " + World.frustumculls )
+    }
+
 		GUI.renderScene
 	}
 
-	def initshaders {
-		shader = ARBShaderObjects.glCreateProgramObjectARB
-		if( shader != 0 ) {
-			vertshader = ARBShaderObjects.glCreateShaderObjectARB(ARBVertexShader.GL_VERTEX_SHADER_ARB)
-			fragshader=ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
-			if( vertshader != 0 ) {
-				val vertexPath = getClass.getClassLoader.getResource("shaders/screen.vert").getPath
-				val vertexCode = io.Source.fromFile(vertexPath).mkString
-				ARBShaderObjects.glShaderSourceARB(vertshader, vertexCode)
-				ARBShaderObjects.glCompileShaderARB(vertshader)
-			}
-			
-			if( fragshader != 0 ) {
-				val fragPath = getClass.getClassLoader.getResource("shaders/screen.frag").getPath
-				val fragCode = io.Source.fromFile(fragPath).mkString
-				ARBShaderObjects.glShaderSourceARB(fragshader, fragCode)
-				ARBShaderObjects.glCompileShaderARB(fragshader)
-			}
-			
-			if(vertshader !=0 && fragshader !=0) {
-				ARBShaderObjects.glAttachObjectARB(shader, vertshader)
-				ARBShaderObjects.glAttachObjectARB(shader, fragshader)
-				ARBShaderObjects.glLinkProgramARB(shader)
-				ARBShaderObjects.glValidateProgramARB(shader)
-			}
-		}
-		printLogInfo(shader)
-		printLogInfo(vertshader)
-		printLogInfo(fragshader)
-	}
-	
 	// mit dieser Methode kann ein Bereich umschlossen werden,
 	// der mit Shadern gerendert werden soll
-	def activateShader(func: => Unit) {
-		import ARBShaderObjects._
-		val useshaders = shader != 0 && vertshader != 0 && fragshader != 0
-		if(useshaders) {
-			glUseProgramObjectARB(shader)
-			glUniform1fARB( glGetUniformLocationARB( shader, "time" ), (uptime / 1000.0).toFloat )
-		}
-		
-		func
-		
-		if(useshaders)
-			glUseProgramObjectARB(0)
-	}
 }

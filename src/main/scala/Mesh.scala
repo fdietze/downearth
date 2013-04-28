@@ -22,7 +22,6 @@ trait Mesh extends Serializable {
 	var vertexBufferObject:Int = 0
 	def genvbo
 	def freevbo
-	def draw
 	def free = glDeleteBuffersARB(vertexBufferObject)
 	def size:Int
 }
@@ -69,14 +68,6 @@ case class Update[+T <: MeshData](pos:Int,size:Int,data:T) {
 	//the difference of the size after the patch has been applied
 	def sizedifference = data.size - size
 }
-
-/*
-object EmptyMeshData extends MeshData{
-	override def size = 0
-}
-
-object EmptyPatch extends Patch[Nothing](0,0,null)
-*/
 
 object MutableTextureMesh {
 	
@@ -315,44 +306,9 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	@transient private var msize = vertices.size
 	def size = msize
 	
-	def draw {
-		//TextureManager.box.bind
-		TextureManager.materials.bind
-		
-		if(vertexBufferObject == 0)
-			genvbo
-		
-		if( size > 0 ) {
-			World.drawcalls += 1
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
-
-			glEnableClientState(GL_VERTEX_ARRAY)
-			glEnableClientState(GL_NORMAL_ARRAY)
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-			//glEnableClientState(GL_COLOR_ARRAY)
-
-			glVertexPointer(vertices.components, vertices.rawEnum, vertices.byteStride, vertices.byteOffset)
-			glNormalPointer(normals.rawEnum, normals.byteStride, normals.byteOffset)
-			glTexCoordPointer(texcoords.components, texcoords.rawEnum, texcoords.byteStride, texcoords.byteOffset)
-//			glColorPointer(colors.components, colors.rawType, colors.byteStride, colors.byteOffset)
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices.size)
-
-			glDisableClientState(GL_VERTEX_ARRAY)
-			glDisableClientState(GL_NORMAL_ARRAY)
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-//			glDisableClientState(GL_COLOR_ARRAY)
-
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
-		}
-		else {
-			World.emptydrawcalls += 1
-		}
-	}
-	
 	def genvbo {
 		freevbo
-		// es gibt einen Fehler wenn man versucht ein VBO der länge 0 anzulegen
+		// vbo with size of 0 can't be initialized
 		if( size > 0 ) {
 			vertexBufferObject = glGenBuffersARB()
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)

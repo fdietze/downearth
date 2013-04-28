@@ -4,13 +4,9 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import org.lwjgl.opengl.GL11._
 import Util._
 
 object World {
-	var drawcalls = 0
-	var emptydrawcalls = 0
-	var frustumculls = 0
 	
 	val octree = {
 		WorldSerializer.load match {
@@ -18,8 +14,7 @@ object World {
 			case None => WorldGenerator.genWorld
 		}
 	}
-	
-	
+
 	//raytracer zum anklicken von Zellen
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Double):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
@@ -100,20 +95,6 @@ object World {
 		BulletPhysics.worldChange(pos)
 	}
 	
-	def apply(pos:Vec3i) = 
-		if(octree != null)
-			octree(pos)
-		else
-			Config.ungeneratedDefault
-		
-	def draw(test:FrustumTest){
-		drawcalls = 0
-		emptydrawcalls = 0
-		frustumculls = 0
-		
-		octree.draw(test)
-		
-		if(Config.streamWorld)
-			octree stream Player.position
-	}
+	def apply(pos:Vec3i) = octree(pos)
+
 }

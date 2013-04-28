@@ -32,7 +32,7 @@ object DirectDrawer extends IDebugDraw{
 		println(warningString)
 	}
 	
-	override def drawTriangle(v0:Vector3f, v1:Vector3f, v2:Vector3f, color:Vector3f, alpha:Float){
+	override def drawTriangle(v0:Vector3f, v1:Vector3f, v2:Vector3f, color:Vector3f, alpha:Float) {
 		glColor4f(color.x,color.y,color.z,alpha)
 		glBegin(GL_TRIANGLES)
 		glVertex3f(v0.x, v0.y, v0.z)

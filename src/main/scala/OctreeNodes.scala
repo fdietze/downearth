@@ -34,7 +34,9 @@ trait OctantOverMesh extends Octant {
 	def repolyWorld(info:NodeInfo, p:Vec3i):Unit
 	
 	// löst aus, dass alle Meshes in allen MeshNodes innerhalb dieses Oktants gezeichnet werden.
-	def draw(info:NodeInfo, test:FrustumTest)
+//	def draw(info:NodeInfo, test:FrustumTest)
+
+  def foreachMeshNode(info:NodeInfo, test:FrustumTest, fun:MeshNode => Unit )
 	
 	// extrahiert alle Polygone an einer Position, extrahiert sie also aus dem 
 	// Mesh heraus
@@ -354,18 +356,30 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 		val (index,childinfo) = info(p)
 		data(index).repolyWorld(childinfo,p)
 	}
+
+  override def foreachMeshNode(info:NodeInfo, test:FrustumTest, fun:MeshNode => Unit ) {
+    if( test testNode info ) {
+      var i = 0;
+      while(i < 8){
+        data(i).foreachMeshNode( info(i), test, fun )
+        i += 1
+      }
+    }
+//    else
+//      World.frustumculls += 1
+  }
 	
-	override def draw(info:NodeInfo, test:FrustumTest) {
-		if( test testNode info ) {
-			var i = 0;
-			while(i < 8){
-				data(i).draw( info(i), test )
-				i += 1
-			}
-		}
-		else
-			World.frustumculls += 1
-	}
+//	override def draw(info:NodeInfo, test:FrustumTest) {
+//		if( test testNode info ) {
+//			var i = 0;
+//			while(i < 8){
+//				data(i).draw( info(i), test )
+//				i += 1
+//			}
+//		}
+//		else
+//			World.frustumculls += 1
+//	}
 	
 	override def toString = data.mkString("(",",",")")
 	
@@ -387,7 +401,7 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 	// falls alle Kindknoten MeshNodes sind, und zusammen weniger Vertices Haben, 
 	// als Vorgeschrieben, so werden sie hier zu einem einzigen Mesh zusammengefügt
 	def joinChildren:OctantOverMesh = {
-		if( ( data map ( x => x.isInstanceOf[MeshNode]) ).reduce( _ && _ ) ) {
+		if( ( true /: data ) ( _ && _.isInstanceOf[MeshNode] ) ) {
 			// println("starting Join.")
 			val meshNodes = data map (_.asInstanceOf[MeshNode])
 			// println("step 0")
@@ -539,13 +553,20 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 		
 		this
 	}
+
+  override def foreachMeshNode( info:NodeInfo, test:FrustumTest, fun:MeshNode => Unit ) {
+    if( test testNode info )
+      fun(this)
+//    else
+//      World.frustumculls += 1
+  }
 	
-	override def draw(info:NodeInfo, test:FrustumTest) {
-		if( test testNode info )
-			mesh.draw
-		else
-			World.frustumculls += 1
-	}
+//	override def draw(info:NodeInfo, test:FrustumTest) {
+//		if( test testNode info )
+//			mesh.draw
+//		else
+//			World.frustumculls += 1
+//	}
 	
 	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
 		
@@ -631,13 +652,12 @@ object DeadInnerNode extends OctantOverMesh {
 			replacement
 		}
 	}
-	
-	// deadNodes sind unsichtbar
-	def draw(info:NodeInfo, test:FrustumTest){
-		// TODO Hier muss die Anfrage an dien Nodegenerator und die Prediction gestartet werden.
-	}
-	
+
+  // deadNodes sind unsichtbar
+  override def foreachMeshNode(info:NodeInfo, test:FrustumTest, fun:MeshNode => Unit ) {
+    // TODO Hier muss die Anfrage an dien Nodegenerator und die Prediction gestartet werden.
+  }
+
 	// deadNodes haben keine Polygone
 	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
 }
-

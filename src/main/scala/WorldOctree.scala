@@ -54,33 +54,12 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 			printf("update out of world at %s, %s\n",p.toString,rootNodeInfo.toString)
 		}
 	}
+
+  def foreachMeshNode( node: MeshNode => Unit ) {
+
+  }
 	
 	override def toString = "Octree("+root.toString+")"
-	
-	def draw(test:FrustumTest) {
-		makeUpdates
-	
-		import org.lwjgl.opengl.GL11._
-		glColor3f(1,1,1)
-		rootB.draw(rootNodeInfo,test)
-		
-		if(Config.debugDraw) {
-			glDisable(GL_LIGHTING)
-			glDisable(GL_TEXTURE_2D)
-		
-			glPushMatrix
-			glTranslate3dv(Vec3(rootNodePos))
-			glColor3f(1,0,0)
-			Draw.renderCube(rootNodeSize)
-			glPopMatrix
-		
-			glPushMatrix
-			glTranslate3dv(worldWindowPos + 0.05)
-			glColor3f(0,1,0)
-			Draw.renderCube(worldWindowSize - 0.1)
-			glPopMatrix
-		}
-	}
 	
 	def genMesh(f:(Vec3i => Polyeder) = v => World.apply(v).h ) {
 		assert(! meshGenerated)

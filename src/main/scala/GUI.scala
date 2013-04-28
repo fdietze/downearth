@@ -13,7 +13,7 @@ import openworld.Util._
 import openworld._
 
 // die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
-object GUI extends Camera {
+object GUI {
 	
 	val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
 		background = new ColorBackground(Vec4(0.1,0.1,0.1,0.7))
@@ -55,17 +55,15 @@ object GUI extends Camera {
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) // no wireframes
 		applyortho
 		
-		// Draw.addText("%d fps" format Main.currentfps)
-		Draw.addText("drawcalls: " + World.drawcalls +
-			", empty: " + World.emptydrawcalls + "")
-		Draw.addText("frustum culled nodes: " + World.frustumculls)
-		//Draw.addText("")
-		//Draw.addText("Inventory: " + Player.inventory.materials)
-		
-		if( !Player.isGhost ) {
-			Draw.addText("Player Position: " + round10(Player.position) )
-			//Draw.addText("Player Velocity: " + round10(Player.velocity) )
-		}
+//  Draw.addText("%d fps" format Main.currentfps)
+//	Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
+//	Draw.addText("frustum culled nodes: " + World.frustumculls)
+//  Draw.addText("")
+//  Draw.addText("Inventory: " + Player.inventory.materials)
+//		if( !Player.isGhost ) {
+//			Draw.addText("Player Position: " + round10(Player.position) )
+//			Draw.addText("Player Velocity: " + round10(Player.velocity) )
+//		}
 		
 		glDisable( GL_LIGHTING )
 		glDisable( GL_TEXTURE_2D )

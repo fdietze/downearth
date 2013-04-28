@@ -30,6 +30,13 @@ object Util {
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
 	implicit def q2qf(in:Quat4) = new Quat4f(in.a.toFloat,in.b.toFloat,in.c.toFloat,in.d.toFloat)
 	implicit def qf2q(in:Quat4f) = Quat4(in.w,in.x,in.y,in.z)
+  implicit def λ2Rubable(in: () => Any ) = new Runnable {
+    def run() {
+      in.apply()
+    }
+  }
+
+
 	implicit def mat2buffer(in:Mat4):FloatBuffer = {
 		val data = DataBuffer[Mat4,RFloat](1)
 		data(0) = in

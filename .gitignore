@@ -2,6 +2,7 @@ target/
 project/boot/
 .idea*
 *~
+*.log
 worldoctree
 
 
