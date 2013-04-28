@@ -1,6 +1,5 @@
 package openworld
 
-import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl._
 import org.lwjgl.input._
 
@@ -8,13 +7,10 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import Util._
 import Config._
 
-import gui.{MainWidget, GUI}
+import gui.MainWidget
 import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
-import java.util.concurrent.ConcurrentLinkedQueue
-import javafx.beans.property.ReadOnlyIntegerWrapper
 import openworld.Util._
 import org.lwjgl.opengl.GL30._
 import org.lwjgl.opengl.GL11.glGetInteger
@@ -23,13 +19,13 @@ import org.lwjgl.opengl.ARBDebugOutput._
 import java.util.concurrent.atomic.AtomicLong
 import org.lwjgl.util.stream.StreamUtil.RenderStreamFactory
 import scala.compat.Platform
+import scala.collection.mutable.SynchronizedQueue
 
 class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
 
   /* adopted from Gears.java */
 
-  val pendingRunnables = new ConcurrentLinkedQueue[Runnable]
-  val fps = new ReadOnlyIntegerWrapper(this, "fps", 0);
+  val pendingRunnables = new SynchronizedQueue[() => Unit]
 
   if ((Pbuffer.getCapabilities & Pbuffer.PBUFFER_SUPPORTED) == 0)
     throw new UnsupportedOperationException("Support for pbuffers is required.")
@@ -73,23 +69,19 @@ class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
   var renderStream = m_renderStreamFactory.create(readHandler, 1, transfersToBuffer)
   def renderStreamFactory = m_renderStreamFactory
   def renderStreamFactory_=(renderStreamFactory: RenderStreamFactory){
-    pendingRunnables.offer(new Runnable {
-      override def run {
-        if (renderStream ne null)
-          renderStream.destroy
-        m_renderStreamFactory = renderStreamFactory
-        renderStream = renderStreamFactory.create(renderStream.getHandler, samples, transfersToBuffer)
-      }
+    pendingRunnables.enqueue(() => {
+      if (renderStream ne null)
+        renderStream.destroy
+      m_renderStreamFactory = renderStreamFactory
+      renderStream = renderStreamFactory.create(renderStream.getHandler, samples, transfersToBuffer)
     })
   }
 
   private def resetStreams {
-    pendingRunnables.offer(new Runnable {
-      override def run {
-        renderStream.destroy
-        renderStream = renderStreamFactory.create(renderStream.getHandler, samples, transfersToBuffer)
-        updateSnapshot()
-      }
+    pendingRunnables.enqueue(() => {
+      renderStream.destroy
+      renderStream = renderStreamFactory.create(renderStream.getHandler, samples, transfersToBuffer)
+      updateSnapshot()
     })
   }
 
@@ -98,17 +90,14 @@ class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
   }
 
   private def drainPendingActionsQueue() {
-    var runnable: Runnable = pendingRunnables.poll()
-    while (runnable != null) {
-      runnable.run()
-      runnable = pendingRunnables.poll()
+    while ( !pendingRunnables.isEmpty ) {
+      val runable = pendingRunnables.dequeue()
+      runable()
     }
   }
 
   val snapshotRequest = new AtomicLong
   var snapshotCurrent = -1L
-
-
 
 	var finished = false
 	
@@ -129,8 +118,16 @@ class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
       renderStream.bind()
 
 			BulletPhysics.update()
-//		input
-			draw()
+//		input()
+
+      // these updates need to be done from the javaFx thread
+      guiController.runLater {
+        guiController.playerPosition.setText( "Player Position: " + round10(Player.position) )
+        guiController.drawcalls.setText( "drawcalls: " + Renderer.drawcalls + ", empty: " + Renderer.emptydrawcalls + "" )
+        //guiController.frustumCulledNodes.setText( "frustum culled nodes: " + World.frustumculls )
+      }
+
+			Renderer.draw()
 			frame()
 
       renderStream.swapBuffers()
@@ -309,21 +306,4 @@ class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
 		Player.rotate(2.0*delta_angle)
 
 	}
-
-	def draw() {
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-		Renderer.renderScene( Player.camera )
-
-    // these updates need to be done from the javaFx thread
-    guiController.runLater {
-      guiController.playerPosition.setText( "Player Position: " + round10(Player.position) )
-      guiController.drawcalls.setText( "drawcalls: " + Renderer.drawcalls + ", empty: " + Renderer.emptydrawcalls + "" )
-//      guiController.frustumCulledNodes.setText( "frustum culled nodes: " + World.frustumculls )
-    }
-
-		GUI.renderScene
-	}
-
-	// mit dieser Methode kann ein Bereich umschlossen werden,
-	// der mit Shadern gerendert werden soll
 }

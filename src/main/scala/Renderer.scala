@@ -14,6 +14,7 @@ import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
 import openworld.Util._
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
+import openworld.gui.GUI
 
 object Renderer {
 
@@ -25,6 +26,15 @@ object Renderer {
   var shader = 0
   var vertShader = 0
   var fragShader = 0
+
+  def draw() {
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+
+    renderScene( Player.camera )
+
+    GUI.renderScene
+  }
+
 
   def initshaders {
     shader = ARBShaderObjects.glCreateProgramObjectARB
