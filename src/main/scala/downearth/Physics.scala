@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import com.bulletphysics.collision._
 import com.bulletphysics.dynamics._

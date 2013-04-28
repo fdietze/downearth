@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import simplex3d.math._
 import simplex3d.math.double._
@@ -13,6 +13,7 @@ import org.newdawn.slick.Color
 
 import Util._
 import Config._
+import java.nio.FloatBuffer
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -30,8 +31,23 @@ object ConsoleFont {
 	def height = font.getLineHeight
 }
 
-// nützliche Methoden, um verschiedene Objekte zu zeichnen.
+// useful primitive geometric objects
 object Draw {
+  implicit class ExtendedBuffer( buffer: FloatBuffer ) {
+    def putVertex(x:Float,y:Float,z:Float, w:Float = 1) {
+      buffer put x
+      buffer put y
+      buffer put z
+      buffer put w
+    }
+    def putColor(r:Float,g:Float,b:Float, a:Float = 1) {
+      buffer put r
+      buffer put g
+      buffer put b
+      buffer put a
+    }
+  }
+
 	def renderAxis {
 		glBegin(GL_LINES)
 		glColor3f(1,0,0)
@@ -45,22 +61,22 @@ object Draw {
 		glVertex3f(0,0,1)
 		glEnd
 	}
-	
+
 	def renderCube(size:Double) {
 		glPushMatrix
 			glScale1d(size)
-			plaincube
+			plainCube
 		glPopMatrix
 	}
-	
+
 	def renderCuboid(size:Vec3) {
 		glPushMatrix
-			glScale3dv(size)
-			plaincube
+			glScaled(size.x,size.y,size.z)
+			plainCube()
 		glPopMatrix
 	}
-	
-	def plaincube {
+
+	def plainCube() {
 		glBegin(GL_LINES)
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
 			glVertex3f(i,j,k)
@@ -70,8 +86,8 @@ object Draw {
 			glVertex3f(k,i,j)
 		glEnd
 	}
-	
-	def crossHair{
+
+	def crossHair() {
 		glPushMatrix
 			glTranslated(JavaFxMain.width/2,JavaFxMain.height/2,0)
 			glColor3f(1,1,1)
@@ -80,7 +96,7 @@ object Draw {
 				glVertex2i( -5, 0)
 				glVertex2i(  5, 0)
 				glVertex2i( 15, 0)
-		
+
 				glVertex2i(0, -15)
 				glVertex2i(0,  -5)
 				glVertex2i(0,   5)
@@ -88,12 +104,12 @@ object Draw {
 			glEnd
 		glPopMatrix
 	}
-	
+
 	// rendert den Umriss eines Hexaeders, um ihn für die Selektion hervorheben zu können.
 	def renderPolyeder(h:Polyeder) {
 		val verts = h.vertices
 		val indices = Seq(0,1,2,3,4,5,6,7,0,2,1,3,4,6,5,7,0,4,1,5,2,6,3,7)
-		
+
 		try {
 			glBegin(GL_LINES)
 			for(v <- indices map verts)
@@ -101,17 +117,17 @@ object Draw {
 			glEnd
 		}
 		catch {
-			case e:Exception => 
+			case e:Exception =>
 				println("cant draw Hexaeder: " + h + "\nvertices: " + h.vertices)
 				throw e
 		}
 	}
-	
+
 	def highlight(pos:Vec3i, polyeder:Polyeder, transparent:Boolean = true) {
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
-		glPushMatrix
+		glPushMatrix()
 			glTranslate3dv(Vec3(pos))
 
 			// Transparent
@@ -123,11 +139,11 @@ object Draw {
 				renderPolyeder(polyeder)
 				glDisable(GL_BLEND)
 			}
-			
+
 			// Not Transparent
 			glEnable(GL_DEPTH_TEST)
 			renderPolyeder(polyeder)
-		glPopMatrix
+		glPopMatrix()
 	}
 
 	def drawNodeInfo(nodeinfo:NodeInfo) {
@@ -135,12 +151,12 @@ object Draw {
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
-		glPushMatrix
+		glPushMatrix()
 			glTranslate3dv(pos + 0.1)
 			Draw.renderCube(size - 0.2)
-		glPopMatrix
+		glPopMatrix()
 	}
-	
+
 	def drawCuboid(cuboid:Cuboid) {
 		import cuboid.{pos,size}
 		glDisable(GL_LIGHTING)
@@ -157,7 +173,7 @@ object Draw {
 	var predictedCuboids:List[Cuboid] = Nil
 //	def addSampledNode(nodeinfo:NodeInfo) { sampledNodes ::= nodeinfo }
 	def addPredictedCuboid(cuboid:Cuboid) { predictedCuboids ::= cuboid }
-	
+
 	def drawSampledNodes {
 		/*
 		glColor3f(1,0,0)
@@ -179,14 +195,14 @@ object Draw {
 		glDisable( GL_LIGHTING )
 		glDisable( GL_TEXTURE_2D )
 	}
-	
+
 	// simuliert ein Konsolenähnliches verhalten, um Text auf dem Bildschirm darzustellen
 	val textCache = collection.mutable.ArrayBuffer[String]()
-	
+
 	def addText(msg:Any) {
 		textCache += msg.toString
 	}
-	
+
 	def drawTexts {
 		if( textCache.size > 0 ) {
 			val pos = Vec2i(20)
@@ -197,13 +213,12 @@ object Draw {
 			textCache.clear
 		}
 	}
-	
-	def drawDispayEvent(event:DisplayEvent, pos:Int) {
-		import org.newdawn.slick.Color.white
-		
+
+	def drawDisplayEvent(event:DisplayEvent, pos:Int) {
+
 		val textPos = Vec2i(JavaFxMain.width.toInt - 20 - ConsoleFont.font.getWidth(event.textMessage),
 			250 + ConsoleFont.height * pos)
-		
+
 		drawString(textPos, event.textMessage)
 	}
 }

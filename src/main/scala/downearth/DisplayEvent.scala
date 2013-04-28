@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import scala.collection.mutable._
 import Config._
@@ -20,7 +20,7 @@ object DisplayEventManager{
 		for(i <- 0 until events.length) {
 			if(events(i) ne null){
 				if( events(i).startTime + eventTime >= currentTime ){
-					Draw.drawDispayEvent(events(i),i)
+					Draw.drawDisplayEvent(events(i),i)
 					hasEvent = true
 				}
 				else {

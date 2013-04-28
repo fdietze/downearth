@@ -4,7 +4,7 @@
  * Time: 01:14
  */
 
-package openworld
+package downearth
 
 import org.lwjgl.opengl.GL11._
 import openworld.Config._

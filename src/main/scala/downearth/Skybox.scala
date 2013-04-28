@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import simplex3d.math.double._
 import org.lwjgl.opengl.GL11._

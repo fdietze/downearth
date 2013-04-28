@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import org.lwjgl.opengl._
 import org.lwjgl.input._

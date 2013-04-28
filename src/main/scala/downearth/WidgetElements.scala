@@ -1,4 +1,4 @@
-package openworld.gui
+package downearth.gui
 
 import simplex3d.math._
 import simplex3d.math.double._

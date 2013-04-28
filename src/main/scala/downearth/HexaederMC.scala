@@ -1,4 +1,4 @@
-package openworld
+package downearth
 import simplex3d.data._
 import simplex3d.data.double._
 import simplex3d.math._

@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import org.newdawn.slick.opengl._
 import org.lwjgl.opengl.GL11._

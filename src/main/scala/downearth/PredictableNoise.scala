@@ -1,4 +1,4 @@
-package noise
+package downearth
 
 import interval.{Interval, Volume}
 

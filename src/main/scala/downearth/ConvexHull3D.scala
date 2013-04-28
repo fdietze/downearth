@@ -1,5 +1,5 @@
 
-package openworld
+package downearth
 
 import simplex3d.math.double._
 import simplex3d.math.double.functions._

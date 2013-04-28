@@ -1,5 +1,5 @@
  
-package openworld.gen
+package downearth.gen
 
 import noise.Noise.noise3
 import noise.Worley.cellnoise
