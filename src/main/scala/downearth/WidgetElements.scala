@@ -4,9 +4,7 @@ import simplex3d.math._
 import simplex3d.math.double._
 import org.lwjgl.opengl.GL11._
 
-import openworld.Config._
-import openworld.Util._
-import openworld._
+import downearth.util._
 
 trait Border {
 	def draw(position:Vec2i, size:Vec2i)
@@ -18,7 +16,7 @@ object NoBorder extends Border {
 
 class LineBorder(val color:Vec4 = Vec4(1)) extends Border {
 	def draw(position:Vec2i, size:Vec2i) {
-		glColor4dv(color)
+		glColor4d(color.r, color.g, color.b, color.a)
 		
 		glBegin(GL_LINE_LOOP)
 			glVertex2i(position.x-1       , position.y)

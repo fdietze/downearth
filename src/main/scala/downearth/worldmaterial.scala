@@ -9,7 +9,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 // case class Material(color:Int = 0x000000)
-import openworld.Util.Material
+import downearth.util.Material
 
 object material {
 

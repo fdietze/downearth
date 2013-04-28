@@ -1,5 +1,5 @@
- 
-package downearth.gen
+
+package downearth.generation
 
 import simplex3d.math._
 import simplex3d.math.double._

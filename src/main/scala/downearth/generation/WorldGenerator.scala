@@ -1,12 +1,12 @@
-package downearth
+package downearth.generation
 
 import simplex3d.math._
 import simplex3d.math.double._
 
-
-import Util._
-import Config._
-
+import downearth._
+import downearth.Config._
+import downearth.worldoctree.{Array3D, EmptyHexaeder, NodeInfo, Leaf}
+import downearth.util._
 
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}

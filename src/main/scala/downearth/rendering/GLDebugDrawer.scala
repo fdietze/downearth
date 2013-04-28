@@ -1,4 +1,4 @@
-package downearth
+package downearth.rendering
 
 import com.bulletphysics.linearmath.DebugDrawModes;
 import com.bulletphysics.linearmath.IDebugDraw;

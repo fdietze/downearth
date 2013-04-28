@@ -1,10 +1,13 @@
-package downearth
+package downearth.generation
+
 import simplex3d.data._
 import simplex3d.data.double._
 import simplex3d.math._
 import simplex3d.math.double._
 
-import Util._
+import downearth.util._
+import downearth.worldoctree._
+import downearth._
 
 // Alle Marching-Cubes-Fälle
 object CaseType extends Enumeration {
@@ -177,7 +180,7 @@ object HexaederMC {
 					val Seq(n) = extractNegativeEdges(newCase)
 					val (a,b,c) = getNeighbours(n)
 					
-					setZero(Seq( Seq(a,b), Seq(a,c), Seq(b,c), Seq(n) ).minBy( errorSum ):_*)
+					setZero( Seq( Seq(a,b), Seq(a,c), Seq(b,c), Seq(n) ).minBy( errorSum ):_*)
 
 					
 				case `threePositivesConnected` =>

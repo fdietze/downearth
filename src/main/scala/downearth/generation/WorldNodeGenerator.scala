@@ -1,4 +1,4 @@
-package downearth
+package downearth.generation
 
 //import akka.actor.Actor
 //import Actor._
@@ -9,6 +9,12 @@ import simplex3d.math.double.{Vec2, Vec3, Vec4}
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 import akka.actor._
+import scala.Tuple2
+import downearth.worldoctree._
+import downearth.{MutableTextureMesh, TextureMeshData, Config}
+import downearth.rendering.Draw
+import downearth.worldoctree.NodeInfo
+import downearth.worldoctree.Cuboid
 import scala.Tuple2
 
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen

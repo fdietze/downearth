@@ -4,17 +4,17 @@
  * Time: 01:14
  */
 
-package downearth
+package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
-import openworld.Config._
 import simplex3d.math.double._
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
-import openworld.Util._
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
-import openworld.gui.GUI
+import downearth._
+import downearth.gui.{JavaFxMain, Gui}
+import downearth.worldoctree.{NodeInfo, MeshNode}
 
 object Renderer {
 
@@ -32,9 +32,8 @@ object Renderer {
 
     renderScene( Player.camera )
 
-    GUI.renderScene
+    Gui.renderScene
   }
-
 
   def initshaders {
     shader = ARBShaderObjects.glCreateProgramObjectARB
@@ -62,13 +61,13 @@ object Renderer {
         ARBShaderObjects.glValidateProgramARB(shader)
       }
     }
-    printLogInfo(shader)
-    printLogInfo(vertShader)
-    printLogInfo(fragShader)
+//    printLogInfo(shader)
+//    printLogInfo(vertShader)
+//    printLogInfo(fragShader)
   }
 
   def lighting( position:Vec3 ) {
-    if( wireframe ) {
+    if( Config.wireframe ) {
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
       glDisable(GL_LIGHTING)
     }
@@ -154,15 +153,17 @@ object Renderer {
       glDisable(GL_TEXTURE_2D)
 
       glPushMatrix
-      glTranslate3dv(Vec3(octree.rootNodePos))
+      val p = octree.rootNodePos
+      glTranslatef(p.x, p.y, p.z)
       glColor3f(1,0,0)
       Draw.renderCube(octree.rootNodeSize)
       glPopMatrix
 
       glPushMatrix
-      glTranslate3dv(octree.worldWindowPos + 0.05)
+      val pos2 = octree.worldWindowPos + 0.05
+      glTranslated(pos2.x, pos2.y, pos2.z)
       glColor3f(0,1,0)
-      Draw.renderCube(worldWindowSize - 0.1)
+      Draw.renderCube(octree.worldWindowSize - 0.1)
       glPopMatrix
     }
   }

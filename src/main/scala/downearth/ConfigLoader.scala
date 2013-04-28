@@ -1,4 +1,4 @@
-package openworld
+package downearth
 
 import xml.XML
 import org.lwjgl.input.Keyboard.getKeyIndex

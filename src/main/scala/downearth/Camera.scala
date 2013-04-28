@@ -10,9 +10,8 @@ import simplex3d.data.double._
 import org.lwjgl.input.Mouse
 
 import Config._
-import Util._
-import org.lwjgl.BufferUtils
-import java.nio.FloatBuffer
+import downearth.gui.JavaFxMain
+import downearth.worldoctree.NodeInfo
 
 abstract class Camera {
 	def position:Vec3

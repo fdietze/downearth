@@ -1,4 +1,4 @@
-package downearth
+package downearth.generation
 
 //===================================================================
 // chainHull_2D(): Andrew's monotone chain 2D convex hull algorithm

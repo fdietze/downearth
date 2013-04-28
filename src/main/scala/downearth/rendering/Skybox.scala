@@ -1,4 +1,4 @@
-package downearth
+package downearth.rendering
 
 import simplex3d.math.double._
 import org.lwjgl.opengl.GL11._
@@ -11,6 +11,7 @@ import simplex3d.math.double.functions._
 import simplex3d.data._
 import simplex3d.data.double._
 import java.nio.FloatBuffer
+import downearth.{Config, Player}
 
 object Skybox{
 	val vertices = Array( 

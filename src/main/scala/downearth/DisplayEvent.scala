@@ -1,9 +1,8 @@
 package downearth
 
-import scala.collection.mutable._
-import Config._
+import downearth.rendering.Draw
 
-object DisplayEventManager{
+object DisplayEventManager {
 	val eventTime =  5000L // TODO in die Config
 	val events = new Array[DisplayEvent](10)
 	var pos = 0

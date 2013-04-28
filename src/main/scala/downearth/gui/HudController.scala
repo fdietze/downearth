@@ -4,24 +4,30 @@
  * Time: 16:12
  */
 
-package downearth
+package downearth.gui
+
+import  downearth.gui.{Label => _}
 
 import java.nio.ByteBuffer
 import java.util.concurrent.Semaphore
+
 import javafx.application.{Platform, Application}
 import javafx.event.{EventHandler, ActionEvent}
-import javafx.scene.control.{Label, Button}
+import javafx.scene.control
+import javafx.scene.control.Button
 import javafx.scene.image.{PixelFormat, WritableImage, ImageView}
-import javafx.scene.layout.{TilePane, GridPane, Pane, AnchorPane}
+import javafx.scene.layout.{GridPane, Pane, AnchorPane}
 import javafx.scene.Scene
 import javafx.stage.{WindowEvent, Stage}
-import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
-import org.lwjgl.opengl.GL11._
+
+import org.lwjgl.util.stream.{StreamHandler}
+
 import javafx.fxml.{Initializable, FXMLLoader, FXML}
 import java.util.ResourceBundle
 import java.net.URL
-import javafx.scene.input.{KeyEvent, KeyCombination, KeyCode, KeyCodeCombination}
-import javafx.collections.ObservableMap
+import javafx.scene.input.{KeyEvent, KeyCode}
+
+import downearth.GameLoop
 
 object JavaFxMain  {
   var controller:HudController = null
@@ -90,9 +96,9 @@ class HudController extends Initializable {
   @FXML var root:AnchorPane = _
   @FXML var gameView:ImageView = _
 
-  @FXML var drawcalls:Label = _
-  @FXML var frustumCulledNodes:Label = _
-  @FXML var playerPosition:Label = _
+  @FXML var drawcalls:control.Label = _
+  @FXML var frustumCulledNodes:control.Label = _
+  @FXML var playerPosition:control.Label = _
 
   @FXML var forward:Button = _
   @FXML var backward:Button = _

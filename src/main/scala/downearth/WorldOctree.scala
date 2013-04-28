@@ -4,16 +4,16 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import Util._
+import util._
 import akka.pattern.ask
 
 import Config.minMeshNodeSize
-import scala.util.{Success, Failure}
 import akka.util.Timeout
 import concurrent.Await
-import concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
+import downearth.generation.{GetFinishedJobs, WorldNodeGenerator}
+import downearth.worldoctree._
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends Data3D[Leaf] with Serializable{
@@ -31,12 +31,12 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	var meshGenerated = false
 	
-	override def indexInRange(pos:Vec3i) = Util.indexInRange(pos,rootNodePos,rootNodeSize)
+	override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
 	
 	def rootNodeInfo = NodeInfo(rootNodePos,rootNodeSize)
 	
 	def apply(p:Vec3i) = {
-		if(rootNodeInfo.indexInRange(p))
+		if( rootNodeInfo.indexInRange(p) )
 			root(rootNodeInfo,p)
 		else
 			Config.ungeneratedDefault

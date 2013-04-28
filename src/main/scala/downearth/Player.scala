@@ -3,22 +3,20 @@ package downearth
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
-
 import simplex3d.data._
 import simplex3d.data.double._
-
-import org.lwjgl.opengl.GL11._
-import org.lwjgl.util.glu._
-import org.lwjgl.input.Mouse
-import GLU._
 
 import com.bulletphysics.linearmath.Transform
 import com.bulletphysics.collision.shapes._
 
-import Util._
-import Config._
+import downearth.util._
+import downearth.Config._
+
 import gui.MainWidget
 import javax.vecmath.{Vector3f, Quat4f}
+import downearth.rendering.Draw
+import downearth.worldoctree._
+import scala.Some
 
 object Player {
 	/////////////////////////////////

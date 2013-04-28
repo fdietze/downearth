@@ -7,9 +7,10 @@ import simplex3d.math.double.functions._
 import org.lwjgl.opengl.GL11._
 import org.newdawn.slick.opengl.Texture
 
-import openworld.Config._
-import openworld.Util._
-import openworld._
+import downearth.Config._
+import downearth.util._
+import downearth.Player
+import downearth.rendering.{Draw, ConsoleFont}
 
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(JavaFxMain.width.toInt,JavaFxMain.height.toInt)) {
 	border = NoBorder

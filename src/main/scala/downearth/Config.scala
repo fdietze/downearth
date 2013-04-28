@@ -1,10 +1,13 @@
-package openworld
+package downearth
 
 import simplex3d.math.double.Vec3
 import simplex3d.math.doublex.Vec3d
 import noise.Noise.{noise3, noise3_prediction}
 import noise.interval.{Interval, Volume}
 import org.lwjgl.opengl.{Display, DisplayMode}
+import downearth.generation.prediction
+import downearth.worldoctree.{FullHexaeder, Leaf}
+import util.isPowerOfTwo
 
 object Config{
 	import ConfigLoader._
@@ -42,7 +45,7 @@ object Config{
 	
 	def densityfunction(v:Vec3) = gen.density(v)
 	def materialfunction(v:Vec3) = gen.material(v)
-	def prediction(v:Volume) = gen.prediction(v)
+	def prediction(v:Volume) = generation.prediction(v)
 	val saveWorld = false
 
 	var fullscreen = loadBoolean("fullscreen") getOrElse false
@@ -86,6 +89,6 @@ object Config{
 
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )
-	assert( Util.isPowerOfTwo(worldWindowSize / minMeshNodeSize) )
+	assert( isPowerOfTwo(worldWindowSize / minMeshNodeSize) )
 }
 

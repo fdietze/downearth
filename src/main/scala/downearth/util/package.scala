@@ -8,29 +8,29 @@ import simplex3d.data._
 import simplex3d.data.double._
 import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
-import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.{ARBShaderObjects, ARBVertexShader, ARBFragmentShader}
+import org.lwjgl.opengl.ARBShaderObjects
 import javax.vecmath.{Vector3f,Quat4f}
 import org.lwjgl.BufferUtils
 import java.nio.FloatBuffer
 import java.io._
-import Config._
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
-import java.util.{Date, Locale}
+import java.util.Date
 import java.text.SimpleDateFormat
-import java.text.DateFormat._
-import scala.concurrent.Future
 import concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
+import downearth.gui.JavaFxMain
+import downearth.rendering.Draw
+import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
+import downearth.generation.ChainHull2D
 
-object Util {
+package object util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
 	implicit def q2qf(in:Quat4) = new Quat4f(in.a.toFloat,in.b.toFloat,in.c.toFloat,in.d.toFloat)
 	implicit def qf2q(in:Quat4f) = Quat4(in.w,in.x,in.y,in.z)
-  implicit def λ2Rubable(in: () => Any ) = new Runnable {
+  implicit def λ2Runable(in: () => Any ) = new Runnable {
     def run() {
       in.apply()
     }
@@ -40,7 +40,7 @@ object Util {
 	implicit def mat2buffer(in:Mat4):FloatBuffer = {
 		val data = DataBuffer[Mat4,RFloat](1)
 		data(0) = in
-		data.buffer.asInstanceOf[FloatBuffer]
+		data.buffer
 	}
 
 	implicit def vec3_2buffer(in:Vec3):FloatBuffer = {
@@ -384,8 +384,6 @@ object Util {
 				f
 			}
 		
-
-		
 			var i      = 0
 			val width  = JavaFxMain.width.toInt
 			val height = JavaFxMain.height.toInt
@@ -414,13 +412,6 @@ object Util {
 			 case e : IOException => e.printStackTrace
 			}
 		}
-	}
-	
-	case class Material(color:Int, id:Int) {
-		def red   = color >> 16
-		def green = (color & 0x00FF00) >> 8
-		def blue  = color & 0xFF
-		def vec4  = Vec4(red/255.0,green/255.0,blue/255.0,1)
 	}
 }
 

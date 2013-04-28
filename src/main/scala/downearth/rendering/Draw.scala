@@ -1,19 +1,17 @@
-package downearth
+package downearth.rendering
 
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import simplex3d.data._
-import simplex3d.data.double._
-
 import org.lwjgl.opengl.GL11._
-
 import org.newdawn.slick.Color
+import downearth.util._
+import downearth.gui.JavaFxMain
 
-import Util._
-import Config._
 import java.nio.FloatBuffer
+import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
+import downearth.DisplayEvent
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -147,23 +145,21 @@ object Draw {
 	}
 
 	def drawNodeInfo(nodeinfo:NodeInfo) {
-		import nodeinfo.{pos,size}
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix()
-			glTranslate3dv(pos + 0.1)
-			Draw.renderCube(size - 0.2)
+			glTranslate3dv(nodeinfo.pos + 0.1)
+			Draw.renderCube(nodeinfo.size - 0.2)
 		glPopMatrix()
 	}
 
 	def drawCuboid(cuboid:Cuboid) {
-		import cuboid.{pos,size}
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix
-			glTranslate3dv(pos + 0.1)
+			glTranslate3dv(cuboid.pos + 0.1)
 			Draw.renderCuboid(cuboid.size - 0.2)
 		glPopMatrix
 	}

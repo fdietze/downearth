@@ -5,15 +5,15 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
-import org.newdawn.slick.opengl.Texture
 import org.lwjgl.input.Mouse
 
-import openworld.Config._
-import openworld.Util._
-import openworld._
+import downearth.Config._
+import downearth.util._
+import downearth._
+import downearth.rendering.{Draw, ConsoleFont, TextureManager}
 
-// die GUI wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
-object GUI {
+// die Gui wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
+object Gui {
 	
 	val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
 		background = new ColorBackground(Vec4(0.1,0.1,0.1,0.7))

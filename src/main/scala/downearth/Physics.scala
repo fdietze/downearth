@@ -5,9 +5,8 @@ import com.bulletphysics.dynamics._
 import com.bulletphysics.util.ObjectArrayList
 import com.bulletphysics.dynamics.character.KinematicCharacterController
 import com.bulletphysics.collision.dispatch.PairCachingGhostObject
-import com.bulletphysics.collision.broadphase.{BroadphaseProxy, CollisionFilterGroups}
+import com.bulletphysics.collision.broadphase.CollisionFilterGroups
 import com.bulletphysics.collision.dispatch.GhostPairCallback
-import com.bulletphysics.collision.dispatch.CollisionWorld
 
 import broadphase.DbvtBroadphase
 import constraintsolver.SequentialImpulseConstraintSolver
@@ -17,9 +16,9 @@ import shapes._
 import simplex3d.math.double.functions._
 import simplex3d.math.double._
 import simplex3d.math._
-//import java.nio.{ByteOrder,ByteBuffer}
-
-import Util._
+import downearth.rendering.{Draw, DirectDrawer}
+import downearth.worldoctree.{Array3D, NodeInfo}
+import downearth.util._
 import com.bulletphysics.linearmath.{DefaultMotionState, Transform}
 import org.lwjgl.opengl.GL11._
 
@@ -157,7 +156,7 @@ object BulletPhysics {
 		val bodies = new Array3D[T](Vec3i(size))
 		bodies fill fillfunc
 		
-		def indexInRange(p:Vec3i) = Util.indexInRange(p,pos,size)
+		def indexInRange(p:Vec3i) = util.indexInRange(p,pos,size)
 		def reloadAt(p:Vec3i){
 			if(indexInRange(p)){
 				val rpos = p-pos
@@ -173,7 +172,7 @@ object BulletPhysics {
 			assert( length(dirvec) == 1 )
 			
 			// remove old bodies
-			val (in,out) = (Vec3i(0) until Vec3i(size)) partition ( x => Util.indexInRange(x-dirvec,Vec3i(0),size) )
+			val (in,out) = (Vec3i(0) until Vec3i(size)) partition ( x => util.indexInRange(x-dirvec,Vec3i(0),size) )
 			
 			for( v <- out )
 				removeBody(bodies(v))
@@ -197,7 +196,7 @@ object BulletPhysics {
 			pos += dirvec
 			
 			
-			val newarea = (Vec3i(0) until Vec3i(size)) filterNot ( x => Util.indexInRange(x+dirvec,Vec3i(0),size) )
+			val newarea = (Vec3i(0) until Vec3i(size)) filterNot ( x => util.indexInRange(x+dirvec,Vec3i(0),size) )
 			
 			for( v <- newarea ){
 				bodies(v) = fillfunc(v)
@@ -217,7 +216,7 @@ object BulletPhysics {
 		
 		def draw {
 			glPushMatrix
-			glTranslate3iv(pos)
+			glTranslated(pos.x,pos.y,pos.z)
 			Draw.renderCube(size)
 			glPopMatrix
 		}

@@ -1,30 +1,28 @@
 package downearth
 
+import scala.collection.mutable.SynchronizedQueue
+
 import org.lwjgl.opengl._
 import org.lwjgl.input._
+import org.lwjgl.util.stream.StreamUtil.RenderStreamFactory
+import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
+import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL11.glGetInteger
+import org.lwjgl.opengl.AMDDebugOutput._
+import org.lwjgl.opengl.ARBDebugOutput._
 
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import Config._
-
-import gui.MainWidget
-import org.lwjgl.util.stream.{StreamUtil, StreamHandler}
-import openworld.Util._
-import org.lwjgl.opengl.GL30._
-import org.lwjgl.opengl.GL11.glGetInteger
-import org.lwjgl.opengl.AMDDebugOutput._
-import org.lwjgl.opengl.ARBDebugOutput._
-import java.util.concurrent.atomic.AtomicLong
-import org.lwjgl.util.stream.StreamUtil.RenderStreamFactory
-import scala.compat.Platform
-import scala.collection.mutable.SynchronizedQueue
+import downearth.gui.{JavaFxMain, HudController, MainWidget}
+import downearth.rendering.Renderer
+import downearth.generation.WorldNodeGenerator
+import downearth.util._
+import downearth.Config._
 
 class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
-
   /* adopted from Gears.java */
-
   val pendingRunnables = new SynchronizedQueue[() => Unit]
 
   if ((Pbuffer.getCapabilities & Pbuffer.PBUFFER_SUPPORTED) == 0)
@@ -86,7 +84,7 @@ class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
   }
 
   def updateSnapshot() {
-    snapshotRequest.incrementAndGet
+    snapshotRequest += 1
   }
 
   private def drainPendingActionsQueue() {
@@ -96,7 +94,7 @@ class GameLoop(val readHandler: StreamHandler, guiController:HudController) {
     }
   }
 
-  val snapshotRequest = new AtomicLong
+  var snapshotRequest = 0L
   var snapshotCurrent = -1L
 
 	var finished = false

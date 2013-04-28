@@ -4,7 +4,9 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import Util._
+import downearth.util._
+import downearth.generation.WorldGenerator
+import downearth.worldoctree.{Polyeder, Hexaeder, Leaf}
 
 object World {
 	
@@ -39,7 +41,7 @@ object World {
 		tDelta.z = 1/abs(t.z)
 		
 		var h:Polyeder = apply(pos).h
-		if(!Util.rayPolyederIntersect(from-pos,direction,h))
+		if(!util.rayPolyederIntersect(from-pos,direction,h))
 			h = null
 		var i = 0
 		
@@ -71,7 +73,7 @@ object World {
 
 			h = apply(pos).h
 
-			if(!Util.rayPolyederIntersect(from-pos,direction,h))
+			if(!util.rayPolyederIntersect(from-pos,direction,h))
 				h = null
 			
 			i += 1
