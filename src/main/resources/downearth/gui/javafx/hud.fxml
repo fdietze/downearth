@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.TilePane?>
-<AnchorPane id="AnchorPane" fx:id="root" fx:controller="openworld.HudController" xmlns:fx="http://javafx.com/fxml">
+<AnchorPane id="AnchorPane" fx:id="root" fx:controller="downearth.gui.javafx.HudController" xmlns:fx="http://javafx.com/fxml">
     <children>
         <ImageView fx:id="gameView" fitWidth="640" fitHeight="480" pickOnBounds="true" preserveRatio="false" scaleY="-1" smooth="false"
                 AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"/>

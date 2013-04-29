@@ -5,24 +5,19 @@ import simplex3d.math.double._
 
 import downearth._
 import downearth.Config._
-import downearth.worldoctree.{Array3D, EmptyHexaeder, NodeInfo, Leaf}
+import downearth.worldoctree._
 import downearth.util._
+import downearth.worldoctree.NodeInfo
 
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}
 	
-	def genWorld:WorldOctree = {
-		val octree = new WorldOctree(cubesize,Vec3i(-cubesize/2))
-		octree.generateStartArea
-		octree
-	}
+	def genWorld:WorldOctree = new WorldOctree(cubesize,Vec3i(-cubesize/2))
 	
-	def genWorldAt(nodeinfo:NodeInfo):WorldOctree = {
+	def genWorldAt(nodeinfo:NodeInfo):OctantOverMesh = {
 		val NodeInfo(nodepos, nodesize) = nodeinfo
 		import HexaederMC._
-		
-		val octree = new WorldOctree( nodesize, nodepos.clone )
-		
+
 		// Predichtion hat kein eindeutiges Ergebnis,
 		// Bereich KANN Oberfläche enthalten
 		
@@ -85,14 +80,14 @@ object WorldGenerator {
 			else 
 				h
 		}
-		
-		// Octree mit Hexaedern füllen
-		octree.fill( v => Leaf(fillfun(v)) )
-		octree.genMesh( fillfun _ )
-		assert(octree.rootNodePos == nodepos)
-		assert(octree.rootNodeSize == nodesize)
 
-		octree
+
+
+    // Octree mit Hexaedern füllen
+
+    val root = ( EmptyLeaf.asInstanceOf[OctantUnderMesh] /: (nodepos until nodepos+nodesize) ) ( (node,pos) => node.updated(nodeinfo, pos, Leaf(fillfun(pos))) )
+
+    root.genMesh( nodeinfo, minMeshNodeSize, (x => {if( nodeinfo.indexInRange(x) ) root(nodeinfo,x).h else fillfun(x) }) )
 	}
 }
 

@@ -21,8 +21,6 @@ object Noise {
 	//def hash(k:Int) = ((k*0x12345678) >> (k*0x87754351)) & 0x7FFFFFFF
 	def hash(k:Int) = mod(((k*34)+1)*k, 289).toInt
 
-
-
 	// Split Bezier Curves
 	def splitleft(h:Array[Double],t:Double):Array[Double] = {
 		val n = h.size - 1
@@ -108,13 +106,11 @@ object Noise {
 		gradients3(hash(hash(hash(X)+Y)+Z) & 15)
 	}
 
-
-	def noise3_prediction = noise3_prediction_bezier _
 	def noise3_prediction(v:Volume):Interval = {
 		import v.x.{low => x0, high => x1}
 		import v.y.{low => y0, high => y1}
 		import v.z.{low => z0, high => z1}
-		noise3_prediction(x0,y0,z0,x1,y1,z1)
+    noise3_prediction_bezier(x0,y0,z0,x1,y1,z1)
 	}
 	
 	def noise3_prediction_trivial(x0:Double,y0:Double,z0:Double,x1:Double,y1:Double,z1:Double) = Interval(-1,1)

@@ -13,8 +13,8 @@ import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 import downearth._
-import downearth.gui.{JavaFxMain, Gui}
-import downearth.worldoctree.{NodeInfo, MeshNode}
+import downearth.gui.{Gui}
+import downearth.worldoctree.{WorldOctree, NodeInfo, MeshNode}
 
 object Renderer {
 
@@ -90,7 +90,7 @@ object Renderer {
   }
 
   def renderScene(camera:Camera) {
-    glViewport(0, 0, JavaFxMain.width.toInt, JavaFxMain.height.toInt)
+    glViewport(0, 0, Main.width.toInt, Main.height.toInt)
     glEnable(GL_CULL_FACE)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_TEXTURE_2D)
@@ -146,7 +146,7 @@ object Renderer {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
-    octree.rootB.foreachMeshNode( octree.rootNodeInfo, test , (node:MeshNode) => drawTextureMesh(node.mesh) )
+    octree.root.foreachMeshNode( octree.rootNodeInfo, test , (node:MeshNode) => drawTextureMesh(node.mesh) )
 
     if(Config.debugDraw) {
       glDisable(GL_LIGHTING)

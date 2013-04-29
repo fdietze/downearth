@@ -137,7 +137,7 @@ class Worker (id:Int) extends Actor {
           val nodeinfo = cuboid.nodeinfo
           val node = WorldGenerator genWorldAt nodeinfo
           isActive = false
-          sender ! Tuple2(nodeinfo, node.root)  // Master
+          sender ! Tuple2(nodeinfo, node)  // Master
         }
       }
       sender ! (cuboid, 'done)  // Master

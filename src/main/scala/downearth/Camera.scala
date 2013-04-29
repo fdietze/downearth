@@ -10,8 +10,8 @@ import simplex3d.data.double._
 import org.lwjgl.input.Mouse
 
 import Config._
-import downearth.gui.JavaFxMain
 import downearth.worldoctree.NodeInfo
+import downearth.gui.javafx.JavaFxMain
 
 abstract class Camera {
 	def position:Vec3
@@ -45,8 +45,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 			directionQuat.rotateVector(-worldUpVector)
 		}
 		else {
-			val rx = (Mouse.getX * 2.0 - JavaFxMain.width   ) / JavaFxMain.height
-			val ry = (Mouse.getY * 2.0 - JavaFxMain.height  ) / JavaFxMain.height
+			val rx = (Mouse.getX * 2.0 - Main.width   ) / Main.height
+			val ry = (Mouse.getY * 2.0 - Main.height  ) / Main.height
 			directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
 		}
 	}
@@ -71,7 +71,7 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 
 	override def projection:Mat4 = {
-		val v = JavaFxMain.width.toDouble / JavaFxMain.height.toDouble
+		val v = Main.width.toDouble / Main.height.toDouble
 		
 		val n = 0.05     //near
 		val f = 1000.0   //far

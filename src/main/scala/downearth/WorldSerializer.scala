@@ -2,6 +2,7 @@ package downearth
 
 import java.io._
 import Config.saveWorld
+import downearth.worldoctree.WorldOctree
 
 object WorldSerializer{
 	val file = new File("worldoctree")

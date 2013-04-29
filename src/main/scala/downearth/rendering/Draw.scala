@@ -7,11 +7,12 @@ import simplex3d.math.double.functions._
 import org.lwjgl.opengl.GL11._
 import org.newdawn.slick.Color
 import downearth.util._
-import downearth.gui.JavaFxMain
 
 import java.nio.FloatBuffer
 import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
 import downearth.DisplayEvent
+import downearth.Main
+import downearth.gui.javafx.JavaFxMain
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -87,7 +88,7 @@ object Draw {
 
 	def crossHair() {
 		glPushMatrix
-			glTranslated(JavaFxMain.width/2,JavaFxMain.height/2,0)
+			glTranslated( Main.width/2, Main.height/2,0)
 			glColor3f(1,1,1)
 			glBegin(GL_LINES)
 				glVertex2i(-15, 0)
@@ -212,7 +213,7 @@ object Draw {
 
 	def drawDisplayEvent(event:DisplayEvent, pos:Int) {
 
-		val textPos = Vec2i(JavaFxMain.width.toInt - 20 - ConsoleFont.font.getWidth(event.textMessage),
+		val textPos = Vec2i( Main.width.toInt - 20 - ConsoleFont.font.getWidth(event.textMessage),
 			250 + ConsoleFont.height * pos)
 
 		drawString(textPos, event.textMessage)

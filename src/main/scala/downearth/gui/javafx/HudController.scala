@@ -4,7 +4,7 @@
  * Time: 16:12
  */
 
-package downearth.gui
+package downearth.gui.javafx
 
 import  downearth.gui.{Label => _}
 
@@ -20,71 +20,16 @@ import javafx.scene.layout.{GridPane, Pane, AnchorPane}
 import javafx.scene.Scene
 import javafx.stage.{WindowEvent, Stage}
 
-import org.lwjgl.util.stream.{StreamHandler}
+import org.lwjgl.util.stream.StreamHandler
 
 import javafx.fxml.{Initializable, FXMLLoader, FXML}
 import java.util.ResourceBundle
 import java.net.URL
 import javafx.scene.input.{KeyEvent, KeyCode}
 
-import downearth.GameLoop
-
-object JavaFxMain  {
-  var controller:HudController = null
-
-  def width = {
-    if( (controller eq null) || (controller.renderImage eq null) )
-      640.0
-    else
-      controller.renderImage.getWidth
-  }
-
-  def height = {
-    if( (controller eq null) || (controller.renderImage eq null) )
-      480.0
-    else
-      controller.renderImage.getHeight
-  }
-
-  def main(args: Array[String]) {
-    Application.launch(classOf[JavaFxApplication],args:_*)
-  }
-}
-
-class JavaFxApplication extends Application {
-  override def start(primaryStage:Stage) {
-    primaryStage.setTitle("Hello World!")
 
 
-    val url = getClass.getResource("hud.fxml")
-    val loader  = new FXMLLoader(url)
-    val content = loader.load().asInstanceOf[Pane]
-    val controller = loader.getController[HudController]
 
-    val renderer = new Thread("LWJGL Renderer") {
-      override def run() {
-        controller.runGame()
-        Platform.runLater(new Runnable {
-          def run() {
-            primaryStage.close()
-          }
-        })
-      }
-    }
-
-    primaryStage.setOnCloseRequest( new EventHandler[WindowEvent] {
-      def handle(p1: WindowEvent) {
-        p1.consume()
-        controller.game.finished = true
-      }
-    })
-
-    renderer.start()
-
-    primaryStage.setScene(new Scene(content, 640, 480))
-    primaryStage.show()
-  }
-}
 
 class HudController extends Initializable {
   var renderImage: WritableImage = null
@@ -108,7 +53,10 @@ class HudController extends Initializable {
   @FXML var inventory:GridPane = _
 
   override def initialize(url: URL, resourceBundle: ResourceBundle ) {
-    JavaFxMain.controller = this
+
+//    downearth.Main.controller = this
+
+
     gameView.fitWidthProperty.bind(root.widthProperty)
     gameView.fitHeightProperty.bind(root.heightProperty)
 
@@ -195,7 +143,7 @@ class HudController extends Initializable {
     }
   }
 
-  lazy val game = new GameLoop( readHandler, this )
+  lazy val game = new JavaFxGameLoop( readHandler, this )
 
   def runGame() {
 

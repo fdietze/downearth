@@ -11,8 +11,9 @@ import downearth.Config._
 import downearth.util._
 import downearth.Player
 import downearth.rendering.{Draw, ConsoleFont}
+import downearth.Main
 
-object MainWidget extends FreePanel(Vec2i(0),Vec2i(JavaFxMain.width.toInt,JavaFxMain.height.toInt)) {
+object MainWidget extends FreePanel(Vec2i(0),Vec2i(Main.width.toInt,Main.height.toInt)) {
 	border = NoBorder
 	background = NoBackground
 	mouseOver = true

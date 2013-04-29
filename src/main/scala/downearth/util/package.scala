@@ -20,10 +20,10 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
-import downearth.gui.JavaFxMain
 import downearth.rendering.Draw
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
+import downearth.gui.javafx.JavaFxMain
 
 package object util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
@@ -367,8 +367,8 @@ package object util {
 		counter += 1
 		glReadBuffer(GL_FRONT)
 		val bpp = 4
-		val buffer = BufferUtils.createByteBuffer(JavaFxMain.width.toInt * JavaFxMain.height.toInt * bpp)
-		glReadPixels(0, 0, JavaFxMain.width.toInt, JavaFxMain.height.toInt, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
+		val buffer = BufferUtils.createByteBuffer( Main.width.toInt * Main.height.toInt * bpp )
+		glReadPixels(0, 0, Main.width.toInt, Main.height.toInt, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
 
     Future.apply { // save picture in background
 			val format = "PNG"
@@ -385,8 +385,8 @@ package object util {
 			}
 		
 			var i      = 0
-			val width  = JavaFxMain.width.toInt
-			val height = JavaFxMain.height.toInt
+			val width  = Main.width.toInt
+			val height = Main.height.toInt
       val end    = width * height * bpp
 
       val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)

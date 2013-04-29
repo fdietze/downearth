@@ -33,7 +33,7 @@ object Gui {
 		setTopRight
 		
 		var moved = false
-		def setTopRight = setPosition(Vec2i(JavaFxMain.width.toInt - size.x - 20, 20))
+		def setTopRight = setPosition(Vec2i(Main.width.toInt - size.x - 20, 20))
 		override def dragStop(mousePos:Vec2i) { moved = true }
 	}
 	
@@ -45,7 +45,7 @@ object Gui {
 		
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity
-		glOrtho(0, JavaFxMain.width, JavaFxMain.height, 0, -100, 100)
+		glOrtho(0, Main.width, Main.height, 0, -100, 100)
 		
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity
