@@ -17,6 +17,7 @@ import javax.vecmath.{Vector3f, Quat4f}
 import downearth.rendering.Draw
 import downearth.worldoctree._
 import scala.Some
+import downearth.world.World
 
 object Player {
 	/////////////////////////////////

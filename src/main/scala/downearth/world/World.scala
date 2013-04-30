@@ -1,4 +1,4 @@
-package downearth
+package downearth.world
 
 import simplex3d.math._
 import simplex3d.math.double._
@@ -7,6 +7,7 @@ import simplex3d.math.double.functions._
 import downearth.util._
 import downearth.generation.WorldGenerator
 import downearth.worldoctree.{Polyeder, Hexaeder, Leaf}
+import downearth.{BulletPhysics, util, WorldSerializer}
 
 object World {
 	

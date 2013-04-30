@@ -31,18 +31,6 @@ class JavaFxGameLoop(val readHandler: StreamHandler, guiController:HudController
 
   val drawable = pbuffer // wofür auch immer
 
-  val caps = GLContext.getCapabilities
-  val maxSamples =
-  if (caps.OpenGL30 || (caps.GL_EXT_framebuffer_multisample && caps.GL_EXT_framebuffer_blit))
-    glGetInteger(GL_MAX_SAMPLES)
-  else
-    1
-
-  if ( caps.GL_ARB_debug_output )
-	  glDebugMessageCallbackARB(new ARBDebugOutputCallback())
-  else if ( caps.GL_AMD_debug_output )
-    glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
-
   private var m_transfersToBuffer = 3
   def transfersToBuffer = m_transfersToBuffer
   def transfersToBuffer_=(transfersToBuffer: Int) {

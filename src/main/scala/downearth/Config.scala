@@ -51,7 +51,7 @@ object Config{
 	var fullscreen = loadBoolean("fullscreen") getOrElse false
 
 	// Vollbild-Modus mit höchster Auflösung
-	def fullscreenDisplayMode = Display.getAvailableDisplayModes.maxBy( _.getWidth )
+	def fullscreenDisplayMode = Display.getDesktopDisplayMode
 	
 	val windowResolutionWidth  = loadInt("windowResolutionWidth")  getOrElse 1024
 	val windowResolutionHeight = loadInt("windowResolutionHeight") getOrElse  768

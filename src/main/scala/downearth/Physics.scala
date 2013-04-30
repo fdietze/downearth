@@ -21,6 +21,7 @@ import downearth.worldoctree.{Array3D, NodeInfo}
 import downearth.util._
 import com.bulletphysics.linearmath.{DefaultMotionState, Transform}
 import org.lwjgl.opengl.GL11._
+import downearth.world.World
 
 // Verbindung der Engine zur jBullet-Implementierung
 

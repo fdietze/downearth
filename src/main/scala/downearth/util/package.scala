@@ -228,8 +228,7 @@ package object util {
 		printf("%s: %6.2f ms\n",msg,t)
 		f
 	}
-	
-	
+
 	// Graham Scan algorithm O(n log n)
 	/*
 	def convexHull2d( points:List[Vec2] ) = {

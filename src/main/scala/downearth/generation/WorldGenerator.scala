@@ -81,11 +81,9 @@ object WorldGenerator {
 				h
 		}
 
-
-
     // Octree mit Hexaedern füllen
-
-    val root = ( EmptyLeaf.asInstanceOf[OctantUnderMesh] /: (nodepos until nodepos+nodesize) ) ( (node,pos) => node.updated(nodeinfo, pos, Leaf(fillfun(pos))) )
+    // TODO use prediction here
+    val root = EmptyLeaf.fill( nodeinfo, pos => Leaf(fillfun(pos)) )
 
     root.genMesh( nodeinfo, minMeshNodeSize, (x => {if( nodeinfo.indexInRange(x) ) root(nodeinfo,x).h else fillfun(x) }) )
 	}

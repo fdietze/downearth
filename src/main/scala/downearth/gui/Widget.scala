@@ -5,12 +5,11 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
-import org.newdawn.slick.opengl.Texture
 
 import downearth.Config._
 import downearth.util._
 import downearth.Player
-import downearth.rendering.{Draw, ConsoleFont}
+import downearth.rendering.{Draw, ConsoleFont, Texture}
 import downearth.Main
 
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(Main.width.toInt,Main.height.toInt)) {

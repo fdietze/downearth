@@ -15,6 +15,7 @@ import org.lwjgl.opengl.ARBVertexBufferObject._
 import downearth._
 import downearth.gui.{Gui}
 import downearth.worldoctree.{WorldOctree, NodeInfo, MeshNode}
+import downearth.world.World
 
 object Renderer {
 
