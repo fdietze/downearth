@@ -37,6 +37,7 @@ object Config{
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
 	val maxMeshVertexCount = 30000
+  val maxDebugDrawQubes = 200
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2
 	val cameraTurboSpeed = 32
@@ -71,6 +72,7 @@ object Config{
 	val keyQuit              = loadKey("quit") getOrElse KEY_ESCAPE
 	val keyPausePhysics      = loadKey("pause") getOrElse KEY_P
 	val keyToggleGhostPlayer = loadKey("toggle_ghost_player") getOrElse KEY_TAB
+  val keyIncOctreeDepth    = loadKey("inc_octree_depth") getOrElse KEY_X
 
 	val keyDebugDraw      = loadKey("debug_draw") getOrElse KEY_F1
 	val keyWireframe      = loadKey("wireframe") getOrElse KEY_F2

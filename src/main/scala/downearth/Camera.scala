@@ -16,6 +16,7 @@ import downearth.gui.javafx.JavaFxMain
 abstract class Camera {
 	def position:Vec3
   def directionQuat:Quat4
+  def direction:Vec3 = directionQuat.rotateVector( -Vec3.UnitZ )
 
   def projection:Mat4
   def view:Mat4
@@ -39,17 +40,6 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	def this (positionVec:Vec3,directionVec:Vec3) = this(positionVec,quaternion(lookAt(-directionVec,worldUpVector)))
 	
 	def camera = this
-	
-	def direction = {
-		if( Mouse.isGrabbed ){
-			directionQuat.rotateVector(-worldUpVector)
-		}
-		else {
-			val rx = (Mouse.getX * 2.0 - Main.width   ) / Main.height
-			val ry = (Mouse.getY * 2.0 - Main.height  ) / Main.height
-			directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
-		}
-	}
 
 	def rotateVector(v:Vec3) = directionQuat.rotateVector(v)
 	
@@ -85,8 +75,9 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 }
 
 
-trait FrustumTest {
+trait FrustumTest extends Function1[NodeInfo,Boolean] {
 	def testNode( info:NodeInfo ):Boolean
+  def apply( info:NodeInfo ) = testNode(info)
 }
 
 // Frustum Culling

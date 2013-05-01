@@ -46,7 +46,7 @@ object ImageRaster{
 class ImageRaster(val width:Int, val height:Int, val data:Array[Int] ) {
   require( ((width - 1) & width) == 0 )
   require( ((height - 1) & height) == 0 )
-  require( data.length == width * height )
+  require( data.length == width * height, "data length is %d , but should be %d, width: %d, height: %d".format(data.length,width*height,width,height) )
 }
 
 class TextureLoader {

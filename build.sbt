@@ -6,20 +6,6 @@ version := "0.2.0"
 
 scalaVersion := "2.10.1"
 
-seq( LWJGLPlugin.lwjglSettings: _*)
-
-lwjgl.version := "2.9.0"
-
-javaOptions in run += "-XX:+ExplicitGCInvokesConcurrent"
-
-javaOptions in run += "-Xmx512m"
-
-//fork in run := true
-
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Yinline-warnings")
-
-scalacOptions ++= Seq("-language:_")
-
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 libraryDependencies ++= Seq(
@@ -28,9 +14,27 @@ libraryDependencies ++= Seq(
 	"org.scala-lang" % "scala-reflect" % "2.10.1"
 )
 
+seq( LWJGLPlugin.lwjglSettings: _*)
+
+lwjgl.version := "2.9.0"
+
+scalacOptions ++= Seq(
+    "-unchecked", 
+    "-deprecation", 
+    "-feature", 
+    "-Yinline-warnings", 
+    "-language:_"
+)
+
+javaOptions in run ++= Seq(
+    "-XX:+ExplicitGCInvokesConcurrent",
+    "-XX:+DoEscapeAnalysis",
+    "-Xmx512m"
+)
+
 //initialCommands := """
 //import simplex3d.math._
 //import simplex3d.math.float._
 //import simplex3d.math.float.functions._
-//import openworld._
+//import ._
 //"""

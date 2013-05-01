@@ -9,6 +9,8 @@ import downearth.Config._
 import downearth.util._
 import downearth.gui.MainWidget
 import simplex3d.math.doublex.functions._
+import downearth.worldoctree.WorldOctree
+import downearth.world.World
 
 /**
  * User: arne
@@ -91,6 +93,8 @@ class LwjglGameLoop extends GameLoop {
               Player.toggleGhost
             case `keyJump` =>
               Player.jump
+            case `keyIncOctreeDepth` =>
+              World.octree.incDepth()
             case _ =>
           }
         }

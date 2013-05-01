@@ -7,6 +7,7 @@
 package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL15._
 import simplex3d.math.double._
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
@@ -14,8 +15,10 @@ import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 import downearth._
 import downearth.gui.{Gui}
-import downearth.worldoctree.{WorldOctree, NodeInfo, MeshNode}
+import downearth.worldoctree._
 import downearth.world.World
+import downearth.worldoctree.NodeInfo
+import scala.collection.mutable.ArrayBuffer
 
 object Renderer {
 
@@ -30,9 +33,7 @@ object Renderer {
 
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-
     renderScene( Player.camera )
-
     Gui.renderScene
   }
 
@@ -117,7 +118,17 @@ object Renderer {
         }
       }
 
-    drawWorld(frustumTest)
+    drawcalls = 0
+    emptydrawcalls = 0
+
+    val order = WorldOctree.frontToBackOrder(camera.direction)
+
+    drawOctree(World.octree, frustumTest)
+
+    if(Config.debugDraw) {
+      drawDebugOctree(World.octree, order, frustumTest)
+    }
+
     Player.activeTool.draw
 
     if(Config.debugDraw) {
@@ -129,44 +140,117 @@ object Renderer {
   var drawcalls = 0
   var emptydrawcalls = 0
 
-  def drawWorld(test:FrustumTest) {
-    drawcalls = 0
-    emptydrawcalls = 0
+  def drawDebugOctree(octree:WorldOctree, order:Array[Int], test:FrustumTest) {
 
-    drawOctree(World.octree,test)
-    // TODO this is not render code
-    if(Config.streamWorld)
-      World.octree stream Player.position
+    glDisable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
 
+    glPushMatrix()
+    val pos2 = octree.worldWindowPos + 0.05
+    glTranslated(pos2.x, pos2.y, pos2.z)
+    glColor3f(0,1,0)
+    Draw.renderCube(octree.worldWindowSize - 0.1)
+    glPopMatrix()
+
+    var maximumDrawcalls = Config.maxDebugDrawQubes
+
+    octree.queryRegion(test)(order) {
+    case (info,octant) =>
+
+      if(! octant.hasChildren) {
+        glPushMatrix
+        val p = info.pos
+        glTranslatef(p.x, p.y, p.z)
+
+        if(octant.isInstanceOf[MeshNode])
+          glColor3f(1,0,0)
+        else
+          glColor3f(0,0,1)
+
+        Draw.renderCube(info.size)
+        glPopMatrix
+
+        maximumDrawcalls -= 1
+      }
+      maximumDrawcalls > 0
+    }
   }
 
   def drawOctree(octree:WorldOctree, test:FrustumTest) {
-    // TODO this is not render code
-    octree.makeUpdates
 
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
-    octree.root.foreachMeshNode( octree.rootNodeInfo, test , (node:MeshNode) => drawTextureMesh(node.mesh) )
+    val order = Array(0,1,2,3,4,5,6,7)
 
-    if(Config.debugDraw) {
-      glDisable(GL_LIGHTING)
-      glDisable(GL_TEXTURE_2D)
-
-      glPushMatrix
-      val p = octree.rootNodePos
-      glTranslatef(p.x, p.y, p.z)
-      glColor3f(1,0,0)
-      Draw.renderCube(octree.rootNodeSize)
-      glPopMatrix
-
-      glPushMatrix
-      val pos2 = octree.worldWindowPos + 0.05
-      glTranslated(pos2.x, pos2.y, pos2.z)
-      glColor3f(0,1,0)
-      Draw.renderCube(octree.worldWindowSize - 0.1)
-      glPopMatrix
+    octree.queryRegion( test ) (order) {
+      case (info, node:MeshNode) =>
+        drawTextureMesh(node.mesh)
+        false
+      case _ => true
     }
+
+    TextureManager.box.bind
+
+    val nodeInfoBuffer = ArrayBuffer[NodeInfo]()
+
+    octree.queryRegion( test ) (order) {
+      case (info, UngeneratedInnerNode) =>
+        nodeInfoBuffer += info
+        false
+      case (info, node:MeshNode) =>
+        false
+      case _ =>
+        true
+    }
+
+    val buffer = BufferUtils.createIntBuffer( nodeInfoBuffer.size )
+    glGenQueries( buffer )
+
+    var queries:Seq[Int] = new IndexedSeq[Int] {
+      val length = buffer.limit()
+      def apply(i:Int) = buffer.get(i)
+    }
+
+    for( (info,queryId) <- nodeInfoBuffer zip queries ) {
+      glBeginQuery(GL_SAMPLES_PASSED, queryId )
+
+      glPushMatrix()
+      glTranslatef(info.pos.x, info.pos.y, info.pos.z)
+      glScaled(info.size,info.size,info.size)
+      Draw.texturedCube()
+      glPopMatrix()
+
+      glEndQuery(GL_SAMPLES_PASSED)
+    }
+
+
+    var occluded = 0
+    var visible  = 0
+    var undecided = 0
+
+    while( queries.size > 0 ) {
+      queries = queries.filter { id =>
+        val state = glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_TRUE
+
+        if( state ) {
+          val pixelCount = glGetQueryObjectui(id, GL_QUERY_RESULT)
+
+          if( pixelCount > 0 )
+            visible += 1
+          else
+            occluded += 1
+        }
+        else
+          undecided += 1
+
+        ! state
+      }
+    }
+
+    println( s"occlusion query result (${buffer.limit}):\noccluded: $occluded, visible: $visible, undecided: $undecided")
+
+    glDeleteQueries(buffer)
   }
 
   def drawTextureMesh(mesh:TextureMesh) {

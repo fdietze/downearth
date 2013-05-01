@@ -54,6 +54,11 @@ abstract class GameLoop {
 
       extraLoopOperation()
 
+      World.octree.makeUpdates()
+      if(Config.streamWorld) {
+        World.octree stream Player.position
+      }
+
 			Renderer.draw()
 			frame()
 
@@ -74,10 +79,14 @@ abstract class GameLoop {
       else
         1
 
-    if ( caps.GL_ARB_debug_output )
+    if ( caps.GL_ARB_debug_output ) {
+      println("GL_ARB_debug_output")
       glDebugMessageCallbackARB(new ARBDebugOutputCallback())
-    else if ( caps.GL_AMD_debug_output )
+    }
+    else if ( caps.GL_AMD_debug_output ) {
+      println("GL_ARB_debug_output")
       glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
+    }
 
 		if(useshaders)
 			Renderer.initshaders

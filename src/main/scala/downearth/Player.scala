@@ -18,6 +18,7 @@ import downearth.rendering.Draw
 import downearth.worldoctree._
 import scala.Some
 import downearth.world.World
+import org.lwjgl.input.Mouse
 
 object Player {
 	/////////////////////////////////
@@ -60,7 +61,16 @@ object Player {
 		//println(ghostObject.getWorldTransform(new Transform).origin)
 	}
 
-	def direction:Vec3 = camera.direction
+	def direction:Vec3 = {
+    if( Mouse.isGrabbed ) {
+      camera.direction
+    }
+    else {
+      val rx = (Mouse.getX * 2.0 - Main.width   ) / Main.height
+      val ry = (Mouse.getY * 2.0 - Main.height  ) / Main.height
+      camera.directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
+    }
+  }
 	
 /*	def velocity:Vec3 = {
 		val v = new Vector3f
@@ -93,8 +103,7 @@ object Player {
 	def rotate(rot:Vec3) {
 		// TODO hier entstehen noch starke rotationsartefakte
 		m_camera.rotate(rot)
-		m_camera.lerpUp(1-m_camera.direction.z.abs)
-
+		m_camera.lerpUp(1 - direction.z.abs )
 	}
 	
 	def jump{

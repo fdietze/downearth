@@ -75,6 +75,34 @@ object Draw {
 		glPopMatrix
 	}
 
+  def texturedCube() {
+    val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
+    val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
+    var i = 0
+    glBegin(GL_QUADS)
+    glColor3f(1,1,1)
+    for(idx <- indices) {
+      val x = (idx & 1) >> 0
+      val y = (idx & 2) >> 1
+      val z = (idx & 4) >> 2
+
+      val j = i & 3
+      val k = i >> 2
+      val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
+      val v = (j & 2) >> 1
+
+      if( j == 0 ) {
+        glNormal3f( normals(i), normals(i+1), normals(i+2) )
+      }
+
+      glTexCoord2f(u,v)
+      glVertex3f(x,y,z)
+
+      i += 1
+    }
+    glEnd()
+  }
+
 	def plainCube() {
 		glBegin(GL_LINES)
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
