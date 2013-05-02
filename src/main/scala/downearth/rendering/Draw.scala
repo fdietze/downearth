@@ -12,7 +12,6 @@ import java.nio.FloatBuffer
 import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
 import downearth.DisplayEvent
 import downearth.Main
-import downearth.gui.javafx.JavaFxMain
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont

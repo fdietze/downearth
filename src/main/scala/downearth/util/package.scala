@@ -23,7 +23,6 @@ import ExecutionContext.Implicits.global
 import downearth.rendering.Draw
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
-import downearth.gui.javafx.JavaFxMain
 
 package object util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
