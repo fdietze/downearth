@@ -195,14 +195,14 @@ object Draw {
 	// Für den Debugdraw: alle Bereiche, die gesampled werden
 //	var sampledNodes:List[NodeInfo] = Nil
 	var predictedCuboids:List[Cuboid] = Nil
-//	def addSampledNode(nodeinfo:NodeInfo) { sampledNodes ::= nodeinfo }
+//	def addSampledNode(toNodeinfo:NodeInfo) { sampledNodes ::= toNodeinfo }
 	def addPredictedCuboid(cuboid:Cuboid) { predictedCuboids ::= cuboid }
 
 	def drawSampledNodes {
 		/*
 		glColor3f(1,0,0)
-		for( nodeinfo <- sampledNodes )
-			drawNodeInfo(nodeinfo)
+		for( toNodeinfo <- sampledNodes )
+			drawNodeInfo(toNodeinfo)
 		*/
 		for( cuboid <- predictedCuboids ) {
 			if( cuboid.isCube )

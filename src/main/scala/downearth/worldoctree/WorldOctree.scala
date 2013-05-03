@@ -50,8 +50,8 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	val vsize = Vec3i(worldWindowSize)
 	
 
-	var root:OctantOverMesh = UngeneratedInnerNode // UngeneratedInnerNode
-  WorldNodeGenerator.master ! rootNodeInfo.cuboid
+	var root:OctantOverMesh = GeneratingNode // UngeneratedInnerNode
+  WorldNodeGenerator.master ! rootNodeInfo.toCuboid
 	
 	override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
 	
@@ -82,7 +82,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	
 	def generateNode(info:NodeInfo) {
 		if(!isSet(info)) {
-			WorldNodeGenerator.master ! info.cuboid
+			WorldNodeGenerator.master ! info.toCuboid
 		}
 	}
 	

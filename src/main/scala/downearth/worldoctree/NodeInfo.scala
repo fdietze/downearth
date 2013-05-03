@@ -54,17 +54,18 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		pos1 until pos2
 	}
 	
-	def cuboid = Cuboid(pos, Vec3i(size))
-	def volume = Volume(Vec3(pos), Vec3(pos+size))
+	def toCuboid = Cuboid(pos, Vec3i(size))
+	def toVolume = Volume(Vec3(pos), Vec3(pos+size))
 }
 
 case class Cuboid(pos:Vec3i, size:Vec3i) {
-	def volume = Volume(Vec3(pos), Vec3(pos + size))
-	def isCube = size.x == size.y && size.y == size.z
-	def nodeinfo = {
+	def toVolume = Volume(Vec3(pos), Vec3(pos + size))
+	def toNodeinfo = {
 		assert(isCube)
 		NodeInfo(pos, size.x)
 	}
+
+  def isCube = size.x == size.y && size.y == size.z
 
 	def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,size)
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)

@@ -22,7 +22,7 @@ object WorldGenerator {
 		// Bereich KANN Oberfläche enthalten
 		
 		// Bereich des Nodes wird vollständig abgetastet
-		//Draw addSampledNode nodeinfo  // Für DebugDraw
+		//Draw addSampledNode toNodeinfo  // Für DebugDraw
 
 		// Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 		// Marching-Cubes für n Cubes: n+1 Datenpunkte
