@@ -649,25 +649,16 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 	}
 }
 
-
-
 /**
  * this Inner Node is used in the octree to indicate, that this node is not Generated yet
  */
-class LeafOverMesh extends OctantOverMesh {
+abstract class LeafOverMesh extends OctantOverMesh {
 
   override def hasChildren = false
 
   override def getChild(i:Int) = throw new NoSuchElementException("ungenerated inner node doesn't have children")
 
-	def isSet(info:NodeInfo,pos:NodeInfo) = false
 	def apply(info:NodeInfo, p:Vec3i) = Config.ungeneratedDefault
-	
-	//similar to updated, but this function also generates patches to update the mesh
-	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
-		println("ungenerated nodes can't have updates")
-		this
-	}
 	
 	override def repolyWorld(info: NodeInfo, p: Vec3i){}
 	
@@ -688,5 +679,22 @@ class LeafOverMesh extends OctantOverMesh {
 	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
 }
 
-object UngeneratedInnerNode extends LeafOverMesh
-object GeneratingNode extends LeafOverMesh
+object UngeneratedInnerNode extends LeafOverMesh {
+  def isSet(info:NodeInfo,pos:NodeInfo) = false
+
+  //similar to updated, but this function also generates patches to update the mesh
+  override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
+    println("ungenerated nodes can't have updates" + info)
+    this
+  }
+}
+
+object GeneratingNode extends LeafOverMesh {
+  def isSet(info:NodeInfo,pos:NodeInfo) = true
+
+  //similar to updated, but this function also generates patches to update the mesh
+  override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
+    println("generating nodes can't have updates " + info)
+    this
+  }
+}

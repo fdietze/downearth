@@ -90,7 +90,7 @@ class JavaFxGameLoop(val readHandler: StreamHandler, guiController:HudController
     // these updates need to be done from the javaFx thread
     guiController.runLater {
       guiController.playerPosition.setText( "Player Position: " + round10(Player.position) )
-      guiController.drawcalls.setText( "drawcalls: " + Renderer.drawcalls + ", empty: " + Renderer.emptydrawcalls + "" )
+      guiController.drawcalls.setText( "drawcalls: " + Renderer.drawCalls + ", empty: " + Renderer.emptyDrawCalls + "" )
       //guiController.frustumCulledNodes.setText( "frustum culled nodes: " + World.frustumculls )
     }
   }

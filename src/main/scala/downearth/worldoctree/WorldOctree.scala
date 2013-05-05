@@ -96,9 +96,9 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	override def toString = "Octree("+root.toString+")"
 	
 	def generateNode(info:NodeInfo) {
-		if(!isSet(info)) {
-			WorldNodeGenerator.master ! info.toCuboid
-		}
+    require(!isSet(info))
+    insert( info, GeneratingNode )
+    WorldNodeGenerator.master ! info.toCuboid
 	}
 	
 	def makeUpdates() {
@@ -214,19 +214,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	}
 
 	def isSet(info:NodeInfo):Boolean = {
-		//TODO: generating Node einführen und linearzeitabfrage rauswerfen
-    import akka.pattern.ask
-    implicit val timeout = akka.util.Timeout(1000)
-
-    val future = WorldNodeGenerator.master ? info
-
-    // asks weather the Area is currently processed
-    val answer = Await.result( future, Duration(1, TimeUnit.SECONDS) ).asInstanceOf[Boolean]
-
-    if ( answer )
-      return true
-
-    if(rootNodeInfo indexInRange info)
+		if(rootNodeInfo indexInRange info)
 			return root.isSet(rootNodeInfo,info)
 		else
 			return false

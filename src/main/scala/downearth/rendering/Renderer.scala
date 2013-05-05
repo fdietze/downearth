@@ -20,7 +20,7 @@ import downearth.world.World
 import downearth.worldoctree.NodeInfo
 import scala.collection.mutable.ArrayBuffer
 import downearth.util.Logger
-import downearth.generation.WorldNodeGenerator
+import java.nio.IntBuffer
 
 object Renderer extends Logger {
 
@@ -32,6 +32,16 @@ object Renderer extends Logger {
   var shader = 0
   var vertShader = 0
   var fragShader = 0
+
+
+  // this is occlusion querry from the last frame
+  var query:Query = null
+
+  class Query(val buffer:IntBuffer,val nodeInfos:Seq[NodeInfo]) extends IndexedSeq[(Int,NodeInfo)] {
+    require(buffer.limit == nodeInfos.length)
+    val length    = buffer.limit()
+    def apply(i:Int) = Tuple2(buffer.get(i), nodeInfos(i))
+  }
 
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
@@ -120,12 +130,21 @@ object Renderer extends Logger {
         }
       }
 
-    drawcalls = 0
-    emptydrawcalls = 0
+    drawCalls = 0
+    emptyDrawCalls = 0
 
     val order = WorldOctree.frontToBackOrder(camera.direction)
 
-    drawOctree(World.octree, frustumTest)
+    drawOctree(World.octree, frustumTest, order)
+
+    // TODO this is not strictly render code
+    // here the occlusion query from the last frame is evaluated, and a new one is generated
+
+    if( query != null )
+      for( result <- evalQueries(query).visible )
+        World.octree.generateNode(result)
+    query = findUngeneratedNodes(World.octree, frustumTest, order)
+
 
     if(Config.debugDraw) {
       drawDebugOctree(World.octree, order, frustumTest)
@@ -139,8 +158,8 @@ object Renderer extends Logger {
     }
   }
 
-  var drawcalls = 0
-  var emptydrawcalls = 0
+  var drawCalls = 0
+  var emptyDrawCalls = 0
 
   def drawDebugOctree(octree:WorldOctree, order:Array[Int], test:FrustumTest) {
 
@@ -154,13 +173,13 @@ object Renderer extends Logger {
     Draw.renderCube(octree.worldWindowSize - 0.1)
     glPopMatrix()
 
-    var maximumDrawcalls = Config.maxDebugDrawQubes
+    var maximumDrawCalls = Config.maxDebugDrawQubes
 
     octree.queryRegion(test)(order) {
     case (info,octant) =>
 
       if(! octant.hasChildren) {
-        glPushMatrix
+        glPushMatrix()
         val p = info.pos
         glTranslatef(p.x, p.y, p.z)
 
@@ -170,35 +189,27 @@ object Renderer extends Logger {
           glColor3f(0,0,1)
 
         Draw.renderCube(info.size)
-        glPopMatrix
+        glPopMatrix()
 
-        maximumDrawcalls -= 1
+        maximumDrawCalls -= 1
       }
-      maximumDrawcalls > 0
+      maximumDrawCalls > 0
     }
   }
 
-  def drawOctree(octree:WorldOctree, test:FrustumTest) {
-
-    import org.lwjgl.opengl.GL11._
-    glColor3f(1,1,1)
-
-    val order = Array(0,1,2,3,4,5,6,7)
-
-    octree.queryRegion( test ) (order) {
-      case (info, node:MeshNode) =>
-        drawTextureMesh(node.mesh)
-        false
-      case _ => true
-    }
-
+  def findUngeneratedNodes(octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
     TextureManager.box.bind
 
-    val nodeInfoBuffer = ArrayBuffer[NodeInfo]()
+    val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
+    val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
 
+    // TODO hier weiter machen
     octree.queryRegion( test ) (order) {
       case (info, UngeneratedInnerNode) =>
-        nodeInfoBuffer += info
+        nodeInfoBufferUngenerated += info
+        false
+      case (info, GeneratingNode) =>
+        nodeInfoBufferGenerating += info
         false
       case (info, node:MeshNode) =>
         false
@@ -206,15 +217,19 @@ object Renderer extends Logger {
         true
     }
 
-    val buffer = BufferUtils.createIntBuffer( nodeInfoBuffer.size )
-    glGenQueries( buffer )
-
-    val queries:Seq[Int] = new IndexedSeq[Int] {
-      val length = buffer.limit()
-      def apply(i:Int) = buffer.get(i)
+    for( info <- nodeInfoBufferGenerating ) {
+      glPushMatrix()
+      glTranslatef(info.pos.x, info.pos.y, info.pos.z)
+      glScaled(info.size,info.size,info.size)
+      Draw.texturedCube()
+      glPopMatrix()
     }
 
-    for( (info,queryId) <- nodeInfoBuffer zip queries ) {
+    val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )
+    glGenQueries( buffer )
+    val queries = new Query(buffer, nodeInfoBufferUngenerated)
+
+    for( (queryId, info) <- queries ) {
       glBeginQuery(GL_SAMPLES_PASSED, queryId )
 
       glPushMatrix()
@@ -226,34 +241,41 @@ object Renderer extends Logger {
       glEndQuery(GL_SAMPLES_PASSED)
     }
 
+    queries
+  }
 
-    var occluded = 0
-    var visible  = 0
+  case class QueryResult(visible:Seq[NodeInfo], occluded:Seq[NodeInfo])
 
-    val results = new ArrayBuffer[Int]
+  def evalQueries(queries:Query) = {
+    val visible  = ArrayBuffer[NodeInfo]()
+    val occluded = ArrayBuffer[NodeInfo]()
 
-    for( id <- queries ) {
+    for( (id,info) <- queries ) {
       while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
         Thread.sleep(1)
       }
-      results += glGetQueryObjectui(id, GL_QUERY_RESULT)
+      if( glGetQueryObjectui(id, GL_QUERY_RESULT) > 0 )
+        visible += info
+      else
+        occluded += info
     }
 
-    // TODO this is no render code
-    for( (info,result) <- nodeInfoBuffer zip results ) {
-      if(result > 0) {
-        visible += 1
-        octree.insert( info, GeneratingNode )
-        WorldNodeGenerator.master ! info.toCuboid
-      }
-      else {
-        occluded += 1
-      }
+    log.println( s"occlusion query result (${queries.buffer.limit}):\noccluded: ${occluded.size}, visible: ${visible.size}" )
+    glDeleteQueries(queries.buffer)
+
+    QueryResult(visible, occluded)
+  }
+
+  def drawOctree(octree:WorldOctree, test:FrustumTest, order:Array[Int]) {
+    import org.lwjgl.opengl.GL11._
+    glColor3f(1,1,1)
+
+    octree.queryRegion( test ) (order) {
+      case (info, node:MeshNode) =>
+        drawTextureMesh(node.mesh)
+        false
+      case _ => true
     }
-
-    log.println( s"occlusion query result (${buffer.limit}):\noccluded: $occluded, visible: $visible" )
-
-    glDeleteQueries(buffer)
   }
 
   def drawTextureMesh(mesh:TextureMesh) {
@@ -264,7 +286,7 @@ object Renderer extends Logger {
       mesh.genvbo
 
     if( mesh.size > 0 ) {
-      drawcalls += 1
+      drawCalls += 1
       glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh.vertexBufferObject)
 
       glEnableClientState(GL_VERTEX_ARRAY)
@@ -287,7 +309,7 @@ object Renderer extends Logger {
       glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
     }
     else {
-      emptydrawcalls += 1
+      emptyDrawCalls += 1
     }
   }
 
