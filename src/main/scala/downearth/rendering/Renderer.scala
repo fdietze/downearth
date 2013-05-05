@@ -19,8 +19,10 @@ import downearth.worldoctree._
 import downearth.world.World
 import downearth.worldoctree.NodeInfo
 import scala.collection.mutable.ArrayBuffer
+import downearth.util.Logger
+import downearth.generation.WorldNodeGenerator
 
-object Renderer {
+object Renderer extends Logger {
 
   val lightPos = BufferUtils.createFloatBuffer(4)
   val ambientLight = BufferUtils.createFloatBuffer(4)
@@ -207,7 +209,7 @@ object Renderer {
     val buffer = BufferUtils.createIntBuffer( nodeInfoBuffer.size )
     glGenQueries( buffer )
 
-    var queries:Seq[Int] = new IndexedSeq[Int] {
+    val queries:Seq[Int] = new IndexedSeq[Int] {
       val length = buffer.limit()
       def apply(i:Int) = buffer.get(i)
     }
@@ -227,28 +229,29 @@ object Renderer {
 
     var occluded = 0
     var visible  = 0
-    var undecided = 0
 
-    while( queries.size > 0 ) {
-      queries = queries.filter { id =>
-        val state = glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_TRUE
+    val results = new ArrayBuffer[Int]
 
-        if( state ) {
-          val pixelCount = glGetQueryObjectui(id, GL_QUERY_RESULT)
+    for( id <- queries ) {
+      while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
+        Thread.sleep(1)
+      }
+      results += glGetQueryObjectui(id, GL_QUERY_RESULT)
+    }
 
-          if( pixelCount > 0 )
-            visible += 1
-          else
-            occluded += 1
-        }
-        else
-          undecided += 1
-
-        ! state
+    // TODO this is no render code
+    for( (info,result) <- nodeInfoBuffer zip results ) {
+      if(result > 0) {
+        visible += 1
+        octree.insert( info, GeneratingNode )
+        WorldNodeGenerator.master ! info.toCuboid
+      }
+      else {
+        occluded += 1
       }
     }
 
-    println( s"occlusion query result (${buffer.limit}):\noccluded: $occluded, visible: $visible, undecided: $undecided")
+    log.println( s"occlusion query result (${buffer.limit}):\noccluded: $occluded, visible: $visible" )
 
     glDeleteQueries(buffer)
   }

@@ -11,7 +11,6 @@ import org.lwjgl.input.Mouse
 
 import Config._
 import downearth.worldoctree.NodeInfo
-import downearth.gui.javafx.JavaFxMain
 
 abstract class Camera {
 	def position:Vec3

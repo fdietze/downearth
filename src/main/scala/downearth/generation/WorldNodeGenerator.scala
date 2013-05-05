@@ -26,8 +26,8 @@ object WorldNodeGenerator {
 case object GetFinishedJobs
 
 class Master extends Actor {
-  val jobqueue = new SynchronizedQueue[Cuboid]
-  val done  = new SynchronizedQueue[(NodeInfo, OctantOverMesh)] //TODO: im worldoctree speichern
+  val jobqueue = new Queue[Cuboid]
+  val done  = new Queue[(NodeInfo, OctantOverMesh)] //TODO: im worldoctree speichern
   // Alle im moment bearbeiteten jobs
   val activeJobs = new HashSet[Cuboid] with SynchronizedSet[Cuboid] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
 
@@ -50,11 +50,11 @@ class Master extends Actor {
       else
         jobqueue enqueue cuboid //Warteschlange
 
-    // Worker meldet abgeschlossenen Job (als nodeinfo)
+    // Worker meldet abgeschlossenen Job (als toNodeinfo)
     case ( oldjob:NodeInfo, node:OctantOverMesh ) =>
       done enqueue ( oldjob -> node )
 
-    // Worker meldet abgeschlossenen Job (als cuboid)
+    // Worker meldet abgeschlossenen Job (als toCuboid)
     case (oldjob:Cuboid, 'done) =>
       activeJobs -= oldjob
 
@@ -92,13 +92,11 @@ class Worker (id:Int) extends Actor {
 
   def receive = {
     case cuboid @ Cuboid(cuboidpos, cuboidsize) =>
-      isActive = true
-      val interval = Config.prediction(cuboid.volume)
+      val interval = Config.prediction(cuboid.toVolume)
 
       if(interval.isPositive) {
         Draw addPredictedCuboid cuboid  // Für DebugDraw
 
-        isActive = false
         for( nodeinfo <- cuboid.nodeinfos ) {
           val meshnode = new MeshNode(Leaf(FullHexaeder))
           meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
@@ -109,7 +107,6 @@ class Worker (id:Int) extends Actor {
       else if(interval.isNegative) {
         Draw addPredictedCuboid cuboid  // Für DebugDraw
 
-        isActive = false
         for( nodeinfo <- cuboid.nodeinfos ) {
           val meshnode = new MeshNode(Leaf(EmptyHexaeder))
           meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
@@ -118,32 +115,36 @@ class Worker (id:Int) extends Actor {
       }
 
       else {
-        // falls der Bereich groß genug ist splitten und Teile neu predicten
+        // if the area is too big, it will be splitted
         if( cuboid.size(cuboid.longestedge)/2 >= Config.minPredictionSize ) {
           // für alle Kindknoten den Cuboid an Master senden
 
-          isActive = false
-          //Master ! Tuple2(nodeinfo, Range(0,8).map( i => nodeinfo(i)))
-          if( Config.kdTreePrediction )
-            for( child <- cuboid.splitlongest )
-              sender ! child  // Master
-          else
-            for( child <- cuboid.octsplit )
-              sender ! child  // Master
+          //Master ! Tuple2(toNodeinfo, Range(0,8).map( i => toNodeinfo(i)))
+//          if( Config.kdTreePrediction )
+//            for( child <- cuboid.splitlongest )
+//              sender ! child  // Master
+//          else
+//            for( child <- cuboid.octsplit )
+//              sender ! child
+
+          val data = Array.fill[OctantOverMesh](8)(UngeneratedInnerNode)
+          val node = new InnerNodeOverMesh(data)
+          val nodeInfo = cuboid.toNodeinfo
+
+          sender ! Tuple2(nodeInfo, node)
+
+
         }
         // sonst samplen
         else {
           assert( cuboid.isCube )
-          val nodeinfo = cuboid.nodeinfo
+          val nodeinfo = cuboid.toNodeinfo
           val node = WorldGenerator genWorldAt nodeinfo
-          isActive = false
           sender ! Tuple2(nodeinfo, node)  // Master
         }
       }
       sender ! (cuboid, 'done)  // Master
   }
-
-  override def toString = "Worker(%d %b)".format(id, isActive)
 }
 
 

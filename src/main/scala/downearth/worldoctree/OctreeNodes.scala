@@ -649,10 +649,12 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 	}
 }
 
+
+
 /**
  * this Inner Node is used in the octree to indicate, that this node is not Generated yet
  */
-object UngeneratedInnerNode extends OctantOverMesh {
+class LeafOverMesh extends OctantOverMesh {
 
   override def hasChildren = false
 
@@ -675,7 +677,7 @@ object UngeneratedInnerNode extends OctantOverMesh {
 		if(info == insertinfo)
 			insertnode
 		else{
-			val replacement = new InnerNodeOverMesh(Array.fill[OctantOverMesh](8)(UngeneratedInnerNode))
+			val replacement = new InnerNodeOverMesh(Array.fill[OctantOverMesh](8)(this))
 			val (index, childinfo) = info(insertinfo.pos)
 			replacement.data(index) = insertNode(childinfo,insertinfo,insertnode)
 			replacement
@@ -685,3 +687,6 @@ object UngeneratedInnerNode extends OctantOverMesh {
 	// deadNodes haben keine Polygone
 	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
 }
+
+object UngeneratedInnerNode extends LeafOverMesh
+object GeneratingNode extends LeafOverMesh

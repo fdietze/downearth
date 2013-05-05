@@ -14,7 +14,6 @@ import downearth.rendering.Renderer
 import downearth.generation.WorldNodeGenerator
 import downearth.util._
 import downearth.Config._
-import downearth.gui.javafx.{JavaFxMain, HudController}
 import downearth.gui.lwjgl.LwjglMain
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL30._
