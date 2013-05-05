@@ -42,7 +42,7 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		val hsize = size >> 1
 		NodeInfo(pos+v*hsize,hsize)
 	}
-	
+
 	def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)

@@ -25,19 +25,6 @@ sealed trait Octant extends Serializable {
   def hasChildren:Boolean
 
   def getChild(i:Int):Octant
-
-  def queryRegion(info:NodeInfo, test:(NodeInfo) => Boolean, order:Array[Int], function: (NodeInfo, Octant) => Boolean) {
-    if( test(info) ) {
-      if( function(info,this) && hasChildren ) {
-        var i = 0
-        while(i < 8) {
-          getChild(i).queryRegion(info(order(i)), test, order, function)
-          i += 1
-        }
-      }
-    }
-  }
-
 }
 
 // im Octree wird unterschieden, ob sich der Octant oberhalb oder unterhalb des 

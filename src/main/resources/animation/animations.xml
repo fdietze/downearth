@@ -1,0 +1,9 @@
+<animations>
+    <frames>
+        <Frame position="0,0" id="front"/>
+        <Frame position="16,0" id="back"/>
+        <Frame position="32,0" id="right"/>
+        <Frame position="48,0" id="left"/>
+    </frames>
+</animations>
+

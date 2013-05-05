@@ -59,7 +59,22 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 
   def queryRegion(test:(NodeInfo) => Boolean)(order:Array[Int])(function: (NodeInfo,Octant) => Boolean) {
     require(order.length == 8)
-    root.queryRegion(rootNodeInfo, test, order, function)
+
+    val infoQueue = collection.mutable.Queue[NodeInfo](rootNodeInfo)
+    val nodeQueue = collection.mutable.Queue[Octant](root)
+
+    while( !nodeQueue.isEmpty ) {
+      val currentInfo = infoQueue.dequeue()
+      val currentNode = nodeQueue.dequeue()
+      if( test(currentInfo) && function(currentInfo,currentNode) && currentNode.hasChildren ) {
+        var i = 0
+        while(i < 8) {
+          nodeQueue += currentNode.getChild(order(i))
+          infoQueue += currentInfo(order(i))
+          i += 1
+        }
+      }
+    }
   }
 	
 	def apply(p:Vec3i) = {
