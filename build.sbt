@@ -6,12 +6,19 @@ version := "0.2.0"
 
 scalaVersion := "2.10.1"
 
-resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers ++= Seq(
+  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+  //"Slick" at "http://slick.cokeandcode.com/mavenrepo"
+)
 
 libraryDependencies ++= Seq(
-	"org.scalatest" %% "scalatest" % "1.9.1" % "test",
-	"com.typesafe.akka" %% "akka-actor" % "2.2-M2",
-	"org.scala-lang" % "scala-reflect" % "2.10.1"
+  "org.scalatest" %% "scalatest" % "1.9.1" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.2-M2",
+  "org.scala-lang" % "scala-reflect" % "2.10.1",
+  "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
+  "org.simplex3d" %% "simplex3d-data-double" % "2.4.7",
+  //"slick" % "slick" % "274",
+  "java3d" % "vecmath" % "1.3.1"
 )
 
 seq( LWJGLPlugin.lwjglSettings: _*)
@@ -19,17 +26,17 @@ seq( LWJGLPlugin.lwjglSettings: _*)
 lwjgl.version := "2.9.0"
 
 scalacOptions ++= Seq(
-    "-unchecked", 
-    "-deprecation", 
-    "-feature", 
-    "-Yinline-warnings", 
-    "-language:_"
+  "-unchecked", 
+  "-deprecation", 
+  "-feature", 
+  "-Yinline-warnings", 
+  "-language:_"
 )
 
 javaOptions in run ++= Seq(
-    "-XX:+ExplicitGCInvokesConcurrent",
-    "-XX:+DoEscapeAnalysis",
-    "-Xmx512m"
+  "-XX:+ExplicitGCInvokesConcurrent",
+  //"-XX:+DoEscapeAnalysis",
+  "-Xmx512m"
 )
 
 //initialCommands := """
