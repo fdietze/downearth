@@ -20,7 +20,7 @@ import scala.Tuple2
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 object WorldNodeGenerator {
   val actorSystem = ActorSystem.create("worldNodeGenerator")
-  val master = actorSystem.actorOf( Props(new Master) )
+  val master = actorSystem.actorOf( Props[Master] )
 }
 
 case object GetFinishedJobs
@@ -33,7 +33,7 @@ class Master extends Actor {
   // Alle im moment bearbeiteten jobs
   val activeJobs = new HashSet[Cuboid] with SynchronizedSet[Cuboid] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
 
-  val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(new Worker(i)) ))
+  val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(classOf[Worker],i) ))
 
   val idleWorkers = Queue(workers:_*)
 

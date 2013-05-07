@@ -33,7 +33,6 @@ object Renderer extends Logger {
   var vertShader = 0
   var fragShader = 0
 
-
   // this is occlusion querry from the last frame
   var query:Query = null
 
@@ -45,7 +44,7 @@ object Renderer extends Logger {
 
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-    renderScene( Player.camera )
+    renderWorld( Player.camera )
     Gui.renderScene
   }
 
@@ -103,7 +102,7 @@ object Renderer extends Logger {
     }
   }
 
-  def renderScene(camera:Camera) {
+  def renderWorld(camera:Camera) {
     glViewport(0, 0, Main.width.toInt, Main.height.toInt)
     glEnable(GL_CULL_FACE)
     glEnable(GL_COLOR_MATERIAL)
@@ -282,12 +281,12 @@ object Renderer extends Logger {
     //TextureManager.box.bind
     TextureManager.materials.bind
 
-    if(mesh.vertexBufferObject == 0)
-      mesh.genvbo
+    if( !mesh.hasVbo )
+      mesh.genvbo()
 
     if( mesh.size > 0 ) {
       drawCalls += 1
-      glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh.vertexBufferObject)
+      mesh.bind()
 
       glEnableClientState(GL_VERTEX_ARRAY)
       glEnableClientState(GL_NORMAL_ARRAY)
@@ -320,7 +319,6 @@ object Renderer extends Logger {
 
     if(useshaders) {
       glUseProgramObjectARB(shader)
-      // glUniform1fARB( glGetUniformLocationARB( shader, "time" ), ( time / 1000.0 ).toFloat )
     }
 
     func

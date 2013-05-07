@@ -12,7 +12,13 @@ import downearth.worldoctree.NodeInfo
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}
 	
-	def genWorld:WorldOctree = new WorldOctree(cubesize,Vec3i(-cubesize/2))
+	def genWorld:WorldOctree = {
+		// val rootNodeInfo = NodeInfo(Vec3i(-cubesize/2), cubesize)
+		val initArea = NodeInfo( Vec3i(-cubesize/4), cubesize/2 )
+		val octree = new WorldOctree(initArea,genWorldAt(initArea))
+		octree.incDepth()
+		octree
+	}
 	
 	def genWorldAt(nodeinfo:NodeInfo):OctantOverMesh = {
 		val NodeInfo(nodepos, nodesize) = nodeinfo

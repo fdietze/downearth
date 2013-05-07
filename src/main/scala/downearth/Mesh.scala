@@ -14,36 +14,62 @@ import simplex3d.data.double._
 import simplex3d.math.integration.RFloat
 import org.lwjgl.BufferUtils
 
+import java.nio._
+import downearth.annotation._
+
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
 // sie die Kommunikation mit der Grafikkarte.
 
 trait Mesh extends Serializable {
-	var vertexBufferObject:Int = 0
-	def genvbo
-	def freevbo
-	def free = glDeleteBuffersARB(vertexBufferObject)
-	def size:Int
-}
- 
-trait MutableMesh[T <: MeshData] extends Mesh {
-	def applyUpdates(updates:Iterable[Update[T]])
-}
+	def bind()
+	def genvbo()
+	def freevbo()
 
-trait MeshData {
+  def hasVbo:Boolean
 	def size:Int
 }
 
-trait MeshBuilder[T <: MeshData] {
-	def result : T
+class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
+	var vbo = 0
+	def size = data.limit / 8
+  def hasVbo = vbo > 0
+
+  @Foo(first = "a", last = "b")
+  var i = 17
+
+	def bind() {
+		assert(vbo != 0)
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
+	}
+
+	def genvbo() {
+		freevbo
+		// vbo with size of 0 can't be initialized
+		if( size > 0 ) {
+			vbo = glGenBuffersARB()
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
+			glBufferDataARB(GL_ARRAY_BUFFER_ARB, data, GL_STATIC_DRAW_ARB)
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+		}
+	}
+	
+	def freevbo() {
+		if( vbo > 0 ) {
+			glDeleteBuffersARB( vbo )
+			vbo = 0
+		}
+	}
 }
+
+
 
 case class TextureMeshData(
 			vertexArray:Array[Vec3],
 			normalArray:Array[Vec3],
 			texcoordsArray:Array[Vec2]
 //			colorArray:Array[Vec4]
-		) extends MeshData{
+		) {
 	def size = vertexArray.size
 }
 
@@ -54,7 +80,7 @@ case class TextureMeshBuilder(
 			normalBuilder:ArrayBuilder[Vec3] = ArrayBuilder.make[Vec3],
 			texCoordBuilder:ArrayBuilder[Vec2] = ArrayBuilder.make[Vec2]
 //			colorBuilder:ArrayBuilder[Vec4] = ArrayBuilder.make[Vec4]
-			) extends MeshBuilder[TextureMeshData] {
+			) {
 	def result = TextureMeshData(
 					vertexBuilder.result,
 					normalBuilder.result,
@@ -64,7 +90,7 @@ case class TextureMeshBuilder(
 }
 
 // A <: B <: MeshData => Patch[A] <: Patch[B]
-case class Update[+T <: MeshData](pos:Int,size:Int,data:T) {
+case class Update(pos:Int,size:Int,data:TextureMeshData) {
 	//the difference of the size after the patch has been applied
 	def sizedifference = data.size - size
 }
@@ -155,7 +181,7 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 //                         colors_ :DataView[Vec4,RFloat]
                          ) 
     	extends TextureMesh(vertices_, normals_, texcoords_) // colors_), 
-    	with MutableMesh[TextureMeshData] {
+    	 {
 
 	private var msize = vertices_.size
 	override def size = msize
@@ -163,7 +189,7 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 	// fügt mehrere Updates in den Hexaeder ein. Hier ist es Sinnvoll alle 
 	// Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den 
 	// Hexaeder einzufügen.
-	def applyUpdates(updates:Iterable[Update[TextureMeshData]]) {
+	def applyUpdates(updates:Iterable[Update]) {
 		val oldvertices = vertices
 		/*val oldnormals = normals
 		val oldcoords = texcoords*/
@@ -257,7 +283,7 @@ class MutableTextureMesh(vertices_ :DataView[Vec3,RFloat],
 	}
 }
 
-object TextureMesh{
+object TextureMesh {
 	def apply(data:TextureMeshData) = {
 	import data._
     val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * 8 * 4)
@@ -280,9 +306,7 @@ object TextureMesh{
 // Festplatte gespeichert werden.
 class TextureMesh(@transient var vertices:DataView[Vec3,RFloat], 
                   @transient var normals:DataView[Vec3,RFloat], 
-                  @transient var texcoords:DataView[Vec2,RFloat]
-                  //@transient var colors:DataView[Vec4,RFloat]
-                  ) 
+                  @transient var texcoords:DataView[Vec2,RFloat])
                        extends Mesh with Serializable {
   
 	import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
@@ -304,25 +328,32 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	}
 	
 	@transient private var msize = vertices.size
+
+  var vbo = 0
+
+  def hasVbo = vbo > 0
+
+  def bind() {
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
+  }
+
 	def size = msize
 	
-	def genvbo {
+	def genvbo() {
 		freevbo
 		// vbo with size of 0 can't be initialized
 		if( size > 0 ) {
-			vertexBufferObject = glGenBuffersARB()
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBufferObject)
+			vbo = glGenBuffersARB()
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
 			glBufferDataARB(GL_ARRAY_BUFFER_ARB, vertices.bindingBuffer, GL_STATIC_COPY_ARB)
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
 		}
-		else
-			vertexBufferObject = -1
 	}
 	
-	def freevbo {
-		if( vertexBufferObject > 0 ) {
-			glDeleteBuffersARB(vertexBufferObject)
-			vertexBufferObject = 0
+	def freevbo() {
+		if( vbo > 0 ) {
+			glDeleteBuffersARB(vbo)
+			vbo = 0
 		}
 	}
 }

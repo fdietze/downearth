@@ -173,7 +173,7 @@ trait PlayerTool {
 	
 	def selectPos = {
 		if( MainWidget.mouseOver )
-			World.raytracer(Player.position, Player.direction, top, range)
+			World.octree.raytracer(Player.position, Player.direction, top, range)
 		else
 			None
 	}
@@ -183,12 +183,12 @@ object Shovel extends PlayerTool {
 	// removes a block
 	def top = false
 	
-	def selectPolyeder(pos:Vec3i) = World(pos).h
+	def selectPolyeder(pos:Vec3i) = World.octree(pos).h
 	
 	override def primary{
 		selectPos match {
 			case Some(pos) =>
-				val block = World(pos)
+				val block = World.octree(pos)
 				//TODO: the evaluation of the materialfunction should be in the Leaf itself
 				val material = if( block.material == -1 ) materialfunction(pos + 0.5).id else block.material
 				Player.inventory.materials(material) += block.h.volume
@@ -241,7 +241,7 @@ object ConstructionTool extends PlayerTool {
 		selectPos match {
 			case Some(pos) =>
 				if( Player.inventory.materials(selectedMaterial) >= current.volume ) {
-					val block = World(pos)
+					val block = World.octree(pos)
 					//TODO: the evaluation of the materialfunction should be in the Leaf itself
 					val material = if( block.material == -1 ) materialfunction(pos + 0.5).id else block.material
 					Player.inventory.materials(material) += block.h.volume

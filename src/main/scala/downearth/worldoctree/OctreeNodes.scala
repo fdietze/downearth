@@ -67,7 +67,7 @@ trait OctantUnderMesh extends Octant {
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
 	// Polygonverdeckungstest aufzufrischen.
-	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData]
+	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update
 	
 	// extrahiert alle Polygone an einer Position in form des Bereichs von 
 	// Polygonen aus dem Mesh
@@ -75,7 +75,7 @@ trait OctantUnderMesh extends Octant {
 	
 	// Ähnlich zu updated, aber diese Funktion generierd auch Updates für das 
 	// Mesh, welches sich verändert.
-	def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData])
+	def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update)
 }
 
 class WrongNode extends OctantOverMesh {
@@ -276,18 +276,18 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 		vertexCounter
 	}
 	
-	override def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update[TextureMeshData]) = {
+	override def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update) = {
 		val replacement = updated(info, p, newLeaf)
 		
 		val builder = new TextureMeshBuilder
-		replacement.genPolygons(info,builder, v => World.apply(v).h )
+		replacement.genPolygons(info,builder, v => World.octree(v).h )
 		val update = Update(vertpos,vertcount,builder.result)
 		(replacement,update)
 	}
 
-	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update[TextureMeshData] = {
+	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
 		val builder = new TextureMeshBuilder 
-		genPolygons(info, builder, v => World.apply(v).h )
+		genPolygons(info, builder, v => World.octree(v).h )
 		Update(vertpos,vertcount,builder.result)
 	}
 
@@ -514,7 +514,7 @@ class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
 		if(merge_?){
 			val mb = new TextureMeshBuilder
 			// replace with newLeaf
-			newLeaf.genPolygons(info,mb, v => World.apply(v).h )
+			newLeaf.genPolygons(info,mb, v => World.octree(v).h )
 			( newLeaf, Update(vertpos,vertcount,mb.result) )
 		}
 		else
