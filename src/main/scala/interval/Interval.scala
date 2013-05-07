@@ -1,9 +1,9 @@
-package noise.interval
+package interval
 
 object Interval {
   // Degenerate Interval
-  def apply(value:Double):Interval = Interval(value,value)
-  def infinity = Interval(scala.Double.NegativeInfinity, scala.Double.PositiveInfinity)
+  def apply(value:Double):Interval = new Interval(value,value)
+  def infinity = new Interval(scala.Double.NegativeInfinity, scala.Double.PositiveInfinity)
 }
 
 case class Interval(low:Double = 0.0, high:Double = 0.0) {

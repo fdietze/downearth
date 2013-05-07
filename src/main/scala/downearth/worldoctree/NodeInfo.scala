@@ -5,7 +5,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 
-import noise.interval.Interval3
+import interval.Interval3
 import scala.Predef._
 import downearth.util._
 

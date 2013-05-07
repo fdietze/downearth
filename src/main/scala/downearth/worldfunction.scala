@@ -1,8 +1,7 @@
  
 package downearth.gen
 
-import noise.Noise.noise3
-import noise.Worley.cellnoise
+import noise.perlin.{improved => noise3}
 
 import simplex3d.math._
 import simplex3d.math.double._

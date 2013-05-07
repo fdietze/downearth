@@ -5,11 +5,10 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import noise.Noise.noise3_prediction
-import noise.Worley.cellnoise_prediction
+import noise.perlin.prediction.{bezierImproved => noise3_prediction}
+import noise.worley.prediction.{distance => cellnoise_prediction}
 
-import noise.interval
-import noise.interval.{Interval, Interval3, Interval4}
+import interval.{Interval, Interval3, Interval4}
 
 object prediction {
 

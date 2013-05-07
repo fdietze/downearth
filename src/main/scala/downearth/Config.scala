@@ -2,8 +2,7 @@ package downearth
 
 import simplex3d.math.double.Vec3
 import simplex3d.math.doublex.Vec3d
-import noise.Noise.{noise3, noise3_prediction}
-import noise.interval.{Interval, Interval3}
+import interval.{Interval, Interval3}
 import org.lwjgl.opengl.{Display, DisplayMode}
 import downearth.generation.prediction
 import downearth.worldoctree.{FullHexaeder, Leaf}

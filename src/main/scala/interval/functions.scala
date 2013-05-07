@@ -1,4 +1,4 @@
-package noise.interval
+package interval
 
 import simplex3d.math.double.{functions => scalar}
 

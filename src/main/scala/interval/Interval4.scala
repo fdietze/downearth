@@ -1,10 +1,10 @@
-package noise.interval
+package interval
 
 import simplex3d.math.double._
 
 object Interval4 {
   def apply(v1:Vec4, v2:Vec4):Interval4 = {
-    Interval4(
+    new Interval4(
       Interval(v1.x, v2.x),
       Interval(v1.y, v2.y),
       Interval(v1.z, v2.z),
@@ -12,7 +12,7 @@ object Interval4 {
     )
   }
   def apply(v:Vec4):Interval4 = Interval4(v,v)
-  def apply(x:Double, y:Double, z:Double, w:Double):Interval4 = Interval4(Interval(x), Interval(y), Interval(z), Interval(w))
+  def apply(x:Double, y:Double, z:Double, w:Double):Interval4 = new Interval4(Interval(x), Interval(y), Interval(z), Interval(w))
   def apply(value:Double):Interval4 = Interval4(value, value, value, value)
 }
 
