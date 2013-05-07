@@ -1,8 +1,14 @@
+import akka.util.Timeout
 import org.scalatest.FunSuite
 
-import openworld._
+import downearth._
+import generation._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import util._
 import simplex3d.math.double._
-import scala.collection.mutable.Stack
+import collection.mutable
+import akka.pattern.ask
 
 class GenerationBenchmark extends FunSuite {
 	test("parameter combinations") {
@@ -13,10 +19,11 @@ class GenerationBenchmark extends FunSuite {
 			'worldWindowSize -> Seq(64)
 		)
 		
-		val timer = new Util.Timer
+		val timer = new Timer
 		val combinations = configs.values.map(_.size).product
 		var currentcombination = 1
 		var besttime = Double.MaxValue
+    implicit val timeout = Timeout(30000)
 		for(
 			minMeshNodeSize <- configs('minMeshNodeSize);
 			minPredictionSize <- configs('minPredictionSize);
@@ -30,11 +37,9 @@ class GenerationBenchmark extends FunSuite {
 			Config.minPredictionSize = minPredictionSize.asInstanceOf[Int]
 			Config.kdTreePrediction = kdTreePrediction.asInstanceOf[Boolean]
 			Config.worldWindowSize = worldWindowSize.asInstanceOf[Int]
-			WorldNodeGenerator.Master.done.dequeueAll( _ => true)
+			WorldNodeGenerator.master ! GetFinishedJobs
 			
-			assert( WorldNodeGenerator.Master.done.isEmpty )
-			assert( WorldNodeGenerator.Master.activeJobs.isEmpty )
-			assert( WorldNodeGenerator.Master.jobqueue.isEmpty )
+      assert(Await.result((WorldNodeGenerator.master ? AllJobsEmpty).mapTo[Boolean],Duration.Inf))
 			
 			timer.reset
 			timer.start
@@ -47,7 +52,7 @@ class GenerationBenchmark extends FunSuite {
 			while( running )
 			{
 				Thread.sleep(20)
-				if( WorldNodeGenerator.Master.activeJobs.isEmpty )
+				if( Await.result((WorldNodeGenerator.master ? ActiveJobsEmpty).mapTo[Boolean],Duration.Inf) )
 					running = false
 			}
 			

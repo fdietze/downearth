@@ -96,7 +96,7 @@ class WorldOctree(var rootNodeSize:Int,var rootNodePos:Vec3i = Vec3i(0)) extends
 	override def toString = "Octree("+root.toString+")"
 	
 	def generateNode(info:NodeInfo) {
-    require(!isSet(info))
+    require(!isSet(info)) // TODO this fails sometimes
     insert( info, GeneratingNode )
     WorldNodeGenerator.master ! info.toCuboid
 	}

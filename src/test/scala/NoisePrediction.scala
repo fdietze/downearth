@@ -1,11 +1,11 @@
 import org.scalatest.FunSuite
 
-import openworld._
+import downearth._
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import Util.Timer
+import util.Timer
 
 import noise.Noise._
 import noise.interval.{Interval, Volume}
@@ -18,7 +18,7 @@ class NoisePrediction extends FunSuite {
 		
 		val noisetimer = new Timer
 		val predictiontimer = new Timer
-		val n = 2000
+		val n = 20000
 		for( i <- 0 until n )
 		{
 			import scala.util.Random.{nextDouble => r}

@@ -24,6 +24,8 @@ object WorldNodeGenerator {
 }
 
 case object GetFinishedJobs
+case object ActiveJobsEmpty
+case object AllJobsEmpty
 
 class Master extends Actor {
   val jobqueue = new Queue[Cuboid]
@@ -39,6 +41,13 @@ class Master extends Actor {
     case GetFinishedJobs =>
       val result = done.dequeueAll( _ => true)
       sender ! result
+
+    case ActiveJobsEmpty =>
+      sender ! (activeJobs.isEmpty)
+
+    case AllJobsEmpty =>
+      sender ! (jobqueue.isEmpty && done.isEmpty && activeJobs.isEmpty)
+
     case nodeInfo:NodeInfo =>
       sender ! (activeJobs.find( _ indexInRange nodeInfo ).isDefined || done.find( _._1 indexInRange nodeInfo).isDefined)
 

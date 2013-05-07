@@ -1,11 +1,11 @@
 import org.scalatest.FunSuite
 
-import openworld._
+import downearth.generation._
 import simplex3d.math.double._
 import scala.collection.mutable.Stack
 
 class ConvexHullTest extends FunSuite {
-	
+
 	test("test1"){
 		val data       = Vector( Vec2(0,3), Vec2(2,3), Vec2(3,1), Vec2(2,1) )
 		val dataSorted = Vector( Vec2(0,3), Vec2(2,1), Vec2(2,3), Vec2(3,1) )
