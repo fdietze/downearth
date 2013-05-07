@@ -87,6 +87,8 @@ abstract class GameLoop {
       glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
     }
 
+    glClearColor(91/255f,203/255f,255/255f,1f)
+
 		if(useshaders)
 			Renderer.initshaders
 
