@@ -1,6 +1,6 @@
 package noise
 
-import interval.{Interval, Volume, Interval4D}
+import interval.{Interval, Interval3, Interval4}
 
 import simplex3d.math._
 import simplex3d.math.double._
@@ -34,11 +34,11 @@ object Worley {
 	val maxvalue = Vec4(1.1242269084951875, 1.1555402454923787, 1.2139070974183257, 1.2354559268805023)
 	
 	def cellnoise_prediction = cellnoise_prediction_simple _
-	def cellnoise_prediction_simple(v:Volume):Interval4D = {
+	def cellnoise_prediction_simple(v:Interval3):Interval4 = {
 		val center = (v.high + v.low)*0.5
 		val radius = length(center - v.low)
 		val sample = cellnoise(center)
-		Interval4D(max(minvalue, sample-radius), min(maxvalue, sample+radius))
+		Interval4(max(minvalue, sample-radius), min(maxvalue, sample+radius))
 	}
 	
 	def cellnoise(v:Vec3):Vec4 = cellnoise(v.x, v.y, v.z)

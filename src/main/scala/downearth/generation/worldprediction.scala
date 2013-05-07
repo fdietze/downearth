@@ -9,15 +9,15 @@ import noise.Noise.noise3_prediction
 import noise.Worley.cellnoise_prediction
 
 import noise.interval
-import noise.interval.{Interval, Volume, Interval4D}
+import noise.interval.{Interval, Interval3, Interval4}
 
 object prediction {
 
-def apply(world:Volume) = {
+def apply(world:Interval3) = {
 
 def scalesrcz_uid4e7b7b1d(scale:Double):Interval = {world.z * scale}
-def perlinnoise3_uid4e7b7b1d(v:Volume, x:Interval, y:Interval, z:Interval, add:Interval, sub:Interval, size:Double, scale:Double, offset:Double):Interval = {(noise3_prediction((v + Volume(x,y,z))*size)+offset)*scale/size + add - sub}
-def scalesrcv_uid4e7b7b1d(scale:Double):Volume = {world   * scale}
+def perlinnoise3_uid4e7b7b1d(v:Interval3, x:Interval, y:Interval, z:Interval, add:Interval, sub:Interval, size:Double, scale:Double, offset:Double):Interval = {(noise3_prediction((v + Interval3(x,y,z))*size)+offset)*scale/size + add - sub}
+def scalesrcv_uid4e7b7b1d(scale:Double):Interval3 = {world   * scale}
 
 val vn2_scalesrcz_uid4e7b7b1d = scalesrcz_uid4e7b7b1d(0.12158186842653576)
 val vn2_scalesrcv_uid4e7b7b1d = scalesrcv_uid4e7b7b1d(0.12158186842653576)

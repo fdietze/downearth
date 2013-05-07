@@ -8,7 +8,7 @@ import simplex3d.math.double.functions._
 import util.Timer
 
 import noise.Noise._
-import noise.interval.{Interval, Volume}
+import noise.interval.{Interval, Interval3}
 
 class NoisePrediction extends FunSuite {
 
@@ -30,7 +30,7 @@ class NoisePrediction extends FunSuite {
 			val y1 = y0 + r/30
 			val z1 = z0 + r/30
 	
-			val volume = Volume(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
+			val volume = Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
 			predictiontimer.measure { noise3_prediction(volume) }
 			noisetimer.measure{ noise3(x0,y0,z0) }
 		}
@@ -52,7 +52,7 @@ class NoisePrediction extends FunSuite {
 			val y1 = y0 + r/30
 			val z1 = z0 + r/30
 	
-			val prediction = noise3_prediction(Volume(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
+			val prediction = noise3_prediction(Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
 	
 			// Sample Interval
 			for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){ 

@@ -101,7 +101,7 @@ class Worker (id:Int) extends Actor {
 
   def receive = {
     case cuboid @ Cuboid(cuboidpos, cuboidsize) =>
-      val interval = Config.prediction(cuboid.toVolume)
+      val interval = Config.prediction(cuboid.toInterval3)
 
       if(interval.isPositive) {
         Draw addPredictedCuboid cuboid  // Für DebugDraw

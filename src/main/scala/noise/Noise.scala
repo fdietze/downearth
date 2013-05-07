@@ -1,6 +1,7 @@
 package noise
 
-import interval.{Interval, Volume}
+import interval.{Interval, Interval3}
+import interval.{functions => intervalfunctions}
 
 import simplex3d.math._
 import simplex3d.math.double._
@@ -106,7 +107,7 @@ object Noise {
 		gradients3(hash(hash(hash(X)+Y)+Z) & 15)
 	}
 
-	def noise3_prediction(v:Volume):Interval = {
+	def noise3_prediction(v:Interval3):Interval = {
 		import v.x.{low => x0, high => x1}
 		import v.y.{low => y0, high => y1}
 		import v.z.{low => z0, high => z1}
@@ -131,21 +132,21 @@ object Noise {
 		
 		// if interval spreads over more than one unit cube
 		if( fastceil(x1) - X > 1 )
-			return interval.hull(
-				noise3_prediction(Volume(Interval(x0,fastfloor(x0)+1),Interval(y0,y1),Interval(z0,z1))),
-				noise3_prediction(Volume(Interval(fastceil(x1)-1,x1),Interval(y0,y1),Interval(z0,z1)))
+			return intervalfunctions.hull(
+				noise3_prediction(Interval3(Interval(x0,fastfloor(x0)+1),Interval(y0,y1),Interval(z0,z1))),
+				noise3_prediction(Interval3(Interval(fastceil(x1)-1,x1),Interval(y0,y1),Interval(z0,z1)))
 			)
 			
 		if( fastceil(y1) - Y > 1 )
-			return interval.hull(
-				noise3_prediction(Volume(Interval(x0,x1), Interval(y0,fastfloor(y0)+1),Interval(z0,z1))),
-				noise3_prediction(Volume(Interval(x0,x1), Interval(fastceil(y1)-1,y1),Interval(z0,z1)))
+			return intervalfunctions.hull(
+				noise3_prediction(Interval3(Interval(x0,x1), Interval(y0,fastfloor(y0)+1),Interval(z0,z1))),
+				noise3_prediction(Interval3(Interval(x0,x1), Interval(fastceil(y1)-1,y1),Interval(z0,z1)))
 			)
 			
 		if( fastceil(z1) - Z > 1 )
-			return interval.hull(
-				noise3_prediction(Volume(Interval(x0,x1),Interval(y0,y1),Interval(z0,fastfloor(z0)+1))),
-				noise3_prediction(Volume(Interval(x0,x1),Interval(y0,y1),Interval(fastceil(z1)-1,z1)))
+			return intervalfunctions.hull(
+				noise3_prediction(Interval3(Interval(x0,x1),Interval(y0,y1),Interval(z0,fastfloor(z0)+1))),
+				noise3_prediction(Interval3(Interval(x0,x1),Interval(y0,y1),Interval(fastceil(z1)-1,z1)))
 			)
 		
 		
@@ -457,7 +458,7 @@ g3y*0.16666666666666666,(g3z-g3y)*0.16666666666666666,(2*g3z-g3y)*0.166666666666
 	}	
 
 
-	def noise3_prediction_MAA(v:Volume):Interval = {
+	def noise3_prediction_MAA(v:Interval3):Interval = {
 		import v.x.{low => x0a, high => x1a}
 		import v.y.{low => y0a, high => y1a}
 		import v.z.{low => z0a, high => z1a}
@@ -478,21 +479,21 @@ g3y*0.16666666666666666,(g3z-g3y)*0.16666666666666666,(2*g3z-g3y)*0.166666666666
 		
 		// if interval spreads over more than one unit cube
 		if( fastceil(x1a) - X > 1 )
-			return interval.hull(
-				noise3_prediction(Volume(Interval(x0a,fastfloor(x0a)+1),v.y,v.z)),
-				noise3_prediction(Volume(Interval(fastceil(x1a)-1,x1a),v.y,v.z))
+			return intervalfunctions.hull(
+				noise3_prediction(Interval3(Interval(x0a,fastfloor(x0a)+1),v.y,v.z)),
+				noise3_prediction(Interval3(Interval(fastceil(x1a)-1,x1a),v.y,v.z))
 			)
 			
 		if( fastceil(y1a) - Y > 1 )
-			return interval.hull(
-				noise3_prediction(Volume(v.x, Interval(y0a,fastfloor(y0a)+1),v.z)),
-				noise3_prediction(Volume(v.x, Interval(fastceil(y1a)-1,y1a),v.z))
+			return intervalfunctions.hull(
+				noise3_prediction(Interval3(v.x, Interval(y0a,fastfloor(y0a)+1),v.z)),
+				noise3_prediction(Interval3(v.x, Interval(fastceil(y1a)-1,y1a),v.z))
 			)
 			
 		if( fastceil(z1a) - Z > 1 )
-			return interval.hull(
-				noise3_prediction(Volume(v.x,v.y,Interval(z0a,fastfloor(z0a)+1))),
-				noise3_prediction(Volume(v.x,v.y,Interval(fastceil(z1a)-1,z1a)))
+			return intervalfunctions.hull(
+				noise3_prediction(Interval3(v.x,v.y,Interval(z0a,fastfloor(z0a)+1))),
+				noise3_prediction(Interval3(v.x,v.y,Interval(fastceil(z1a)-1,z1a)))
 			)
 		
 		
