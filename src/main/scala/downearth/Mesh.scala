@@ -35,8 +35,10 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	def size = data.limit / 8
   def hasVbo = vbo > 0
 
-  @Foo(first = "a", last = "b")
-  var i = 17
+  val stride = 8*4
+  val posOffset      = 0
+  val texCordsOffset = 3*4
+  val normalOffset   = 5*4
 
 	def bind() {
 		assert(vbo != 0)
