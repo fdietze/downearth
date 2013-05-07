@@ -1,4 +1,4 @@
-import noise.perlin.prediction.bezierImproved
+import noise.perlin.prediction.{bezierImproved, bezierSimple}
 import org.scalatest.FunSuite
 
 import downearth._
@@ -65,53 +65,105 @@ class Noise extends FunSuite {
 
 
   test("perlin noise prediction speed (improved)") {
-		
-		val noisetimer = new Timer
-		val predictiontimer = new Timer
-		val n = 2000
-		for( i <- 0 until n )
-		{
-			import scala.util.Random.{nextDouble => r}
-	
-			val x0 = 1/r
-			val y0 = 1/r
-			val z0 = 1/r
-			val x1 = x0 + r/30
-			val y1 = y0 + r/30
-			val z1 = z0 + r/30
-	
-			val volume = Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
-			predictiontimer.measure { bezierImproved(volume) }
-			noisetimer.measure{ perlin.improved(x0,y0,z0) }
-		}
-		println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
-	}
-	
-	
-	test("perlin noise prediction correctness by sampling (improved)") {
-		val n = 100
-		val samples = 10
-		for( i <- 0 until n )
-		{
-			import scala.util.Random.{nextDouble => r}
-	
-			val x0 = 1/r
-			val y0 = 1/r
-			val z0 = 1/r
-			val x1 = x0 + r/30
-			val y1 = y0 + r/30
-			val z1 = z0 + r/30
-	
-			val prediction = bezierImproved(Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
-	
-			// Sample Interval
-			for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){ 
-				val x = x0 + u / samples.toDouble * (x1 - x0)
-				val y = y0 + v / samples.toDouble * (y1 - y0)
-				val z = z0 + w / samples.toDouble * (z1 - z0)
-				val noise = perlin.improved(x,y,z)
-				assert(prediction(noise),"Wrong Prediction:\n" + prediction + ", \nInterval: " + (x0,y0,z0) + " - " + (x1,y1,z1) + "\nPosition: " + (x,y,z) + "Value: " + noise)
-			}
-		}
-	}
+
+    val noisetimer = new Timer
+    val predictiontimer = new Timer
+    val n = 2000
+    for( i <- 0 until n )
+    {
+      import scala.util.Random.{nextDouble => r}
+
+      val x0 = 1/r
+      val y0 = 1/r
+      val z0 = 1/r
+      val x1 = x0 + r/30
+      val y1 = y0 + r/30
+      val z1 = z0 + r/30
+
+      val volume = Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
+      predictiontimer.measure { bezierImproved(volume) }
+      noisetimer.measure{ perlin.improved(x0,y0,z0) }
+    }
+    println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
+  }
+
+
+  test("perlin noise prediction speed (simple)") {
+
+    val noisetimer = new Timer
+    val predictiontimer = new Timer
+    val n = 2000
+    for( i <- 0 until n )
+    {
+      import scala.util.Random.{nextDouble => r}
+
+      val x0 = 1/r
+      val y0 = 1/r
+      val z0 = 1/r
+      val x1 = x0 + r/30
+      val y1 = y0 + r/30
+      val z1 = z0 + r/30
+
+      val volume = Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
+      predictiontimer.measure { bezierSimple(volume) }
+      noisetimer.measure{ perlin.simple(x0,y0,z0) }
+    }
+    println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
+  }
+
+
+
+  test("perlin noise prediction correctness by sampling (improved)") {
+    val n = 100
+    val samples = 10
+    for( i <- 0 until n )
+    {
+      import scala.util.Random.{nextDouble => r}
+
+      val x0 = 1/r
+      val y0 = 1/r
+      val z0 = 1/r
+      val x1 = x0 + r/30
+      val y1 = y0 + r/30
+      val z1 = z0 + r/30
+
+      val prediction = bezierImproved(Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
+
+      // Sample Interval
+      for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){
+        val x = x0 + u / samples.toDouble * (x1 - x0)
+        val y = y0 + v / samples.toDouble * (y1 - y0)
+        val z = z0 + w / samples.toDouble * (z1 - z0)
+        val noise = perlin.improved(x,y,z)
+        assert(prediction(noise),"Wrong Prediction:\n" + prediction + ", \nInterval: " + (x0,y0,z0) + " - " + (x1,y1,z1) + "\nPosition: " + (x,y,z) + "Value: " + noise)
+      }
+    }
+  }
+
+  test("perlin noise prediction correctness by sampling (simple)") {
+    val n = 100
+    val samples = 10
+    for( i <- 0 until n )
+    {
+      import scala.util.Random.{nextDouble => r}
+
+      val x0 = 1/r
+      val y0 = 1/r
+      val z0 = 1/r
+      val x1 = x0 + r/30
+      val y1 = y0 + r/30
+      val z1 = z0 + r/30
+
+      val prediction = bezierSimple(Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1)))
+
+      // Sample Interval
+      for( u <- 1 until samples; v <- 1 until samples; w <- 1 until samples ){
+        val x = x0 + u / samples.toDouble * (x1 - x0)
+        val y = y0 + v / samples.toDouble * (y1 - y0)
+        val z = z0 + w / samples.toDouble * (z1 - z0)
+        val noise = perlin.simple(x,y,z)
+        assert(prediction(noise),"Wrong Prediction:\n" + prediction + ", \nInterval: " + (x0,y0,z0) + " - " + (x1,y1,z1) + "\nPosition: " + (x,y,z) + "Value: " + noise)
+      }
+    }
+  }
 }

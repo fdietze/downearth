@@ -195,7 +195,7 @@ object bezierImproved {
       i += 1
     }
 
-    Interval(max(imin,-1), min(imax,1))
+    Interval(max(imin,-1.036353811211803), min(imax,1.036353811211803))
   }
 }
 
