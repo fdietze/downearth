@@ -5,7 +5,6 @@ import simplex3d.math.double.Vec3
 import scala.Array
 import simplex3d.math.doublex.functions._
 import interval.{functions => intervalfunctions}
-import bezier._
 import noise.perlin._
 
 object bezierImproved {
