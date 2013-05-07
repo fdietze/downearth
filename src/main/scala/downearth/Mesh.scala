@@ -15,7 +15,6 @@ import simplex3d.math.integration.RFloat
 import org.lwjgl.BufferUtils
 
 import java.nio._
-import downearth.annotation._
 
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
