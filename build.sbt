@@ -7,13 +7,13 @@ version := "0.2.0"
 scalaVersion := "2.10.1"
 
 resolvers ++= Seq(
-  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+  //"Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
   //"Slick" at "http://slick.cokeandcode.com/mavenrepo"
 )
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
-  "com.typesafe.akka" %% "akka-actor" % "2.2-M2",
+  "com.typesafe.akka" %% "akka-actor" % "2.2-M3",
   "org.scala-lang" % "scala-reflect" % "2.10.1",
   "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
   "org.simplex3d" %% "simplex3d-data-double" % "2.4.7",
@@ -35,7 +35,6 @@ scalacOptions ++= Seq(
 
 javaOptions in run ++= Seq(
   "-XX:+ExplicitGCInvokesConcurrent",
-  //"-XX:+DoEscapeAnalysis",
   "-Xmx512m"
 )
 
