@@ -1,10 +1,7 @@
 package downearth
 
 import simplex3d.math.double.Vec3
-import simplex3d.math.doublex.Vec3d
-import interval.{Interval, Interval3}
 import org.lwjgl.opengl.{Display, DisplayMode}
-import downearth.generation.prediction
 import downearth.worldoctree.{FullHexaeder, Leaf}
 import util.isPowerOfTwo
 
@@ -43,9 +40,6 @@ object Config{
 	val startAsGhost = false
 	val buildrange = 100
 	
-	def densityfunction(v:Vec3) = gen.density(v)
-	def materialfunction(v:Vec3) = gen.material(v)
-	def prediction(v:Interval3) = generation.prediction(v)
 	val saveWorld = false
 
 	var fullscreen = loadBoolean("fullscreen") getOrElse false

@@ -9,8 +9,8 @@ import downearth.util._
 import downearth.Update
 import downearth.TextureMeshData
 import downearth.TextureMeshBuilder
-import downearth.Config.materialfunction
 import downearth.world.World
+import downearth.generation.WorldDefinition
 
 sealed trait Octant extends Serializable {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
@@ -172,7 +172,7 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 			}
 			
 			@inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
-				val matid = if( material >= 0 ) material else materialfunction(pos + 0.5).id
+				val matid = if( material >= 0 ) material else WorldDefinition.material(pos + 0.5).id
 				
 				vertexBuilder += (Vec3(pos) + v0)
 				texCoordBuilder += Vec2( v0(axisa)/4.0 + matid/4.0 , v0(axisb) )

@@ -4,11 +4,11 @@ import interval.{Interval3, Interval}
 
 // http://www.gamedev.net/topic/285533-2d-perlin-noise-gradient-noise-range--/
 
-object trivialSimple {
+object boundsSimple {
   def apply(range:Interval3) = Interval(-1.036353811211803, 1.036353811211803)
 }
 
-object trivialImproved {
+object boundsImproved {
   def apply(range:Interval3) = Interval(-1.036353811211803, 1.036353811211803)
 }
 

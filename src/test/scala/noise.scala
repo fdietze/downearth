@@ -26,7 +26,7 @@ class Noise extends FunSuite {
       low = low min result
       high = high max result
     }
-    val bounds = perlin.prediction.trivialImproved(Interval3(0))
+    val bounds = perlin.prediction.boundsImproved(Interval3(0))
     println("["+low+", "+high+"] <= " + bounds)
     assert(bounds(low) && bounds(high))
   }
@@ -41,7 +41,7 @@ class Noise extends FunSuite {
       low = low min result
       high = high max result
     }
-    val bounds = perlin.prediction.trivialSimple(Interval3(0))
+    val bounds = perlin.prediction.boundsSimple(Interval3(0))
     println("["+low+", "+high+"] <= " + bounds)
     assert(bounds(low) && bounds(high))
   }
@@ -56,7 +56,7 @@ class Noise extends FunSuite {
       low = min(low,result)
       high = max(high,result)
     }
-    val bounds = worley.prediction.trivial(Interval3(0))
+    val bounds = worley.prediction.bounds(Interval3(0))
     println("["+low+", "+high+"] <= " + bounds)
     assert(bounds(low) && bounds(high))
   }

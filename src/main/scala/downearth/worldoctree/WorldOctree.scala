@@ -86,7 +86,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
       root = root.updated(rootNodeInfo, p, l)
 		}
 		else{
-			printf("update out of world at %s, %s\n",p.toString,rootNodeInfo.toString)
+			printf("update out of area at %s, %s\n",p.toString,rootNodeInfo.toString)
 		}
 	}
 
@@ -174,7 +174,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 	}
 
   def incDepth() {
-    // TODO add test for correct subdivision of the world. Depending on where the root is, it should be extended differently.
+    // TODO add test for correct subdivision of the area. Depending on where the root is, it should be extended differently.
 
     var newRoot:OctantOverMesh = new InnerNodeOverMesh(Array.fill[OctantOverMesh](8)(UngeneratedInnerNode))
     val newRootNodeInfo = NodeInfo(rootNodePos - rootNodeSize/2, rootNodeSize*2)
