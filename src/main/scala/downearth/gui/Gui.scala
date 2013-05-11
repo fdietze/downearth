@@ -5,89 +5,22 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.input.Mouse
 
-import downearth.Config._
+import downearth.gui.Border._
+import downearth.gui.Background._
 import downearth.util._
 import downearth._
 import downearth.rendering.{Draw, ConsoleFont, TextureManager}
-
-// die Gui wird sebst als Kamera implementiert weil sie ihre eigene 2D Szene hat
-object Gui {
-	
-	val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
-		background = new ColorBackground(Vec4(0.1,0.1,0.1,0.7))
-		border = new LineBorder(Vec4(0,0,0,1))
-		
-		children += new Hammer(position+Vec2i(0 , 0))
-		children += new Shovel(position+Vec2i(40, 0))
-		children ++= Range(0,4).map(
-			i => new MaterialWidget(i, position + Vec2i(i * 40, 40) )
-		)
-		
-		children ++= Range(0, ConstructionTool.all.size).map(
-			i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
-		)
-		
-		arrangeChildren()
-		setTopRight
-		
-		var moved = false
-		def setTopRight = setPosition(Vec2i(Main.width.toInt - size.x - 20, 20))
-		override def dragStop(mousePos:Vec2i) { moved = true }
-	}
-	
-	MainWidget.children += inventory
-	
-	def applyortho {
-		glDisable(GL_DEPTH_TEST)
-		glDisable(GL_LIGHTING)
-		
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity
-		glOrtho(0, Main.width, Main.height, 0, -100, 100)
-		
-		glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity
-	}
-	
-	def renderScene {
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) // no wireframes
-		applyortho
-		
-//  Draw.addText("%d fps" format Main.currentfps)
-//	Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
-//	Draw.addText("frustum culled nodes: " + World.frustumculls)
-//  Draw.addText("")
-//  Draw.addText("Inventory: " + Player.inventory.materials)
-//		if( !Player.isGhost ) {
-//			Draw.addText("Player Position: " + round10(Player.position) )
-//			Draw.addText("Player Velocity: " + round10(Player.velocity) )
-//		}
-		
-		glDisable( GL_LIGHTING )
-		glDisable( GL_TEXTURE_2D )
-		glEnable(GL_BLEND)
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-		
-		Draw.drawTexts
-		DisplayEventManager.draw
-
-		if( Mouse.isGrabbed )
-			Draw.crossHair
-		
-		MainWidget.invokeDraw
-		
-		glDisable(GL_BLEND)
-	}
-}
+import simplex3d.math.doublex.functions._
 
 class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5) )
 class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5,0), Vec2(0.5) )
 
 
 class MaterialWidget(val matId:Int, _pos:Vec2i)
-	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4,0), Vec2(0.25,1) )
+
+	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
+
 	with InventoryItem {
 	
 	override def mouseClicked(mousePos:Vec2i) {
@@ -96,17 +29,7 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 		ConstructionTool.selectedMaterial = matId
 		DisplayEventManager.showEventText("Material " + matId)
 	}
-	
-	override def draw {
-		super.draw
 
-		val text = floor(Player.inventory.materials(matId)).toInt
-		val textSize = Vec2i(ConsoleFont.font.getWidth(text.toString) + 2, ConsoleFont.height)
-		val textPos = position + size - textSize
-		import org.newdawn.slick.Color.white
-		Draw.drawString(textPos, text, white)
-	}
-	
 	override def selected = ConstructionTool.selectedMaterial == matId
 }
 
@@ -114,12 +37,11 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Vec2)
 	extends TextureWidget(_pos, Vec2i(32), TextureManager.tools, _texPosition, _texSize)
 	with InventoryItem {
-	
-	override def mouseClicked(mousePos:Vec2i) {
-		super.mouseClicked(mousePos)
-		Player.selectTool(tool)
-		DisplayEventManager.showEventText("Tool " + tool)
-	}
+
+  override def select() {
+    Player.selectTool(tool)
+    DisplayEventManager.showEventText("Tool " + tool)
+  }
 
 	override def selected = Player.activeTool eq tool
 }
@@ -132,47 +54,44 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
 	//def degTime = Main.uptime*degPerSec/1000.0
   val degTime = 0
 	var lastMouseOut = degTime - 360.0
-	
-	override def draw {
-		super.draw
-		
-		glPushMatrix
-			glColor4f(1,1,1,1)
-			glTranslate3dv(Vec3(position+size/2,0))
-			glScalef(20,20,20)
-			glRotatef(72,1,0,0)
-			if( mouseOver || (degTime - lastMouseOut + outOffset) < 360.0 )
-				glRotated(degTime - inOffset + preferredAngle,0,0,1)
-			else
-				glRotated(preferredAngle,0,0,1)
-			glTranslatef(-0.5f,-0.5f,-0.5f)
-			Draw.renderPolyeder(ConstructionTool.all(shapeId)(0))
-		glPopMatrix
-	}
-	
-	override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-		if( (degTime - lastMouseOut + outOffset) >= 360.0 )
-			inOffset = mod(degTime, 360.0)
-	}
-	
-	override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-		lastMouseOut = degTime
-		outOffset = mod(degTime - inOffset, 360.0)
-	}
-	
-	def selected = ConstructionTool.id == shapeId
+
+
+  override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+    if( (degTime - lastMouseOut + outOffset) >= 360.0 )
+      inOffset = mod(degTime, 360.0)
+    super.mouseIn(mousePos0, mousePos1)
+  }
+
+  override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+    lastMouseOut = degTime
+    outOffset = mod(degTime - inOffset, 360.0)
+    super.mouseOut(mousePos0, mousePos1)
+  }
 
 	override def mouseClicked(mousePos:Vec2i) {
 		super.mouseClicked(mousePos)
 		Player.selectTool(ConstructionTool)
-		ConstructionTool.id = shapeId
+
+    lineBorderColor := Vec4(0.2,0.4,1,1)
+
+    ConstructionTool.id = shapeId
 		DisplayEventManager.showEventText("Shape " + shapeId)
 	}
+
+  override def select() {
+    Player.selectTool(ConstructionTool)
+    ConstructionTool.id = shapeId
+    DisplayEventManager.showEventText("Shape " + shapeId)
+  }
+
+  override def unselect() {}
 }
 
 
 trait InventoryItem extends Draggable {
-	def selected:Boolean
+  def inventory = parent.asInstanceOf[Inventory]
+	def selected = (inventory.selected == this)
+  lineBorderColor := Vec4(1)
 	
 	override def dragStop(mousePos:Vec2i) = {
 		// draw this item last to not interrupt the positioning of the others
@@ -182,34 +101,37 @@ trait InventoryItem extends Draggable {
 		inventory.children += this
 		inventory.arrangeChildren(300)
 	}
-	
-	override def draw {
-		border match {
-			case b:LineBorder =>
-				if( selected )
-					b.color := Vec4(0.2,0.4,1,1)
-				else
-					if( mouseOver )
-						b.color := Vec4(0.6,0.8,1,1)
-					else
-						b.color := Vec4(1)
-		}
-		background match {
-			case b:ColorBackground =>
-				if( selected )
-					b.color := Vec4(0.7,0.8,1,0.25)
-				else
-					if( mouseOver )
-						b.color := Vec4(0.8,0.9,1,0.25)
-					else
-						b.color := Vec4(1,1,1,0.25)
-		}
-		super.draw
-	}
+
+  override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+    if( !selected )
+      lineBorderColor := Vec4(0.6,0.8,1,1)
+  }
+
+  override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+    if( !selected )
+      lineBorderColor := Vec4(1)
+  }
+
+  def select() {}
+  def unselect() {}
+
+  override def mouseClicked(mousePos:Vec2i) {
+    super.mouseClicked(mousePos)
+    lineBorderColor := Vec4(0.2,0.4,1,1)
+    if(inventory.selected != null) {
+      inventory.selected.lineBorderColor := Vec4(1)
+      inventory.selected.unselect()
+    }
+    inventory.selected = this
+    select()
+  }
+
 }
 
 
-class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable
+class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable {
+  var selected:InventoryItem = null
+}
 
 
 

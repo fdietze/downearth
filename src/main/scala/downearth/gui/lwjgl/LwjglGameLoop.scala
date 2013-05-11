@@ -31,25 +31,24 @@ class LwjglGameLoop extends GameLoop {
     import Mouse._
     import Keyboard._
 
-    if(Display.isCloseRequested)
+    if( Display.isCloseRequested )
       finished = true
 
     lastMousePos := mousePos
-    mousePos := Vec2i(getX, Main.height.toInt-Mouse.getY)
-
+    mousePos := Vec2i(getX, Display.getHeight-Mouse.getY)
 
     val mouseDelta = Vec2i(getDX, getDY)
     // Move and rotate player
     val delta = Vec3(0)
     val delta_angle = Vec3(0)
 
-    if(isKeyDown(keyForward))
+    if( isKeyDown(keyForward) )
       delta.z -= 1
-    if(isKeyDown(keyBackward))
+    if( isKeyDown(keyBackward) )
       delta.z += 1
-    if(isKeyDown(keyLeft))
+    if( isKeyDown(keyLeft) )
       delta.x -= 1
-    if(isKeyDown(keyRight))
+    if( isKeyDown(keyRight) )
       delta.x += 1
 
 
@@ -136,6 +135,10 @@ class LwjglGameLoop extends GameLoop {
             case _ =>
           }
         }
+      }
+
+      if( Display.wasResized ) {
+        MainWidget.resize(Vec2i(Display.getWidth, Display.getHeight))
       }
 
       // Mouse events

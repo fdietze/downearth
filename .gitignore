@@ -3,6 +3,9 @@ project/boot/
 .idea*
 *~
 *.log
+*.blend*
+*.mtl
+*.obj
 
 screenshots
 config.xml

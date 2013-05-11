@@ -6,44 +6,13 @@ import org.lwjgl.opengl.GL11._
 
 import downearth.util._
 
-trait Border {
-	def draw(position:Vec2i, size:Vec2i)
+object Border extends Enumeration {
+  type Border = Value
+  val NoBorder, LineBorder = Value
 }
 
-object NoBorder extends Border {
-	def draw(position:Vec2i, size:Vec2i) {}
+object Background extends Enumeration {
+  type Background = Value
+  val NoBackground, ColorBackGround = Value
 }
 
-class LineBorder(val color:Vec4 = Vec4(1)) extends Border {
-	def draw(position:Vec2i, size:Vec2i) {
-		glColor4d(color.r, color.g, color.b, color.a)
-		
-		glBegin(GL_LINE_LOOP)
-			glVertex2i(position.x-1       , position.y)
-			glVertex2i(position.x         , position.y + size.y)
-			glVertex2i(position.x + size.x, position.y + size.y)
-			glVertex2i(position.x + size.x, position.y)
-		glEnd
-	}
-}
-
-trait Background {
-	def draw(position:Vec2i, size:Vec2i)
-}
-
-object NoBackground extends Background {
-	def draw(position:Vec2i, size:Vec2i) {}
-}
-
-class ColorBackground(val color:Vec4 = Vec4(1,1,1,0.25)) extends Background {
-	def draw(position:Vec2i, size:Vec2i) {
-		glColor4dv(color)
-		
-		glBegin(GL_QUADS)
-			glVertex2i(position.x         , position.y)
-			glVertex2i(position.x         , position.y + size.y)
-			glVertex2i(position.x + size.x, position.y + size.y)
-			glVertex2i(position.x + size.x, position.y)
-		glEnd
-	}
-}

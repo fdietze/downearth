@@ -8,19 +8,32 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
-import simplex3d.math.double._
 import org.lwjgl.BufferUtils
+import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
+import org.lwjgl.opengl.Display
+
 import downearth._
-import downearth.gui.{Gui}
+import downearth.util._
+import downearth.gui._
+import downearth.gui.Border._
+import downearth.gui.Background._
 import downearth.worldoctree._
 import downearth.world.World
-import downearth.worldoctree.NodeInfo
-import scala.collection.mutable.ArrayBuffer
-import downearth.util.Logger
+import downearth.entity.{Entity, SimpleEntity}
+
 import java.nio.IntBuffer
+
+import scala.collection.mutable.ArrayBuffer
+import scala.Tuple2
+
+import simplex3d.math.Vec2i
+import simplex3d.math.double._
+import simplex3d.math.doublex.functions._
+import downearth.worldoctree.NodeInfo
+import scala.Tuple2
 
 object Renderer extends Logger {
 
@@ -45,7 +58,7 @@ object Renderer extends Logger {
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
     renderWorld( Player.camera )
-    Gui.renderScene
+    renderGui()
   }
 
   def initshaders {
@@ -74,6 +87,7 @@ object Renderer extends Logger {
         ARBShaderObjects.glValidateProgramARB(shader)
       }
     }
+
 //    printLogInfo(shader)
 //    printLogInfo(vertShader)
 //    printLogInfo(fragShader)
@@ -100,6 +114,164 @@ object Renderer extends Logger {
       //Add ambient light
       glLightModel(GL_LIGHT_MODEL_AMBIENT, ambientLight)
     }
+  }
+
+  def renderGui() {
+    
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ) // no wireframes
+    
+    glDisable(GL_DEPTH_TEST)
+    glDisable(GL_LIGHTING)
+    
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(0, Display.getWidth, Display.getHeight, 0, -100, 100)
+    
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+  
+//  Draw.addText("%d fps" format Main.currentfps)
+//  Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
+//  Draw.addText("frustum culled nodes: " + World.frustumculls)
+//  Draw.addText("")
+//  Draw.addText("Inventory: " + Player.inventory.materials)
+//    if( !Player.isGhost ) {
+//      Draw.addText("Player Position: " + round10(Player.position) )
+//      Draw.addText("Player Velocity: " + round10(Player.velocity) )
+//    }
+    
+    glDisable( GL_LIGHTING )
+    glDisable( GL_TEXTURE_2D )
+    glEnable( GL_BLEND )
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
+    
+    Draw.drawTexts
+    DisplayEventManager.draw
+
+    if( Mouse.isGrabbed )
+      Draw.crossHair
+
+    drawWidget(MainWidget)
+    
+    glDisable(GL_BLEND)
+  }
+
+  def drawWidget(widget:Widget) {
+    widget.invokeAnimation
+    widget.background match {
+      case ColorBackGround =>
+        drawColorBackGround(widget.position, widget.size, widget.backGroundColor)
+      case NoBackground =>
+    }
+
+    // no pattern matching, because branching in non-exclusive
+    if( widget.isInstanceOf[ShapeWidget] ){
+      drawShapeWidget(widget.asInstanceOf[ShapeWidget])
+    }
+    if( widget.isInstanceOf[Label]) {
+      Draw.drawString( widget.position, widget.asInstanceOf[Label].text)
+    }
+    if( widget.isInstanceOf[TextureWidget] ) {
+      val tw = widget.asInstanceOf[TextureWidget]
+      import tw._
+
+      glColor4f(1,1,1,1)
+
+      texture.bind
+      glEnable(GL_TEXTURE_2D)
+      glBegin(GL_QUADS)
+
+      glTexCoord2d(tw.texPosition.x, texPosition.y)
+      glVertex2i(position.x         , position.y          )
+      glTexCoord2d(tw.texPosition.x, texPosition.y + texSize.y)
+      glVertex2i(position.x         , position.y + size.y )
+      glTexCoord2d(tw.texPosition.x + texSize.x, texPosition.y + texSize.y)
+      glVertex2i(position.x + size.x, position.y + size.y )
+      glTexCoord2d(tw.texPosition.x + texSize.x, texPosition.y)
+      glVertex2i(position.x + size.x, position.y          )
+
+      glEnd()
+      glDisable(GL_TEXTURE_2D)
+    }
+    if( widget.isInstanceOf[MaterialWidget] ) {
+      val text = floor(Player.inventory.materials(widget.asInstanceOf[MaterialWidget].matId)).toInt
+      val textSize = Vec2i(ConsoleFont.font.getWidth(text.toString) + 2, ConsoleFont.height)
+      val textPos = widget.position + widget.size - textSize
+      import org.newdawn.slick.Color.white
+      Draw.drawString(textPos, text, white)
+    }
+
+    import widget.{lineBorderColor => c}
+
+    if( widget.isInstanceOf[GridPanel] && widget.asInstanceOf[GridPanel].border == LineBorder ) {
+      glColor4d(c.r,c.g,c.b,c.a)
+      drawLineGrid(widget.position, widget.size, widget.asInstanceOf[GridPanel].cellsize)
+    }
+
+    if( widget.isInstanceOf[Panel] )
+      for( child <- widget.asInstanceOf[Panel].children )
+        drawWidget(child)
+
+    widget.border match {
+      case LineBorder =>
+        glColor4d(c.r,c.g,c.b,c.a)
+        drawLineBorder(widget.position, widget.size)
+      case NoBorder =>
+    }
+  }
+
+  def drawShapeWidget(widget:ShapeWidget) {
+    glPushMatrix()
+    glColor4f(1,1,1,1)
+    glTranslate3dv(Vec3(widget.position+widget.size/2,0))
+    glScalef(20,20,20)
+    glRotatef(72,1,0,0)
+
+    if( widget.mouseOver || (widget.degTime - widget.lastMouseOut + widget.outOffset) < 360.0 )
+      glRotated(widget.degTime - widget.inOffset + widget.preferredAngle,0,0,1)
+    else
+      glRotated(widget.preferredAngle,0,0,1)
+
+    glTranslatef(-0.5f,-0.5f,-0.5f)
+    Draw.renderPolyeder(ConstructionTool.all(widget.shapeId)(0))
+    glPopMatrix()
+  }
+
+  def drawColorBackGround(position:Vec2i, size:Vec2i, color:Vec4) {
+    glColor4d(color.r, color.g, color.b, color.a)
+
+    glBegin(GL_QUADS)
+    glVertex2i(position.x         , position.y)
+    glVertex2i(position.x         , position.y + size.y)
+    glVertex2i(position.x + size.x, position.y + size.y)
+    glVertex2i(position.x + size.x, position.y)
+    glEnd()
+  }
+
+  def drawLineBorder(position:Vec2i, size:Vec2i) {
+    glBegin(GL_LINE_LOOP)
+    glVertex2i(position.x-1       , position.y)
+    glVertex2i(position.x         , position.y + size.y)
+    glVertex2i(position.x + size.x, position.y + size.y)
+    glVertex2i(position.x + size.x, position.y)
+    glEnd()
+  }
+
+  def drawLineGrid(position:Vec2i, size:Vec2i, cellSize:Int) {
+    glBegin(GL_LINES)
+    var x = 0
+    while( x < size.x ) {
+      glVertex2i(position.x + x, position.y + 0)
+      glVertex2i(position.x + x, position.y + size.y)
+      x += cellSize
+    }
+    var y = 0
+    while( y < size.y ) {
+      glVertex2i(position.x + 0     , position.y + y)
+      glVertex2i(position.x + size.x, position.y + y)
+      y += cellSize
+    }
+    glEnd()
   }
 
   def renderWorld(camera:Camera) {
@@ -136,6 +308,15 @@ object Renderer extends Logger {
 
     drawOctree(World.octree, frustumTest, order)
 
+    World.dynamicWorld.entities foreach {
+      case simple:SimpleEntity => ()
+        glPushMatrix
+        glTranslated( simple.pos.x, simple.pos.y, simple.pos.z )
+        drawObjMesh( simple.mesh )
+        glPopMatrix
+      case entity:Entity => ()
+    }
+
     // TODO this is not strictly render code
     // here the occlusion query from the last frame is evaluated, and a new one is generated
 
@@ -144,14 +325,11 @@ object Renderer extends Logger {
         World.octree.generateNode(result)
     query = findUngeneratedNodes(World.octree, frustumTest, order)
 
+    Player.activeTool.draw
+
 
     if(Config.debugDraw) {
       drawDebugOctree(World.octree, order, frustumTest)
-    }
-
-    Player.activeTool.draw
-
-    if(Config.debugDraw) {
       BulletPhysics.debugDrawWorld
       Draw.drawSampledNodes
     }
@@ -259,7 +437,7 @@ object Renderer extends Logger {
         occluded += info
     }
 
-    log.println( s"occlusion query result (${queries.buffer.limit}):\noccluded: ${occluded.size}, visible: ${visible.size}" )
+    //log.println( s"occlusion query result (${queries.buffer.limit}):\noccluded: ${occluded.size}, visible: ${visible.size}" )
     glDeleteQueries(queries.buffer)
 
     QueryResult(visible, occluded)
@@ -269,44 +447,62 @@ object Renderer extends Logger {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
+    TextureManager.materials.bind
+
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glEnableClientState(GL_NORMAL_ARRAY)
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
     octree.queryRegion( test ) (order) {
       case (info, node:MeshNode) =>
         drawTextureMesh(node.mesh)
         false
       case _ => true
     }
+
+    glDisableClientState(GL_VERTEX_ARRAY)
+    glDisableClientState(GL_NORMAL_ARRAY)
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+  }
+
+  def drawObjMesh(mesh:ObjMesh) {
+    TextureManager.box.bind
+
+    drawCalls += 1;
+    mesh.bind()
+
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glEnableClientState(GL_NORMAL_ARRAY)
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
+    glVertexPointer(mesh.posComponents, GL_FLOAT, mesh.stride, mesh.posOffset)
+    glTexCoordPointer(mesh.texCoordComponents, GL_FLOAT, mesh.stride, mesh.normalOffset)
+    glNormalPointer(GL_FLOAT, mesh.stride, mesh.normalOffset)
+
+    glDrawElements(GL_TRIANGLES, mesh.size, GL_UNSIGNED_INT, 0);
+
+    glDisableClientState(GL_VERTEX_ARRAY)
+    glDisableClientState(GL_NORMAL_ARRAY)
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+
+    mesh.unbind()
   }
 
   def drawTextureMesh(mesh:TextureMesh) {
-    //TextureManager.box.bind
-    TextureManager.materials.bind
-
     if( !mesh.hasVbo )
       mesh.genvbo()
 
     if( mesh.size > 0 ) {
       drawCalls += 1
       mesh.bind()
-
-      glEnableClientState(GL_VERTEX_ARRAY)
-      glEnableClientState(GL_NORMAL_ARRAY)
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-      //glEnableClientState(GL_COLOR_ARRAY)
-
       glVertexPointer(mesh.vertices.components, mesh.vertices.rawEnum, mesh.vertices.byteStride, mesh.vertices.byteOffset)
       glNormalPointer(mesh.normals.rawEnum, mesh.normals.byteStride, mesh.normals.byteOffset)
       glTexCoordPointer(mesh.texcoords.components, mesh.texcoords.rawEnum, mesh.texcoords.byteStride, mesh.texcoords.byteOffset)
-      //glColorPointer(colors.components, colors.rawType, colors.byteStride, colors.byteOffset)
-
       glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size)
-
-      glDisableClientState(GL_VERTEX_ARRAY)
-      glDisableClientState(GL_NORMAL_ARRAY)
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-      //glDisableClientState(GL_COLOR_ARRAY)
 
       glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
     }
+
     else {
       emptyDrawCalls += 1
     }

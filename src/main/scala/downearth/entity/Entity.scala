@@ -1,7 +1,12 @@
 package downearth.entity
 
 import downearth.ObjMesh
+import simplex3d.math.double._
 
-trait Entity
+trait Entity {
+	def pos:Vec3
+}
 
-class SimpleEntity(mesh:ObjMesh) extends Entity
+class SimpleEntity(val pos:Vec3, val mesh:ObjMesh) extends Entity {
+	require(mesh.hasVbo)
+}

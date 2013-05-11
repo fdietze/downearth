@@ -31,34 +31,54 @@ trait Mesh extends Serializable {
 
 class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	var vbo = 0
-	def size = data.limit / 8
-  def hasVbo = vbo > 0
+  var vibo = 0
+	def size = indices.limit
+  def hasVbo = (vbo > 0 && vibo > 0)
+
+  require(size > 0)
 
   val stride = 8*4
   val posOffset      = 0
   val texCordsOffset = 3*4
   val normalOffset   = 5*4
 
+  val posComponents = 3
+  val texCoordComponents = 2
+
 	def bind() {
-		assert(vbo != 0)
+		assert(vbo != 0 && vibo != 0)
 		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vibo)
 	}
+
+  def unbind() {
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0) 
+  }
 
 	def genvbo() {
 		freevbo
 		// vbo with size of 0 can't be initialized
-		if( size > 0 ) {
-			vbo = glGenBuffersARB()
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
-			glBufferDataARB(GL_ARRAY_BUFFER_ARB, data, GL_STATIC_DRAW_ARB)
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
-		}
+		
+		vbo = glGenBuffersARB()
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
+		glBufferDataARB(GL_ARRAY_BUFFER_ARB, data, GL_STATIC_DRAW_ARB)
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+
+    vibo = glGenBuffersARB()
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vibo);
+    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indices, GL_STATIC_DRAW_ARB);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0)
+		
+    assert( hasVbo )
 	}
 	
 	def freevbo() {
 		if( vbo > 0 ) {
 			glDeleteBuffersARB( vbo )
+      glDeleteBuffersARB( vibo )
 			vbo = 0
+      vibo = 0
 		}
 	}
 }
@@ -99,43 +119,40 @@ case class Update(pos:Int,size:Int,data:TextureMeshData) {
 object MutableTextureMesh {
 	
 	def apply(data:TextureMeshData) = {
-	import data.{vertexArray,texcoordsArray}
+    import data.{vertexArray,texcoordsArray}
 //	import data.{vertexArray, colorArray}
 	
-	val normalArray = if(Config.smoothShading) new Array[Vec3](vertexArray.size) else (data.normalArray flatMap (x => Seq(x,x,x)))
-	
-	
-	if(Config.smoothShading) {
-		
-		val indices = (0 until vertexArray.size).sortWith( (a,b) => {
-			val v1 = vertexArray(a)
-			val v2 = vertexArray(b)
-			(v1.x < v2.x) || (v1.x == v2.x && v1.y < v2.y) || (v1.xy == v2.xy && v1.z < v2.z)
-		})
-		
-		var equals:List[Int] = Nil
-		
-		for(index <- indices){
-			if( equals == Nil || vertexArray(equals.head) == vertexArray(index) )
-				equals ::= index
-			else{
-				val normal = normalize( (equals map ( i => data.normalArray(i/3) ) ).reduce(_+_) )
-				for(j <- equals)
-					normalArray(j) = normal
-				equals = index :: Nil
-			}
-		}
-		
-		def makeSmooth{
-			val normal = normalize( (equals map ( i => data.normalArray(i/3) ) ).reduce(_+_) )
-			for(i <- equals)
-				normalArray(i) = normal
-		}
-		
-		if(equals != Nil)
-			makeSmooth
-	}
+    val normalArray = if(Config.smoothShading) new Array[Vec3](vertexArray.size) else (data.normalArray flatMap (x => Seq(x,x,x)))
 
+    if(Config.smoothShading) {
+      val indices = (0 until vertexArray.size).sortWith( (a,b) => {
+        val v1 = vertexArray(a)
+        val v2 = vertexArray(b)
+        (v1.x < v2.x) || (v1.x == v2.x && v1.y < v2.y) || (v1.xy == v2.xy && v1.z < v2.z)
+     })
+
+      var equals:List[Int] = Nil
+		
+		  for( index <- indices ) {
+			  if( equals == Nil || vertexArray(equals.head) == vertexArray(index) )
+				  equals ::= index
+			  else{
+				  val normal = normalize( (equals map ( i => data.normalArray(i/3) ) ).reduce(_+_) )
+				  for(j <- equals)
+					  normalArray(j) = normal
+				  equals = index :: Nil
+			  }
+		  }
+		
+      def makeSmooth{
+        val normal = normalize( (equals map ( i => data.normalArray(i/3) ) ).reduce(_+_) )
+        for(i <- equals)
+          normalArray(i) = normal
+      }
+		
+      if(equals != Nil)
+        makeSmooth
+	  }
 
     val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * 8 * 4)
     val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
@@ -148,7 +165,6 @@ object MutableTextureMesh {
 			texcoords(i) = texcoordsArray(i)
 		}
 		new MutableTextureMesh(vertices,normals,texcoords)
-//		new MutableTextureMesh(vertices,normals,colors)
 	}
 	
 	def apply(meshes:Array[MutableTextureMesh]) = {
@@ -162,14 +178,14 @@ object MutableTextureMesh {
 		var currentpos = 0
 		var currentsize = 0
 		
-		for(mesh <- meshes){
+		for(mesh <- meshes) {
 			currentsize = mesh.size
 			vertices.bindingBufferSubData(currentpos,currentsize) put 
 				mesh.vertices.bindingBufferSubData(0,currentsize)
 			currentpos += currentsize
 		}
+
 		new MutableTextureMesh(vertices,normals,texcoords)
-//		new MutableTextureMesh(vertices,normals,colors)
 	}
 }
 

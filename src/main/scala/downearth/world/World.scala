@@ -27,9 +27,5 @@ object World {
 		BulletPhysics.worldChange(pos)
 	}
 
-	val dynamicWorld = new DynamicWorld
-	val loader = new ObjLoader
-	dynamicWorld.entities += new SimpleEntity(loader.load(new FileInputStream(new File("monkey.obj"))))
-
-
+	val dynamicWorld = DynamicWorld.testScene
 }
