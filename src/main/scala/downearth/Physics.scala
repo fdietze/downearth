@@ -286,14 +286,10 @@ object BulletPhysics {
 	def getTime = System.nanoTime / 1000000000.0
 	var simTime = getTime
 	
-	def simStep(timestep:Float) {
-		dynamicsWorld stepSimulation timestep
-	}
-	
 	def update() {
 		if(!pause) {
 			val currentTime = getTime
-			dynamicsWorld stepSimulation (currentTime - simTime).toFloat
+			dynamicsWorld stepSimulation Main.gameLoop.timeStep.toFloat
 			simTime = currentTime
 		}
 	}

@@ -32,7 +32,7 @@ abstract class GameLoop {
 	def uptime = time - starttime
 
 	var lastFrame = uptime
-	var timeStep = 0.0
+	val timeStep = 1.0 / fpsLimit
 	var currentFps = 0
 	var timestamp = starttime
 	var frameCounter = 0
@@ -109,11 +109,11 @@ abstract class GameLoop {
 			currentFps = frameCounter
 			timestamp = time
 			frameCounter = 0
+      Display.setTitle("%d fps" format currentFps)
 		}
 		else
 			frameCounter += 1
 	
-		timeStep = (uptime - lastFrame)/1000.0
 		lastFrame = uptime
 	}
 	

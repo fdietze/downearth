@@ -2,6 +2,7 @@ package downearth.gui.lwjgl
 
 import org.lwjgl.opengl.{DisplayMode, ContextAttribs, Display}
 import downearth.gui.{WidgetEventDispatcher, MainWidget}
+import downearth.Config
 
 /**
  * User: arne
@@ -12,13 +13,14 @@ class LwjglMain {
   def width = Display.getWidth
   def height = Display.getHeight
 
+  var gameLoop:LwjglGameLoop = null
   def main(args: Array[String]) {
 
-    Display.setDisplayMode( new DisplayMode(640,480) )
+    Display.setDisplayMode( new DisplayMode(Config.windowResolutionWidth,Config.windowResolutionHeight) )
     Display.setResizable(true)
     Display.create()
 
-    val gameLoop = new LwjglGameLoop
+    gameLoop = new LwjglGameLoop
 
     val wed = new WidgetEventDispatcher(MainWidget)
     wed.listenTo(gameLoop)
