@@ -1,6 +1,7 @@
 package downearth.gui.lwjgl
 
 import org.lwjgl.opengl.{DisplayMode, ContextAttribs, Display}
+import downearth.gui.{WidgetEventDispatcher, MainWidget}
 
 /**
  * User: arne
@@ -18,6 +19,10 @@ class LwjglMain {
     Display.create()
 
     val gameLoop = new LwjglGameLoop
+
+    val wed = new WidgetEventDispatcher(MainWidget)
+    wed.listenTo(gameLoop)
+
     gameLoop.run()
   }
 }

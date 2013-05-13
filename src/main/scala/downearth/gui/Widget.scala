@@ -4,15 +4,13 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import org.lwjgl.opengl.GL11._
-
-import downearth.Config._
 import downearth.util._
 import downearth.{ConstructionTool, Player, Main}
-import downearth.rendering.{Draw, ConsoleFont, Texture}
+import downearth.rendering.{ConsoleFont, Texture}
 import org.lwjgl.opengl.Display
 import downearth.gui.Border._
 import downearth.gui.Background._
+import System.{currentTimeMillis => time}
 
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getHeight) ) {
 
@@ -61,27 +59,20 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getH
 
   children += inventory
 }
-/*
-def position:Vec2i
-def position_=(newPos:Vec2i)
-def size:Vec2i
-def size_=(newSize:Vec2i)
 
-def parent:Panel
-def parent_=(newParent)
-
-var border:Border = new LineBorder()
-var background:Background = new ColorBackground()
-*/
-
-class Widget( val position:Vec2i, val size:Vec2i) {
-	
-	def time = System.currentTimeMillis
+class Widget( val position:Vec2i, val size:Vec2i) extends Listener[WidgetEvent] {
 	var animationStartTime:Long = 0
 	var animationEndTime:Long = 0
 	val animationStartPosition = position.clone
 	val animationEndPosition = position.clone
-	
+
+  addReaction {
+  case event =>
+    print(getClass.getName.split('.').last)
+    print(": ")
+    println(event)
+  }
+
 	def safePosition(newPos:Vec2i) = {
 		min( max(parent.position, newPos), parent.position + parent.size - size)
 	}
@@ -380,4 +371,15 @@ trait Draggable extends Widget {
 		super.mouseDragged(mousePos0, mousePos1)
 		setPosition( dragOriginalPosition - dragStartPos + mousePos1 )
 	}
+}
+
+
+trait Test{
+  var i:Int
+}
+
+class Test2 extends Test{
+  var j = 0
+  def i = j
+  def i_=(i:Int){j = i}
 }

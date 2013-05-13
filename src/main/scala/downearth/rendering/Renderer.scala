@@ -310,10 +310,10 @@ object Renderer extends Logger {
 
     World.dynamicWorld.entities foreach {
       case simple:SimpleEntity => ()
-        glPushMatrix
+        glPushMatrix()
         glTranslated( simple.pos.x, simple.pos.y, simple.pos.z )
         drawObjMesh( simple.mesh )
-        glPopMatrix
+        glPopMatrix()
       case entity:Entity => ()
     }
 
@@ -325,8 +325,7 @@ object Renderer extends Logger {
         World.octree.generateNode(result)
     query = findUngeneratedNodes(World.octree, frustumTest, order)
 
-    Player.activeTool.draw
-
+    // Player.activeTool.draw
 
     if(Config.debugDraw) {
       drawDebugOctree(World.octree, order, frustumTest)
@@ -453,11 +452,22 @@ object Renderer extends Logger {
     glEnableClientState(GL_NORMAL_ARRAY)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
+    val objMeshes = ArrayBuffer[(NodeInfo,ObjMesh)]()
+
     octree.queryRegion( test ) (order) {
       case (info, node:MeshNode) =>
         drawTextureMesh(node.mesh)
+        objMeshes ++= node.objMeshes
         false
       case _ => true
+    }
+
+    for((info,mesh) <- objMeshes) {
+      glPushMatrix()
+      glTranslated( info.pos.x, info.pos.y, info.pos.z )
+      glScale1d( info.size )
+      drawObjMesh( mesh )
+      glPopMatrix()
     }
 
     glDisableClientState(GL_VERTEX_ARRAY)

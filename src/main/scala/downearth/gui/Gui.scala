@@ -2,15 +2,9 @@ package downearth.gui
 
 import simplex3d.math._
 import simplex3d.math.double._
-import simplex3d.math.double.functions._
 
-import org.lwjgl.opengl.GL11._
-
-import downearth.gui.Border._
-import downearth.gui.Background._
-import downearth.util._
 import downearth._
-import downearth.rendering.{Draw, ConsoleFont, TextureManager}
+import downearth.rendering.TextureManager
 import simplex3d.math.doublex.functions._
 
 class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5) )
@@ -18,11 +12,9 @@ class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5,0), Vec2(0.5
 
 
 class MaterialWidget(val matId:Int, _pos:Vec2i)
-
 	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
-
 	with InventoryItem {
-	
+
 	override def mouseClicked(mousePos:Vec2i) {
 		super.mouseClicked(mousePos)
 		Player.selectTool(ConstructionTool)
@@ -32,7 +24,6 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 
 	override def selected = ConstructionTool.selectedMaterial == matId
 }
-
 
 class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Vec2)
 	extends TextureWidget(_pos, Vec2i(32), TextureManager.tools, _texPosition, _texSize)
@@ -127,7 +118,6 @@ trait InventoryItem extends Draggable {
   }
 
 }
-
 
 class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable {
   var selected:InventoryItem = null

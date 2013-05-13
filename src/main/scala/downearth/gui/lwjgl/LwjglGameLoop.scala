@@ -7,17 +7,20 @@ import simplex3d.math.Vec2i
 import simplex3d.math.double._
 import downearth.Config._
 import downearth.util._
-import downearth.gui.MainWidget
+import downearth.gui._
 import simplex3d.math.doublex.functions._
 import downearth.worldoctree.WorldOctree
 import downearth.world.World
+import downearth.gui.MouseDown
+import downearth.gui.MouseUp
 
 /**
  * User: arne
  * Date: 29.04.13
  * Time: 00:39
  */
-class LwjglGameLoop extends GameLoop {
+class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
+
   def swapBuffers() {
     Display.swapBuffers()
     Display.update()
@@ -144,18 +147,30 @@ class LwjglGameLoop extends GameLoop {
       // Mouse events
       while( Mouse.next ) {
         ( getEventButton, getEventButtonState ) match {
-          case (0 , true) => // left down
+          case (0 , true) =>
+            publish( MouseDown(mousePos, 0) )
             MainWidget.invokeMouseDown(mousePos)
           case (0 , false) => // left up
+            publish( MouseUp(mousePos, 0) )
             MainWidget.invokeMouseUp(mousePos)
           case (1 , true) => // right down
+            publish( MouseDown(mousePos, 1) )
           case (1 , false) => // right up
+            publish( MouseUp(mousePos, 1) )
             Mouse setGrabbed true
-          case (-1, false) => // wheel
+          case (-1, _) =>
+            val dx =  Mouse.getEventDX
+            val dy = -Mouse.getEventDY
+            val x  =  Mouse.getEventX
+            val y  = Display.getHeight - Mouse.getEventY
+            val dW = Mouse.getDWheel
+            assert( (dx != 0 || dy != 0) ^ (dW != 0) )
+            if( dx != 0 || dy != 0 ) {
+              publish( MouseMove(Vec2i(x-dx,y-dy),Vec2i(x,y)) )
+            }
           case _ =>
         }
       }
-
     }
 
     val factor = if(turbo) cameraTurboSpeed else cameraSpeed

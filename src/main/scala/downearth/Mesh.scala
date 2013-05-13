@@ -357,7 +357,7 @@ class TextureMesh(@transient var vertices:DataView[Vec3,RFloat],
 	def size = msize
 	
 	def genvbo() {
-		freevbo
+		freevbo()
 		// vbo with size of 0 can't be initialized
 		if( size > 0 ) {
 			vbo = glGenBuffersARB()

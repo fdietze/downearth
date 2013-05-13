@@ -11,6 +11,7 @@ import downearth.TextureMeshData
 import downearth.TextureMeshBuilder
 import downearth.world.World
 import downearth.generation.WorldDefinition
+import scala.collection.mutable.{ArrayBuffer, Queue}
 
 sealed trait Octant extends Serializable {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
@@ -76,30 +77,6 @@ trait OctantUnderMesh extends Octant {
 	// Ähnlich zu updated, aber diese Funktion generierd auch Updates für das 
 	// Mesh, welches sich verändert.
 	def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (OctantUnderMesh, Update)
-}
-
-class WrongNode extends OctantOverMesh {
-  // Greift mit absoluten Koordinaten auf den Oktant zu
-  def apply(info: NodeInfo, p: Vec3i): Leaf = ???
-
-  def hasChildren: Boolean = ???
-
-  def getChild(i: Int): Octant = ???
-
-  // Überprüft, ob ein bestimmter Teilbereich des Knotens schon generiert wurde.
-  def isSet(info: NodeInfo, pos: NodeInfo): Boolean = ???
-
-  // liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-  def updated(info: NodeInfo, p: Vec3i, newLeaf: Leaf): OctantOverMesh = ???
-
-  // Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder
-  def repolyWorld(info: NodeInfo, p: Vec3i) {}
-
-  // extrahiert alle Polygone an einer Position, extrahiert sie also aus dem
-  def getPolygons(info: NodeInfo, pos: Vec3i): Seq[_root_.simplex3d.math.double.ConstVec3] = ???
-
-  // Ähnlich wie updated, nur dass nicht ein einzelner Hexaeder eingefügt wird,
-  def insertNode(info: NodeInfo, insertinfo: NodeInfo, insertnode: OctantOverMesh): OctantOverMesh = ???
 }
 
 // TODO: eventuell Leaf von Polyeder erben lassen um eine Refernz zu sparen.
@@ -184,20 +161,6 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 				texCoordBuilder += Vec2( v2(axisa)/4.0 + matid/4.0 , v2(axisb) )
 				
 				vertexCounter += 3
-				
-				/*
-				if( vertexMaterials ) {
-					colorBuilder += materialfunction(Vec3(pos) + v0).vec4
-					colorBuilder += materialfunction(Vec3(pos) + v1).vec4
-					colorBuilder += materialfunction(Vec3(pos) + v2).vec4
-				}
-				else {
-					val centerColor = materialfunction(pos + 0.5f).vec4
-					colorBuilder += centerColor
-					colorBuilder += centerColor
-					colorBuilder += centerColor
-				}
-				*/
 
 				normalBuilder += normalize(cross(v2-v1,v0-v1))
 			}
@@ -356,6 +319,8 @@ case object EmptyLeaf extends Leaf(EmptyHexaeder) {
 }
 case object FullLeaf extends Leaf(FullHexaeder)
 
+class ObjLeaf(val mesh:ObjMesh) extends Leaf(EmptyHexaeder)
+
 class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
   override def hasChildren = true
 
@@ -428,26 +393,10 @@ class InnerNodeOverMesh(val data:Array[OctantOverMesh]) extends OctantOverMesh {
 			// println("starting Join.")
 			val meshNodes = data map (_.asInstanceOf[MeshNode])
 			// println("step 0")
-			var sum = 0
-			for(meshnode <- meshNodes) {
-				sum += meshnode.mesh.size
-			}
-			
-			if(sum < Config.maxMeshVertexCount) {
-				val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
-				val node = new InnerNode( meshNodes.map(_.node) )
-				
-				for(i <- 0 until 8) {
-					node.vvertcount(i) = meshNodes(i).mesh.size
-					meshNodes(i).mesh.freevbo
-				}
-				
-				val meshnode = new MeshNode(node.merge)
-				meshnode.mesh = mesh
-				
-				meshnode
-			}
-			
+			val sum = (0 /: meshNodes) ( _ + _.mesh.size )
+
+			if(sum < Config.maxMeshVertexCount)
+        MeshNode.join(meshNodes)
 			else
 				this
 		}
@@ -555,6 +504,26 @@ class InnerNode(val data:Array[OctantUnderMesh]) extends OctantUnderMesh {
 	}
 }
 
+object MeshNode {
+  def join(meshNodes:Array[MeshNode]) = {
+
+    // joining mesh Nodes, maybe better as method of MeshNode
+    val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
+    val node = new InnerNode( meshNodes.map(_.node) )
+
+    for(i <- 0 until 8) {
+      node.vvertcount(i) = meshNodes(i).mesh.size
+      meshNodes(i).mesh.freevbo
+    }
+
+    val meshNode = new MeshNode(node.merge)
+    meshNodes.foreach( meshNode.objMeshes ++= _.objMeshes )
+
+    meshNode.mesh = mesh
+    meshNode
+  }
+}
+
 //decorator pattern
 class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 	// Nodes unter dem MeshNode müssen gesetzt sein.
@@ -571,12 +540,13 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 	def apply(info: NodeInfo, p: Vec3i) = node(info,p)
 
 	var mesh:MutableTextureMesh = null
+
+  val objMeshes = ArrayBuffer[(NodeInfo,ObjMesh)]()
 	
 	// der einzige OctantOverMesh, der genMesh implementiert
 	def genMesh(info:NodeInfo , destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
 		assert(mesh == null)
 		val meshBuilder = new TextureMeshBuilder
-
 
     // TODO warum wird result nicht verwendet?
 		val result = node.genPolygons(info, meshBuilder, worldaccess)
@@ -585,11 +555,42 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 		// genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in 
 		// anderen Threads als dem render Thread aufgerufen wird. Um die
 		// Erzeugung des vbo kümmert sich das mesh selbst beim rendern
+
+    // collecting all ObjMeshes from the children
+    val todo = Queue( (info,node) )
+
+    while( !todo.isEmpty ) {
+      val (info,node) = todo.dequeue()
+      if(node.hasChildren)
+      for( i <- 0 until 8 ) {
+        todo.enqueue( Tuple2(info(i), node.getChild(i).asInstanceOf[OctantUnderMesh]) )
+      }
+
+      if( node.isInstanceOf[ObjLeaf] ) {
+        objMeshes += Tuple2(info, node.asInstanceOf[ObjLeaf].mesh)
+      }
+    }
+
 		
 		this
 	}
 	
 	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : OctantOverMesh = {
+
+    val leafInfo = NodeInfo(p,1)
+
+    objMeshes.find {
+      case (info, mesh) => info == leafInfo
+    } match {
+      case Some( t ) =>
+        objMeshes.remove(objMeshes.indexOf(t))
+      case None =>
+    }
+
+    if( newLeaf.isInstanceOf[ObjLeaf] ) {
+      objMeshes += Tuple2( NodeInfo(p,1), newLeaf.asInstanceOf[ObjLeaf].mesh)
+    }
+
 		val (replacement,patch) = node.patchWorld(info, p, newLeaf, 0, mesh.size)
 		node = replacement
 		var patches = patch :: Nil
@@ -613,23 +614,27 @@ class MeshNode(var node:OctantUnderMesh) extends OctantOverMesh {
 		
 		// falls das mesh an dieser Stelle die Maximalgröße Überschreitet, wird es aufgeteilt
 		if( mesh.size > Config.maxMeshVertexCount ) {
-			split
+			split(info)
 		}
 		else
 			this
 	}
 
-  def split = {
+  def split(info: NodeInfo) = {
     node match {
       case innernode:InnerNode =>
         val newdata = new Array[OctantOverMesh](8)
         val childmeshes = mesh.split(innernode.vvertcount)
-        for(i ← 0 until 8){
+        for(i ← 0 until 8) {
+          val childInfo = info(i)
           val meshnode = new MeshNode(innernode.data(i))
+          meshnode.objMeshes ++= objMeshes.filter {
+            case (objInfo,_) => childInfo(i).indexInRange(objInfo)
+          }
           meshnode.mesh = childmeshes(i)
           newdata(i) = meshnode
         }
-        mesh.freevbo
+        mesh.freevbo()
         new InnerNodeOverMesh(newdata)
       case leaf:Leaf =>
         // kommt nur ganz selten vor, denn Blätter haben

@@ -180,7 +180,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
     val newRootNodeInfo = NodeInfo(rootNodePos - rootNodeSize/2, rootNodeSize*2)
 
     if( root.isInstanceOf[MeshNode] )
-      root = root.asInstanceOf[MeshNode].split
+      root = root.asInstanceOf[MeshNode].split(rootNodeInfo)
 
     if( root != UngeneratedInnerNode ) {
     	for(i <- 0 until 8) {

@@ -8,6 +8,7 @@ import downearth.Config._
 import downearth.worldoctree._
 import downearth.util._
 import downearth.worldoctree.NodeInfo
+import downearth.rendering.ObjManager
 
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}
@@ -17,6 +18,9 @@ object WorldGenerator {
 		val initArea = NodeInfo( Vec3i(-cubesize/4), cubesize/2 )
 		val octree = new WorldOctree(initArea,genWorldAt(initArea))
 		octree.incDepth()
+
+//    octree( Vec3i(1,2,3) ) = new ObjLeaf(ObjManager.testMesh)
+
 		octree
 	}
 	

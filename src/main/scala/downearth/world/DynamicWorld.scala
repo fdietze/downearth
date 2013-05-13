@@ -3,14 +3,13 @@ package downearth.world
 import scala.collection.mutable.ArrayBuffer
 import simplex3d.math.double._
 import downearth.entity._
-import downearth.rendering.ObjLoader
+import downearth.rendering.{ObjManager, ObjLoader}
 import java.io._
 
 // this object should contain all objects of the scene that are not part of the static environment
 object DynamicWorld {
 	def testScene:DynamicWorld = {
-		val loader = new ObjLoader
-		val mesh = loader.load(new FileInputStream(new File("thing.obj")))
+		val mesh = ObjManager.testMesh
 		mesh.genvbo()
 
 		val world = new DynamicWorld

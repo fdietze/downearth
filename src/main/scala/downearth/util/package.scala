@@ -257,6 +257,13 @@ package object util {
 	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
 	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
 	def rayPolyederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Polyeder):Boolean = {
+
+    if(h == null) {
+      println("penis")
+      println("penis")
+      println("penis")
+    }
+
 		if( (h eq EmptyHexaeder) || (h eq UndefHexaeder) )
 			false
 		else{
