@@ -15,14 +15,13 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
 	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
 	with InventoryItem {
 
-	override def mouseClicked(mousePos:Vec2i) {
-		super.mouseClicked(mousePos)
-		Player.selectTool(ConstructionTool)
-		ConstructionTool.selectedMaterial = matId
-		DisplayEventManager.showEventText("Material " + matId)
-	}
-
 	override def selected = ConstructionTool.selectedMaterial == matId
+
+  override def select() {
+    Player.selectTool(ConstructionTool)
+    ConstructionTool.selectedMaterial = matId
+    DisplayEventManager.showEventText("Material " + matId)
+  }
 }
 
 class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Vec2)
@@ -46,68 +45,45 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
   val degTime = 0
 	var lastMouseOut = degTime - 360.0
 
-
-  override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
+  addReaction {
+  case MouseIn =>
     if( (degTime - lastMouseOut + outOffset) >= 360.0 )
       inOffset = mod(degTime, 360.0)
-    super.mouseIn(mousePos0, mousePos1)
-  }
-
-  override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
+  case MouseOut =>
     lastMouseOut = degTime
     outOffset = mod(degTime - inOffset, 360.0)
-    super.mouseOut(mousePos0, mousePos1)
   }
-
-	override def mouseClicked(mousePos:Vec2i) {
-		super.mouseClicked(mousePos)
-		Player.selectTool(ConstructionTool)
-
-    lineBorderColor := Vec4(0.2,0.4,1,1)
-
-    ConstructionTool.id = shapeId
-		DisplayEventManager.showEventText("Shape " + shapeId)
-	}
 
   override def select() {
     Player.selectTool(ConstructionTool)
     ConstructionTool.id = shapeId
     DisplayEventManager.showEventText("Shape " + shapeId)
   }
-
-  override def unselect() {}
 }
 
 
 trait InventoryItem extends Draggable {
+  case class Select(item:InventoryItem) extends WidgetEvent
+  case class UnSelect(item:InventoryItem) extends WidgetEvent
+  listenTo(this)
+
   def inventory = parent.asInstanceOf[Inventory]
 	def selected = (inventory.selected == this)
   lineBorderColor := Vec4(1)
-	
-	override def dragStop(mousePos:Vec2i) = {
-		// draw this item last to not interrupt the positioning of the others
-		// TODO: let item stay on top
-		val inventory = parent
-		inventory.children -= this
-		inventory.children += this
-		inventory.arrangeChildren(300)
-	}
-
-  override def mouseIn(mousePos0:Vec2i, mousePos1:Vec2i) {
-    if( !selected )
-      lineBorderColor := Vec4(0.6,0.8,1,1)
-  }
-
-  override def mouseOut(mousePos0:Vec2i, mousePos1:Vec2i) {
-    if( !selected )
-      lineBorderColor := Vec4(1)
-  }
 
   def select() {}
   def unselect() {}
 
-  override def mouseClicked(mousePos:Vec2i) {
-    super.mouseClicked(mousePos)
+
+
+  addReaction {
+  case MouseIn =>
+    if( !selected )
+      lineBorderColor := Vec4(0.6,0.8,1,1)
+  case MouseOut =>
+    if( !selected )
+      lineBorderColor := Vec4(1)
+  case MouseClicked(mousePos) =>
     lineBorderColor := Vec4(0.2,0.4,1,1)
     if(inventory.selected != null) {
       inventory.selected.lineBorderColor := Vec4(1)
@@ -115,8 +91,13 @@ trait InventoryItem extends Draggable {
     }
     inventory.selected = this
     select()
+  case DragEnd(pos) =>
+    // draw this item last to not interrupt the positioning of the others
+    // TODO: let item stay on top
+//    inventory.children -= this
+//    inventory.children += this
+    inventory.arrangeChildren(300)
   }
-
 }
 
 class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable {

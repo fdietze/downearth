@@ -121,9 +121,9 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
     }
     else { // if Mouse is not grabbed
 
-      if( mouseDelta != Vec2i(0) ) { // if Mouse is moved
-        MainWidget.invokeMouseMoved(lastMousePos, mousePos)
-      }
+//      if( mouseDelta != Vec2i(0) ) { // if Mouse is moved
+//        MainWidget.invokeMouseMoved(lastMousePos, mousePos)
+//      }
 
       // Keyboard Events
       while ( Keyboard.next ) {
@@ -149,10 +149,10 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
         ( getEventButton, getEventButtonState ) match {
           case (0 , true) =>
             publish( MouseDown(mousePos, 0) )
-            MainWidget.invokeMouseDown(mousePos)
+            // MainWidget.invokeMouseDown(mousePos)
           case (0 , false) => // left up
             publish( MouseUp(mousePos, 0) )
-            MainWidget.invokeMouseUp(mousePos)
+            // MainWidget.invokeMouseUp(mousePos)
           case (1 , true) => // right down
             publish( MouseDown(mousePos, 1) )
           case (1 , false) => // right up

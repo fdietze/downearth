@@ -1,7 +1,5 @@
 package downearth
 
-import scala.collection.mutable.SynchronizedQueue
-
 import org.lwjgl.opengl._
 import org.lwjgl.input._
 
@@ -9,10 +7,8 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import downearth.gui.{MainWidget}
 import downearth.rendering.Renderer
 import downearth.generation.WorldNodeGenerator
-import downearth.util._
 import downearth.Config._
 import downearth.gui.lwjgl.LwjglMain
 import org.lwjgl.opengl.GL11._
