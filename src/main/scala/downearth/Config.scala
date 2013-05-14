@@ -12,7 +12,7 @@ object Config{
 	// => umbenennen oder entfernen.
 	// Wenn die Größe gleich der worldWindowSize gesetzt wird,
 	// erhält man automatisch ein hierarchisches streaming.
-	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
+	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 4
 	var minPredictionSize = loadInt("minPredictionSize") getOrElse minMeshNodeSize
 	var kdTreePrediction = loadBoolean("kdTreePrediction") getOrElse true
 	

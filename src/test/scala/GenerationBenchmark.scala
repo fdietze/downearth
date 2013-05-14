@@ -13,8 +13,8 @@ import akka.pattern.ask
 class GenerationBenchmark extends FunSuite {
 	test("parameter combinations") {
 		val configs = Map[Symbol,Seq[AnyVal]](
-			'minMeshNodeSize -> Seq(16,8,4),
-			'minPredictionSize -> Seq(16,8,4),
+			'minMeshNodeSize -> Seq(16,8,4,2,1),
+			'minPredictionSize -> Seq(16,8,4,2,1),
 			'kdTreePrediction -> Seq(false,true),
 			'worldWindowSize -> Seq(64)
 		)
