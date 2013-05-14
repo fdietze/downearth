@@ -3,6 +3,12 @@ package downearth.generation
 import simplex3d.math.double._
 import interval.{Interval, Interval3}
 
+object Material {
+  def apply(r:Int, g:Int, b:Int):Material = new Material((r << 16) + (g << 8) + b,0)
+  def apply(r:Double, g:Double, b:Double):Material = Material((r*255).toInt, (g*255).toInt, (b*255).toInt)
+  def apply():Material = new Material(0xFF00FF,0)
+}
+
 case class Material(color:Int, id:Int) {
   def red   = color >> 16
   def green = (color & 0x00FF00) >> 8
