@@ -269,6 +269,7 @@ class Leaf(val h:Polyeder) extends OctantUnderMesh {
 
 // Leaf that is set by a user, contains a material
 class UserLeaf(_h:Polyeder, m:Byte) extends Leaf(_h) {
+  require( _h != null )
 	override def material:Int = m
 	
 	override def equals(that:Any) = {

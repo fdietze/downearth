@@ -23,6 +23,8 @@ case class MouseDrag(oldPos:Vec2i, newPos:Vec2i) extends WidgetEvent
 case class MouseClicked(pos:Vec2i) extends WidgetEvent
 case object MouseIn extends WidgetEvent
 case object MouseOut extends WidgetEvent
+case class WidgetMoved(widget:Widget) extends WidgetEvent
+case class WidgetResized(widget:Widget) extends WidgetEvent
 
 
 // maybe -E

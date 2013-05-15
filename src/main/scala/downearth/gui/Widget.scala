@@ -5,13 +5,12 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import downearth.util._
-import downearth.{ConstructionTool, Player, Main}
+import downearth.{ConstructionTool, Player}
 import downearth.rendering.{ConsoleFont, Texture}
 import org.lwjgl.opengl.Display
 import downearth.gui.Border._
 import downearth.gui.Background._
 import System.{currentTimeMillis => time}
-import downearth.gui.{MouseOut, MouseIn}
 
 object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getHeight) ) {
 
@@ -33,9 +32,9 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getH
     Player.rotate(delta_angle)
   }
 
-	override def resize(newSize:Vec2i) {
-		size := newSize
-	}
+  override def safePosition(newPos:Vec2i) = {
+    this.position
+  }
 
   val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
     backGroundColor := Vec4(0.1,0.1,0.1,0.7)
@@ -51,17 +50,20 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getH
       i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
     )
 
-    arrangeChildren()
-    setTopRight
-
-    var moved = false
-    def setTopRight = setPosition(Vec2i(Main.width - size.x - 20, 20))
+    listenTo(MainWidget)
 
     addReaction {
-    case DragEnd(_) =>
-      moved = true
+    case WidgetResized(MainWidget) =>
+      val newPos = Vec2i(0)
+      newPos.x = MainWidget.size.x - size.x - 20
+      newPos.y = 20
+      setPosition(newPos,0)
     }
+
+    arrangeChildren()
   }
+
+  publish( WidgetResized(this) )
 
   children += inventory
 }
@@ -71,15 +73,8 @@ class Widget( val position:Vec2i, val size:Vec2i) extends Listener[WidgetEvent] 
 	var animationEndTime:Long = 0
 	val animationStartPosition = position.clone
 	val animationEndPosition = position.clone
-
   var mouseOver = false
-
-//  addReaction {
-//  case event =>
-//    print(this)
-//    print(": ")
-//    println(event)
-//  }
+  var visible = true
 
   addReaction {
   case MouseIn =>
@@ -87,6 +82,7 @@ class Widget( val position:Vec2i, val size:Vec2i) extends Listener[WidgetEvent] 
   case MouseOut =>
     mouseOver = false
   }
+
 	def safePosition(newPos:Vec2i) = {
 		min( max(parent.position, newPos), parent.position + parent.size - size)
 	}
@@ -106,8 +102,11 @@ class Widget( val position:Vec2i, val size:Vec2i) extends Listener[WidgetEvent] 
 	}
 
 	def resize(newSize:Vec2i) {
-		size := newSize
-		position := safePosition(position)
+    if( size != newSize ) {
+      size := newSize
+      position := safePosition(position)
+      publish( WidgetResized( this ) )
+    }
 	}
 	
 	var parent:Panel = MainWidget
@@ -130,18 +129,18 @@ class Widget( val position:Vec2i, val size:Vec2i) extends Listener[WidgetEvent] 
 }
 
 class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i(0)) {
-	def updateSize {
-		size.x = ConsoleFont.font.getWidth(m_text)
-		size.y = ConsoleFont.height
+	def updateSize() {
+    val newSize = Vec2i(ConsoleFont.font.getWidth(m_text), ConsoleFont.height)
+		resize(newSize)
 	}
 
 	private var m_text = _text
-	updateSize
+	updateSize()
 
 	def text = m_text
 	def	text_=(s:Any) {
 		m_text = s.toString
-		updateSize
+		updateSize()
 	}
 
   override def toString = s"Label($m_text)"
@@ -151,8 +150,6 @@ class TextureWidget(_position:Vec2i, _size:Vec2i, val texture:Texture, val texPo
 
 // TODO: Typparameter übergeben
 abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _size) { thispanel =>
-
-	
 	override def setPosition(newPos:Vec2i, delay:Int) {
 		val oldPos = position.clone
 		super.setPosition(newPos)
@@ -237,7 +234,6 @@ class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(pos
 	}
 }
 
-
 class GridPanel(position:Vec2i, size:Vec2i, val cellsize:Int = 30) extends FreePanel(position, size) {
 	override def arrangeChildren(delay:Int = 0) {
 		val raster = new collection.mutable.HashMap[Vec2i,Widget]
@@ -254,7 +250,6 @@ class GridPanel(position:Vec2i, size:Vec2i, val cellsize:Int = 30) extends FreeP
 	}
 }
 
-
 trait Draggable extends Widget {
 	// Drag-Start-Widget-Position
 	val dragOriginalPosition = Vec2i(0)
@@ -264,8 +259,8 @@ trait Draggable extends Widget {
   case DragStart(pos) =>
     dragOriginalPosition := position
     dragStartPos := pos
+    println("DragStart"+this)
   case MouseDrag(pos1, pos2) =>
     setPosition( dragOriginalPosition + (pos2 - dragStartPos) )
   }
 }
-

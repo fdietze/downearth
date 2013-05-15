@@ -74,8 +74,6 @@ trait InventoryItem extends Draggable {
   def select() {}
   def unselect() {}
 
-
-
   addReaction {
   case MouseIn =>
     if( !selected )
@@ -85,7 +83,7 @@ trait InventoryItem extends Draggable {
       lineBorderColor := Vec4(1)
   case MouseClicked(mousePos) =>
     lineBorderColor := Vec4(0.2,0.4,1,1)
-    if(inventory.selected != null) {
+    if(inventory.selected != null && (inventory.selected ne this) ) {
       inventory.selected.lineBorderColor := Vec4(1)
       inventory.selected.unselect()
     }
@@ -100,7 +98,7 @@ trait InventoryItem extends Draggable {
   }
 }
 
-class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) with Draggable {
+class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) {
   var selected:InventoryItem = null
 }
 

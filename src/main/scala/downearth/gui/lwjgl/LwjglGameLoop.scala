@@ -93,6 +93,8 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
               debugDraw = !debugDraw
             case `keyToggleGhostPlayer` =>
               Player.toggleGhost
+            case `keyToggleInventory` =>
+              MainWidget.inventory.visible = !MainWidget.inventory.visible
             case `keyJump` =>
               Player.jump
             case `keyIncOctreeDepth` =>
@@ -137,6 +139,28 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
               finished = true
             case _ =>
           }
+        }
+
+        val c = Keyboard.getEventCharacter
+        if( c.intValue != 0 ) {
+          if( c.isControl ) {
+            c match {
+              case '\t' =>
+                print("<tab>")
+              case '\b' =>
+                print("<back>")
+              case '\n' =>
+                print("<enter>")
+              case '\r' =>
+                print("<return>")
+              case _ =>
+                print(s"<${c.intValue}>")
+
+
+            }
+          }
+          else
+            print( Keyboard.getEventCharacter )
         }
       }
 

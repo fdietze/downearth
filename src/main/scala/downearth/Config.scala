@@ -25,7 +25,7 @@ object Config{
 	
 	val skybox = loadBoolean("skybox") getOrElse false
 	
-	val ungeneratedDefault = Leaf(FullHexaeder,-1)
+	lazy val ungeneratedDefault = Leaf(FullHexaeder,-1)
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
 	
 	val fpsLimit = loadInt("fpsLimit") getOrElse 60
@@ -66,6 +66,7 @@ object Config{
 	val keyPausePhysics      = loadKey("pause") getOrElse KEY_P
 	val keyToggleGhostPlayer = loadKey("toggle_ghost_player") getOrElse KEY_TAB
   val keyIncOctreeDepth    = loadKey("inc_octree_depth") getOrElse KEY_X
+  val keyToggleInventory   = loadKey("inventory") getOrElse KEY_Q
 
 	val keyDebugDraw      = loadKey("debug_draw") getOrElse KEY_F1
 	val keyWireframe      = loadKey("wireframe") getOrElse KEY_F2

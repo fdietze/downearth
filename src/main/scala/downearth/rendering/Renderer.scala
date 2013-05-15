@@ -157,6 +157,9 @@ object Renderer extends Logger {
   }
 
   def drawWidget(widget:Widget) {
+    if( !widget.visible )
+      return
+
     widget.invokeAnimation
     widget.background match {
       case ColorBackGround =>
@@ -325,7 +328,7 @@ object Renderer extends Logger {
         World.octree.generateNode(result)
     query = findUngeneratedNodes(World.octree, frustumTest, order)
 
-    // Player.activeTool.draw
+    Player.activeTool.draw
 
     if(Config.debugDraw) {
       drawDebugOctree(World.octree, order, frustumTest)
