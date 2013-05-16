@@ -11,6 +11,9 @@ import collection.mutable
 import akka.pattern.ask
 
 class GenerationBenchmark extends FunSuite {
+
+  // kdTreePrediction is in current code base without usage
+
 	test("parameter combinations") {
 		val configs = Map[Symbol,Seq[AnyVal]](
 			'minMeshNodeSize -> Seq(16,8,4,2,1),

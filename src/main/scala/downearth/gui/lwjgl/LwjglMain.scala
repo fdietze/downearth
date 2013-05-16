@@ -2,7 +2,7 @@ package downearth.gui.lwjgl
 
 import org.lwjgl.opengl.{DisplayMode, ContextAttribs, Display}
 import downearth.gui.{WidgetEventDispatcher, MainWidget}
-import downearth.Config
+import downearth.{ConfigLoader, Config}
 
 /**
  * User: arne
@@ -26,5 +26,7 @@ class LwjglMain {
     wed.listenTo(gameLoop)
 
     gameLoop.run()
+
+    Config.loader.save()
   }
 }

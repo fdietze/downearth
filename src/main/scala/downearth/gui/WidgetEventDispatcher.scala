@@ -5,7 +5,7 @@ import simplex3d.math.Vec2i
 import simplex3d.math.double.Vec2
 import simplex3d.math.double.functions.distance
 
-class WidgetEventDispatcher(val topWidget:Widget) extends Listener[MouseEvent] {
+class WidgetEventDispatcher(val topWidget:Widget) extends Listener {
   val DragThreshHold = 5.0
 
   var currentWidget = topWidget
@@ -40,7 +40,7 @@ class WidgetEventDispatcher(val topWidget:Widget) extends Listener[MouseEvent] {
           val result:Option[Widget] =
             currentWidget match {
               case panel:Panel =>
-                panel.children.find( w => indexInRange(newPos,w.position,w.size) )
+                panel.children.find( w => w.visible && indexInRange(newPos,w.position,w.size) )
               case _ => None
             }
           result match {
@@ -54,8 +54,7 @@ class WidgetEventDispatcher(val topWidget:Widget) extends Listener[MouseEvent] {
         }
       }
       else {
-
-        if(!dragging) {
+        if( !dragging ) {
           if( distance(Vec2(dragStartPos),Vec2(newPos)) > DragThreshHold ) {
             currentWidget handleEvent DragStart(dragStartPos)
             currentWidget handleEvent MouseDrag(dragStartPos, newPos)
@@ -66,5 +65,7 @@ class WidgetEventDispatcher(val topWidget:Widget) extends Listener[MouseEvent] {
           currentWidget handleEvent MouseDrag(oldPos, newPos)
         }
       }
+    case kp =>
+      currentWidget handleEvent kp
   }
 }

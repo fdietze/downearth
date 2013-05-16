@@ -1,34 +1,36 @@
 package downearth
 
 import simplex3d.math.double.Vec3
-import org.lwjgl.opengl.{Display, DisplayMode}
+import org.lwjgl.opengl.Display
 import downearth.worldoctree.{FullHexaeder, Leaf}
+import gui.Listener
 import util.isPowerOfTwo
 
-object Config{
-	import ConfigLoader._
+object Config extends Listener {
+	val loader = new ConfigLoader(this)
+
+  import loader.preferences.{
+    getInt => loadInt,
+    getBoolean => loadBool
+  }
+
+	var minMeshNodeSize = loader.preferences.getInt("minMeshNodeSize", 16)
+	var minPredictionSize = loadInt("minPredictionSize", 4)
+	var kdTreePrediction = loadBool("kdTreePrediction", true)
 	
-	// TODO: minMeshNodeSize wird nurnoch fürs Streaming verwendet (?).
-	// => umbenennen oder entfernen.
-	// Wenn die Größe gleich der worldWindowSize gesetzt wird,
-	// erhält man automatisch ein hierarchisches streaming.
-	var minMeshNodeSize = loadInt("minMeshNodeSize") getOrElse 16
-	var minPredictionSize = loadInt("minPredictionSize") getOrElse 4
-	var kdTreePrediction = loadBoolean("kdTreePrediction") getOrElse true
-	
-	var worldWindowSize = loadInt("worldWindowSize") getOrElse 64
-	val useshaders = loadBoolean("useShaders") getOrElse false
+	var worldWindowSize = loadInt("worldWindowSize", 64)
+	val useshaders = loadBool("useShaders", false)
 	val vertexMaterials = false
-	val smoothShading = loadBoolean("smoothShading") getOrElse false
+	val smoothShading = loadBool("smoothShading", false)
 	
 	val hexaederResolution = 8
 	
-	val skybox = loadBoolean("skybox") getOrElse false
+	val skybox = loadBool("skybox", false)
 	
 	lazy val ungeneratedDefault = Leaf(FullHexaeder,-1)
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
 	
-	val fpsLimit = loadInt("fpsLimit") getOrElse 60
+	val fpsLimit = loadInt("fpsLimit", 60)
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
@@ -42,46 +44,49 @@ object Config{
 	
 	val saveWorld = false
 
-	var fullscreen = loadBoolean("fullscreen") getOrElse false
+	var fullscreen = loadBool("fullscreen", false)
 
 	// Vollbild-Modus mit höchster Auflösung
 	def fullscreenDisplayMode = Display.getDesktopDisplayMode
 	
-	val windowResolutionWidth  = loadInt("windowResolutionWidth")  getOrElse 640
-	val windowResolutionHeight = loadInt("windowResolutionHeight") getOrElse 480
+	val windowResolutionWidth  = loadInt("windowResolutionWidth", 640)
+	val windowResolutionHeight = loadInt("windowResolutionHeight", 480)
 
 	val worldUpVector = Vec3.UnitZ
 	
 	import org.lwjgl.input.Keyboard._
-	val keyForward  = loadKey("forward") getOrElse KEY_W
-	val keyBackward = loadKey("backward") getOrElse KEY_S
-	val keyLeft     = loadKey("left") getOrElse KEY_A
-	val keyRight    = loadKey("right") getOrElse KEY_D
-	val keyJump     = loadKey("jump") getOrElse KEY_SPACE
+
+  val keyForward  = KEY_W
+  val keyBackward = KEY_S
+  val keyLeft     = KEY_A
+  val keyRight    = KEY_D
+  val keyJump     = KEY_SPACE
 	
-	val keyMouseGrab         = loadKey("mouse_grab") getOrElse KEY_G
-	val keyPlayerReset       = loadKey("reset_pos") getOrElse KEY_R
-	val keyTurbo             = loadKey("turbo") getOrElse KEY_T
-	val keyQuit              = loadKey("quit") getOrElse KEY_ESCAPE
-	val keyPausePhysics      = loadKey("pause") getOrElse KEY_P
-	val keyToggleGhostPlayer = loadKey("toggle_ghost_player") getOrElse KEY_TAB
-  val keyIncOctreeDepth    = loadKey("inc_octree_depth") getOrElse KEY_X
-  val keyToggleInventory   = loadKey("inventory") getOrElse KEY_Q
+	val keyMouseGrab         = KEY_G
+	val keyPlayerReset       = KEY_R
+	val keyTurbo             = KEY_T
+	val keyQuit              = KEY_ESCAPE
+	val keyPausePhysics      = KEY_P
+	val keyToggleGhostPlayer = KEY_TAB
+  val keyIncOctreeDepth    = KEY_X
+  val keyToggleInventory   = KEY_Q
 
-	val keyDebugDraw      = loadKey("debug_draw") getOrElse KEY_F1
-	val keyWireframe      = loadKey("wireframe") getOrElse KEY_F2
-	val keyStreaming      = loadKey("streaming") getOrElse KEY_F3
-	val keyFrustumCulling = loadKey("frustum_culling") getOrElse KEY_F4
+	val keyDebugDraw      = KEY_F1
+	val keyWireframe      = KEY_F2
+	val keyStreaming      = KEY_F3
+	val keyFrustumCulling = KEY_F4
 
-	val keyScreenshot     = loadKey("screenshot") getOrElse KEY_F10
-	val keyFullScreen     = loadKey("fullscreen") getOrElse KEY_F11
+	val keyScreenshot       = KEY_F10
+	val keyToggleFullScreen = KEY_F11
 
 	// settings changeable at runtime:
 	var debugDraw = false
 	var wireframe = false
-	var streamWorld = loadBoolean("streamWorld") getOrElse false
+	var streamWorld = false
 	var frustumCulling = true
 	var turbo = false
+
+  loader.load()
 
 	assert( worldWindowSize >= minMeshNodeSize )
 	assert( worldWindowSize % minMeshNodeSize  == 0 )

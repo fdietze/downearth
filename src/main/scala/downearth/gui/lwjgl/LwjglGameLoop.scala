@@ -9,20 +9,20 @@ import downearth.Config._
 import downearth.util._
 import downearth.gui._
 import simplex3d.math.doublex.functions._
-import downearth.worldoctree.WorldOctree
 import downearth.world.World
 import downearth.gui.MouseDown
 import downearth.gui.MouseUp
+import annotation.switch
 
 /**
  * User: arne
  * Date: 29.04.13
  * Time: 00:39
  */
-class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
+class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
 
   def swapBuffers() {
-    Display.swapBuffers()
+    //Display.swapBuffers()
     Display.update()
   }
 
@@ -36,9 +36,6 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
 
     if( Display.isCloseRequested )
       finished = true
-
-    lastMousePos := mousePos
-    mousePos := Vec2i(getX, Display.getHeight-Mouse.getY)
 
     val mouseDelta = Vec2i(getDX, getDY)
     // Move and rotate player
@@ -69,7 +66,7 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
       // Keyboard Events
       while ( Keyboard.next ) {
         if (getEventKeyState) {
-          getEventKey match {
+          (getEventKey: @switch) match {
             case `keyMouseGrab` =>
               Mouse setGrabbed false
             case `keyPlayerReset` =>
@@ -99,6 +96,8 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
               Player.jump
             case `keyIncOctreeDepth` =>
               World.octree.incDepth()
+            case `keyToggleFullScreen` =>
+              // TODO allow fullscreen again
             case _ =>
           }
         }
@@ -129,6 +128,13 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
 
       // Keyboard Events
       while ( Keyboard.next ) {
+        if( getEventKey != KEY_NONE ){
+          if( getEventKeyState )
+            publish( KeyPress(getEventKey) )
+          else
+            publish( KeyRelease(getEventKey) )
+        }
+
         if (getEventKeyState) {
           getEventKey match {
             case `keyMouseGrab` =>
@@ -138,6 +144,7 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
             case `keyQuit` =>
               finished = true
             case _ =>
+              // TODO implement mouse grab independent key events
           }
         }
 
@@ -171,17 +178,14 @@ class LwjglGameLoop extends GameLoop with Publisher[MouseEvent] { gameLoop =>
       // Mouse events
       while( Mouse.next ) {
         ( getEventButton, getEventButtonState ) match {
-          case (0 , true) =>
-            publish( MouseDown(mousePos, 0) )
-            // MainWidget.invokeMouseDown(mousePos)
-          case (0 , false) => // left up
-            publish( MouseUp(mousePos, 0) )
-            // MainWidget.invokeMouseUp(mousePos)
-          case (1 , true) => // right down
-            publish( MouseDown(mousePos, 1) )
-          case (1 , false) => // right up
-            publish( MouseUp(mousePos, 1) )
-            Mouse setGrabbed true
+          case (n , true) if n >= 0 =>
+            val event =  MouseDown(Vec2i(getEventX,Display.getHeight - getEventY), n)
+            publish( event )
+          case (n , false) if n >= 0 =>
+            val event =  MouseUp(Vec2i(getEventX,Display.getHeight - getEventY), n)
+            publish( event )
+            if(n == 1)
+              Mouse setGrabbed true
           case (-1, _) =>
             val dx =  Mouse.getEventDX
             val dy = -Mouse.getEventDY

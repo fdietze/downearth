@@ -79,7 +79,7 @@ abstract class GameLoop {
       glDebugMessageCallbackARB(new ARBDebugOutputCallback())
     }
     else if ( caps.GL_AMD_debug_output ) {
-      println("GL_ARB_debug_output")
+      println("GL_AMD_debug_output")
       glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
     }
 
@@ -116,8 +116,5 @@ abstract class GameLoop {
 	
 		lastFrame = uptime
 	}
-	
-	var mousePos = Vec2i(0,0)
-	var lastMousePos = mousePos.clone
-	// Behandelt alle Benutzereingaben über Maus und Tastatur
+
 }

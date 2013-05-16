@@ -9,7 +9,7 @@ import simplex3d.data.double._
 import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.ARBShaderObjects
+import org.lwjgl.opengl.{Display, ARBShaderObjects}
 import javax.vecmath.{Vector3f,Quat4f}
 import org.lwjgl.BufferUtils
 import java.nio.FloatBuffer
@@ -372,8 +372,8 @@ package object util {
 		counter += 1
 		glReadBuffer(GL_FRONT)
 		val bpp = 4
-		val buffer = BufferUtils.createByteBuffer( Main.width.toInt * Main.height.toInt * bpp )
-		glReadPixels(0, 0, Main.width.toInt, Main.height.toInt, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
+		val buffer = BufferUtils.createByteBuffer( Display.getWidth * Display.getHeight * bpp )
+		glReadPixels(0, 0, Display.getWidth, Display.getHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer )
 
     Future.apply { // save picture in background
 			val format = "PNG"

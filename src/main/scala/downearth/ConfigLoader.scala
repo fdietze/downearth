@@ -1,65 +1,54 @@
 package downearth
 
-import xml.XML
 import org.lwjgl.input.Keyboard.getKeyIndex
+import org.lwjgl.input.Keyboard
+import java.util.prefs.Preferences
 
-object ConfigLoader {
-	val config = try {
-		Some( XML.load( getClass.getResourceAsStream("config.xml") ) )
+class ConfigLoader( configObject:AnyRef ) {
+  val preferences = Preferences.userNodeForPackage(configObject.getClass)
 
-	}
-	catch {
-		case x:Throwable =>
-			System.err.println("keine config.xml angegeben, oder konnte nicht gefunden werden")
-      System.err.println(x)
-			None
-	}
+  def load() {
+    val fields = configObject.getClass.getDeclaredFields
+    val keyFields = fields.filter( _.getName.startsWith("key") )
+
+    for( field <- keyFields ) {
+      val name = field.getName
+      val key = loadKey(name)
+      if( key.isDefined ) {
+        field.setAccessible(true)
+        field.setInt(configObject, key.get)
+      }
+    }
+  }
+
+  def save() {
+    val fieleds = configObject.getClass.getDeclaredFields
+    val (keyFields,nonKeyFields) = fieleds.partition( _.getName.startsWith("key") )
+
+    for( field <- keyFields ) yield {
+      field.setAccessible(true)
+      val fieldName = field.getName
+      val keyName = Keyboard.getKeyName(field.getInt(configObject))
+      preferences.put(fieldName, keyName)
+    }
+
+    preferences.sync()
+  }
 	
 	def loadKey(name:String):Option[Int] = {
-		config match {
-		case Some(config) =>
-			config \ "keys" \ "key" find ( node => (node \ "@name").text == name) match {
-			case Some(node) => 
-				val key = getKeyIndex(node.text)
-				if(key != 0)
-					Some(key)
-				else {
-					System.err.println("Wrong Format in config.xml for key " + name)
-					None
-				}
-			case None =>
-				None
-			}
-		case None =>
-			None
-		}
+    val keyName = preferences.get(name,"")
+    if( keyName != "" ) {
+      val key = getKeyIndex(keyName)
+      if(key != Keyboard.KEY_NONE)
+        Some(key)
+      else {
+        System.err.println("Wrong Format in preferences for key " + name)
+        None
+      }
+    }
+    else
+      None
 	}
-	
-	def loadValue(name:String):Option[String] = {
-		if(config ne None)
-			config.get \ "value" find ( node => (node \ "@name").text == name ) map ( _.text )
-		else
-			None
-	}
-	
-	def loadBoolean(name:String):Option[Boolean] = 
-		loadValue(name) match {
-		case Some("false") => Some(false)
-		case Some("true")  => Some(true)
-		case Some(s)       => System.err.println("can't parse " + s + " as Boolean for key " + name); None
-		case _ => None
-	}
-	
-	def loadInt(name:String):Option[Int] = {
-		val option = loadValue(name)
-		try {
-			loadValue(name) map ( _.toInt )
-		}
-		catch {
-			case _:Throwable =>
-				System.err.println("can't parse " + option.get + " as Int for key " + name)
-				None
-		}
-	}
+
 }
 

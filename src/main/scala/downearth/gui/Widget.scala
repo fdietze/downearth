@@ -5,70 +5,13 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import downearth.util._
-import downearth.{ConstructionTool, Player}
 import downearth.rendering.{ConsoleFont, Texture}
-import org.lwjgl.opengl.Display
 import downearth.gui.Border._
 import downearth.gui.Background._
 import System.{currentTimeMillis => time}
+import org.lwjgl.input.Keyboard
 
-object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getHeight) ) {
-
-	border = NoBorder
-	background = NoBackground
-
-	override def setPosition(newPos:Vec2i, delay:Int) {}
-
-  addReaction {
-  case MouseClicked(pos) =>
-    Player.primaryAction
-  case MouseDrag(mousePos0,mousePos1) =>
-    val mouseDelta = mousePos1 - mousePos0
-    val delta_angle = Vec3(0)
-
-    delta_angle.y = mouseDelta.x/300.0
-    delta_angle.x = mouseDelta.y/300.0
-
-    Player.rotate(delta_angle)
-  }
-
-  override def safePosition(newPos:Vec2i) = {
-    this.position
-  }
-
-  val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
-    backGroundColor := Vec4(0.1,0.1,0.1,0.7)
-    border = LineBorder
-
-    children += new Hammer(position+Vec2i(0 , 0))
-    children += new Shovel(position+Vec2i(40, 0))
-    children ++= Range(0,4).map(
-      i => new MaterialWidget(i, position + Vec2i(i * 40, 40) )
-    )
-
-    children ++= Range(0, ConstructionTool.all.size).map(
-      i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
-    )
-
-    listenTo(MainWidget)
-
-    addReaction {
-    case WidgetResized(MainWidget) =>
-      val newPos = Vec2i(0)
-      newPos.x = MainWidget.size.x - size.x - 20
-      newPos.y = 20
-      setPosition(newPos,0)
-    }
-
-    arrangeChildren()
-  }
-
-  publish( WidgetResized(this) )
-
-  children += inventory
-}
-
-class Widget( val position:Vec2i, val size:Vec2i) extends Listener[WidgetEvent] with Publisher[WidgetEvent] {
+class Widget( val position:Vec2i, val size:Vec2i ) extends Listener with Publisher {
 	var animationStartTime:Long = 0
 	var animationEndTime:Long = 0
 	val animationStartPosition = position.clone
@@ -148,7 +91,6 @@ class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i(0)) {
 
 class TextureWidget(_position:Vec2i, _size:Vec2i, val texture:Texture, val texPosition:Vec2, val texSize:Vec2) extends Widget(_position, _size) {}
 
-// TODO: Typparameter übergeben
 abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _size) { thispanel =>
 	override def setPosition(newPos:Vec2i, delay:Int) {
 		val oldPos = position.clone
@@ -263,4 +205,29 @@ trait Draggable extends Widget {
   case MouseDrag(pos1, pos2) =>
     setPosition( dragOriginalPosition + (pos2 - dragStartPos) )
   }
+}
+
+class KeySettingsWidget(_pos:Vec2i, config:AnyRef) extends Panel(_pos,Vec2i(1)) {
+  val fields = config.getClass.getDeclaredFields.filter( _.getName.startsWith("key") )
+
+  var y = position.y
+  var maxWidth = 0
+  for( field <- fields ) {
+    field.setAccessible( true )
+    val key = field.getInt( config )
+    val keyName = Keyboard.getKeyName(key)
+    val child = new Label( Vec2i(position.x,y), field.getName + " " + keyName )
+    child.addReaction {
+    case KeyPress(key) =>
+      println("got key press " + Keyboard.getKeyName(key))
+      child.text = field.getName + " " + Keyboard.getKeyName(key)
+      field.setInt(config, key)
+    }
+
+    y += child.size.y
+    maxWidth = maxWidth max child.size.x
+    children += child
+  }
+
+  resize( Vec2i(maxWidth, y-position.y) )
 }
