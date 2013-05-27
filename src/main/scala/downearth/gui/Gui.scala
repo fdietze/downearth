@@ -7,10 +7,7 @@ import downearth._
 import downearth.rendering.TextureManager
 import simplex3d.math.doublex.functions._
 import downearth.util.Logger
-
-class Hammer(_pos:Vec2i)           extends ToolWidget( ConstructionTool, _pos, Vec2(0),     Vec2(0.5) )
-class Shovel(_pos:Vec2i)            extends ToolWidget( Shovel,          _pos, Vec2(0.5,0), Vec2(0.5) )
-class TestBuildToolWidget(_pos:Vec2i) extends ToolWidget( TestBuildTool, _pos, Vec2(0,0.5), Vec2(0.5) )
+import downearth.tools.{ConstructionTool, PlayerTool}
 
 class MaterialWidget(val matId:Int, val position:Vec2i)
 	extends TextureWidget(TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
@@ -25,8 +22,8 @@ class MaterialWidget(val matId:Int, val position:Vec2i)
   }
 }
 
-class ToolWidget(val tool:PlayerTool, val position:Vec2i, _texPosition:Vec2, _texSize:Vec2)
-	extends TextureWidget(TextureManager.tools, _texPosition, _texSize)
+class ToolWidget(val tool:PlayerTool, val position:Vec2i)
+	extends TextureWidget(TextureManager.tools, tool.texturePos, tool.textureSize)
 	with InventoryItem with Logger {
 
   override def select() {

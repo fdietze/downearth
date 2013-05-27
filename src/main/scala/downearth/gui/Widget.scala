@@ -76,6 +76,7 @@ abstract class Widget extends Listener with Publisher {
 
 class Label(val position:Vec2i, _text:String) extends Widget {
   private var m_text = _text
+  backGroundColor.a = 0
   val size = Vec2i(ConsoleFont.font.getWidth(m_text), ConsoleFont.height)
 
 	def updateSize() {
@@ -112,6 +113,26 @@ abstract class Panel extends Widget { thispanel =>
 
 	val children = new collection.mutable.ArrayBuffer[Widget] with WidgetBuffer {
     def parent = thispanel
+  }
+}
+
+class StackPanel(val position:Vec2i)(children:Widget*) extends Panel {
+  val size = ( Vec2i(0,0) /: children ) {
+    case (v,child) =>
+      v.x = max(child.size.x,v.x)
+      v.y += child.size.y
+      v
+  }
+
+  arrangeChildren()
+
+  override def arrangeChildren(delay:Int = 0) {
+    var y = position.y
+
+    for( child <- children ) {
+      child.setPosition( position + Vec2i(0,y), delay )
+      y += child.size.y
+    }
   }
 }
 

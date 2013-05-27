@@ -1,22 +1,22 @@
 package downearth.gui
 import Border._
 import Background._
-import downearth.{Config, ConstructionTool, Player}
+import downearth._
 
 import org.lwjgl.opengl.Display
 
 import simplex3d.math.Vec2i
 import simplex3d.math.double._
-import simplex3d.math.double.functions._
+import downearth.tools._
 
 object MainWidget extends Panel {
   val position = Vec2i(0)
   val size = Vec2i(Display.getWidth,Display.getHeight)
 
-	border = NoBorder
-	background = NoBackground
+  border = NoBorder
+  background = NoBackground
 
-	override def setPosition(newPos:Vec2i, delay:Int) {}
+  override def setPosition(newPos:Vec2i, delay:Int) {}
 
   val dragStartPos = Vec2i(0)
   val startDir = Vec3(0)
@@ -26,7 +26,7 @@ object MainWidget extends Panel {
       Player.primaryAction
     case DragStart(firstPos:Vec2i) =>
       dragStartPos := firstPos
-      startDir := Player.direction
+      startDir := Player.dir
     case MouseDrag(mousePos0, mousePos1) =>
 
       val mouseDelta = Vec2(mousePos1 - mousePos0)
@@ -45,8 +45,9 @@ object MainWidget extends Panel {
     backGroundColor := Vec4(0.1,0.1,0.1,0.7)
     border = LineBorder
 
-    val shovel = new Shovel(position+Vec2i(40, 0))
-    val hammer = new Hammer(position+Vec2i(0 , 0))
+    val shovel = new ToolWidget( Shovel, position+Vec2i(40, 0) )
+    val hammer = new ToolWidget( ConstructionTool, position+Vec2i(0 , 0) )
+
     children += hammer
     children += shovel
     assert(hammer.parent == this)
@@ -60,7 +61,8 @@ object MainWidget extends Panel {
       i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
     )
 
-    val superTool = new TestBuildToolWidget( position+Vec2i(80,0) )
+    val superTool = new ToolWidget( TestBuildTool, position+Vec2i(80,0) )
+
     children += superTool
 
     selected = shovel
@@ -80,9 +82,15 @@ object MainWidget extends Panel {
 
 
   val keySettingWidget = new KeySettingsWidget( Vec2i(20,20), Config )
+  keySettingWidget.visible = false
+
+  val drawCallLabel       = new Label( Vec2i(20,keySettingWidget.size.y + 10 ), "<not set>" )
+  val playerPositionLabel = new Label( Vec2i(20,keySettingWidget.size.y + 30 ), "<not set>" )
 
   publish( WidgetResized(this) )
 
   children += inventory
+  children += drawCallLabel
+  children += playerPositionLabel
   children += keySettingWidget
 }

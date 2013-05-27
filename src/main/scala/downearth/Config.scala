@@ -79,12 +79,16 @@ object Config extends Listener {
 	val keyScreenshot       = KEY_F10
 	val keyToggleFullScreen = KEY_F11
 
-	// settings changeable at runtime:
-	var debugDraw = false
-	var wireframe = false
-	var streamWorld = false
-	var frustumCulling = true
-	var turbo = false
+  // settings changeable at runtime:
+  val DebugDrawOctreeBit = 0x01
+  val DebugDrawPhysicsBit = 0x02
+  val DebugDrawSampledNodesBit = 0x04
+
+  var debugDraw = 0
+  var wireframe = false
+  var streamWorld = false
+  var frustumCulling = true
+  var turbo = false
 
   loader.load()
 

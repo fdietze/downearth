@@ -51,7 +51,7 @@ abstract class GameLoop {
 
       World.octree.makeUpdates()
       if(Config.streamWorld) {
-        World.octree stream Player.position
+        World.octree stream Player.pos
       }
 
 			Renderer.draw()

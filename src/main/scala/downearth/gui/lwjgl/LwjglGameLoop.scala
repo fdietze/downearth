@@ -73,13 +73,13 @@ class LwjglGameLoop extends GameLoop with Publisher with Logger { gameLoop =>
       case `keyPausePhysics` =>
         BulletPhysics.pause = !BulletPhysics.pause
       case `keyDebugDraw` =>
-        debugDraw = !debugDraw
+        debugDraw += 1
       case `keyToggleGhostPlayer` =>
-        Player.toggleGhost
+        Player.toggleGhost()
       case `keyToggleInventory` =>
         MainWidget.inventory.visible = !MainWidget.inventory.visible
       case `keyJump` =>
-        Player.jump
+        Player.jump()
       case `keyIncOctreeDepth` =>
         World.octree.incDepth()
       case `keyToggleFullScreen` =>

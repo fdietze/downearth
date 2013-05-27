@@ -131,7 +131,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 		}
 	}
 	
-	def stream(pos:Vec3) {
+	def stream(pos:ReadVec3) {
 		val wpos = Vec3(worldWindowPos)
 		val wsize = worldWindowSize.toDouble
 		val msize = minMeshNodeSize.toDouble
@@ -194,17 +194,19 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 			Nil
 	}
 
-	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Double):Option[Vec3i] = {
+	def raytracer( ray:Ray, top:Boolean, distance:Double):Option[Vec3i] = {
 		// der raytracer ist fehlerhaft falls die startposition ganzzahling ist
+    val from = Vec3( ray.pos )
+
 		for(i <- 0 until 3) {
 			if(from(i) == floor(from(i)))
 				from(i) += 0.000001
 		}
 	
-		val t = direction
+		val t = ray.dir
 		
 		val pos = Vec3i(floor(from))
-		val step = Vec3i(sign(direction))
+		val step = Vec3i(sign(ray.dir))
 		val tMax = Vec3(0)
 		val tDelta = Vec3(0)
 		
@@ -217,7 +219,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 		tDelta.z = 1/abs(t.z)
 		
 		var h:Polyeder = apply(pos).h
-		if(!util.rayPolyederIntersect(from-pos,direction,h))
+		if(!util.rayPolyederIntersect( Ray(from-pos,ray.dir), h ))
 			h = null
 		var i = 0
 		
@@ -249,7 +251,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 
 			h = apply(pos).h
 
-			if(!util.rayPolyederIntersect(from-pos,direction,h))
+			if(!util.rayPolyederIntersect( Ray(from-pos,ray.dir), h))
 				h = null
 			
 			i += 1
@@ -259,7 +261,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 		prepos(axis) -= step(axis)
 		
 		if(h != null){
-			if(top && rayCellTest(from-pos,direction,h.asInstanceOf[Hexaeder]))
+			if(top && rayCellTest( Ray(from-pos,ray.dir), h.asInstanceOf[Hexaeder]))
 				Some(prepos)
 			else
 				Some(pos)

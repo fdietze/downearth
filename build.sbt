@@ -11,6 +11,8 @@ resolvers ++= Seq(
   //"Slick" at "http://slick.cokeandcode.com/mavenrepo"
 )
 
+
+
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
   "com.typesafe.akka" %% "akka-actor" % "2.2-M3",
@@ -20,6 +22,10 @@ libraryDependencies ++= Seq(
   //"slick" % "slick" % "274",
   "java3d" % "vecmath" % "1.3.1"
 )
+
+net.virtualvoid.sbt.graph.Plugin.graphSettings
+
+filterScalaLibrary := false
 
 seq( LWJGLPlugin.lwjglSettings: _*)
 

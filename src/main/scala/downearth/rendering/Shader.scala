@@ -109,6 +109,12 @@ class Program {
     glUseProgram(id)
   }
 
+  def use(block: => Unit) {
+    glUseProgram(id)
+    block
+    glUseProgram(0)
+  }
+
   def delete() {
     glDeleteProgram(id)
     id = 0

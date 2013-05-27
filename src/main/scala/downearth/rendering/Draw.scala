@@ -19,7 +19,7 @@ object ConsoleFont {
 	import java.awt.{Font,Color};
 	import java.util.List
 	val font = new UnicodeFont(new Font("Monospace", Font.BOLD, 14))
-	font.addAsciiGlyphs
+	font.addAsciiGlyphs()
 	font.addGlyphs("äöüÄÖÜß")
 	val effects = font.getEffects.asInstanceOf[List[Effect]]
 	effects add new ShadowEffect
@@ -29,8 +29,13 @@ object ConsoleFont {
 	def height = font.getLineHeight
 }
 
+trait Draw {
+  def renderPolyeder(h:Polyeder, pos:Vec3i, color:Vec4)
+  def drawLine(p1:Vec3, p2:Vec3, color:Vec4)
+}
+
 // useful primitive geometric objects
-object Draw {
+object GlDraw extends Draw {
   implicit class ExtendedBuffer( buffer: FloatBuffer ) {
     def putVertex(x:Float,y:Float,z:Float, w:Float = 1) {
       buffer put x
@@ -46,6 +51,14 @@ object Draw {
     }
   }
 
+  def drawLine(p1:Vec3, p2:Vec3, color:Vec4) {
+    glColor4d(color.r, color.g, color.b, color.a)
+    glBegin(GL_LINES)
+      glVertex3d(p1.x, p1.y, p1.z)
+      glVertex3d(p2.x, p2.y, p2.z)
+    glEnd()
+  }
+
 	def renderAxis {
 		glBegin(GL_LINES)
 		glColor3f(1,0,0)
@@ -57,21 +70,21 @@ object Draw {
 		glColor3f(0,0,1)
 		glVertex3f(0,0,0)
 		glVertex3f(0,0,1)
-		glEnd
+		glEnd()
 	}
 
 	def renderCube(size:Double) {
-		glPushMatrix
+		glPushMatrix()
 			glScale1d(size)
-			plainCube
-		glPopMatrix
+			plainCube()
+		glPopMatrix()
 	}
 
 	def renderCuboid(size:Vec3) {
-		glPushMatrix
+		glPushMatrix()
 			glScaled(size.x,size.y,size.z)
 			plainCube()
-		glPopMatrix
+		glPopMatrix()
 	}
 
   def texturedCube() {
@@ -110,11 +123,11 @@ object Draw {
 			glVertex3f(i,k,j)
 		for(i <- 0 to 1;j <- 0 to 1;k <- 0 to 1)
 			glVertex3f(k,i,j)
-		glEnd
+		glEnd()
 	}
 
 	def crossHair() {
-		glPushMatrix
+		glPushMatrix()
 			glTranslated( Main.width/2, Main.height/2,0)
 			glColor3f(1,1,1)
 			glBegin(GL_LINES)
@@ -127,27 +140,35 @@ object Draw {
 				glVertex2i(0,  -5)
 				glVertex2i(0,   5)
 				glVertex2i(0,  15)
-			glEnd
-		glPopMatrix
+			glEnd()
+		glPopMatrix()
 	}
 
 	// rendert den Umriss eines Hexaeders, um ihn für die Selektion hervorheben zu können.
-	def renderPolyeder(h:Polyeder) {
-		val verts = h.vertices
-		val indices = Seq(0,1,2,3,4,5,6,7,0,2,1,3,4,6,5,7,0,4,1,5,2,6,3,7)
+  override def renderPolyeder(h:Polyeder, pos:Vec3i, color:Vec4) {
+    glColor4d(color.r, color.g, color.b, color.a)
+    glPushMatrix()
+    glTranslate3iv(pos)
+    renderPolyeder(h)
+    glPopMatrix()
+  }
 
-		try {
-			glBegin(GL_LINES)
-			for(v <- indices map verts)
-				glVertex3d(v.x,v.y,v.z)
-			glEnd
-		}
-		catch {
-			case e:Exception =>
-				println("cant draw Hexaeder: " + h + "\nvertices: " + h.vertices)
-				throw e
-		}
-	}
+  def renderPolyeder(h:Polyeder) {
+    val verts = h.vertices
+    val indices = Seq(0,1,2,3,4,5,6,7,0,2,1,3,4,6,5,7,0,4,1,5,2,6,3,7)
+
+    try {
+      glBegin(GL_LINES)
+      for(v <- indices map verts)
+        glVertex3d(v.x,v.y,v.z)
+      glEnd
+    }
+    catch {
+      case e:Exception =>
+        println("cant draw Hexaeder: " + h + "\nvertices: " + h.vertices)
+        throw e
+    }
+  }
 
 	def highlight(pos:Vec3i, polyeder:Polyeder, transparent:Boolean = true) {
 		glDisable(GL_LIGHTING)
@@ -178,7 +199,7 @@ object Draw {
 
 		glPushMatrix()
 			glTranslate3dv(nodeinfo.pos + 0.1)
-			Draw.renderCube(nodeinfo.size - 0.2)
+			GlDraw.renderCube(nodeinfo.size - 0.2)
 		glPopMatrix()
 	}
 
@@ -186,10 +207,10 @@ object Draw {
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
-		glPushMatrix
+		glPushMatrix()
 			glTranslate3dv(cuboid.pos + 0.1)
-			Draw.renderCuboid(cuboid.size - 0.2)
-		glPopMatrix
+			GlDraw.renderCuboid(cuboid.size - 0.2)
+		glPopMatrix()
 	}
 
 	// Für den Debugdraw: alle Bereiche, die gesampled werden

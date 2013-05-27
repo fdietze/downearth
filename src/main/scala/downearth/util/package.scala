@@ -20,7 +20,7 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
-import downearth.rendering.Draw
+import downearth.rendering.GlDraw
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
 
@@ -256,7 +256,7 @@ package object util {
 	
 	// testet, ob ein Strahl einen Hexaeder trifft, wobei davon ausgegangen 
 	// wird, dass sich der Hexaeder im Ursprung das Koordinatensystems befindet.
-	def rayPolyederIntersect(rayStart:Vec3,rayDirection:Vec3,h:Polyeder):Boolean = {
+	def rayPolyederIntersect(ray:Ray, h:Polyeder):Boolean = {
 
     if(h == null) {
       println("penis")
@@ -267,14 +267,14 @@ package object util {
 		if( (h eq EmptyHexaeder) || (h eq UndefHexaeder) )
 			false
 		else{
-			val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,rayDirection)) )
+			val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,ray.dir)) )
 
-			val x = normalize( cross(q,rayDirection) )
-			val y = normalize( cross(x,rayDirection) )
+			val x = normalize( cross(q,ray.dir) )
+			val y = normalize( cross(x,ray.dir) )
 			val m = transpose( Mat2x3(x,y) )
 
 			// alle Vertices werden in richtung des Strahls projeziert
-			val projected = Vector.concat( Seq(rayStart), h.vertices ).map( m * _ )
+			val projected = Vector.concat( Seq(ray.pos), h.vertices ).map( m * _ )
 			val projectedStart = projected.head
 			
 			val convexHull = ChainHull2D( projected )
@@ -289,10 +289,10 @@ package object util {
 	// falls schon sichergestellt wurde, dass der Strahl den Hexaeder trifft, 
 	// wird hir noch herausgefunden, ob der strahl eine Aussenwand des Hexaeders
 	// trifft oder nicht.
-	def rayCellTest(rayStart:Vec3,rayDirection:Vec3,h:Hexaeder):Boolean = {
-		val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,rayDirection)) )
-		val x:Vec3 = normalize( cross(q,rayDirection) )
-		val y:Vec3 = normalize( cross(x,rayDirection) )
+	def rayCellTest(ray:Ray, h:Hexaeder):Boolean = {
+		val q = Seq( Vec3.UnitX,Vec3.UnitY,Vec3.UnitZ ).minBy( v => abs(dot(v,ray.dir)) )
+		val x:Vec3 = normalize( cross(q,ray.dir) )
+		val y:Vec3 = normalize( cross(x,ray.dir) )
 		val m = transpose( Mat2x3(x,y) )
 		
 		for(i ← 0 until 6) {
@@ -311,8 +311,8 @@ package object util {
 				// normale des Dreiecks
 				val n = cross(v2-v1,v0-v1)
 				// falls der Strahl auf die Sichtbare Seite des ersten Dreiecks trifft.
-				if( dot(n,rayDirection) <= 0 ) {
-					val projected = Vector(m*rayStart, m*v0, m*v1, m*v2)
+				if( dot(n,ray.dir) <= 0 ) {
+					val projected = Vector(m*ray.pos, m*v0, m*v1, m*v2)
 					val projectedStart = projected(0)
 					
 					val convexhull = ChainHull2D( projected )
@@ -326,8 +326,8 @@ package object util {
 			}
 		}
 		
-		// dieser code hier wird nur erreicht, wenn der strahl den Hexaeder garnicht getroffen hat
-		Draw addText "nicht getroffen"
+		// dieser code hier wird nur erreicht, wenn der strahl den Hexaeder garnicht getroffen hat, obwohl dis sicher gestellt ist
+		GlDraw addText "nicht getroffen"
 		return false
 	}
 	
@@ -364,7 +364,7 @@ package object util {
 	// 2 => (0,1)
 	
 	def round10(a:Double) = math.round(a*10.0)/10.0
-	def round10(v:Vec3):Vec3 = Vec3(round10(v.x), round10(v.y), round10(v.z))
+	def round10(v:ReadVec3):Vec3 = Vec3(round10(v.x), round10(v.y), round10(v.z))
 	
 	var counter = 0
 	

@@ -2,11 +2,17 @@ target/
 project/boot/
 .idea*
 *.sublime*
+.classpath
+.project
+.settings/
+
 *~
 *.log
 *.blend*
 *.mtl
 *.obj
+
+
 
 screenshots
 config.xml

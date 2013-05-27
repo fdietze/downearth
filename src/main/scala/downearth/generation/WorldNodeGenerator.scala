@@ -12,7 +12,7 @@ import akka.actor._
 import scala.Tuple2
 import downearth.worldoctree._
 import downearth.{MutableTextureMesh, TextureMeshData, Config}
-import downearth.rendering.Draw
+import downearth.rendering.{GlDraw, Draw}
 import downearth.worldoctree.NodeInfo
 import downearth.worldoctree.Cuboid
 import scala.Tuple2
@@ -104,7 +104,7 @@ class Worker (id:Int) extends Actor {
       val interval = WorldDefinition.range(cuboid.toInterval3)
 
       if(interval.isPositive) {
-        Draw addPredictedCuboid cuboid  // Für DebugDraw
+        GlDraw addPredictedCuboid cuboid  // Für DebugDraw
 
         for( nodeinfo <- cuboid.nodeinfos ) {
           val meshnode = new MeshNode(Leaf(FullHexaeder))
@@ -114,7 +114,7 @@ class Worker (id:Int) extends Actor {
       }
 
       else if(interval.isNegative) {
-        Draw addPredictedCuboid cuboid  // Für DebugDraw
+        GlDraw addPredictedCuboid cuboid  // Für DebugDraw
 
         for( nodeinfo <- cuboid.nodeinfos ) {
           val meshnode = new MeshNode(Leaf(EmptyHexaeder))

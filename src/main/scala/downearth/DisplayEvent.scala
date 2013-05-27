@@ -1,6 +1,6 @@
 package downearth
 
-import downearth.rendering.Draw
+import downearth.rendering.{GlDraw, Draw}
 
 object DisplayEventManager {
 	val eventTime =  5000L // TODO in die Config
@@ -19,7 +19,7 @@ object DisplayEventManager {
 		for(i <- 0 until events.length) {
 			if(events(i) ne null){
 				if( events(i).startTime + eventTime >= currentTime ){
-					Draw.drawDisplayEvent(events(i),i)
+					GlDraw.drawDisplayEvent(events(i),i)
 					hasEvent = true
 				}
 				else {

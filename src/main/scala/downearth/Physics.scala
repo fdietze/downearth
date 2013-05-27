@@ -7,19 +7,23 @@ import com.bulletphysics.dynamics.character.KinematicCharacterController
 import com.bulletphysics.collision.dispatch.PairCachingGhostObject
 import com.bulletphysics.collision.broadphase.CollisionFilterGroups
 import com.bulletphysics.collision.dispatch.GhostPairCallback
-
-import broadphase.DbvtBroadphase
+import com.bulletphysics.linearmath.{DefaultMotionState, Transform}
+import com.bulletphysics.collision.broadphase.DbvtBroadphase
 import constraintsolver.SequentialImpulseConstraintSolver
 import dispatch.{CollisionObject, CollisionFlags, CollisionDispatcher, DefaultCollisionConfiguration}
+
+
 import javax.vecmath.Vector3f
 import shapes._
+
 import simplex3d.math.double.functions._
 import simplex3d.math.double._
 import simplex3d.math._
-import downearth.rendering.{Draw, DirectDrawer}
+
+import downearth.rendering.{GlDraw, DirectDrawer}
 import downearth.worldoctree.{Array3D, NodeInfo}
 import downearth.util._
-import com.bulletphysics.linearmath.{DefaultMotionState, Transform}
+
 import org.lwjgl.opengl.GL11._
 import downearth.world.World
 
@@ -216,10 +220,10 @@ object BulletPhysics {
 		}
 		
 		def draw {
-			glPushMatrix
+			glPushMatrix()
 			glTranslated(pos.x,pos.y,pos.z)
-			Draw.renderCube(size)
-			glPopMatrix
+			GlDraw.renderCube(size)
+			glPopMatrix()
 		}
 	}
 	
