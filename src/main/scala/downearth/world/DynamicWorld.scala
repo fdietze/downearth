@@ -13,9 +13,12 @@ object DynamicWorld {
 		mesh.genvbo()
 
 		val world = new DynamicWorld
+
+    /*
 		world.entities += new SimpleEntity(Vec3(0), mesh)
 		world.entities += new SimpleEntity(Vec3(1), mesh)
 		world.entities += new SimpleEntity(Vec3(2), mesh)
+		*/
 		
 		world
 	}

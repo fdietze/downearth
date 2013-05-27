@@ -1,31 +1,40 @@
 package downearth.gui
-
-import org.lwjgl.opengl.Display
-import simplex3d.math.Vec2i
-import simplex3d.math.double.{Vec3,Vec4}
-import downearth.{Config, ConstructionTool, Player}
-
 import Border._
 import Background._
+import downearth.{Config, ConstructionTool, Player}
 
-object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getHeight) ) {
+import org.lwjgl.opengl.Display
+
+import simplex3d.math.Vec2i
+import simplex3d.math.double._
+import simplex3d.math.double.functions._
+
+object MainWidget extends Panel {
+  val position = Vec2i(0)
+  val size = Vec2i(Display.getWidth,Display.getHeight)
 
 	border = NoBorder
 	background = NoBackground
 
 	override def setPosition(newPos:Vec2i, delay:Int) {}
 
+  val dragStartPos = Vec2i(0)
+  val startDir = Vec3(0)
+
   addReaction {
-  case MouseClicked(pos) =>
-    Player.primaryAction
-  case MouseDrag(mousePos0,mousePos1) =>
-    val mouseDelta = mousePos1 - mousePos0
-    val delta_angle = Vec3(0)
+    case MouseClicked(pos) =>
+      Player.primaryAction
+    case DragStart(firstPos:Vec2i) =>
+      dragStartPos := firstPos
+      startDir := Player.direction
+    case MouseDrag(mousePos0, mousePos1) =>
 
-    delta_angle.y = mouseDelta.x/300.0
-    delta_angle.x = mouseDelta.y/300.0
+      val mouseDelta = Vec2(mousePos1 - mousePos0)
+      mouseDelta *= 2.0 / size.y
 
-    Player.rotate(delta_angle)
+      val deltaAngle = Vec3(mouseDelta.yx, 0)
+
+      Player.rotate(deltaAngle)
   }
 
   override def safePosition(newPos:Vec2i) = {
@@ -37,14 +46,22 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getH
     border = LineBorder
 
     val shovel = new Shovel(position+Vec2i(40, 0))
-    children += new Hammer(position+Vec2i(0 , 0))
+    val hammer = new Hammer(position+Vec2i(0 , 0))
+    children += hammer
     children += shovel
+    assert(hammer.parent == this)
+    assert(shovel.parent == this)
+
     children ++= Range(0,4).map(
       i => new MaterialWidget(i, position + Vec2i(i * 40, 40) )
     )
+
     children ++= Range(0, ConstructionTool.all.size).map(
       i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
     )
+
+    val superTool = new TestBuildToolWidget( position+Vec2i(80,0) )
+    children += superTool
 
     selected = shovel
 
@@ -60,6 +77,7 @@ object MainWidget extends FreePanel(Vec2i(0),Vec2i(Display.getWidth,Display.getH
 
     arrangeChildren()
   }
+
 
   val keySettingWidget = new KeySettingsWidget( Vec2i(20,20), Config )
 

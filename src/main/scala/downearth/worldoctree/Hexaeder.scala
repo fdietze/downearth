@@ -199,7 +199,7 @@ abstract class APolyeder extends Polyeder {
 	}
 }
 
-// TODO ein immutable Hexaeder, denn im Octree dürfen Hexaeder nicht verändert werden ohne sie auszutauschen
+// TODO immutable Hexaeder, because it is disallowed to modify one inside of the octree without reinserting it (notify the change)
 case object FullHexaeder extends Hexaeder{
 	override def toString = "[X]"
 	override def planemax(axis:Int, direction:Int) = true

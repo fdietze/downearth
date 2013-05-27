@@ -41,7 +41,7 @@ object WorldOctree {
 }
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] with Serializable{
+class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] with Serializable{
 	var worldWindowPos:Vec3i = rootNodePos.clone
 	val worldWindowSize:Int = rootNodeSize
 	
@@ -54,11 +54,11 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 	def rootNodePos = rootNodeInfo.pos
 	def rootNodeSize = rootNodeInfo.size
 
-  def queryRegion(test:(NodeInfo) => Boolean)(order:Array[Int])(function: (NodeInfo,Octant) => Boolean) {
+  def queryRegion(test:(NodeInfo) => Boolean)(order:Array[Int])(function: (NodeInfo,Node) => Boolean) {
     require(order.length == 8)
 
     val infoQueue = collection.mutable.Queue[NodeInfo](rootNodeInfo)
-    val nodeQueue = collection.mutable.Queue[Octant](root)
+    val nodeQueue = collection.mutable.Queue[Node](root)
 
     while( !nodeQueue.isEmpty ) {
       val currentInfo = infoQueue.dequeue()
@@ -90,6 +90,15 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 		}
 	}
 
+  def insert( nodeinfo:NodeInfo, that:NodeOverMesh ) {
+    val NodeInfo(nodepos,nodesize) = nodeinfo
+
+    if( any(lessThan(nodepos, rootNodePos)) || any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize)) )
+      incDepth()
+
+    root = root.insertNode(rootNodeInfo, nodeinfo, that)
+  }
+
 	override def toString = "Octree("+root.toString+")"
 	
 	def generateNode(info:NodeInfo) {
@@ -100,7 +109,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 	
 	def makeUpdates() {
     implicit val timeout = Timeout(1000 seconds)
-    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(NodeInfo, OctantOverMesh)]]
+    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(NodeInfo, NodeOverMesh)]]
     val s = Await.result(future, 1000 seconds)
 
     for( (nodeinfo, node) <- s ) {
@@ -145,38 +154,11 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 		if( pos.z > upperVertex.z )
 			move( Vec3i(0,0,1) )
 	}
-	
-	def insert( nodeinfo:NodeInfo, that:OctantOverMesh ) {
-		val NodeInfo(nodepos,nodesize) = nodeinfo
-		
-//		if(any(lessThan(nodepos, rootNodePos)) || any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize))) {
-//			// Welt wird in (+1,+1,+1) vergrößert
-//			val newdata = Array.fill[OctantOverMesh](8)(UngeneratedInnerNode)
-//			newdata(7) = root
-//			root = new InnerNodeOverMesh(newdata)
-//
-//			rootNodePos -= rootNodeSize
-//			rootNodeSize *= 2
-//		}
-//
-//		else if() {
-//			// Welt wird in (-1,-1,-1) vergrößert
-//			val newdata = Array.fill[OctantOverMesh](8)(UngeneratedInnerNode)
-//			newdata(0) = root
-//			root = new InnerNodeOverMesh(newdata)
-//
-//			rootNodeSize *= 2
-//		}
-    if( any(lessThan(nodepos, rootNodePos)) || any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize)) )
-      incDepth()
-		
-		root = root.insertNode(rootNodeInfo, nodeinfo, that)
-	}
 
   def incDepth() {
     // TODO add test for correct subdivision of the area. Depending on where the root is, it should be extended differently.
 
-    var newRoot:OctantOverMesh = new InnerNodeOverMesh(Array.fill[OctantOverMesh](8)(UngeneratedInnerNode))
+    var newRoot:NodeOverMesh = new InnerNodeOverMesh(Array.fill[NodeOverMesh](8)(UngeneratedInnerNode))
     val newRootNodeInfo = NodeInfo(rootNodePos - rootNodeSize/2, rootNodeSize*2)
 
     if( root.isInstanceOf[MeshNode] )
@@ -184,7 +166,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 
     if( root != UngeneratedInnerNode ) {
     	for(i <- 0 until 8) {
-	      newRoot = newRoot.insertNode(newRootNodeInfo, rootNodeInfo(i), root.getChild(i).asInstanceOf[OctantOverMesh] )
+	      newRoot = newRoot.insertNode(newRootNodeInfo, rootNodeInfo(i), root.getChild(i).asInstanceOf[NodeOverMesh] )
 	    }
   	}
 
@@ -213,7 +195,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:OctantOverMesh = Ungenerat
 	}
 
 	def raytracer(from:Vec3,direction:Vec3,top:Boolean,distance:Double):Option[Vec3i] = {
-		// der raytracer ist fehlerhaft falls die startposition genau auf einen Integer fällt ganzzahling
+		// der raytracer ist fehlerhaft falls die startposition ganzzahling ist
 		for(i <- 0 until 3) {
 			if(from(i) == floor(from(i)))
 				from(i) += 0.000001

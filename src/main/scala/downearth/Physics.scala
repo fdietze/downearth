@@ -294,12 +294,12 @@ object BulletPhysics {
 		}
 	}
 	
-	def debugDrawWorld {
+	def debugDrawWorld() {
 		glDisable(GL_LIGHTING)
 
-		glPushMatrix
-			dynamicsWorld.debugDrawWorld
+		glPushMatrix()
+			dynamicsWorld.debugDrawWorld()
 			glColor3b(127,127,127)
-		glPopMatrix
+		glPopMatrix()
 	}
 }

@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
  */
 
 class Texture(val width:Int, val height:Int, pixels:ByteBuffer) {
-  val id = glGenTextures()
+  var id = glGenTextures()
 
   glBindTexture(GL_TEXTURE_2D, id)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
@@ -25,16 +25,20 @@ class Texture(val width:Int, val height:Int, pixels:ByteBuffer) {
 
   glBindTexture(GL_TEXTURE_2D, 0)
 
-  var active = true
-
-  def bind {
-    assert(active)
+  def bind() {
+    assert( id != 0 )
     glBindTexture(GL_TEXTURE_2D, id)
   }
 
-  def destroy {
-    assert(active)
-    active = false
+  def delete() {
+    assert( id != 0 )
     glDeleteTextures(id)
+    id = 0
+  }
+
+  override def finalize() {
+    if( id != 0 ) {
+      delete()
+    }
   }
 }

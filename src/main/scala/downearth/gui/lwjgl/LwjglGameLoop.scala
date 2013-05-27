@@ -1,7 +1,7 @@
 package downearth.gui.lwjgl
 
 import downearth._
-import org.lwjgl.opengl.Display
+import org.lwjgl.opengl.{DisplayMode, Display}
 import org.lwjgl.input.{Keyboard, Mouse}
 import simplex3d.math.Vec2i
 import simplex3d.math.double._
@@ -19,16 +19,17 @@ import annotation.switch
  * Date: 29.04.13
  * Time: 00:39
  */
-class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
+class LwjglGameLoop extends GameLoop with Publisher with Logger { gameLoop =>
 
   def swapBuffers() {
-    //Display.swapBuffers()
     Display.update()
   }
 
   def extraLoopOperation() {
     handleInput()
   }
+
+  var windowMode:DisplayMode = null
 
   def handleInput() {
     import Mouse._
@@ -51,6 +52,50 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
     if( isKeyDown(keyRight) )
       delta.x += 1
 
+    val mouseGrabIndependant: Int => Unit = {
+      case `keyQuit` =>
+        finished = true
+      case `keyScreenshot` =>
+        screenShot( "screenshot" )
+      case `keyMouseGrab` =>
+        Mouse setGrabbed !Mouse.isGrabbed
+      case `keyPlayerReset` =>
+        Player.resetPos
+      case `keyStreaming` =>
+        streamWorld = !streamWorld
+      case `keyWireframe` =>
+        wireframe = !wireframe
+      case `keyFrustumCulling` =>
+        frustumCulling = !frustumCulling
+      case `keyTurbo` =>
+        turbo = ! turbo
+        log.println(s"Turbo is ${if(turbo) "on" else "off"}." )
+      case `keyPausePhysics` =>
+        BulletPhysics.pause = !BulletPhysics.pause
+      case `keyDebugDraw` =>
+        debugDraw = !debugDraw
+      case `keyToggleGhostPlayer` =>
+        Player.toggleGhost
+      case `keyToggleInventory` =>
+        MainWidget.inventory.visible = !MainWidget.inventory.visible
+      case `keyJump` =>
+        Player.jump
+      case `keyIncOctreeDepth` =>
+        World.octree.incDepth()
+      case `keyToggleFullScreen` =>
+        if( Display.isFullscreen ) {
+          Display.setDisplayModeAndFullscreen(windowMode)
+          MainWidget.resize( Vec2i(windowMode.getWidth, windowMode.getHeight) )
+        }
+        else {
+          windowMode = Display.getDisplayMode
+          val mode = Display.getDesktopDisplayMode
+          assert(mode.isFullscreenCapable)
+          Display.setDisplayModeAndFullscreen(mode)
+          MainWidget.resize( Vec2i(mode.getWidth, mode.getHeight) )
+        }
+      case _ =>
+    }
 
     if( Mouse.isGrabbed ) {
 
@@ -62,45 +107,12 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
       if( turbo && Mouse.isButtonDown(0) )
         Player.primaryAction
 
-
       // Keyboard Events
       while ( Keyboard.next ) {
         if (getEventKeyState) {
-          (getEventKey: @switch) match {
-            case `keyMouseGrab` =>
-              Mouse setGrabbed false
-            case `keyPlayerReset` =>
-              Player.resetPos
-            case `keyStreaming` =>
-              streamWorld = !streamWorld
-            case `keyWireframe` =>
-              wireframe = !wireframe
-            case `keyFrustumCulling` =>
-              frustumCulling = !frustumCulling
-            case `keyScreenshot` =>
-              screenShot( "screenshot" )
-            case `keyTurbo` =>
-              turbo = ! turbo
-              DisplayEventManager.showEventText("Turbo is "+(if(turbo) "on" else "off")+"." )
-            case `keyQuit` =>
-              finished = true
-            case `keyPausePhysics` =>
-              BulletPhysics.pause = !BulletPhysics.pause
-            case `keyDebugDraw` =>
-              debugDraw = !debugDraw
-            case `keyToggleGhostPlayer` =>
-              Player.toggleGhost
-            case `keyToggleInventory` =>
-              MainWidget.inventory.visible = !MainWidget.inventory.visible
-            case `keyJump` =>
-              Player.jump
-            case `keyIncOctreeDepth` =>
-              World.octree.incDepth()
-            case `keyToggleFullScreen` =>
-              // TODO allow fullscreen again
-            case _ =>
-          }
+          mouseGrabIndependant(getEventKey)
         }
+        // implement some mouse grab dependant keys here
       }
 
       // Mouse events
@@ -113,7 +125,7 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
           case (1 , false) => // right up
             //Player.secondarybutton
             Mouse setGrabbed false
-            Mouse setCursorPosition( Main.width.toInt / 2, Main.height.toInt / 2)
+            Mouse setCursorPosition( Display.getWidth / 2, Display.getHeight / 2)
           case (-1, false) => // wheel
           // Player.updownbutton( Mouse.getDWheel / 120 )
           case _ =>
@@ -121,10 +133,6 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
       }
     }
     else { // if Mouse is not grabbed
-
-//      if( mouseDelta != Vec2i(0) ) { // if Mouse is moved
-//        MainWidget.invokeMouseMoved(lastMousePos, mousePos)
-//      }
 
       // Keyboard Events
       while ( Keyboard.next ) {
@@ -135,17 +143,9 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
             publish( KeyRelease(getEventKey) )
         }
 
-        if (getEventKeyState) {
-          getEventKey match {
-            case `keyMouseGrab` =>
-              Mouse setGrabbed true
-            case `keyScreenshot` =>
-              screenShot( "screenshot" )
-            case `keyQuit` =>
-              finished = true
-            case _ =>
-              // TODO implement mouse grab independent key events
-          }
+        if ( getEventKeyState ) {
+          mouseGrabIndependant(getEventKey)
+          // implement some mouse grab dependant keys here
         }
 
         val c = Keyboard.getEventCharacter
@@ -162,8 +162,6 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
                 print("<return>")
               case _ =>
                 print(s"<${c.intValue}>")
-
-
             }
           }
           else
@@ -204,6 +202,5 @@ class LwjglGameLoop extends GameLoop with Publisher { gameLoop =>
     val factor = if(turbo) cameraTurboSpeed else cameraSpeed
     Player.move(factor*(delta/max(1,length(delta)))*timeStep)
     Player.rotate(2.0*delta_angle)
-
   }
 }

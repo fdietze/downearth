@@ -1,8 +1,8 @@
 package downearth.gui.lwjgl
 
-import org.lwjgl.opengl.{DisplayMode, ContextAttribs, Display}
+import org.lwjgl.opengl.{DisplayMode, Display}
 import downearth.gui.{WidgetEventDispatcher, MainWidget}
-import downearth.{ConfigLoader, Config}
+import downearth.Config
 
 /**
  * User: arne

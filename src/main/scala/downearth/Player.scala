@@ -14,7 +14,7 @@ import downearth.Config._
 
 import gui.MainWidget
 import javax.vecmath.{Vector3f, Quat4f}
-import downearth.rendering.Draw
+import downearth.rendering.{ObjManager, Draw}
 import downearth.worldoctree._
 import scala.Some
 import downearth.world.World
@@ -30,7 +30,9 @@ object Player {
 	
 	private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
 	def camera = {
-		m_camera.position = position
+    if( !isGhost )
+		  m_camera.position = position
+
 		m_camera
 	}
 	
@@ -41,25 +43,11 @@ object Player {
 			m_camera.position
 		else {
 			ghostObject.getWorldTransform(new Transform).origin + camDistFromCenter
-		} // body.getCenterOfMassTransform(new Transform).origin + camDistFromCenter
+		}
 	}
 	
 	def position_= (newPos:Vec3) {
-
-		/*val v = new Vector3f
-		body.setLinearVelocity(v)
-		body getCenterOfMassPosition v
-		v.negate
-		v += newpos
-		body translate v*/
-
-		/*val transform = new Transform
-		transform.origin.set(newPos)
-		ghostObject.setWorldTransform(transform)*/
-		
-		//body.reset
 		body.warp(newPos)
-		//println(ghostObject.getWorldTransform(new Transform).origin)
 	}
 
 	def direction:Vec3 = {
@@ -69,15 +57,13 @@ object Player {
     else {
       val rx = (Mouse.getX * 2.0 - Main.width   ) / Main.height
       val ry = (Mouse.getY * 2.0 - Main.height  ) / Main.height
-      camera.directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
+      direction(rx,ry);
     }
   }
-	
-/*	def velocity:Vec3 = {
-		val v = new Vector3f
-		body getLinearVelocity v
-		v
-	}*/
+
+  def direction(rx:Double,ry:Double):Vec3 = {
+    camera.directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
+  }
 
 	def resetPos {
 		DisplayEventManager.showEventText("reset")
@@ -102,10 +88,15 @@ object Player {
 	var dir = Vec2(Pi/2)
 	
 	def rotate(rot:Vec3) {
-		// TODO hier entstehen noch starke rotationsartefakte
+
 		m_camera.rotate(rot)
-		m_camera.lerpUp(1 - direction.z.abs )
+    // TODO this method to make z an absolute needs still some improvements
+		m_camera.lerpUp( 1 - pow( direction.z, 2 ) )
 	}
+
+  def rotate(rot:Quat4) {
+    m_camera.directionQuat *= rot
+  }
 	
 	def jump{
 		if( !isGhost ) {
@@ -118,17 +109,18 @@ object Player {
 	var isGhost = Config.startAsGhost
 	
 	def toggleGhost {
-		/*
 		if( isGhost ) {
 			position = camera.position - camDistFromCenter
-			BulletPhysics.addBody(body)
+			// BulletPhysics.addBody(body)
 			isGhost = false
 		}
 		else {
-			BulletPhysics.removeBody(body)
+			// BulletPhysics.removeBody(body)
 			isGhost = true
-		}*/
+		}
 	}
+
+
 	//////////////////////////////////
 	// Tools, Inventory, Menu Controls
 	//////////////////////////////////
@@ -138,6 +130,9 @@ object Player {
 	def selectTool(tool:PlayerTool) = {
 		if( inventory.tools contains tool )
 			activeTool = tool
+    else {
+      throw new Exception("plyar tool not in tools list")
+    }
 	}
 	def selectNextTool {
 		selectTool(
@@ -154,7 +149,7 @@ class Inventory {
 	val materials = new collection.mutable.HashMap[Int,Double] {
 		override def default(key:Int) = 0.0
 	}
-	val tools = IndexedSeq(Shovel, ConstructionTool)
+	val tools = IndexedSeq(Shovel, ConstructionTool, TestBuildTool)
 }
 
 
@@ -163,14 +158,7 @@ trait PlayerTool {
 	def top:Boolean
 	def range = 100
 	def selectPolyeder(pos:Vec3i):Polyeder
-	
-	def draw {
-		selectPos match {
-			case Some(pos) =>
-				Draw.highlight( pos, selectPolyeder(pos) )
-			case _ =>
-		}
-	}
+  def drawTransparent:Boolean
 	
 	def selectPos = {
 		if( MainWidget.mouseOver )
@@ -180,21 +168,37 @@ trait PlayerTool {
 	}
 }
 
+object TestBuildTool extends PlayerTool {
+
+  override def drawTransparent = true
+  def top = true
+  def selectPolyeder(pos:Vec3i) = World.octree(pos).h
+
+  val testThing = new ObjLeaf( ObjManager.testMesh )
+
+  override def primary() {
+    println("inserting at selectPos")
+    selectPos foreach ( pos =>
+      World(pos) = testThing
+    )
+  }
+}
+
 object Shovel extends PlayerTool {
 	// removes a block
+  override def drawTransparent = true
+
 	def top = false
 	
-	def selectPolyeder(pos:Vec3i) = World.octree(pos).h
+	def selectPolyeder(pos:Vec3i) = FullHexaeder
 	
-	override def primary{
-		selectPos match {
-			case Some(pos) =>
-				val block = World.octree(pos)
-				//TODO: the evaluation of the materialfunction should be in the Leaf itself
-				val material = if( block.material == -1 ) WorldDefinition.material(pos + 0.5).id else block.material
-				Player.inventory.materials(material) += block.h.volume
-				World(pos) = Leaf(EmptyHexaeder)
-			case _ =>
+	override def primary() {
+    selectPos.foreach { case pos =>
+      val block = World.octree(pos)
+      // TODO: the evaluation of the materialfunction should be in the Leaf itself
+      val material = if( block.material == -1 ) WorldDefinition.material(pos + 0.5).id else block.material
+      Player.inventory.materials(material) += block.h.volume
+      World(pos) = EmptyLeaf
 		}
 	}
 	
@@ -203,7 +207,9 @@ object Shovel extends PlayerTool {
 
 object ConstructionTool extends PlayerTool {
 	// adds a block
-	def selectPolyeder(pos:Vec3i) = current
+	override def selectPolyeder(pos:Vec3i) = current
+  override def top = true
+  override def drawTransparent = false
 	
 	val full = FullHexaeder
 	val half = new Hexaeder(Z = 0x44440000)
@@ -232,13 +238,13 @@ object ConstructionTool extends PlayerTool {
 	}
 
 	def current = all(id)(rotation)
-
-	
-	override def top = true
 	
 	var selectedMaterial = 3
 
 	override def primary = {
+
+
+
 		selectPos match {
 			case Some(pos) =>
 				if( Player.inventory.materials(selectedMaterial) >= current.volume ) {
@@ -255,13 +261,6 @@ object ConstructionTool extends PlayerTool {
 			case _ =>
 		}
 	}
-	
-	override def draw {
-		selectPos match {
-			case Some(pos) =>
-				Draw.highlight( pos, selectPolyeder(pos), false )
-			case _ =>
-		}
-	}
+
 }
 

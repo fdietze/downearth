@@ -85,8 +85,8 @@ abstract class GameLoop {
 
     glClearColor(91/255f,203/255f,255/255f,1f)
 
-		if(useshaders)
-			Renderer.initshaders
+		if(useShaders)
+			Renderer.shaderProgram
 
 		World
 		

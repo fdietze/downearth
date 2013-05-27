@@ -198,7 +198,7 @@ object Draw {
 //	def addSampledNode(toNodeinfo:NodeInfo) { sampledNodes ::= toNodeinfo }
 	def addPredictedCuboid(cuboid:Cuboid) { predictedCuboids ::= cuboid }
 
-	def drawSampledNodes {
+	def drawSampledNodes() {
 		/*
 		glColor3f(1,0,0)
 		for( toNodeinfo <- sampledNodes )

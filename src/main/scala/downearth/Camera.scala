@@ -73,7 +73,6 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	override def view:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))
 }
 
-
 trait FrustumTest extends Function1[NodeInfo,Boolean] {
 	def testNode( info:NodeInfo ):Boolean
   def apply( info:NodeInfo ) = testNode(info)

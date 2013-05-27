@@ -13,7 +13,7 @@ import simplex3d.data.double._
 import java.nio.FloatBuffer
 import downearth.{Config, Player}
 
-object Skybox{
+object Skybox {
 	val vertices = Array( 
 		Vec3(1,1,1), Vec3(-1,1,1), Vec3(-1,1,-1), Vec3(1,1,-1),
 		Vec3(-1,1,1), Vec3(-1,-1,1), Vec3(-1,-1,-1), Vec3(-1,1,-1),
@@ -43,7 +43,7 @@ object Skybox{
 		m_skyboxBuffer.buffer
 	}
 	
-	def render{
+	def render {
 		if(Config.skybox) {
 			glMatrixMode(GL_MODELVIEW)
 			glLoadMatrix( skyboxBuffer )
@@ -60,7 +60,7 @@ object Skybox{
 				glTexCoord2d(u,v)
 				glVertex3d(x,y,z)
 			}
-			glEnd
+			glEnd()
 		}
 	}
 }

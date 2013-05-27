@@ -29,7 +29,7 @@ case object AllJobsEmpty
 
 class Master extends Actor {
   val jobqueue = new Queue[Cuboid]
-  val done  = new Queue[(NodeInfo, OctantOverMesh)] //TODO: im worldoctree speichern
+  val done  = new Queue[(NodeInfo, NodeOverMesh)] //TODO: im worldoctree speichern
   // Alle im moment bearbeiteten jobs
   val activeJobs = new HashSet[Cuboid] with SynchronizedSet[Cuboid] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
 
@@ -60,7 +60,7 @@ class Master extends Actor {
         jobqueue enqueue cuboid //Warteschlange
 
     // Worker meldet abgeschlossenen Job (als toNodeinfo)
-    case ( oldjob:NodeInfo, node:OctantOverMesh ) =>
+    case ( oldjob:NodeInfo, node:NodeOverMesh ) =>
       done enqueue ( oldjob -> node )
 
     // Worker meldet abgeschlossenen Job (als toCuboid)
@@ -136,7 +136,7 @@ class Worker (id:Int) extends Actor {
 //            for( child <- cuboid.octsplit )
 //              sender ! child
 
-          val data = Array.fill[OctantOverMesh](8)(UngeneratedInnerNode)
+          val data = Array.fill[NodeOverMesh](8)(UngeneratedInnerNode)
           val node = new InnerNodeOverMesh(data)
           val nodeInfo = cuboid.toNodeinfo
 

@@ -19,8 +19,8 @@ object Config extends Listener {
 	var kdTreePrediction = loadBool("kdTreePrediction", true)
 	
 	var worldWindowSize = loadInt("worldWindowSize", 64)
-	val useshaders = loadBool("useShaders", false)
-	val vertexMaterials = false
+	val useShaders = loadBool("useShaders", false)
+	val vertexMaterials = true
 	val smoothShading = loadBool("smoothShading", false)
 	
 	val hexaederResolution = 8

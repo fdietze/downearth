@@ -11,11 +11,14 @@ import downearth.gui.Background._
 import System.{currentTimeMillis => time}
 import org.lwjgl.input.Keyboard
 
-class Widget( val position:Vec2i, val size:Vec2i ) extends Listener with Publisher {
-	var animationStartTime:Long = 0
+abstract class Widget extends Listener with Publisher {
+  val position:Vec2i
+  val size:Vec2i
+
+  var animationStartTime:Long = 0
 	var animationEndTime:Long = 0
-	val animationStartPosition = position.clone
-	val animationEndPosition = position.clone
+	lazy val animationStartPosition = position.clone
+	lazy val animationEndPosition = position.clone
   var mouseOver = false
   var visible = true
 
@@ -71,14 +74,14 @@ class Widget( val position:Vec2i, val size:Vec2i ) extends Listener with Publish
 	override def toString = getClass.getName.split('.').last //"%s(%s, %s)" format( getClass.getName, position, size )
 }
 
-class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i(0)) {
+class Label(val position:Vec2i, _text:String) extends Widget {
+  private var m_text = _text
+  val size = Vec2i(ConsoleFont.font.getWidth(m_text), ConsoleFont.height)
+
 	def updateSize() {
     val newSize = Vec2i(ConsoleFont.font.getWidth(m_text), ConsoleFont.height)
 		resize(newSize)
 	}
-
-	private var m_text = _text
-	updateSize()
 
 	def text = m_text
 	def	text_=(s:Any) {
@@ -89,9 +92,10 @@ class Label(_pos:Vec2i,_text:String) extends Widget(_pos, Vec2i(0)) {
   override def toString = s"Label($m_text)"
 }
 
-class TextureWidget(_position:Vec2i, _size:Vec2i, val texture:Texture, val texPosition:Vec2, val texSize:Vec2) extends Widget(_position, _size) {}
+abstract class TextureWidget(val texture:Texture, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
 
-abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _size) { thispanel =>
+// a panel a gui element that has children
+abstract class Panel extends Widget { thispanel =>
 	override def setPosition(newPos:Vec2i, delay:Int) {
 		val oldPos = position.clone
 		super.setPosition(newPos)
@@ -106,58 +110,13 @@ abstract class Panel(_position:Vec2i, _size:Vec2i) extends Widget(_position, _si
 	
 	def arrangeChildren(delay:Int = 0) {}
 
-	val children = new collection.mutable.Buffer[Widget] {
-		val buffer = new collection.mutable.ArrayBuffer[Widget]
-		// trait Buffer implementieren, um automatisch die Parents eines
-		// hinzugefügten Widgets zu setzen
-		
-		def +=(child:Widget) = {
-			child.parent = thispanel
-			buffer += child
-			this
-		}
-
-		def +=:(child:Widget) = {
-			child.parent = thispanel
-			child +=: buffer
-			this
-		}
-		
-		def remove(n: Int) = {
-			buffer(n).parent = null
-			buffer.remove(n)
-		}
-		
-		def insertAll(n: Int, elems: Traversable[Widget]) {
-			for(c <- elems)
-				c.parent = thispanel
-			buffer.insertAll(n,elems)
-		}
-		
-		def clear {
-			for(c <- buffer)
-				c.parent = null
-			buffer.clear
-		}
-		
-		def length = buffer.length
-		
-		def update (n: Int, newelem: Widget) {
-			buffer(n).parent = null
-			newelem.parent = thispanel
-			buffer(n) = newelem 
-		}
-		
-		def apply (n: Int) = buffer(n)
-		def iterator = buffer.iterator
-	}
+	val children = new collection.mutable.ArrayBuffer[Widget] with WidgetBuffer {
+    def parent = thispanel
+  }
 }
 
-// TODO nichts sagender Name
-class FreePanel(_position:Vec2i, _size:Vec2i) extends Panel(_position,_size)
-
-// TODO nichts sagender Name
-class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(position, size) {
+// this panel clamps the position of the child elements to the border of the panel
+class ClampPositionPanel(val position:Vec2i, val size:Vec2i, space:Int = 5) extends Panel {
 	override def arrangeChildren(delay:Int = 0) {
 		var x = space
 		var y = space
@@ -176,7 +135,7 @@ class AutoPanel(position:Vec2i, size:Vec2i, space:Int = 5) extends FreePanel(pos
 	}
 }
 
-class GridPanel(position:Vec2i, size:Vec2i, val cellsize:Int = 30) extends FreePanel(position, size) {
+class GridPanel(val position:Vec2i, val size:Vec2i, val cellsize:Int = 30) extends Panel {
 	override def arrangeChildren(delay:Int = 0) {
 		val raster = new collection.mutable.HashMap[Vec2i,Widget]
 		for( child <- children ) {
@@ -207,7 +166,7 @@ trait Draggable extends Widget {
   }
 }
 
-class KeySettingsWidget(_pos:Vec2i, config:AnyRef) extends Panel(_pos,Vec2i(1)) {
+class KeySettingsWidget(val position:Vec2i, config:AnyRef) extends Panel {
   val fields = config.getClass.getDeclaredFields.filter( _.getName.startsWith("key") )
 
   var y = position.y
@@ -229,5 +188,5 @@ class KeySettingsWidget(_pos:Vec2i, config:AnyRef) extends Panel(_pos,Vec2i(1)) 
     children += child
   }
 
-  resize( Vec2i(maxWidth, y-position.y) )
+  val size = Vec2i(maxWidth, y-position.y)
 }

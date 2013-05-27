@@ -6,13 +6,14 @@ import simplex3d.math.double._
 import downearth._
 import downearth.rendering.TextureManager
 import simplex3d.math.doublex.functions._
+import downearth.util.Logger
 
-class Hammer(_pos:Vec2i) extends ToolWidget( ConstructionTool, _pos, Vec2(0),      Vec2(0.5) )
-class Shovel(_pos:Vec2i) extends ToolWidget( Shovel, _pos, Vec2(0.5,0), Vec2(0.5) )
+class Hammer(_pos:Vec2i)           extends ToolWidget( ConstructionTool, _pos, Vec2(0),     Vec2(0.5) )
+class Shovel(_pos:Vec2i)            extends ToolWidget( Shovel,          _pos, Vec2(0.5,0), Vec2(0.5) )
+class TestBuildToolWidget(_pos:Vec2i) extends ToolWidget( TestBuildTool, _pos, Vec2(0,0.5), Vec2(0.5) )
 
-
-class MaterialWidget(val matId:Int, _pos:Vec2i)
-	extends TextureWidget(_pos, Vec2i(32), TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
+class MaterialWidget(val matId:Int, val position:Vec2i)
+	extends TextureWidget(TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
 	with InventoryItem {
 
 	override def selected = ConstructionTool.selectedMaterial == matId
@@ -24,19 +25,19 @@ class MaterialWidget(val matId:Int, _pos:Vec2i)
   }
 }
 
-class ToolWidget(val tool:PlayerTool, _pos:Vec2i, _texPosition:Vec2, _texSize:Vec2)
-	extends TextureWidget(_pos, Vec2i(32), TextureManager.tools, _texPosition, _texSize)
-	with InventoryItem {
+class ToolWidget(val tool:PlayerTool, val position:Vec2i, _texPosition:Vec2, _texSize:Vec2)
+	extends TextureWidget(TextureManager.tools, _texPosition, _texSize)
+	with InventoryItem with Logger {
 
   override def select() {
     Player.selectTool(tool)
-    DisplayEventManager.showEventText("Tool " + tool)
+    log.println("Tool " + tool)
   }
 
 	override def selected = Player.activeTool eq tool
 }
 
-class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) with InventoryItem {
+class ShapeWidget(val shapeId:Int, val position:Vec2i) extends Widget with InventoryItem {
 	val preferredAngle = 30.0
 	val degPerSec = 180.0
 	var inOffset = 0.0
@@ -65,6 +66,7 @@ class ShapeWidget(val shapeId:Int, _pos:Vec2i) extends Widget(_pos, Vec2i(32)) w
 trait InventoryItem extends Draggable {
   case class Select(item:InventoryItem) extends WidgetEvent
   case class UnSelect(item:InventoryItem) extends WidgetEvent
+  override val size = Vec2i(32)
   listenTo(this)
 
   def inventory = parent.asInstanceOf[Inventory]
@@ -90,16 +92,24 @@ trait InventoryItem extends Draggable {
     inventory.selected = this
     select()
   case DragEnd(pos) =>
-    // draw this item last to not interrupt the positioning of the others
-    // TODO: let item stay on top
-//    inventory.children -= this
-//    inventory.children += this
+    // draw this item last to not interrupt the positioning of the others (whatever that means)
+    inventory.setToTop(this)
     inventory.arrangeChildren(300)
   }
 }
 
 class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) {
   var selected:InventoryItem = null
+
+  def setToTop( item:InventoryItem) {
+    // last position will be drawn last (on top)
+    val i = children.indexOf(item)
+    val j =  children.size - 1
+
+    val tmp = children(i)
+    children(i) = children(j)
+    children(j) = tmp
+  }
 }
 
 

@@ -20,8 +20,8 @@ package object perlin {
   def noise3(x:Double, y:Double, z:Double, fade:Double => Double):Double = {
     def grad(hash:Int, x:Double, y:Double, z:Double) = {
       val h = hash & 15
-      val u = if(h<8) x else y
-      val v = if(h<4) y else {if(h==12 || h==14) x else z}
+      val u = if(h < 8) x else y
+      val v = if(h < 4) y else { if(h == 12 || h == 14) x else z }
       (if((h&1) == 0) u else -u) + (if((h&2) == 0) v else -v)
     }
 

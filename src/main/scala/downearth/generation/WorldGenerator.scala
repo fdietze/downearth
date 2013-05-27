@@ -24,7 +24,7 @@ object WorldGenerator {
 		octree
 	}
 	
-	def genWorldAt(nodeinfo:NodeInfo):OctantOverMesh = {
+	def genWorldAt(nodeinfo:NodeInfo):NodeOverMesh = {
 		val NodeInfo(nodepos, nodesize) = nodeinfo
 		import HexaederMC._
 
@@ -45,7 +45,7 @@ object WorldGenerator {
 	
 
 		// Fall für jeden Cube ermitteln und abspeichern
-		for( coord <- Vec3i(0) until Vec3i(nodesize+2) ){
+		for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
 			val exactCase = dataToCase(originalNoiseData.extract(coord))
 			exactCaseData(coord) = exactCase.toShort
 		}

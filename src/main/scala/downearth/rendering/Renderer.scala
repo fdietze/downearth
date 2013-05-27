@@ -8,6 +8,7 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.GL20._
 import org.lwjgl.BufferUtils
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
@@ -26,14 +27,12 @@ import downearth.entity.{Entity, SimpleEntity}
 
 import java.nio.IntBuffer
 
-import scala.collection.mutable.ArrayBuffer
-import scala.Tuple2
-
 import simplex3d.math.Vec2i
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
 import downearth.worldoctree.NodeInfo
 import scala.Tuple2
+import scala.collection.mutable.ArrayBuffer
 
 object Renderer extends Logger {
 
@@ -42,9 +41,11 @@ object Renderer extends Logger {
   ambientLight.put( Array(0.2f, 0.2f, 0.2f, 1f) )
   ambientLight.rewind()
 
-  var shader = 0
-  var vertShader = 0
-  var fragShader = 0
+  lazy val shaderProgram = {
+    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
+    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
+    Program(vertShader)(fragShader)
+  }
 
   // this is occlusion querry from the last frame
   var query:Query = null
@@ -59,38 +60,6 @@ object Renderer extends Logger {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
     renderWorld( Player.camera )
     renderGui()
-  }
-
-  def initshaders {
-    shader = ARBShaderObjects.glCreateProgramObjectARB
-    if( shader != 0 ) {
-      vertShader = ARBShaderObjects.glCreateShaderObjectARB(ARBVertexShader.GL_VERTEX_SHADER_ARB)
-      fragShader=ARBShaderObjects.glCreateShaderObjectARB(ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
-      if( vertShader != 0 ) {
-        val vertexPath = getClass.getClassLoader.getResource("shaders/screen.vert").getPath
-        val vertexCode = io.Source.fromFile(vertexPath).mkString
-        ARBShaderObjects.glShaderSourceARB(vertShader, vertexCode)
-        ARBShaderObjects.glCompileShaderARB(vertShader)
-      }
-
-      if( fragShader != 0 ) {
-        val fragPath = getClass.getClassLoader.getResource("shaders/screen.frag").getPath
-        val fragCode = io.Source.fromFile(fragPath).mkString
-        ARBShaderObjects.glShaderSourceARB(fragShader, fragCode)
-        ARBShaderObjects.glCompileShaderARB(fragShader)
-      }
-
-      if(vertShader !=0 && fragShader !=0) {
-        ARBShaderObjects.glAttachObjectARB(shader, vertShader)
-        ARBShaderObjects.glAttachObjectARB(shader, fragShader)
-        ARBShaderObjects.glLinkProgramARB(shader)
-        ARBShaderObjects.glValidateProgramARB(shader)
-      }
-    }
-
-//    printLogInfo(shader)
-//    printLogInfo(vertShader)
-//    printLogInfo(fragShader)
   }
 
   def lighting( position:Vec3 ) {
@@ -133,10 +102,11 @@ object Renderer extends Logger {
 //  Draw.addText("%d fps" format Main.currentfps)
 //  Draw.addText("drawcalls: " + World.drawcalls + ", empty: " + World.emptydrawcalls + "")
 //  Draw.addText("frustum culled nodes: " + World.frustumculls)
+
 //  Draw.addText("")
 //  Draw.addText("Inventory: " + Player.inventory.materials)
 //    if( !Player.isGhost ) {
-//      Draw.addText("Player Position: " + round10(Player.position) )
+      Draw.addText("Player Position: " + round10(Player.position) )
 //      Draw.addText("Player Velocity: " + round10(Player.velocity) )
 //    }
     
@@ -328,12 +298,16 @@ object Renderer extends Logger {
         World.octree.generateNode(result)
     query = findUngeneratedNodes(World.octree, frustumTest, order)
 
-    Player.activeTool.draw
+
+    if( Player.activeTool != TestBuildTool )
+      Player.activeTool.selectPos.foreach ( pos => Draw.highlight( pos, Player.activeTool.selectPolyeder(pos), Player.activeTool.drawTransparent ) )
 
     if(Config.debugDraw) {
+
       drawDebugOctree(World.octree, order, frustumTest)
-      BulletPhysics.debugDrawWorld
-      Draw.drawSampledNodes
+      // BulletPhysics.debugDrawWorld()
+      // Draw.drawSampledNodes()
+
     }
   }
 
@@ -377,12 +351,13 @@ object Renderer extends Logger {
   }
 
   def findUngeneratedNodes(octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
-    TextureManager.box.bind
+    TextureManager.box.bind()
 
     val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
     val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
 
     // TODO hier weiter machen
+    // TODO next time add comment, what is still work in Progress
     octree.queryRegion( test ) (order) {
       case (info, UngeneratedInnerNode) =>
         nodeInfoBufferUngenerated += info
@@ -524,15 +499,13 @@ object Renderer extends Logger {
   def activateShader(func: => Unit) {
     import ARBShaderObjects._
 
-    val useshaders = shader != 0 && vertShader != 0 && fragShader != 0
-
-    if(useshaders) {
-      glUseProgramObjectARB(shader)
+    if(Config.useShaders) {
+      shaderProgram.use()
     }
 
     func
 
-    if(useshaders)
+    if(Config.useShaders)
       glUseProgramObjectARB(0)
   }
 }
