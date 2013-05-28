@@ -3,13 +3,13 @@ package downearth.generation
 import simplex3d.math.double._
 import interval.{Interval, Interval3}
 
-object Material {
-  def apply(r:Int, g:Int, b:Int):Material = new Material((r << 16) + (g << 8) + b,0)
-  def apply(r:Double, g:Double, b:Double):Material = Material((r*255).toInt, (g*255).toInt, (b*255).toInt)
-  def apply():Material = new Material(0xFF00FF,0)
+object ColorMaterial {
+  @deprecated("","") def apply(r:Int, g:Int, b:Int):ColorMaterial = new ColorMaterial(0, (r << 16) + (g << 8) + b)
+  @deprecated("","") def apply(r:Double, g:Double, b:Double):ColorMaterial = ColorMaterial((r*255).toInt, (g*255).toInt, (b*255).toInt)
+  @deprecated("","") def apply():ColorMaterial = new ColorMaterial(0, 0xFF00FF)
 }
 
-case class Material(color:Int, id:Int) {
+case class ColorMaterial(id:Int, color:Int) {
   def red   = color >> 16
   def green = (color & 0x00FF00) >> 8
   def blue  = color & 0xFF
@@ -35,7 +35,7 @@ abstract class WorldFunction {
   }
 
   def density(pos:Vec3):Double
-  def material(pos:Vec3):Material
+  def material(pos:Vec3):ColorMaterial
 
   def bounds(area:Interval3):Interval
   def intervalExtension(area:Interval3):Interval

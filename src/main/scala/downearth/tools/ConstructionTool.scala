@@ -65,7 +65,7 @@ object ConstructionTool extends EnvironmentTool {
       World(pos) = Leaf(current, selectedMaterial)
     }
     else {
-      DisplayEventManager.showEventText("Not enough Material " + selectedMaterial + ".")
+      DisplayEventManager.showEventText("Not enough ColorMaterial " + selectedMaterial + ".")
     }
   }
 

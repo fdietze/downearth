@@ -8,6 +8,7 @@ import org.lwjgl.opengl.Display
 import simplex3d.math.Vec2i
 import simplex3d.math.double._
 import downearth.tools._
+import downearth.generation.MaterialManager
 
 object MainWidget extends Panel {
   val position = Vec2i(0)
@@ -62,9 +63,9 @@ object MainWidget extends Panel {
     assert(hammer.parent == this)
     assert(shovel.parent == this)
 
-    children ++= Range(0,4).map(
-      i => new MaterialWidget(i, position + Vec2i(i * 40, 40) )
-    )
+    children ++= MaterialManager.materials.zipWithIndex.map{
+      case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40) )
+    }
 
     children ++= Range(0, ConstructionTool.all.size).map(
       i => new ShapeWidget(i, position + Vec2i(i * 40, 80))

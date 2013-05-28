@@ -8,17 +8,19 @@ import downearth.rendering.TextureManager
 import simplex3d.math.doublex.functions._
 import downearth.util.Logger
 import downearth.tools.{ConstructionTool, PlayerTool}
+import downearth.generation.Material
 
-class MaterialWidget(val matId:Int, val position:Vec2i)
-	extends TextureWidget(TextureManager.materials, Vec2(matId/4.0,0), Vec2(0.25,1) )
+class MaterialWidget(val material:Material, val position:Vec2i)
+	extends TextureWidget(material.texture, material.texPos, material.texSize )
 	with InventoryItem {
+  val matId = material.id
 
 	override def selected = ConstructionTool.selectedMaterial == matId
 
   override def select() {
     Player.selectTool(ConstructionTool)
     ConstructionTool.selectedMaterial = matId
-    DisplayEventManager.showEventText("Material " + matId)
+    DisplayEventManager.showEventText("ColorMaterial " + matId)
   }
 }
 

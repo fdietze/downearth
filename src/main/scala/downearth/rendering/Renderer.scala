@@ -30,6 +30,7 @@ import simplex3d.math.doublex.functions._
 
 import scala.Tuple2
 import scala.collection.mutable.ArrayBuffer
+import downearth.generation.MaterialManager
 
 
 object Renderer extends Logger {
@@ -283,7 +284,7 @@ object Renderer extends Logger {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
-    TextureManager.materials.bind()
+    MaterialManager.textureAtlas.bind()
 
     glEnableClientState(GL_VERTEX_ARRAY)
     glEnableClientState(GL_NORMAL_ARRAY)

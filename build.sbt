@@ -23,9 +23,9 @@ libraryDependencies ++= Seq(
   "java3d" % "vecmath" % "1.3.1"
 )
 
-net.virtualvoid.sbt.graph.Plugin.graphSettings
+//net.virtualvoid.sbt.graph.Plugin.graphSettings
 
-filterScalaLibrary := false
+//filterScalaLibrary := false
 
 seq( LWJGLPlugin.lwjglSettings: _*)
 
