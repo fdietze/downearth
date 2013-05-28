@@ -42,17 +42,17 @@ object WorldOctree {
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] with Serializable{
-	var worldWindowPos:Vec3i = rootNodePos.clone
-	val worldWindowSize:Int = rootNodeSize
-	
-	def worldWindowCenter = worldWindowPos + worldWindowSize/2
-	
-	val vsize = Vec3i(worldWindowSize)
-	
-	override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
-	
-	def rootNodePos = rootNodeInfo.pos
-	def rootNodeSize = rootNodeInfo.size
+  var worldWindowPos:Vec3i = rootNodePos.clone
+  val worldWindowSize:Int = rootNodeSize
+
+  def worldWindowCenter = worldWindowPos + worldWindowSize/2
+
+  val vsize = Vec3i(worldWindowSize)
+
+  override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
+
+  def rootNodePos = rootNodeInfo.pos
+  def rootNodeSize = rootNodeInfo.size
 
   def queryRegion(test:(NodeInfo) => Boolean)(order:Array[Int])(function: (NodeInfo,Node) => Boolean) {
     require(order.length == 8)
@@ -73,22 +73,22 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
       }
     }
   }
-	
-	def apply(p:Vec3i) = {
-		if( rootNodeInfo.indexInRange(p) )
-			root(rootNodeInfo,p)
-		else
-			Config.ungeneratedDefault
-	}
 
-	def update(p:Vec3i,l:Leaf) {
-		if(rootNodeInfo.indexInRange(p)) {
+  def apply(p:Vec3i) = {
+    if( rootNodeInfo.indexInRange(p) )
+      root(rootNodeInfo,p)
+    else
+      Config.ungeneratedDefault
+  }
+
+  def update(p:Vec3i,l:Leaf) {
+    if(rootNodeInfo.indexInRange(p)) {
       root = root.updated(rootNodeInfo, p, l)
-		}
-		else{
-			printf("update out of area at %s, %s\n",p.toString,rootNodeInfo.toString)
-		}
-	}
+    }
+    else{
+      printf(s"update out of area at $p, $rootNodeInfo\n")
+    }
+  }
 
   def insert( nodeinfo:NodeInfo, that:NodeOverMesh ) {
     val NodeInfo(nodepos,nodesize) = nodeinfo
@@ -99,15 +99,33 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
     root = root.insertNode(rootNodeInfo, nodeinfo, that)
   }
 
-	override def toString = "Octree("+root.toString+")"
-	
-	def generateNode(info:NodeInfo) {
-    require(!isSet(info)) // TODO this fails sometimes
-    insert( info, GeneratingNode )
-    WorldNodeGenerator.master ! info.toCuboid
-	}
-	
-	def makeUpdates() {
+  override def toString = "Octree("+root.toString+")"
+
+  def generateNode(info:NodeInfo) {
+    // require(!isSet(info)) // TODO this fails sometimes
+    while(!(rootNodeInfo indexInRange info)){
+      incDepth()
+    }
+
+    var list = List[NodeInfo]()
+
+    queryRegion(_ indexInRange info) ( Array.range(0,8) ) {
+      case (nodeInfo, node) =>
+        if( node == UngeneratedInnerNode ) {
+          list ::= nodeInfo
+          false
+        }
+        else
+          true
+    }
+
+    for( nodeInfo <- list ) {
+      insert( nodeInfo, GeneratingNode )
+      WorldNodeGenerator.master ! nodeInfo.toCuboid
+    }
+  }
+
+  def makeUpdates() {
     implicit val timeout = Timeout(1000 seconds)
     val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(NodeInfo, NodeOverMesh)]]
     val s = Await.result(future, 1000 seconds)
