@@ -1,7 +1,7 @@
 package downearth.entity
 
-import downearth.ObjMesh
 import simplex3d.math.double._
+import downearth.rendering.ObjMesh
 
 trait Entity {
 	def pos:Vec3

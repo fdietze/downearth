@@ -41,6 +41,15 @@ object MainWidget extends Panel {
     this.position
   }
 
+  val drawCallLabel       = new Label( Vec2i(20,20), "<not set>" )
+  val playerPositionLabel = new Label( Vec2i(20,40), "<not set>" )
+  val inventoryButton = new Button(    Vec2i(20,60), "inventory")
+  val keySettingsButton = new Button(  Vec2i(20,80), "settings" ){
+    override  def onClick() {
+      keySettingWidget.visible = !keySettingWidget.visible
+    }
+  }
+
   val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
     backGroundColor := Vec4(0.1,0.1,0.1,0.7)
     border = LineBorder
@@ -68,6 +77,7 @@ object MainWidget extends Panel {
     selected = shovel
 
     listenTo(MainWidget)
+    listenTo(inventoryButton)
 
     addReaction {
     case WidgetResized(MainWidget) =>
@@ -75,22 +85,24 @@ object MainWidget extends Panel {
       newPos.x = MainWidget.size.x - size.x - 20
       newPos.y = 20
       setPosition(newPos,0)
+    case ButtonClicked(`inventoryButton`) =>
+      visible = !visible
     }
 
     arrangeChildren()
   }
 
-
-  val keySettingWidget = new KeySettingsWidget( Vec2i(20,20), Config )
-  keySettingWidget.visible = false
-
-  val drawCallLabel       = new Label( Vec2i(20,keySettingWidget.size.y + 10 ), "<not set>" )
-  val playerPositionLabel = new Label( Vec2i(20,keySettingWidget.size.y + 30 ), "<not set>" )
+  val keySettingWidget = new KeySettingsWidget( Vec2i(20,100), Config )
 
   publish( WidgetResized(this) )
 
-  children += inventory
-  children += drawCallLabel
-  children += playerPositionLabel
-  children += keySettingWidget
+  children ++= Seq(
+    inventory,
+    inventoryButton,
+    drawCallLabel,
+    playerPositionLabel,
+    keySettingWidget,
+    keySettingsButton
+  )
+
 }

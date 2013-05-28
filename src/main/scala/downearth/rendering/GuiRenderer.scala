@@ -74,6 +74,9 @@ object GuiRenderer {
       if( widget.isInstanceOf[Label]) {
         GlDraw.drawString( widget.position, widget.asInstanceOf[Label].text)
       }
+      if( widget.isInstanceOf[Button]) {
+        GlDraw.drawString( widget.position, widget.asInstanceOf[Button].text)
+      }
       if( widget.isInstanceOf[TextureWidget] ) {
         val tw = widget.asInstanceOf[TextureWidget]
         import tw._

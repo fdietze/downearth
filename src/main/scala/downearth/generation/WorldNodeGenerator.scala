@@ -11,8 +11,8 @@ import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 import akka.actor._
 import scala.Tuple2
 import downearth.worldoctree._
-import downearth.{MutableTextureMesh, TextureMeshData, Config}
-import downearth.rendering.{GlDraw, Draw}
+import downearth.{Config}
+import downearth.rendering.{MutableTextureMesh, TextureMeshData, GlDraw, Draw}
 import downearth.worldoctree.NodeInfo
 import downearth.worldoctree.Cuboid
 import scala.Tuple2

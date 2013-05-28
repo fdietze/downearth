@@ -5,6 +5,7 @@ import java.awt.image.DataBufferByte
 import org.lwjgl.BufferUtils
 import simplex3d.math.double._
 import java.nio.ByteBuffer
+import simplex3d.math.{ConstVec2i, ReadVec2i}
 
 /**
  * User: arne
@@ -12,8 +13,8 @@ import java.nio.ByteBuffer
  * Time: 21:56
  */
 
-object ImageRaster{
-  def concatHorizontal(images:Seq[ImageRaster]):ImageRaster = {
+object Surface{
+  def concatHorizontal(images:Seq[Surface]):Surface = {
     val height = images.head.height
     require( (true /: images) ( _ && _.height == height ) )
     val width = (0 /: images) ( _ + _.width )
@@ -28,22 +29,40 @@ object ImageRaster{
       }
     }
 
-    new ImageRaster(width, height, data)
+    new Surface(width, height, data)
   }
 
-  def concatVertical(images:Seq[ImageRaster]):ImageRaster = {
+  def concatVertical(images:Seq[Surface]):Surface = {
     val width = images.head.width
     require( (true /: images) ( _ && _.height == width ) )
     val height = (0 /: images) ( _ + _.height )
 
     val data = Array.concat( images.map(_.data):_* )
 
-    new ImageRaster(width, height, data)
+    new Surface(width, height, data)
   }
+
+  def blit(img:Surface, imgrect:Rect, screen:Surface, dstrect:Rect):Unit = ???
 }
 
+class Rect(var x:Int, var y:Int, var w:Int, var h:Int) {
+  def this(pos:ReadVec2i, size:ReadVec2i) = this(pos.x, pos.y, size.x, size.y)
 
-class ImageRaster(val width:Int, val height:Int, val data:Array[Int] ) {
+  def pos:ReadVec2i = ConstVec2i(x,y)
+  def pos_=(v:ReadVec2i) {
+    x = v.x
+    y = v.y
+  }
+
+  def size:ReadVec2i = ConstVec2i(w,h)
+  def size_=(v:ReadVec2i) {
+    w = v.x
+    y = v.y
+  }
+
+}
+
+class Surface(val width:Int, val height:Int, val data:Array[Int] ) {
   require( ((width - 1) & width) == 0 )
   require( ((height - 1) & height) == 0 )
   require( data.length == width * height, "data length is %d , but should be %d, width: %d, height: %d".format(data.length,width*height,width,height) )
@@ -100,7 +119,7 @@ class TextureLoader {
   case class QuadTexCoords(v1:Vec2, v2:Vec2, v3:Vec2, v4:Vec2)
 
 
-  def createTextureAtlas( names:Seq[String] ) : ImageRaster = {
+  def createTextureAtlas( names:Seq[String] ) : Surface = {
 
     var maxWidth = 0
     var maxHeight = 0
@@ -119,7 +138,7 @@ class TextureLoader {
       val hasAlphaChannel = image.getAlphaRaster != null
       val pixels = makeIntArray(image.getRaster.getDataBuffer.asInstanceOf[DataBufferByte].getData, hasAlphaChannel)
 
-      new ImageRaster( width, height, pixels )
+      new Surface( width, height, pixels )
     }
 
     require( ((maxWidth - 1) & maxWidth) == 0 )
@@ -138,7 +157,7 @@ class TextureLoader {
       flip = !flip
     }
 
-    ImageRaster.concatVertical( images.grouped(sizeX).map( ImageRaster.concatHorizontal _ ).toSeq )
+    Surface.concatVertical( images.grouped(sizeX).map( Surface.concatHorizontal _ ).toSeq )
   }
 
   private def readImage(filename:String) = {
@@ -148,11 +167,11 @@ class TextureLoader {
     ImageIO.read(is)
   }
 
-  def readImageRaster( filename:String ) : ImageRaster = {
+  def readImageRaster( filename:String ) : Surface = {
     val image = readImage(filename)
     val data = image.getRaster.getDataBuffer.asInstanceOf[DataBufferByte].getData
     val pixels = makeIntArray(data, image.getAlphaRaster != null)
-    new ImageRaster(image.getWidth, image.getHeight, pixels)
+    new Surface(image.getWidth, image.getHeight, pixels)
   }
 
   def loadAsTexture(filename:String):Texture = {

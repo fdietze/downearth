@@ -2,7 +2,6 @@ package downearth.rendering
 
 import simplex3d.math.double._
 
-import downearth.ObjMesh
 
 import java.io.{InputStreamReader, Reader, BufferedReader, InputStream}
 import scala.collection.mutable.{ArrayBuffer, HashMap, ArrayBuilder}

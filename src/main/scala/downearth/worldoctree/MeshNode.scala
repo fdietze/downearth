@@ -1,9 +1,10 @@
 package downearth.worldoctree
 
-import downearth.{Config, TextureMeshBuilder, ObjMesh, MutableTextureMesh}
+import downearth.{Config}
 import simplex3d.math.Vec3i
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
+import downearth.rendering.{MutableTextureMesh, TextureMeshBuilder, ObjMesh}
 
 /**
  * User: arne

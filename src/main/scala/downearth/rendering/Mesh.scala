@@ -1,17 +1,16 @@
-package downearth
+package downearth.rendering
 
-import org.lwjgl.opengl.GL11._
+import downearth.Config
 
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 
 import simplex3d.math.double.{Vec2,Vec3,Vec4}
-import simplex3d.math.Vec3i
 import simplex3d.math.double.functions.normalize
-
 import simplex3d.data._
 import simplex3d.data.double._
 import simplex3d.math.integration.RFloat
+
 import org.lwjgl.BufferUtils
 
 import java.nio._

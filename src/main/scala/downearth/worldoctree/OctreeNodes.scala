@@ -6,12 +6,10 @@ import simplex3d.math.double.functions._
 
 import downearth._
 import downearth.util._
-import downearth.Update
-import downearth.TextureMeshData
-import downearth.TextureMeshBuilder
 import downearth.world.World
 import downearth.generation.WorldDefinition
 import scala.collection.mutable.{ArrayBuffer, Queue}
+import downearth.rendering.{Update, TextureMeshBuilder, TextureMeshData}
 
 sealed trait Node extends Serializable {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom

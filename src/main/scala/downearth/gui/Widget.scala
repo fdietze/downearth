@@ -47,14 +47,14 @@ abstract class Widget extends Listener with Publisher {
 		}
 	}
 
-	def resize(newSize:Vec2i) {
+  def resize(newSize:Vec2i) {
     if( size != newSize ) {
       size := newSize
       position := safePosition(position)
       publish( WidgetResized( this ) )
     }
-	}
-	
+  }
+
 	var parent:Panel = MainWidget
 	var border:Border = LineBorder
   val lineBorderColor = Vec4(0)
@@ -91,6 +91,24 @@ class Label(val position:Vec2i, _text:String) extends Widget {
 	}
 
   override def toString = s"Label($m_text)"
+}
+
+class Button(val position:Vec2i, val text:String) extends Widget {
+  val size = Vec2i(ConsoleFont.font.getWidth(text), ConsoleFont.height)
+  border = LineBorder
+  lineBorderColor := Vec4(1)
+
+  def onClick() {}
+
+  addReaction {
+    case MouseIn =>
+      backGroundColor.a = 0.5
+    case MouseOut =>
+      backGroundColor.a = 0.25
+    case MouseClicked(pos) =>
+      onClick()
+      publish( ButtonClicked(this) )
+  }
 }
 
 abstract class TextureWidget(val texture:Texture, val texPosition:Vec2, val texSize:Vec2) extends Widget {}

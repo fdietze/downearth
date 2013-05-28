@@ -8,6 +8,7 @@ import downearth.world.World
 import simplex3d.math.{Vec2i, Vec3i}
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
+import downearth.rendering.{Update, TextureMeshBuilder, ObjMesh}
 
 
 /**
