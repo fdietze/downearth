@@ -198,11 +198,15 @@ object Renderer extends Logger {
     }
   }
 
+  var randomizer = 0
+
   def findUngeneratedNodes(octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
     TextureManager.box.bind()
 
     val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
     val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
+
+    glColorMask(false,false,false,false)
 
     // TODO hier weiter machen
     // TODO next time add comment, what is still work in Progress
@@ -227,10 +231,15 @@ object Renderer extends Logger {
       glPopMatrix()
     }
 
+//    val firstIndex = max(0, 100 - nodeInfoBufferGenerating.size)
+//    val count = nodeInfoBufferUngenerated.size - firstIndex
+//    if( count > 0)
+//      nodeInfoBufferUngenerated.remove(firstIndex, count)
+
     val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )
     glGenQueries( buffer )
-    val queries = new Query(buffer, nodeInfoBufferUngenerated)
 
+    val queries = new Query(buffer, nodeInfoBufferUngenerated)
     for( (queryId, info) <- queries ) {
       glBeginQuery(GL_SAMPLES_PASSED, queryId )
 
@@ -242,6 +251,8 @@ object Renderer extends Logger {
 
       glEndQuery(GL_SAMPLES_PASSED)
     }
+
+    glColorMask(true, true, true, true)
 
     queries
   }

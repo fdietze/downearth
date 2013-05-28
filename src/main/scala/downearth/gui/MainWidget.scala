@@ -93,6 +93,7 @@ object MainWidget extends Panel {
   }
 
   val keySettingWidget = new KeySettingsWidget( Vec2i(20,100), Config )
+  keySettingWidget.visible = false
 
   publish( WidgetResized(this) )
 
