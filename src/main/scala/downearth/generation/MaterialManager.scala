@@ -4,6 +4,9 @@ import downearth.rendering.{Texture, TextureManager}
 import simplex3d.math.double._
 
 case class Material(id:Int, texture:Texture, texPos:Vec2, texSize:Vec2)
+object Material {
+  def apply(id:Int, r:Double, g:Double, b:Double):Material = MaterialManager.materials(id)
+}
 
 object MaterialManager {
   val textureAtlas = TextureManager.materials

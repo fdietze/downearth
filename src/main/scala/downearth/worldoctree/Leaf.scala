@@ -2,7 +2,7 @@ package downearth.worldoctree
 
 import downearth._
 import downearth.util._
-import downearth.generation.WorldDefinition
+import downearth.generation.{MaterialManager, WorldDefinition}
 import downearth.world.World
 
 import simplex3d.math.{Vec2i, Vec3i}
@@ -88,15 +88,16 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
       @inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
         val matid = if( material >= 0 ) material else WorldDefinition.material(pos + 0.5).id
+        val matCount = MaterialManager.materialCount.toDouble
 
         vertexBuilder += (Vec3(pos) + v0)
-        texCoordBuilder += Vec2( v0(axisa)/4.0 + matid/4.0 , v0(axisb) )
+        texCoordBuilder += Vec2( v0(axisa)/matCount + matid/matCount , v0(axisb) )
 
         vertexBuilder += (Vec3(pos) + v1)
-        texCoordBuilder += Vec2( v1(axisa)/4.0 + matid/4.0 , v1(axisb) )
+        texCoordBuilder += Vec2( v1(axisa)/matCount + matid/matCount , v1(axisb) )
 
         vertexBuilder += (Vec3(pos) + v2)
-        texCoordBuilder += Vec2( v2(axisa)/4.0 + matid/4.0 , v2(axisb) )
+        texCoordBuilder += Vec2( v2(axisa)/matCount + matid/matCount , v2(axisb) )
 
         vertexCounter += 3
 
