@@ -12,4 +12,8 @@ object ObjManager {
 
   lazy val testMesh = loader.load(new FileInputStream(new File("thing.obj")))
   lazy val monkey = loader.load(new FileInputStream(new File("monkey.obj")))
+
+  def delete() {
+    // TODO resourcen wieder freigeben
+  }
 }

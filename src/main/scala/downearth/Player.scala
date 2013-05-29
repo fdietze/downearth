@@ -11,6 +11,7 @@ import downearth.tools._
 
 import org.lwjgl.input.Mouse
 import javax.vecmath.Vector3f
+import org.lwjgl.opengl.Display
 
 
 object Player extends Ray {
@@ -51,8 +52,8 @@ object Player extends Ray {
       camera.direction
     }
     else {
-      val rx = (Mouse.getX * 2.0 - Main.width   ) / Main.height
-      val ry = (Mouse.getY * 2.0 - Main.height  ) / Main.height
+      val rx = (Mouse.getX * 2.0 - Display.getWidth   ) / Display.getHeight
+      val ry = (Mouse.getY * 2.0 - Display.getHeight  ) / Display.getHeight
       dir(rx,ry)
     }
   }

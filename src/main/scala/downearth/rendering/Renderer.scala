@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.GL20._
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.{ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
+import org.lwjgl.opengl.{Display, ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 
@@ -105,7 +105,8 @@ object Renderer extends Logger {
   }
 
   def renderWorld(camera:Camera) {
-    glViewport(0, 0, Main.width.toInt, Main.height.toInt)
+
+    glViewport(0, 0, Display.getWidth, Display.getHeight)
     glEnable(GL_CULL_FACE)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_TEXTURE_2D)

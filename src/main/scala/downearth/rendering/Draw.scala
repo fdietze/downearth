@@ -5,6 +5,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.Display
 import org.newdawn.slick.Color
 import downearth.util._
 
@@ -59,19 +60,19 @@ object GlDraw extends Draw {
     glEnd()
   }
 
-	def renderAxis {
-		glBegin(GL_LINES)
-		glColor3f(1,0,0)
-		glVertex3f(0,0,0)
-		glVertex3f(1,0,0)
-		glColor3f(0,1,0)
-		glVertex3f(0,0,0)
-		glVertex3f(0,1,0)
-		glColor3f(0,0,1)
-		glVertex3f(0,0,0)
-		glVertex3f(0,0,1)
-		glEnd()
-	}
+  def renderAxis {
+    glBegin(GL_LINES)
+    glColor3f(1,0,0)
+    glVertex3f(0,0,0)
+    glVertex3f(1,0,0)
+    glColor3f(0,1,0)
+    glVertex3f(0,0,0)
+    glVertex3f(0,1,0)
+    glColor3f(0,0,1)
+    glVertex3f(0,0,0)
+    glVertex3f(0,0,1)
+    glEnd()
+  }
 
 	def renderCube(size:Double) {
 		glPushMatrix()
@@ -128,7 +129,8 @@ object GlDraw extends Draw {
 
 	def crossHair() {
 		glPushMatrix()
-			glTranslated( Main.width/2, Main.height/2,0)
+      // TODO implement viewport
+			glTranslated( Display.getWidth/2, Display.getHeight/2,0)
 			glColor3f(1,1,1)
 			glBegin(GL_LINES)
 				glVertex2i(-15, 0)
@@ -261,7 +263,7 @@ object GlDraw extends Draw {
 
 	def drawDisplayEvent(event:DisplayEvent, pos:Int) {
 
-		val textPos = Vec2i( Main.width.toInt - 20 - ConsoleFont.font.getWidth(event.textMessage),
+		val textPos = Vec2i( Display.getWidth - 20 - ConsoleFont.font.getWidth(event.textMessage),
 			250 + ConsoleFont.height * pos)
 
 		drawString(textPos, event.textMessage)

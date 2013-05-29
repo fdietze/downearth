@@ -390,16 +390,16 @@ package object util {
 			}
 		
 			var i      = 0
-			val width  = Main.width.toInt
-			val height = Main.height.toInt
+			val width  = Display.getWidth
+			val height = Display.getHeight
       val end    = width * height * bpp
 
       val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
 		
 			while(i < end) {
-				val r = buffer.get(i) & 0xFF;
-				val g = buffer.get(i + 1) & 0xFF;
-				val b = buffer.get(i + 2) & 0xFF;
+				val r = buffer.get(i) & 0xFF
+				val g = buffer.get(i + 1) & 0xFF
+				val b = buffer.get(i + 2) & 0xFF
 				val p = (i/bpp)
 				image.setRGB(
 					p % width,
@@ -414,7 +414,7 @@ package object util {
 				ImageIO.write(image, format, file);
 				DisplayEventManager.showEventText("File "+ file.getName +" saved.")
 			} catch {
-			 case e : IOException => e.printStackTrace
+			 case e : IOException => e.printStackTrace()
 			}
 		}
 	}

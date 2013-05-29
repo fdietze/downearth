@@ -11,6 +11,7 @@ import org.lwjgl.input.Mouse
 
 import Config._
 import downearth.worldoctree.NodeInfo
+import org.lwjgl.opengl.Display
 
 abstract class Camera {
 	def position:Vec3
@@ -60,7 +61,8 @@ class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
 	
 
 	override def projection:Mat4 = {
-		val v = Main.width.toDouble / Main.height.toDouble
+    // TODO implement viewport
+		val v = Display.getWidth.toDouble / Display.getHeight.toDouble
 		
 		val n = 0.05     //near
 		val f = 1000.0   //far
