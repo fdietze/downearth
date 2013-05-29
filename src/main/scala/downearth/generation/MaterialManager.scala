@@ -9,12 +9,13 @@ object Material {
 }
 
 object MaterialManager {
+  val inset = 1 // material separation texture atlas border for texture coordinates
   val textureAtlas = TextureManager.materials
   val materialCount = textureAtlas.width / textureAtlas.height
   val materials = Array.tabulate(materialCount){ id =>
     Material(id,
       texture = textureAtlas,
-      texPos  = Vec2(id.toDouble/materialCount,0),
-      texSize = Vec2(1.0/materialCount,1))
+      texPos  = Vec2(id.toDouble/materialCount + inset,0 + inset),
+      texSize = Vec2(1.0/materialCount - 2*inset,1 - 2*inset))
   }
 }
