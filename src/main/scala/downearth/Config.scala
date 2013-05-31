@@ -31,6 +31,7 @@ object Config extends Listener {
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
 	
 	val fpsLimit = loadInt("fpsLimit", 60)
+  val timeStep = 1.0 / fpsLimit
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
@@ -89,6 +90,7 @@ object Config extends Listener {
   var streamWorld = false
   var frustumCulling = true
   var turbo = false
+  var visibleOcclusionTest = true
 
   loader.load()
 

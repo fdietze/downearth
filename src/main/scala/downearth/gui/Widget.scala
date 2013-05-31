@@ -207,25 +207,62 @@ trait Draggable extends Widget {
 
 class KeySettingsWidget(val position:Vec2i, config:AnyRef) extends Panel {
   val fields = config.getClass.getDeclaredFields.filter( _.getName.startsWith("key") )
+  val size = {
+    var y = position.y
+    var maxWidth = 0
+    for( field <- fields ) {
+      field.setAccessible( true )
+      val key = field.getInt( config )
+      val keyName = Keyboard.getKeyName(key)
+      val child = new Label( Vec2i(position.x,y), field.getName + " " + keyName )
+      child.addReaction {
+      case KeyPress(key) =>
+        println("got key press " + Keyboard.getKeyName(key))
+        child.text = field.getName + " " + Keyboard.getKeyName(key)
+        field.setInt(config, key)
+      }
 
-  var y = position.y
-  var maxWidth = 0
-  for( field <- fields ) {
-    field.setAccessible( true )
-    val key = field.getInt( config )
-    val keyName = Keyboard.getKeyName(key)
-    val child = new Label( Vec2i(position.x,y), field.getName + " " + keyName )
-    child.addReaction {
-    case KeyPress(key) =>
-      println("got key press " + Keyboard.getKeyName(key))
-      child.text = field.getName + " " + Keyboard.getKeyName(key)
-      field.setInt(config, key)
+      y += child.size.y
+      maxWidth = maxWidth max child.size.x
+      children += child
     }
-
-    y += child.size.y
-    maxWidth = maxWidth max child.size.x
-    children += child
+    Vec2i(maxWidth, y-position.y)
   }
+}
 
-  val size = Vec2i(maxWidth, y-position.y)
+class BoolSettingsWidget(val position:Vec2i, config:AnyRef) extends Panel {
+
+  val size = {
+    var y = position.y
+    var maxWidth = 0
+    for( field <- config.getClass.getDeclaredFields ) {
+      field.setAccessible(true)
+      if( field.get(config).isInstanceOf[Boolean] && !field.getName.startsWith("bitmap$") ) {
+        val value = field.getBoolean(config)
+        val child = new Button( Vec2i(position.x,y), field.getName )
+        if( value )
+          child.backGroundColor := Vec4(0,1,0,0.25)
+        else
+          child.backGroundColor := Vec4(1,0,0,0.25)
+
+        child.addReaction {
+          case MouseClicked(pos) =>
+
+          if( field.getBoolean(config) ){
+            field.setBoolean(config,false)
+            child.backGroundColor := Vec4(1,0,0,0.25)
+          }
+          else {
+            field.setBoolean(config,true)
+            child.backGroundColor := Vec4(0,1,0,0.25)
+          }
+        }
+
+        y += child.size.y
+        maxWidth = maxWidth max child.size.x
+        children += child
+      }
+    }
+    Vec2i(maxWidth, y-position.y)
+  }
 }

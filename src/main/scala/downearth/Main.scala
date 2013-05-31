@@ -10,7 +10,6 @@ import simplex3d.math.double.functions._
 import downearth.rendering.{ObjManager, TextureManager, Renderer}
 import downearth.generation.WorldNodeGenerator
 import downearth.Config._
-import downearth.gui.lwjgl._
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.ARBDebugOutput._
 import org.lwjgl.opengl.AMDDebugOutput._
@@ -21,19 +20,24 @@ import downearth.gui.KeyPress
 import downearth.gui.KeyRelease
 import downearth.gui.MouseDown
 import downearth.gui.MouseUp
+import downearth.util.Logger
 
 
-object Main {
-  var gameLoop:LwjglGameLoop = null
+object Main extends Logger {
 
   def main(args: Array[String]) {
+
+    log.println( "started" )
+
     Display.setDisplayMode( new DisplayMode(Config.windowResolutionWidth,Config.windowResolutionHeight) )
     Display.setResizable(true)
     Display.create()
 
-    gameLoop = new LwjglGameLoop
+    log.println( "display created" )
 
     val wed = new WidgetEventDispatcher(MainWidget)
+
+    val gameLoop = new GameLoop
     wed.listenTo(gameLoop)
 
     gameLoop.run()
@@ -54,7 +58,6 @@ class GameLoop extends Publisher with Logger { gameLoop =>
   def uptime = time - starttime
 
   var lastFrame = uptime
-  val timeStep = 1.0 / fpsLimit
   var currentFps = 0
   var timestamp = starttime
   var frameCounter = 0
@@ -68,20 +71,21 @@ class GameLoop extends Publisher with Logger { gameLoop =>
       BulletPhysics.update()
       // input()
 
-      extraLoopOperation()
+      handleInput()
 
       World.octree.makeUpdates()
 
-      if(Config.streamWorld) {
+      if( Config.streamWorld ) {
         World.octree stream Player.pos
       }
 
       Renderer.draw()
       frame()
 
-      swapBuffers()
+      Display.update()
       Display.sync(fpsLimit)
     }
+
     destroy()
   }
 
@@ -135,14 +139,6 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 	
 		lastFrame = uptime
 	}
-
-  def swapBuffers() {
-    Display.update()
-  }
-
-  def extraLoopOperation() {
-    handleInput()
-  }
 
   var windowMode:DisplayMode = null
 
@@ -220,7 +216,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
       // Turbo mode
       if( turbo && Mouse.isButtonDown(0) )
-        Player.primaryAction
+        Player.primaryAction()
 
       // Keyboard Events
       while ( Keyboard.next ) {
@@ -235,7 +231,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
         ( getEventButton, getEventButtonState ) match {
           case (0 , true) => // left down
           case (0 , false) => // left up
-            Player.primaryAction
+            Player.primaryAction()
           case (1 , true) => // right down
           case (1 , false) => // right up
             //Player.secondarybutton

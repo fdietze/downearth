@@ -459,7 +459,7 @@ class Hexaeder(
 				builder += t(5)
 			}
 		}
-		builder.result
+		builder.result()
 	}
 }
 

@@ -177,7 +177,7 @@ object Renderer extends Logger {
 
   }
 
-  def lighting( position:Vec3 ) {
+  def lighting( position:ReadVec3 ) {
     if( Config.wireframe ) {
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
       glDisable(GL_LIGHTING)
@@ -208,7 +208,8 @@ object Renderer extends Logger {
     val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
     val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
 
-    glColorMask(false,false,false,false)
+    if( !Config.visibleOcclusionTest )
+      glColorMask(false,false,false,false)
 
     // TODO hier weiter machen
     // TODO next time add comment, what is still work in Progress

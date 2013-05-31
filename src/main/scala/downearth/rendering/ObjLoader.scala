@@ -45,37 +45,45 @@ class ObjLoader {
 
     var line = reader.readLine()
     while( line != null ) {
-      line.split("\\s+") match {
-        case Array("v", x,y,z) =>
-          positions += Vec3( x.toDouble, y.toDouble, z.toDouble )
-        case Array("vt", u,v) =>
-          texCoords += Vec2( u.toDouble, v.toDouble )
-        case Array("vn", x,y,z) =>
-          normals += Vec3( x.toDouble, y.toDouble, z.toDouble )
-        case Array("f", v1str, v2str, v3str) =>
-          val cv1 = composedVertex(v1str)
-          val v1 = vertices.getOrElseUpdate(cv1,cv1)
-          val cv2 = composedVertex(v2str)
-          val v2 = vertices.getOrElseUpdate(cv2,cv2)
-          val cv3 = composedVertex(v3str)
-          val v3 = vertices.getOrElseUpdate(cv3,cv3)
+      if( line(0) != '#' ) {
+        line.split("\\s+") match {
+          case Array("v", x,y,z) =>
+            positions += Vec3( x.toDouble, y.toDouble, z.toDouble )
+          case Array("vt", u,v) =>
+            texCoords += Vec2( u.toDouble, v.toDouble )
+          case Array("vn", x,y,z) =>
+            normals += Vec3( x.toDouble, y.toDouble, z.toDouble )
+          case Array("f", v1str, v2str, v3str) =>
+            val cv1 = composedVertex(v1str)
+            val v1 = vertices.getOrElseUpdate(cv1,cv1)
+            val cv2 = composedVertex(v2str)
+            val v2 = vertices.getOrElseUpdate(cv2,cv2)
+            val cv3 = composedVertex(v3str)
+            val v3 = vertices.getOrElseUpdate(cv3,cv3)
 
-          triangles += ComposedTriangle(v1,v2,v3)
-        case Array("f", v1str, v2str, v3str, v4str) =>
+            triangles += ComposedTriangle(v1,v2,v3)
+          case Array("f", v1str, v2str, v3str, v4str) =>
 
-          val cv1 = composedVertex(v1str)
-          val v1 = vertices.getOrElseUpdate(cv1,cv1)
-          val cv2 = composedVertex(v2str)
-          val v2 = vertices.getOrElseUpdate(cv2,cv2)
-          val cv3 = composedVertex(v3str)
-          val v3 = vertices.getOrElseUpdate(cv3,cv3)
-          val cv4 = composedVertex(v4str)
-          val v4 = vertices.getOrElseUpdate(cv4,cv4)
+            val cv1 = composedVertex(v1str)
+            val v1 = vertices.getOrElseUpdate(cv1,cv1)
+            val cv2 = composedVertex(v2str)
+            val v2 = vertices.getOrElseUpdate(cv2,cv2)
+            val cv3 = composedVertex(v3str)
+            val v3 = vertices.getOrElseUpdate(cv3,cv3)
+            val cv4 = composedVertex(v4str)
+            val v4 = vertices.getOrElseUpdate(cv4,cv4)
 
-          triangles += ComposedTriangle(v1,v2,v3)
-          triangles += ComposedTriangle(v3,v2,v4)
-        case _ =>
-          println("cant parse line: "+line)
+            triangles += ComposedTriangle(v1,v2,v3)
+            triangles += ComposedTriangle(v3,v2,v4)
+          case Array("o",name) =>
+            println("ignoring object definition "+name)
+          case Array("usemlt", material) =>
+            println("ignoring material definition "+material)
+          case Array("s", _) =>
+            println("ignoring s")
+          case _ =>
+            println("cant parse line: "+line)
+        }
       }
       line = reader.readLine()
     }

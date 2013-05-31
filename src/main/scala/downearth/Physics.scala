@@ -277,7 +277,7 @@ object BulletPhysics {
 		}
 	}
 	
-	def prepareGroundMesh2 {
+	def prepareGroundMesh2() {
 		for( Body(body, _ , stream) <- bodies ) {
 			val transform = body.getWorldTransform(new Transform)
 			val tmp = transform.origin
@@ -293,7 +293,7 @@ object BulletPhysics {
 	def update() {
 		if(!pause) {
 			val currentTime = getTime
-			dynamicsWorld stepSimulation Main.gameLoop.timeStep.toFloat
+			dynamicsWorld stepSimulation Config.timeStep.toFloat
 			simTime = currentTime
 		}
 	}

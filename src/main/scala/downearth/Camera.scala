@@ -7,15 +7,14 @@ import simplex3d.math.double.functions._
 import simplex3d.data._
 import simplex3d.data.double._
 
-import org.lwjgl.input.Mouse
-
 import Config._
 import downearth.worldoctree.NodeInfo
 import org.lwjgl.opengl.Display
 
 abstract class Camera {
-	def position:Vec3
-  def directionQuat:Quat4
+	var position:ReadVec3
+  var directionQuat:ReadQuat4
+
   def direction:Vec3 = directionQuat.rotateVector( -Vec3.UnitZ )
 
   def projection:Mat4
@@ -36,7 +35,18 @@ abstract class Camera {
 }
 
 // Eine Kamera, die frei im Raum bewegt werden kann
-class Camera3D(var position:Vec3,var directionQuat:Quat4) extends Camera {
+class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Camera {
+  val position = Vec3(_position)
+  val directionQuat = Quat4(_directionQuat)
+
+  def position_=(newPos:ReadVec3) {
+    position := newPos
+  }
+
+  def directionQuat_=(newDir:ReadQuat4) {
+    directionQuat := newDir
+  }
+
 	def this (positionVec:Vec3,directionVec:Vec3) = this(positionVec,quaternion(lookAt(-directionVec,worldUpVector)))
 	
 	def camera = this

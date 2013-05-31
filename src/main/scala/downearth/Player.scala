@@ -97,7 +97,7 @@ object Player extends Ray {
     if( !isGhost ) {
       //body.applyCentralImpulse(new Vector3f(0,0,5))
       DisplayEventManager.showEventText("jump")
-      body.jump
+      body.jump()
     }
   }
   
@@ -105,14 +105,15 @@ object Player extends Ray {
   
   def toggleGhost() {
     if( isGhost ) {
-      pos = camera.position - camDistFromCenter
       // BulletPhysics.addBody(body)
       isGhost = false
+      pos = m_camera.position - camDistFromCenter
     }
     else {
       // BulletPhysics.removeBody(body)
       isGhost = true
     }
+
   }
 
   //////////////////////////////////
@@ -138,14 +139,14 @@ object Player extends Ray {
       throw new Exception("player tool not in tools list")
     }
   }
-  def selectNextTool {
+  def selectNextTool() {
     selectTool(
       (inventory.tools.indexOf(activeTool) + 1) % inventory.tools.size
     )
   }
   
   def primaryAction()   = activeTool.action()
-  def secondaryAction() = selectNextTool
+  def secondaryAction() = selectNextTool()
 }
 
 

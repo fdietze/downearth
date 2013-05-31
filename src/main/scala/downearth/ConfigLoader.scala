@@ -9,7 +9,7 @@ class ConfigLoader( configObject:AnyRef ) {
 
   def load() {
     val fields = configObject.getClass.getDeclaredFields
-    val keyFields = fields.filter( _.getName.startsWith("key") )
+    val (keyFields,nonKeyFields) = fields.partition( _.getName.startsWith("key") )
 
     for( field <- keyFields ) {
       val name = field.getName
@@ -19,17 +19,32 @@ class ConfigLoader( configObject:AnyRef ) {
         field.setInt(configObject, key.get)
       }
     }
+
+    for( field <- nonKeyFields ) {
+      field.setAccessible(true)
+      if( field.get(configObject).isInstanceOf[Boolean] && !field.getName.contains("bitmap$") ) {
+        val b = preferences.getBoolean(field.getName, field.getBoolean(configObject))
+        field.setBoolean(configObject, b)
+      }
+    }
   }
 
   def save() {
-    val fieleds = configObject.getClass.getDeclaredFields
-    val (keyFields,nonKeyFields) = fieleds.partition( _.getName.startsWith("key") )
+    val fields = configObject.getClass.getDeclaredFields
+    val (keyFields,nonKeyFields) = fields.partition( _.getName.startsWith("key") )
 
     for( field <- keyFields ) yield {
       field.setAccessible(true)
       val fieldName = field.getName
       val keyName = Keyboard.getKeyName(field.getInt(configObject))
       preferences.put(fieldName, keyName)
+    }
+
+    for( field <- nonKeyFields ) {
+      field.setAccessible(true)
+      if( field.get(configObject).isInstanceOf[Boolean] && !field.getName.contains("bitmap$") ) {
+        preferences.putBoolean(field.getName, field.getBoolean(configObject))
+      }
     }
 
     preferences.sync()

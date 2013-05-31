@@ -45,9 +45,16 @@ object MainWidget extends Panel {
   val drawCallLabel       = new Label( Vec2i(20,20), "<not set>" )
   val playerPositionLabel = new Label( Vec2i(20,40), "<not set>" )
   val inventoryButton = new Button(    Vec2i(20,60), "inventory")
-  val keySettingsButton = new Button(  Vec2i(20,80), "settings" ){
+  val keySettingsButton = new Button(  Vec2i(20,80), "key settings" ){
     override  def onClick() {
+      boolSettingsWidget.visible =  false
       keySettingWidget.visible = !keySettingWidget.visible
+    }
+  }
+  val boolSettingsButton = new Button( Vec2i(20,100), "bool settings" ){
+    override  def onClick() {
+      keySettingWidget.visible = false
+      boolSettingsWidget.visible = !boolSettingsWidget.visible
     }
   }
 
@@ -93,8 +100,10 @@ object MainWidget extends Panel {
     arrangeChildren()
   }
 
-  val keySettingWidget = new KeySettingsWidget( Vec2i(20,100), Config )
+  val keySettingWidget = new KeySettingsWidget( Vec2i(20,120), Config )
   keySettingWidget.visible = false
+  val boolSettingsWidget = new BoolSettingsWidget( Vec2i(20,120), Config )
+  boolSettingsWidget.visible = false
 
   publish( WidgetResized(this) )
 
@@ -104,7 +113,9 @@ object MainWidget extends Panel {
     drawCallLabel,
     playerPositionLabel,
     keySettingWidget,
-    keySettingsButton
+    keySettingsButton,
+    boolSettingsWidget,
+    boolSettingsButton
   )
 
 }
