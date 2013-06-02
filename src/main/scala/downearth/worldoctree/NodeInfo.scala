@@ -55,7 +55,7 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 	}
 	
 	def toCuboid = Cuboid(pos, Vec3i(size))
-	def toVolume = Interval3(Vec3(pos), Vec3(pos+size))
+	def toInterval3 = Interval3(Vec3(pos), Vec3(pos+size))
 }
 
 case class Cuboid(pos:Vec3i, size:Vec3i) {
