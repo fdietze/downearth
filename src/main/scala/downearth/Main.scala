@@ -42,6 +42,8 @@ object Main extends Logger {
 
     gameLoop.run()
 
+    if(Config.saveWorld)
+      WorldSerializer.save(World.octree)
     Config.loader.save()
   }
 }

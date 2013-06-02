@@ -11,8 +11,7 @@ object WorldSerializer{
 		if(saveWorld){
 			try{
 				val fos = new FileOutputStream(file)
-				val oos = new ObjectOutputStream(fos)
-				oos writeObject src
+				fos.write(src.toMessage.toByteArray)
 			}
 			catch{
 			case e:Exception =>
@@ -24,9 +23,9 @@ object WorldSerializer{
 	def load:Option[WorldOctree] = {
 		if(saveWorld){
 			try {
-				val fis = new FileInputStream(file)
-				val ois = new ObjectInputStream(fis)
-				Some(ois.readObject.asInstanceOf[WorldOctree])
+				//val fis = new FileInputStream(file)
+				//Some( message.Octree().mergeFrom(fis) )
+        None
 			}
 			catch{
 			case e:Exception =>

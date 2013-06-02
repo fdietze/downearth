@@ -1,0 +1,15 @@
+package downearth;
+
+option java_package = "downearth.message";
+option java_outer_classname = "SerializedWorldOctree";
+
+message Octant {
+  optional int32 material = 1;
+  repeated Octant children = 2;
+}
+
+message Octree {
+  required Vec3i pos = 1;
+  required int32 size = 2;
+  required Octant root = 3;
+}

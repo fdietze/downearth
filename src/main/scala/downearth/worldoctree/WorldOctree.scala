@@ -15,6 +15,7 @@ import downearth.util._
 import downearth.generation.{GetFinishedJobs, WorldNodeGenerator}
 import downearth.{BulletPhysics, Config, util}
 import downearth.Config._
+import downearth.message
 
 
 object WorldOctree {
@@ -287,4 +288,13 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 		else
 			None
 	}
+
+  def toMessage = {
+    import downearth.message.implicits._
+    message.Octree(
+      pos  = rootNodePos,
+      size = rootNodeSize,
+      root = root.toMessage
+    )
+  }
 }

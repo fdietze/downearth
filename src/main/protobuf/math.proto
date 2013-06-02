@@ -1,0 +1,12 @@
+package downearth;
+
+option java_package = "downearth.message";
+option java_outer_classname = "Math";
+
+message Vec3i {
+  required sint32 x = 1;
+  required sint32 y = 2;
+  required sint32 z = 3;
+}
+
+

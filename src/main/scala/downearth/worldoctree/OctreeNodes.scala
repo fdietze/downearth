@@ -24,6 +24,18 @@ sealed trait Node extends Serializable {
   def hasChildren:Boolean
 
   def getChild(i:Int):Node
+
+  def toMessage:message.Octant = if(hasChildren)
+    message.Octant(
+      children = Vector.tabulate(8)( getChild(_).toMessage )
+    )
+  else
+    this match {
+      case leaf:UserLeaf => message.Octant(
+        material = Some(leaf.material)
+      )
+      case _ => message.Octant()
+    }
 }
 
 // im Octree wird unterschieden, ob sich der Node oberhalb oder unterhalb des
