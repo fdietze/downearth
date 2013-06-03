@@ -13,6 +13,7 @@ import java.nio.FloatBuffer
 import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
 import downearth.DisplayEvent
 import downearth.Main
+import org.lwjgl.BufferUtils
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -60,7 +61,7 @@ object GlDraw extends Draw {
     glEnd()
   }
 
-  def renderAxis {
+  def renderAxis() {
     glBegin(GL_LINES)
     glColor3f(1,0,0)
     glVertex3f(0,0,0)
@@ -88,6 +89,41 @@ object GlDraw extends Draw {
 		glPopMatrix()
 	}
 
+  lazy val texturedCubeBuffer = new {
+    // GL_QUADS
+    val normalsBuf   = BufferUtils.createByteBuffer(4 * 3 * 24)
+    val texCoordsBuf = BufferUtils.createByteBuffer(4 * 2 * 24)
+    val positionsBuf = BufferUtils.createByteBuffer(4 * 3 * 24)
+
+    {
+      val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
+      val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
+
+      var i = 0
+      for(idx <- indices) {
+        val x = (idx & 1) >> 0
+        val y = (idx & 2) >> 1
+        val z = (idx & 4) >> 2
+
+        val j = i & 3
+        val k = (i >> 2) << 2
+
+        val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
+        val v = (j & 2) >> 1
+
+        normalsBuf.putFloat( normals(k) ).putFloat(normals(k+1)).putFloat(normals(k+2))
+        texCoordsBuf.putFloat(u).putFloat(v)
+        positionsBuf.putFloat(x).putFloat(y).putFloat(z)
+
+        i += 1
+      }
+
+      normalsBuf.flip
+      texCoordsBuf.flip
+      positionsBuf.flip
+    }
+  }
+
   def texturedCube() {
     val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
     val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
@@ -100,14 +136,12 @@ object GlDraw extends Draw {
       val z = (idx & 4) >> 2
 
       val j = i & 3
-      val k = i >> 2
+      val k = (i >> 2) << 2
+
       val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
       val v = (j & 2) >> 1
 
-      if( j == 0 ) {
-        glNormal3f( normals(i), normals(i+1), normals(i+2) )
-      }
-
+      glNormal3f( normals(k), normals(k+1), normals(k+2) )
       glTexCoord2f(u,v)
       glVertex3f(x,y,z)
 
@@ -222,11 +256,6 @@ object GlDraw extends Draw {
 	def addPredictedCuboid(cuboid:Cuboid) { predictedCuboids ::= cuboid }
 
 	def drawSampledNodes() {
-		/*
-		glColor3f(1,0,0)
-		for( toNodeinfo <- sampledNodes )
-			drawNodeInfo(toNodeinfo)
-		*/
 		for( cuboid <- predictedCuboids ) {
 			if( cuboid.isCube )
 				glColor3f(0,0,1)

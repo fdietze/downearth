@@ -14,5 +14,5 @@ void main() {
     float light = dot( lightDir, v_normal );
     light = max(0, light);
 
-    gl_FragColor = ( lightColor * vec4(light) + ambientLight ) * tex;
+    gl_FragColor = ( lightColor * vec4(light) + ambientLight ) * tex * vec4(1,0,0,1);
 }

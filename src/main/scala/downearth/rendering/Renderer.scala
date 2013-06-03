@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.GL20._
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.{Display, ARBFragmentShader, ARBVertexShader, ARBShaderObjects}
+import org.lwjgl.opengl.{Display, ARBShaderObjects}
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 
@@ -21,6 +21,8 @@ import downearth.tools._
 import downearth.worldoctree._
 import downearth.world.World
 import downearth.entity.{Entity, SimpleEntity}
+import downearth.generation.MaterialManager
+import downearth.rendering.shader.{VertexShader, FragmentShader, Shader, Program}
 
 import java.nio.IntBuffer
 
@@ -30,7 +32,7 @@ import simplex3d.math.doublex.functions._
 
 import scala.Tuple2
 import scala.collection.mutable.ArrayBuffer
-import downearth.generation.MaterialManager
+
 
 
 object Renderer extends Logger {
@@ -41,10 +43,29 @@ object Renderer extends Logger {
   ambientLight.rewind()
 
   lazy val shaderProgram = {
+    println("vertex Shader")
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
+    println("fragment Shader")
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
-    Program(vertShader)(fragShader)
+    Program("simple")(vertShader)(fragShader)
   }
+
+  val programBinding = shaderProgram.getBinding
+  println(programBinding)
+
+  val a_texCoord = programBinding.attribute("a_texCoord")
+  a_texCoord.bufferBinding.buffer.bind()
+  a_texCoord.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.texCoordsBuf)
+
+  val a_normal = programBinding.attribute("a_normal")
+  a_normal.bufferBinding.buffer.bind()
+  a_normal.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.normalsBuf)
+
+  val a_position = programBinding.attribute("a_position")
+  a_position.bufferBinding.buffer.bind()
+  a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0)
 
   // this is occlusion querry from the last frame
   var query:Query = null
@@ -59,7 +80,7 @@ object Renderer extends Logger {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
     renderWorld( Player.camera )
 
-    MainWidget.drawCallLabel.text = s"drawcalls: $drawCalls, empty: $emptyDrawCalls"
+    MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
     MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
 
     GuiRenderer.renderGui()
@@ -69,9 +90,6 @@ object Renderer extends Logger {
   var emptyDrawCalls = 0
 
   def drawDebugOctree(octree:WorldOctree, order:Array[Int], test:FrustumTest) {
-
-    glDisable(GL_LIGHTING)
-    glDisable(GL_TEXTURE_2D)
 
     glPushMatrix()
     val pos2 = octree.worldWindowPos + 0.05
@@ -154,11 +172,14 @@ object Renderer extends Logger {
     if( query != null )
       for( result <- evalQueries(query).visible )
         World.octree.generateNode(result)
-    query = findUngeneratedNodes(World.octree, frustumTest, order)
-
-    render3dCursor()
+    query = findUngeneratedNodes(camera, World.octree, frustumTest, order)
 
     import Config._
+
+    glDisable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
+
+    render3dCursor()
 
     if( (debugDraw & DebugDrawOctreeBit) != 0 )
       drawDebugOctree(World.octree, order, frustumTest)
@@ -169,12 +190,10 @@ object Renderer extends Logger {
   }
 
   def render3dCursor() {
-
     Player.activeTool match {
       case tool:EnvironmentTool =>
         tool.renderPreview(GlDraw)
     }
-
   }
 
   def lighting( position:ReadVec3 ) {
@@ -202,7 +221,7 @@ object Renderer extends Logger {
 
   var randomizer = 0
 
-  def findUngeneratedNodes(octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
+  def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
     TextureManager.box.bind()
 
     val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
@@ -226,18 +245,40 @@ object Renderer extends Logger {
         true
     }
 
-    for( info <- nodeInfoBufferGenerating ) {
-      glPushMatrix()
-      glTranslatef(info.pos.x, info.pos.y, info.pos.z)
-      glScaled(info.size,info.size,info.size)
-      GlDraw.texturedCube()
-      glPopMatrix()
-    }
+    val glBufferNodeInfoPosition = BufferUtils.createFloatBuffer( 4 * nodeInfoBufferGenerating.size )
+    val glBufferNodeInfoSize     = BufferUtils.createFloatBuffer( nodeInfoBufferGenerating.size )
 
-//    val firstIndex = max(0, 100 - nodeInfoBufferGenerating.size)
-//    val count = nodeInfoBufferUngenerated.size - firstIndex
-//    if( count > 0)
-//      nodeInfoBufferUngenerated.remove(firstIndex, count)
+    val model = Mat4(1)
+    val view = Mat4(camera.view)
+    val projection = Mat4(camera.projection)
+
+    programBinding.bindUniformMat4("u_modelview", view * model )
+    programBinding.bindUniformMat4("u_mvp",       projection * view * model)
+    programBinding.bindUniformSampler2D("texture", TextureManager.box)
+    programBinding.bindUniformVec4("ambientLight", Vec4(0.2))
+    programBinding.bindUniformVec4("lightColor", Vec4(0.8))
+    programBinding.bindUniformVec3("lightDir", normalize(Vec3(0.1,0.2,-1)))
+
+    shaderProgram.use {
+      for( info <- nodeInfoBufferGenerating ) {
+        glBufferNodeInfoPosition.put( info.pos.x )
+          .put( info.pos.y )
+          .put( info.pos.z )
+          .put( 0 )
+        glBufferNodeInfoSize.put( info.size )
+
+        model := Mat4( Mat4x3.translate( info.pos ).scale(info.size) )
+
+
+//        glPushMatrix()
+//        glTranslatef(info.pos.x, info.pos.y, info.pos.z)
+//        glScaled(info.size,info.size,info.size)
+//        GlDraw.texturedCube()
+//        glPopMatrix()
+
+        glDrawArrays(GL_QUADS, 0, 24)
+      }
+    }
 
     val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )
     glGenQueries( buffer )

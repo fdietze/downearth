@@ -88,7 +88,7 @@ object BulletPhysics {
 	// Spielerverhalen kann so noch nicht realistisch simuliert werden.
 	def addShape(mass:Float, pos:Vec3, colShape:CollisionShape):RigidBody = {
 		val startTransform = new Transform();
-		startTransform.setIdentity
+		startTransform.setIdentity()
 		startTransform.origin.set(pos.x.toFloat,pos.y.toFloat,pos.z.toFloat)
 
 		val localInertia = new Vector3f(0, 0, 1)
@@ -119,7 +119,7 @@ object BulletPhysics {
 	
 	def addCharacter(pos:Vec3) = {
 		val startTransform = new Transform
-		startTransform.setIdentity
+		startTransform.setIdentity()
 		startTransform.origin.set(pos)
 		
 		
@@ -219,7 +219,7 @@ object BulletPhysics {
 			}
 		}
 		
-		def draw {
+		def draw() {
 			glPushMatrix()
 			glTranslated(pos.x,pos.y,pos.z)
 			GlDraw.renderCube(size)
@@ -299,7 +299,6 @@ object BulletPhysics {
 	}
 	
 	def debugDrawWorld() {
-		glDisable(GL_LIGHTING)
 
 		glPushMatrix()
 			dynamicsWorld.debugDrawWorld()

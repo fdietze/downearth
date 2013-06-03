@@ -27,14 +27,22 @@ object TestBuildTool extends EnvironmentTool {
 
   val testThing = new ObjLeaf( ObjManager.testMesh )
 
+  val badColor  =  Vec4(1,0,0,1)
+  val goodColor = Vec4(0,1,0,1)
+
   override def renderPreview(pos:Vec3i, di:Draw) {
-    di.renderPolyeder(FullHexaeder, pos, Vec4(1) )
+    val color = if( testPosition(pos) ) goodColor else badColor
+    di.renderPolyeder(FullHexaeder, pos, color)
+
+  }
+
+  def testPosition(pos:Vec3i) = {
+    World(pos) == EmptyLeaf &&
+    World(pos - Vec3i.UnitZ) == FullLeaf
   }
 
   override def action(pos:Vec3i) {
-    println("inserting at selectPos")
-    selectPos foreach ( pos =>
+    if( testPosition(pos) )
       World(pos) = testThing
-    )
   }
 }

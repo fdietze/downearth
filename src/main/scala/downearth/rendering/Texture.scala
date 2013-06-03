@@ -2,7 +2,10 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
+import org.lwjgl.opengl.GL13._
 import org.lwjgl.opengl.GL14._
+import org.lwjgl.opengl.GL20._
+import org.lwjgl.opengl.GL20._
 
 import java.nio.ByteBuffer
 

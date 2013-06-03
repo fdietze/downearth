@@ -27,5 +27,7 @@ object World {
 		BulletPhysics.worldChange(pos)
 	}
 
+  def apply(pos:Vec3i) = octree(pos)
+
 	val dynamicWorld = DynamicWorld.testScene
 }
