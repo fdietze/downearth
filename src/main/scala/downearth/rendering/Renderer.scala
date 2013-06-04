@@ -169,10 +169,26 @@ object Renderer extends Logger {
     // TODO this is not strictly render code
     // here the occlusion query from the last frame is evaluated, and a new one is generated
 
-    if( query != null )
-      for( result <- evalQueries(query).visible )
-        World.octree.generateNode(result)
-    query = findUngeneratedNodes(camera, World.octree, frustumTest, order)
+    if( Config.occlusionTest ) {
+      if( query != null )
+        for( result <- evalQueries(query).visible )
+          World.octree.generateNode(result)
+      query = findUngeneratedNodes(camera, World.octree, frustumTest, order)
+    } else { // perform frustum test only
+      val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
+      World.octree.queryRegion( frustumTest ) (order) {
+        case (info, UngeneratedInnerNode) =>
+          World.octree.generateNode(info)
+          false
+        case (info, GeneratingNode) =>
+          false
+        case (info, node:MeshNode) =>
+          false
+        case _ =>
+          true
+      }
+    }
+
 
     import Config._
 
@@ -309,7 +325,7 @@ object Renderer extends Logger {
 
     for( (id,info) <- queries ) {
       while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
-        Thread.sleep(1)
+        Thread.sleep(1) //TODO: Don't wait! Instead check only once every frame
       }
       if( glGetQueryObjectui(id, GL_QUERY_RESULT) > 0 )
         visible += info

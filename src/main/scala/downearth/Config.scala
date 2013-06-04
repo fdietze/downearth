@@ -90,6 +90,7 @@ object Config extends Listener {
   var streamWorld = false
   var frustumCulling = true
   var turbo = false
+  var occlusionTest = true
   var visibleOcclusionTest = true
 
   loader.load()
