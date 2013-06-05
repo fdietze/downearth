@@ -1,0 +1,18 @@
+package downearth;
+
+option java_package = "downearth.message";
+option java_outer_classname = "PersistentWorld";
+
+message Polyeder {
+  required bool full = 1;
+}
+
+message Delta {
+  required Vec3i pos = 1;
+  required Polyeder shape = 2;
+  required int32 material = 3;
+}
+
+message WorldDelta {
+  repeated Delta set = 1;
+}

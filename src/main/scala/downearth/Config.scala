@@ -43,8 +43,6 @@ object Config extends Listener {
 	val startAsGhost = false
 	val buildrange = 100
 	
-	val saveWorld = false
-
 	var fullscreen = loadBool("fullscreen", false)
 
 	// Vollbild-Modus mit höchster Auflösung

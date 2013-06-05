@@ -15,7 +15,7 @@ project/boot/
 *.mtl
 *.obj
 
-/worldoctree*
+/worlddelta.save*
 
 
 screenshots
