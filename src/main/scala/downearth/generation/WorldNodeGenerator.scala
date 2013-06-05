@@ -16,6 +16,10 @@ import downearth.rendering.{MutableTextureMesh, TextureMeshData, GlDraw, Draw}
 import downearth.worldoctree.NodeInfo
 import downearth.worldoctree.Cuboid
 import scala.Tuple2
+import downearth.server.LocalServer
+import downearth.server.message._
+import akka.util.Timeout
+import scala.concurrent.Await
 
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 object WorldNodeGenerator {
@@ -72,6 +76,7 @@ class Master extends Actor {
         idleWorkers enqueue sender
       else {
         val job = jobqueue.dequeue
+        // TODO: priorisiere Nodes, die im Sichtfeld liegen
         sender ! job
         activeJobs += job
       }
@@ -103,26 +108,17 @@ class Worker (id:Int) extends Actor {
     case cuboid @ Cuboid(cuboidpos, cuboidsize) =>
       val interval = WorldDefinition.range(cuboid.toInterval3)
 
-      if(interval.isPositive) {
+      if(!interval(0)) {
         GlDraw addPredictedCuboid cuboid  // Für DebugDraw
 
         for( nodeinfo <- cuboid.nodeinfos ) {
-          val meshnode = new MeshNode(Leaf(FullHexaeder))
+          val meshnode = new MeshNode(Leaf(
+            if(interval.isPositive) FullHexaeder else EmptyHexaeder
+          ))
           meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
           sender ! Tuple2(nodeinfo, meshnode)
         }
       }
-
-      else if(interval.isNegative) {
-        GlDraw addPredictedCuboid cuboid  // Für DebugDraw
-
-        for( nodeinfo <- cuboid.nodeinfos ) {
-          val meshnode = new MeshNode(Leaf(EmptyHexaeder))
-          meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
-          sender ! Tuple2(nodeinfo, meshnode)
-        }
-      }
-
       else {
         // if the area is too big, it will be splitted
         if( cuboid.size(cuboid.longestedge)/2 >= Config.minPredictionSize ) {

@@ -21,6 +21,7 @@ import downearth.gui.KeyRelease
 import downearth.gui.MouseDown
 import downearth.gui.MouseUp
 import downearth.util.Logger
+import downearth.server.LocalServer
 
 
 object Main extends Logger {
@@ -45,6 +46,7 @@ object Main extends Logger {
     if(Config.saveWorld)
       WorldSerializer.save(World.octree)
     Config.loader.save()
+
   }
 }
 
@@ -118,14 +120,12 @@ class GameLoop extends Publisher with Logger { gameLoop =>
   def destroy() {
 
     WorldNodeGenerator.actorSystem.shutdown()
+    LocalServer.actorSystem.shutdown()
 
     TextureManager.delete()
     ObjManager.delete()
 
     println("all destroyed")
-
-		// WorldSerializer.save(World.octree)
-		// sys.exit(0)
 	}
 	
 	// Berechnet die Aktuelle Framerate

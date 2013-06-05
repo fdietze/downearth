@@ -9,6 +9,11 @@ import downearth.worldoctree._
 import downearth.util._
 import downearth.worldoctree.NodeInfo
 import downearth.rendering.ObjManager
+import downearth.server.message.{GetDeltaInRange, DeltaSet}
+import akka.util.Timeout
+import downearth.server.LocalServer
+import scala.concurrent.Await
+import akka.pattern.ask
 
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}
@@ -24,8 +29,15 @@ object WorldGenerator {
 		octree
 	}
 	
-	def genWorldAt(nodeinfo:NodeInfo):NodeOverMesh = {
-		val NodeInfo(nodepos, nodesize) = nodeinfo
+	def genWorldAt(nodeInfo:NodeInfo):NodeOverMesh = {
+
+    // Ask server for World delta asynchronly
+    import scala.concurrent.duration._
+    implicit val timeout = Timeout(5 seconds)
+    val deltaSetFuture = LocalServer.server ? GetDeltaInRange(nodeInfo.pos, nodeInfo.size)
+
+    // while waiting for answer, start to sample node
+    val NodeInfo(nodepos, nodesize) = nodeInfo
 		import HexaederMC._
 
 		// Predichtion hat kein eindeutiges Ergebnis,
@@ -80,22 +92,29 @@ object WorldGenerator {
 			}
 		}
 
-		// Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
+    // wait for world delta from server to overwrite generated blocks
+    val deltaSet = Await.result(deltaSetFuture, timeout.duration).asInstanceOf[DeltaSet]
+
+    // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
+    // Berücksichtigt auch gespeicherte User-Ändarungen
 		def fillfun(v:Vec3i) = {
 			val arraypos = v + 1 - nodepos
 			val h = data2hexaeder( modifiedNoiseData.extract(arraypos), exactCaseData(arraypos) )
 
-			if( h.noVolume )
-				EmptyHexaeder
-			else 
-				h
+      if(deltaSet.delta.isDefinedAt(v)) { //TODO: Faster with only one lookup?
+        deltaSet.delta(v).shape
+      } else
+        if( h.noVolume )
+          EmptyHexaeder
+        else
+          h
 		}
 
     // Octree mit Hexaedern füllen
     // TODO use prediction here
-    val root = EmptyLeaf.fill( nodeinfo, pos => Leaf(fillfun(pos)) )
+    val root = EmptyLeaf.fill( nodeInfo, pos => Leaf(fillfun(pos)) )
 
-    root.genMesh( nodeinfo, minMeshNodeSize, (x => {if( nodeinfo.indexInRange(x) ) root(nodeinfo,x).h else fillfun(x) }) )
+    root.genMesh( nodeInfo, minMeshNodeSize, (x => {if( nodeInfo.indexInRange(x) ) root(nodeInfo,x).h else fillfun(x) }) )
 	}
 }
 
