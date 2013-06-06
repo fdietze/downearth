@@ -74,4 +74,6 @@ class Polyeder10(x:Long = 0xF0F0F0F0 & mask,
 	def innerTriangles:Seq[Vec3] = notImplemented
 	
 	def allTriangles = ConvexHull3d giftWrap vertices
+
+  def toMessage = ???
 }

@@ -3,16 +3,38 @@ package downearth;
 option java_package = "downearth.message";
 option java_outer_classname = "PersistentWorld";
 
-message Polyeder {
-  required bool full = 1;
+message Hexaeder {
+  enum Fill {
+    DATA = 0;
+    EMPTY = 1;
+    FULL = 2;
+  }
+  
+  message Data {
+    required fixed32 x = 1;
+    required fixed32 y = 2;
+    required fixed32 z = 3;
+  }
+  
+  required Fill fill = 1;
+  optional Data data = 2;
+}
+
+message Block {
+  required Hexaeder shape = 1;
+  required int32 material = 2;
 }
 
 message Delta {
   required Vec3i pos = 1;
-  required Polyeder shape = 2;
-  required int32 material = 3;
+  required Block block = 2;
 }
 
-message WorldDelta {
+message DeltaSet {
   repeated Delta set = 1;
+}
+
+message NodeInfo {
+  required Vec3i pos = 1;
+  required int32 size = 2;
 }

@@ -17,7 +17,6 @@ import downearth.worldoctree.NodeInfo
 import downearth.worldoctree.Cuboid
 import scala.Tuple2
 import downearth.server.LocalServer
-import downearth.server.message._
 import akka.util.Timeout
 import scala.concurrent.Await
 

@@ -6,13 +6,8 @@ import collection.mutable
 import downearth.util._
 import downearth.worldoctree.{FullHexaeder, Polyeder, EmptyHexaeder}
 import java.io.{FileInputStream, File, FileOutputStream}
-
-package object message {
-  case class Block(shape:Polyeder, mat:Int)
-  case class GetDeltaInRange(pos:Vec3i, size:Int)
-  case class DeltaSet(delta:Map[Vec3i,Block])
-  case class Delta(pos:Vec3i, block:Block)
-}
+import downearth.message._
+import downearth.message.implicits._
 
 object LocalServer {
   val actorSystem = ActorSystem.create("network")
@@ -20,10 +15,22 @@ object LocalServer {
 }
 
 class LocalServer extends Actor {
-  import message._
-
   val file = new File("worlddelta.save")
-  val worldDelta = new mutable.HashMap[Vec3i,Block]
+  val deltaSet = new mutable.HashMap[Vec3i,Block] {
+    def +=(d:Delta):Unit = update(d.pos, d.block)
+    def apply(range:NodeInfo) = DeltaSet(this.collect {
+      case (pos, block) if indexInRange(pos, range.pos, range.size) => Delta(pos,block)
+    }.toVector)
+
+    def toMessage = {
+      DeltaSet(this.map{ case (pos, block) => Delta(pos, block) }.toVector)
+    }
+
+    def fromMessage(m:DeltaSet) {
+      this.clear()
+      this ++= m.set map { case Delta(pos, block) => (messageToSimplexVec3i(pos) -> block) }
+    }
+  }
 
   override def preStart() {
     load()
@@ -31,20 +38,15 @@ class LocalServer extends Actor {
 
   //TODO: Distribute World Definition
   def receive = {
-    // client queries for a set of changes
-    case GetDeltaInRange(rangePos, rangeSize) =>
-      sender ! DeltaSet(worldDelta.filter {
-        case (pos, _) => indexInRange(pos, rangePos, rangeSize)
-      }.toMap)
-
-      /* //Test Data:
-      sender ! DeltaSet((rangePos until (rangePos+rangeSize)).collect{
-        case v@Vec3i(x,y,z) if (x+y+z) % 2 == 0 => (v,Block(EmptyHexaeder,0))
-      }.toMap)*/
+    // client asks for a set of changes
+    case range:NodeInfo =>
+      sender ! deltaSet(range)
 
     // client notifies about changes in the world
-    case Delta(pos,block) => worldDelta += (pos -> block)
+    //TODO: check if change represents density function, if yes, delete it
+    case d:Delta => deltaSet += d
 
+    // unknown message
     case m => println("Server: Unknown Message: " + m)
   }
 
@@ -53,52 +55,30 @@ class LocalServer extends Actor {
     println("Server: Stopped")
   }
 
-  def serializeDelta(deltas:mutable.HashMap[Vec3i,Block]) = {
-    import downearth.message.implicits._
-    import downearth.{message => m}
-
-    m.WorldDelta(deltas.map{
-      case (pos, Block(shape,material)) =>
-        m.Delta(pos, m.Polyeder(shape != EmptyHexaeder), material)
-    }.toVector)
-  }
-
-  def deserializeDelta(worldDelta:downearth.message.WorldDelta) = {
-    import downearth.message.implicits._
-    import downearth.{message => m}
-    worldDelta.set map {
-      case m.Delta(pos,shape,material) =>
-        ( messageToSimplexVec3i(pos),
-          Block(if(shape.full) FullHexaeder else EmptyHexaeder, material)
-          )
-    }
-  }
-
   def load() {
-    import downearth.{message => m}
-    val deltas= try{
-      val fis = new FileInputStream(file)
-      deserializeDelta(m.WorldDelta().mergeFrom(fis))
+    println("Server: Loading World Deltas")
+    try{
+      if( file.exists() ) {
+        val fis = new FileInputStream(file)
+        val message = DeltaSet().mergeFrom(fis)
+        //println(message)
+        deltaSet.fromMessage(message)
+      }
     } catch {
       case e:Exception =>
-        println(e.getMessage)
+        e.printStackTrace()
         println("couldn't open file: " + file)
-        Vector()
     }
-
-    worldDelta.clear()
-    worldDelta ++= deltas
   }
 
   def save() {
-    println("Server: Saving World")
-
+    println("Server: Saving World Deltas")
     try{
       val fos = new FileOutputStream(file)
-      fos.write(serializeDelta(worldDelta).toByteArray)
+      fos.write(deltaSet.toMessage.toByteArray)
     } catch {
       case e:Exception =>
-        println(e.getMessage)
+        e.printStackTrace()
         println("couldn't save file: " + file)
     }
   }

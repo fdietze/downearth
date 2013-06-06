@@ -9,11 +9,11 @@ import downearth.worldoctree._
 import downearth.util._
 import downearth.worldoctree.NodeInfo
 import downearth.rendering.ObjManager
-import downearth.server.message.{GetDeltaInRange, DeltaSet}
 import akka.util.Timeout
 import downearth.server.LocalServer
 import scala.concurrent.Await
 import akka.pattern.ask
+import downearth.message.implicits._
 
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}
@@ -34,7 +34,7 @@ object WorldGenerator {
     // Ask server for World delta asynchronly
     import scala.concurrent.duration._
     implicit val timeout = Timeout(5 seconds)
-    val deltaSetFuture = LocalServer.server ? GetDeltaInRange(nodeInfo.pos, nodeInfo.size)
+    val deltaSetFuture = LocalServer.server ? message.NodeInfo(nodeInfo.pos, nodeInfo.size)
 
     // while waiting for answer, start to sample node
     val NodeInfo(nodepos, nodesize) = nodeInfo
@@ -92,8 +92,11 @@ object WorldGenerator {
 			}
 		}
 
-    // wait for world delta from server to overwrite generated blocks
-    val deltaSet = Await.result(deltaSetFuture, timeout.duration).asInstanceOf[DeltaSet]
+    // wait for world d from server to overwrite generated blocks
+    val deltaSet = Await.result(deltaSetFuture, timeout.duration).asInstanceOf[message.DeltaSet]
+    val deltaMap = (deltaSet.set map {
+      case message.Delta(pos, block) => (messageToSimplexVec3i(pos) -> block)
+    }).toMap
 
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
     // Berücksichtigt auch gespeicherte User-Ändarungen
@@ -101,8 +104,8 @@ object WorldGenerator {
 			val arraypos = v + 1 - nodepos
 			val h = data2hexaeder( modifiedNoiseData.extract(arraypos), exactCaseData(arraypos) )
 
-      if(deltaSet.delta.isDefinedAt(v)) { //TODO: Faster with only one lookup?
-        deltaSet.delta(v).shape
+      if(deltaMap.isDefinedAt(v)) { //TODO: Faster with only one lookup?
+        Hexaeder.fromMessage(deltaMap(v).shape)
       } else
         if( h.noVolume )
           EmptyHexaeder

@@ -1,12 +1,12 @@
 package downearth.worldoctree
 
-//import Util._
 import simplex3d.math.{Vec3i,Vec3b,all}
 import simplex3d.math.double.functions.{lessThanEqual,greaterThanEqual,normalize,cross,dot,round,length}
 import simplex3d.math.double.{Vec3,Vec2}
 
 import collection.immutable.VectorBuilder
 import downearth.Config
+import downearth.message
 
 // Konstanten zur Verwendung im Hexaeder
 object Polyeder {
@@ -77,6 +77,7 @@ trait Polyeder extends Serializable {
 	// all Dreiecke unabhängig davon, ob sie verdeckt werden oder nicht
 	def allTriangles:Seq[Vec3]
 	def rotateZ:Polyeder
+  def toMessage:downearth.message.Hexaeder
 }
 
 abstract class APolyeder extends Polyeder {
@@ -223,6 +224,7 @@ case object EmptyHexaeder extends Polyeder {
 	def innerTriangles = Nil
 	def allTriangles = Nil
 	override def toString = "[ ]"
+  def toMessage = message.Hexaeder(fill=message.Hexaeder.Fill.EMPTY)
 }
 
 // Platzhalter für Hexaeder, die in der Generierung noch fehler Haben. Solle 
@@ -244,6 +246,20 @@ case object UndefHexaeder extends Polyeder {
 	def rotateZ = this
 	override def toString = "[~]"
 	def volume = 0
+  def toMessage = ???
+}
+
+object Hexaeder {
+  import message.Hexaeder.Fill._
+  def fromMessage(m:message.Hexaeder) = m.fill match {
+    case EMPTY => EmptyHexaeder
+    case FULL  => FullHexaeder
+    case DATA  =>
+      val data = m.data.get
+      import data._
+      new Hexaeder(x, y, z)
+    case f => sys.error("unknown fill type for hexaeder: " + f)
+  }
 }
 
 class Hexaeder(
@@ -258,7 +274,12 @@ class Hexaeder(
 	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	//   |x|x|x|x|x|x|x|x|y|y|y|y|y|y|y|y|z|z|z|z|z|z|z|z|
 	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	
+
+  def toMessage = message.Hexaeder(
+    fill=message.Hexaeder.Fill.DATA, //TODO: default enum values in scalabuff not working?
+    data=Some(message.Hexaeder.Data(X,Y,Z))
+  )
+
 	def numVerts = 8
 	
 	override def toString = "Hexaeder(0x%h, 0x%h, 0x%h)".format(X,Y,Z)

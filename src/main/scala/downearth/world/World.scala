@@ -14,9 +14,6 @@ import downearth.{BulletPhysics, util}
 
 import java.io._
 import downearth.server.LocalServer
-import downearth.server.message.{Block, Delta}
-import downearth.server.message.Delta
-import downearth.server.message.Block
 
 object World {
 	val octree = WorldGenerator.genWorld
@@ -24,7 +21,16 @@ object World {
 	def update(pos:Vec3i, l:Leaf) {
 		octree(pos) = l
 		BulletPhysics.worldChange(pos)
-    LocalServer.server ! Delta(pos, Block(if(l.h == EmptyHexaeder) EmptyHexaeder else FullHexaeder, l.material))
+
+    import downearth.message._
+    import downearth.message.implicits._
+    LocalServer.server ! Delta(
+      pos,
+      Block(
+        l.h.toMessage,
+        l.material
+      )
+    )
 	}
 
   def apply(pos:Vec3i) = octree(pos)
