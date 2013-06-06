@@ -11,7 +11,7 @@ import downearth.generation.WorldDefinition
 import scala.collection.mutable.{ArrayBuffer, Queue}
 import downearth.rendering.{Update, TextureMeshBuilder, TextureMeshData}
 
-sealed trait Node extends Serializable {
+sealed trait Node {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
 	// Elternknoten ableiten lässt. Beim Traversieren durch den baum wird diese
 	// Information in Form einer Instanz von NodeInfo weitergereicht.

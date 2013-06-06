@@ -42,7 +42,7 @@ object WorldOctree {
 }
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] with Serializable{
+class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] {
   var worldWindowPos:Vec3i = rootNodePos.clone
   val worldWindowSize:Int = rootNodeSize
 

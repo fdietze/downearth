@@ -19,7 +19,7 @@ import java.nio._
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
 // sie die Kommunikation mit der Grafikkarte.
 
-trait Mesh extends Serializable {
+trait Mesh {
 	def bind()
 	def genvbo()
 	def freevbo()
@@ -323,7 +323,7 @@ object TextureMesh {
 class TextureMesh(@transient var vertices:DataView[Vec3,RFloat], 
                   @transient var normals:DataView[Vec3,RFloat], 
                   @transient var texcoords:DataView[Vec2,RFloat])
-                       extends Mesh with Serializable {
+                       extends Mesh {
   
 	import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
 	@throws(classOf[IOException])

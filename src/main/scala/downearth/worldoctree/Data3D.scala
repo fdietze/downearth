@@ -36,7 +36,7 @@ trait Data3D[A]{
 }
 
 class Array3D[@specialized(Byte,Short,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])
-extends Data3D[A] with Iterable[A] with Serializable{
+extends Data3D[A] with Iterable[A] {
 	def this(vsize:Vec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
 
 	import vsize.{x ⇒ sx,y ⇒ sy, z ⇒ sz}

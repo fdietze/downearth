@@ -57,7 +57,7 @@ object Polyeder {
 
 import Polyeder._
 
-trait Polyeder extends Serializable {
+trait Polyeder {
 	def apply(p:Int,axis:Int):Double
 	def apply(p:Int):Vec3
 	def vertices:Seq[Vec3]
