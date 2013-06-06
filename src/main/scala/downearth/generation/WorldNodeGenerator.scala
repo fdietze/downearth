@@ -11,7 +11,7 @@ import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 import akka.actor._
 import scala.Tuple2
 import downearth.worldoctree._
-import downearth.{Config}
+import downearth.{Player, FrustumTestImpl, Config}
 import downearth.rendering.{MutableTextureMesh, TextureMeshData, GlDraw, Draw}
 import downearth.worldoctree.NodeInfo
 import downearth.worldoctree.Cuboid
@@ -74,8 +74,12 @@ class Master extends Actor {
       if( jobqueue.isEmpty )
         idleWorkers enqueue sender
       else {
-        val job = jobqueue.dequeue
-        // TODO: priorisiere Nodes, die im Sichtfeld liegen
+        val job:Cuboid = if(Config.prioritizeGenerationInFrustum) {
+          val test = new FrustumTestImpl(Player.camera.projection, Player.camera.view)
+          jobqueue.dequeueFirst(c => test(c.toNodeinfo)) getOrElse jobqueue.dequeue()
+        } else
+            jobqueue.dequeue()
+
         sender ! job
         activeJobs += job
       }

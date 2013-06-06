@@ -90,6 +90,7 @@ object Config extends Listener {
   var turbo = false
   var occlusionTest = true
   var visibleOcclusionTest = true
+  var prioritizeGenerationInFrustum = true
 
   loader.load()
 
