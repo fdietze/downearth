@@ -87,7 +87,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
       }
 
       @inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
-        val matid = if( material >= 0 ) material else WorldDefinition.material(pos + 0.5).id
+        val matid = if( material >= 0 ) material else WorldDefinition.materialAtBlock(pos).id
         val matCount = MaterialManager.materialCount.toDouble
 
         vertexBuilder += (Vec3(pos) + v0)

@@ -59,7 +59,7 @@ object ConstructionTool extends EnvironmentTool {
     if( Player.inventory.materials(selectedMaterial) >= current.volume ) {
       val block = World.octree(pos)
       //TODO: the evaluation of the materialfunction should be in the Leaf itself
-      val material = if( block.material == -1 ) WorldDefinition.material(Vec3(pos) + 0.5).id else block.material
+      val material = if( block.material == -1 ) WorldDefinition.materialAtBlock(pos).id else block.material
       Player.inventory.materials(material) += block.h.volume
       Player.inventory.materials(selectedMaterial) -= current.volume
       World(pos) = Leaf(current, selectedMaterial)

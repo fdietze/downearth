@@ -2,6 +2,7 @@ package downearth.generation
 
 import simplex3d.math.double._
 import interval.{Interval, Interval3}
+import simplex3d.math.Vec3i
 
 abstract class WorldFunction {
   val perlinNoise3:(Vec3 => Double) = noise.perlin.simple _
@@ -23,6 +24,7 @@ abstract class WorldFunction {
 
   def density(pos:Vec3):Double
   def material(pos:Vec3):Material
+  def materialAtBlock(pos:Vec3i) = material(Vec3(pos + 0.5))
 
   def bounds(area:Interval3):Interval
   def intervalExtension(area:Interval3):Interval
