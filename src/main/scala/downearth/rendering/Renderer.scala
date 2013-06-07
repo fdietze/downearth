@@ -7,8 +7,10 @@
 package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.GL15._
-import org.lwjgl.opengl.GL20._
+//import org.lwjgl.opengl.GL15._
+import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
+//import org.lwjgl.opengl.GL20._
+import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.{Display, ARBShaderObjects}
 import org.lwjgl.opengl.ARBBufferObject._
@@ -327,7 +329,7 @@ object Renderer extends Logger {
       while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
         Thread.sleep(1) //TODO: Don't wait! Instead check only once every frame
       }
-      if( glGetQueryObjectui(id, GL_QUERY_RESULT) > 0 )
+      if( glGetQueryObjectui(id, GL_QUERY_RESULT) > 0 ) //TODO: Configurable pixel threshold
         visible += info
       else
         occluded += info

@@ -1,6 +1,7 @@
 package downearth.rendering.shader
 
-import org.lwjgl.opengl.GL20._
+//import org.lwjgl.opengl.GL20._
+import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 import org.lwjgl.opengl.GL11._
 import java.io.{InputStreamReader, InputStream}
 import scala.reflect.ClassTag
