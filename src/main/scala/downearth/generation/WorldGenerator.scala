@@ -104,8 +104,9 @@ object WorldGenerator {
 			val arraypos = v + 1 - nodepos
 			val h = data2hexaeder( modifiedNoiseData.extract(arraypos), exactCaseData(arraypos) )
 
-      if(deltaMap.isDefinedAt(v)) { //TODO: Faster with only one lookup?
-        Hexaeder.fromMessage(deltaMap(v).shape)
+      val delta = deltaMap.get(v)
+      if( delta.isDefined ) {
+        Hexaeder.fromMessage(delta.get.shape)
       } else
         if( h.noVolume )
           EmptyHexaeder
