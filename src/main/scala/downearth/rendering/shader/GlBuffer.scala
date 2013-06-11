@@ -1,7 +1,7 @@
 package downearth.rendering.shader
 
-import org.lwjgl.opengl.GL15._
-//import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
+//import org.lwjgl.opengl.GL15._
+import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
 import java.nio.{IntBuffer, FloatBuffer, ByteBuffer}
 
 /**
