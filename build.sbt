@@ -11,8 +11,6 @@ resolvers ++= Seq(
   //"Slick" at "http://slick.cokeandcode.com/mavenrepo"
 )
 
-
-
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
   "com.typesafe.akka" %% "akka-actor" % "2.2-M3",
@@ -41,7 +39,10 @@ scalacOptions ++= Seq(
 
 javaOptions in run ++= Seq(
   "-XX:+ExplicitGCInvokesConcurrent",
-  "-Xmx512m"
+  "-Xmx512m",
+  "-Dorg.lwjgl.util.Debug=true",
+  "-Dorg.lwjgl.opengl.Window.undecorated=true",
+  "-Dmyprocessname"
 )
 
 //initialCommands := """

@@ -14,41 +14,47 @@ import org.lwjgl.opengl.GL14._
 import org.lwjgl.opengl.GL20._
 import downearth.util.AddString
 import scala.collection.mutable.ArrayBuffer
+import org.lwjgl.opengl.Util
 
 class BufferBinding(val buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int){
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
 }
 
 class Attribute(val program:Program, val name:CharSequence, val location:Int, val size:Int, val glType:Int)  extends AddString {
+  glEnableVertexAttribArray(location) // is there ever a reason to disable an attribArray?
+
   if( size != 1 ){
     throw new NotImplementedError("arrays not yet implemented")
   }
 
-  val bufferBinding = new BufferBinding(
-    buffer = {
-      val b = new ArrayGlBuffer()
-      b.create()
-      b.bind()
-      b
-    },
-    size = glType match {
-      case GL_FLOAT => 1
-      case GL_FLOAT_VEC2 => 2
-      case GL_FLOAT_VEC3 => 3
-      case GL_FLOAT_VEC4 => 4
-      case _ => 1 // TODO implement other types
-    },
-    glType = glType match {
-      case GL_FLOAT => GL_FLOAT
-      case GL_FLOAT_VEC2 => GL_FLOAT
-      case GL_FLOAT_VEC3 => GL_FLOAT
-      case GL_FLOAT_VEC4 => GL_FLOAT
-      case _ => glType // TODO implement other types
-    },
-    normalized = false,
-    stride = 0,
-    offset = 0
-  )
+  val bufferBinding = {
+    val b = new ArrayGlBuffer()
+    b.create()
+    b.bind()
+    val bb = new BufferBinding(
+      buffer = b,
+      size = glType match {
+        case GL_FLOAT => 1
+        case GL_FLOAT_VEC2 => 2
+        case GL_FLOAT_VEC3 => 3
+        case GL_FLOAT_VEC4 => 4
+        case _ => 1 // TODO implement other types
+      },
+      glType = glType match {
+        case GL_FLOAT => GL_FLOAT
+        case GL_FLOAT_VEC2 => GL_FLOAT
+        case GL_FLOAT_VEC3 => GL_FLOAT
+        case GL_FLOAT_VEC4 => GL_FLOAT
+        case _ => glType // TODO implement other types
+      },
+      normalized = false,
+      stride = 0,
+      offset = 0
+    )
+    glBindBuffer(b.target,0)
+    Util.checkGLError()
+    bb
+  }
   // TODO find a solution for interleaved data
 
 
@@ -61,7 +67,7 @@ class Attribute(val program:Program, val name:CharSequence, val location:Int, va
   }
 
   override def addString(sb:StringBuilder) = {
-    sb append s"attribute ${Program.shaderTypeString(glType)} $name ${if(size > 1) (s"[$size]") else ""}"
+    sb append s"layout(location = $location) attribute ${Program.shaderTypeString(glType)} $name ${if(size > 1) (s"[$size]") else ""}"
   }
 
 }

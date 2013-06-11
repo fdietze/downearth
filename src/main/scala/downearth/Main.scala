@@ -95,6 +95,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     val caps = GLContext.getCapabilities
 
+
     if ( caps.GL_ARB_debug_output ) {
       println("GL_ARB_debug_output")
       glDebugMessageCallbackARB(new ARBDebugOutputCallback())
@@ -102,6 +103,13 @@ class GameLoop extends Publisher with Logger { gameLoop =>
     else if ( caps.GL_AMD_debug_output ) {
       println("GL_AMD_debug_output")
       glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
+    }
+
+    if ( caps.GL_ARB_draw_instanced ) {
+      println("can do instancing")
+    }
+    else {
+      println("can't do instancing")
     }
 
     glClearColor(91/255f,203/255f,255/255f,1f)

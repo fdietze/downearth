@@ -31,11 +31,8 @@ case object ActiveJobsEmpty
 case object AllJobsEmpty
 
 class Master extends Actor {
-  val jobqueue = new Queue[Cuboid]
+  val jobqueue = new Queue[NodeInfo]
   val done  = new Queue[(NodeInfo, NodeOverMesh)] //TODO: im worldoctree speichern
-  // Alle im moment bearbeiteten jobs
-  val activeJobs = new HashSet[Cuboid] with SynchronizedSet[Cuboid] //TODO: activejobs rauswerfen, hier rauswerfen und information im Octree speichern "generatingNode"
-
   val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(classOf[Worker],i) ))
 
   val idleWorkers = Queue(workers:_*)
@@ -45,43 +42,33 @@ class Master extends Actor {
       val result = done.dequeueAll( _ => true)
       sender ! result
 
-    case ActiveJobsEmpty =>
-      sender ! (activeJobs.isEmpty)
-
     case AllJobsEmpty =>
-      sender ! (jobqueue.isEmpty && done.isEmpty && activeJobs.isEmpty)
-
-    case nodeInfo:NodeInfo =>
-      sender ! (activeJobs.find( _ indexInRange nodeInfo ).isDefined || done.find( _._1 indexInRange nodeInfo).isDefined)
+      sender ! (jobqueue.isEmpty && done.isEmpty)
 
     // Master erhält neuen Job und verteilt ihn.
-    case cuboid:Cuboid =>
-      activeJobs += cuboid
-      if( !idleWorkers.isEmpty )
-        idleWorkers.dequeue ! cuboid //Verteilen
+    case area:NodeInfo =>
+
+      if( idleWorkers.isEmpty )
+        jobqueue enqueue area //Warteschlange
       else
-        jobqueue enqueue cuboid //Warteschlange
+        idleWorkers.dequeue ! area //Verteilen
 
-    // Worker meldet abgeschlossenen Job (als toNodeinfo)
+    // Worker has finished Job
     case ( oldjob:NodeInfo, node:NodeOverMesh ) =>
-      done enqueue ( oldjob -> node )
+      done enqueue Tuple2(oldjob,node)
 
-    // Worker meldet abgeschlossenen Job (als toCuboid)
-    case (oldjob:Cuboid, 'done) =>
-      activeJobs -= oldjob
-
-      // Wenn es noch Jobs gibt, dem Worker einen neuen geben
       if( jobqueue.isEmpty )
         idleWorkers enqueue sender
       else {
-        val job:Cuboid = if(Config.prioritizeGenerationInFrustum) {
+        // if there is a job left assign it.
+        val job = if(Config.prioritizeGenerationInFrustum) {
           val test = new FrustumTestImpl(Player.camera.projection, Player.camera.view)
-          jobqueue.dequeueFirst(c => test(c.toNodeinfo)) getOrElse jobqueue.dequeue()
-        } else
-            jobqueue.dequeue()
+          jobqueue.dequeueFirst(c => test(c)) getOrElse jobqueue.dequeue()
+        }
+        else
+          jobqueue.dequeue()
 
         sender ! job
-        activeJobs += job
       }
 
     case PoisonPill =>
@@ -108,50 +95,31 @@ class Worker (id:Int) extends Actor {
   }
 
   def receive = {
-    case cuboid @ Cuboid(cuboidpos, cuboidsize) =>
-      val interval = WorldDefinition.range(cuboid.toInterval3)
+    case info:NodeInfo =>
+      val interval = WorldDefinition.range(info.toInterval3)
 
       if(!interval(0)) {
-        GlDraw addPredictedCuboid cuboid  // Für DebugDraw
+        GlDraw addPredictedCuboid info.toCuboid  // Für DebugDraw
 
-        for( nodeinfo <- cuboid.nodeinfos ) {
-          val meshnode = new MeshNode(Leaf(
-            if(interval.isPositive) FullHexaeder else EmptyHexaeder
-          ))
-          meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
-          sender ! Tuple2(nodeinfo, meshnode)
-        }
+
+        val meshnode = new MeshNode(Leaf(
+          if(interval.isPositive) FullHexaeder else EmptyHexaeder
+        ))
+        meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
+        sender ! Tuple2(info, meshnode)
       }
-      else {
+
+      else if( info.size/2 >= Config.minMeshNodeSize ) {
         // if the area is too big, it will be splitted
-        if( cuboid.size(cuboid.longestedge)/2 >= Config.minPredictionSize ) {
-          // für alle Kindknoten den Cuboid an Master senden
-
-          //Master ! Tuple2(toNodeinfo, Range(0,8).map( i => toNodeinfo(i)))
-//          if( Config.kdTreePrediction )
-//            for( child <- cuboid.splitlongest )
-//              sender ! child  // Master
-//          else
-//            for( child <- cuboid.octsplit )
-//              sender ! child
-
-          val data = Array.fill[NodeOverMesh](8)(UngeneratedInnerNode)
-          val node = new InnerNodeOverMesh(data)
-          val nodeInfo = cuboid.toNodeinfo
-
-          sender ! Tuple2(nodeInfo, node)
-
-
-        }
-        // sonst samplen
-        else {
-          assert( cuboid.isCube )
-          val nodeinfo = cuboid.toNodeinfo
-          val node = WorldGenerator genWorldAt nodeinfo
-          sender ! Tuple2(nodeinfo, node)  // Master
-        }
+        val data = Array.fill[NodeOverMesh](8)(UngeneratedInnerNode)
+        val node = new InnerNodeOverMesh(data)
+        sender ! Tuple2(info, node)
       }
-      sender ! (cuboid, 'done)  // Master
+        // sonst samplen
+      else {
+        val meshnode = WorldGenerator genWorldAt info
+        sender ! Tuple2(info, meshnode)  // Master
+      }
   }
 }
 

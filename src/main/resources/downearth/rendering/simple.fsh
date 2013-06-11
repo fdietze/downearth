@@ -6,6 +6,7 @@ varying vec2 v_texCoord;
 uniform vec3 lightDir;
 uniform vec4 lightColor;
 uniform vec4 ambientLight;
+uniform vec4 tint;
 
 uniform sampler2D texture;
 
@@ -14,5 +15,5 @@ void main() {
     float light = dot( lightDir, v_normal );
     light = max(0, light);
 
-    gl_FragColor = ( lightColor * vec4(light) + ambientLight ) * tex * vec4(1,0,0,1);
+    gl_FragColor = ( lightColor * vec4(light) + ambientLight ) * tex * tint;
 }

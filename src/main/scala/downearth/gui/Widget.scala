@@ -67,7 +67,7 @@ abstract class Widget extends Listener with Publisher {
 			position := animationEndPosition
 		else {
 			val progress = (time - animationStartTime).toDouble / (animationEndTime - animationStartTime)
-			position := Vec2i(lerpVec2i(animationStartPosition, animationEndPosition, progress))
+			position := Vec2i(lerpVec2(Vec2(animationStartPosition), Vec2(animationEndPosition), progress))
 		}
 	}
 

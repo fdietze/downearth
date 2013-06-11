@@ -1,8 +1,8 @@
 package downearth.rendering.shader
 
-//import org.lwjgl.opengl.GL15._
-import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
-import java.nio.ByteBuffer
+import org.lwjgl.opengl.GL15._
+//import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
+import java.nio.{IntBuffer, FloatBuffer, ByteBuffer}
 
 /**
  * User: arne
@@ -12,6 +12,7 @@ import java.nio.ByteBuffer
 
 abstract class GlBuffer() {
   var id:Int = 0
+  var hasData = false
 
   def create() {
     id = glGenBuffers()
@@ -24,12 +25,29 @@ abstract class GlBuffer() {
     glBindBuffer(target, id)
   }
 
+  def bind( env: => Unit ) {
+    glBindBuffer(target, id)
+    env
+    glBindBuffer(target, 0)
+  }
+
   def delete() {
     glDeleteBuffers(id)
     id = 0
   }
 
   def load( buffer:ByteBuffer ) {
+    hasData = true
+    glBufferData(target, buffer, usage)
+  }
+
+  def load( buffer:FloatBuffer ) {
+    hasData = true
+    glBufferData(target, buffer, usage)
+  }
+
+  def load( buffer:IntBuffer ) {
+    hasData = true
     glBufferData(target, buffer, usage)
   }
 }

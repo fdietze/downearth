@@ -197,7 +197,7 @@ object GlDraw extends Draw {
       glBegin(GL_LINES)
       for(v <- indices map verts)
         glVertex3d(v.x,v.y,v.z)
-      glEnd
+      glEnd()
     }
     catch {
       case e:Exception =>

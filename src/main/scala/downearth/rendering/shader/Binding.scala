@@ -10,7 +10,9 @@ import downearth.util.AddString
  * Time: 20:45
  */
 
-class Binding( val program:Program, val attributes:Seq[Attribute], val uniforms:Seq[Uniform] ) extends AddString {
+abstract class Binding( val program:Program ) extends AddString {
+  val attributes:Seq[Attribute]
+  val uniforms:Seq[Uniform]
 
   def addString(sb:StringBuilder) = {
     sb append program
@@ -22,6 +24,13 @@ class Binding( val program:Program, val attributes:Seq[Attribute], val uniforms:
 
   def attribute(name:String) = attributes.find( _.name == name ).get
 
+  def uniformFloat(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[FloatUniform]
+  def uniformVec2(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec2Uniform]
+  def uniformVec3(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec3Uniform]
+  def uniformVec4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec4Uniform]
+  def uniformMat4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Mat4Uniform]
+  def uniformSampler2D(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[TextureUniform]
+
   def bindUniformFloat(name:String, f: => Float) {
     val binding = uniforms.find( _.name == name )
     binding match {
@@ -31,6 +40,7 @@ class Binding( val program:Program, val attributes:Seq[Attribute], val uniforms:
         System.err.println( "can't bind uniform "+name+" Float" )
     }
   }
+
 
   def bindUniformVec4(name:String, f: => ReadVec4) {
     val binding = uniforms.find( _.name == name )

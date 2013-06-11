@@ -1,28 +1,34 @@
 package downearth
 
 import simplex3d.math._
-import integration.RFloat
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
+import simplex3d.math.doublex._
 import simplex3d.data._
 import simplex3d.data.double._
+
 import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
+
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.{Display, ARBShaderObjects}
-import javax.vecmath.{Vector3f,Quat4f}
 import org.lwjgl.BufferUtils
+
 import java.nio.FloatBuffer
 import java.io._
 import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
 import java.util.Date
 import java.text.SimpleDateFormat
-import concurrent.{ExecutionContext, Future}
-import ExecutionContext.Implicits.global
+import javax.imageio.ImageIO
+import javax.vecmath.{Vector3f,Quat4f}
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import downearth.rendering.GlDraw
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
+
 
 package object util {
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
@@ -33,6 +39,28 @@ package object util {
     def run() {
       in.apply()
     }
+  }
+
+  import scala.reflect.runtime.universe._
+
+  def sizeOf[T : TypeTag](x:T):Int = sizeOf[T]
+
+  def sizeOf[T : TypeTag] = {
+    val t = typeOf[T]
+         if( t =:= typeOf[Int]   || t =:= typeOf[Float]  ) 4
+    else if( t =:= typeOf[Long]  || t =:= typeOf[Double] ) 8
+    else if( t =:= typeOf[Short] || t =:= typeOf[Char]   ) 2
+    else if( t =:= typeOf[Byte] ) 1
+    else if( t =:= typeOf[Vec4d] ) 4*8
+    else if( t =:= typeOf[Vec3d] ) 3*8
+    else if( t =:= typeOf[Vec2d] ) 2*8
+    else if( t =:= typeOf[Mat4d] ) 4*4*8
+    else if( t =:= typeOf[Mat3d] ) 3*3*8
+    else if( t =:= typeOf[Mat2d] ) 2*2*8
+//     else if( t =:= typeOf[Vec4f] ) 4*4
+//     else if( t =:= typeOf[Vec3f] ) 3*4
+//     else if( t =:= typeOf[Vec2f] ) 2*4
+    else ???
   }
 
 
@@ -68,8 +96,8 @@ package object util {
 	def glScale3dv(v:Vec3) = org.lwjgl.opengl.GL11.glScaled(v.x, v.y, v.z)
 	def glScale1d(s:Double) = org.lwjgl.opengl.GL11.glScaled(s,s,s)
 
-  def lerpVec2(a:Vec2, b:Vec2, t:Double) = a + t * (b - a)
-  def lerpVec2i(a:Vec2i, b:Vec2i, t:Double) = a + t * (b - a)
+  def lerpVec2(a:Vec2, b:Vec2, t:Double) = a + Vec2(t) * (b - a)
+  // def lerpVec2i(a:Vec2i, b:Vec2i, t:Double) = a + t * (b - a)
 
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))

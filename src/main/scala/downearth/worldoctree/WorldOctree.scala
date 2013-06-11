@@ -122,7 +122,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 
     for( nodeInfo <- list ) {
       insert( nodeInfo, GeneratingNode )
-      WorldNodeGenerator.master ! nodeInfo.toCuboid
+      WorldNodeGenerator.master ! nodeInfo
     }
   }
 

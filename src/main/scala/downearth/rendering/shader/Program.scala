@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL13._
 
 import downearth.rendering._
 import downearth.util.AddString
+import org.lwjgl.opengl.GL15._
 
 /**
  * User: arne
@@ -30,8 +31,8 @@ object Program {
 
     program.link()
 
-    for(shader <- shaderList)
-      program detach shader
+//    for(shader <- shaderList)
+//      program detach shader
 
     program
   }
@@ -186,7 +187,7 @@ object Program {
 
 }
 
-class Program(val name:String) {
+class Program(val name:String) { program =>
   var id = 0
 
   def attributeLocation(name:CharSequence) = glGetAttribLocation(id,name)
@@ -200,61 +201,83 @@ class Program(val name:String) {
 
     val sizetypeBuffer = BufferUtils.createIntBuffer(2)
 
-    val attributes =
-      for( location <- 0 until numAttributes ) yield {
-        val name = glGetActiveAttrib(id, location, 1000, sizetypeBuffer)
-        val size = sizetypeBuffer.get(0)
-        val _type = sizetypeBuffer.get(1)
-        new Attribute(this, name, location, size, _type)
-      }
+    var currentSampler = 0
 
-    var currentSampler = GL_TEXTURE0
-
-    val uniforms:Seq[Uniform] =
-      for( location <- 0 until numUniforms) yield {
-        val name = glGetActiveUniform(id, location, 1000, sizetypeBuffer)
-        val size = sizetypeBuffer.get(0)
-        val _type = sizetypeBuffer.get(1)
-
-        val map = Map(
-          "program" -> this,
-          "name" -> name,
-          "location" -> location,
-          "position" -> currentSampler,
-          "type" -> _type,
-          "size" -> size
-        )
-
-        if( Program.isSampler(_type) ) {
-          val uniform = new TextureUniform(
-            position = currentSampler,
-            map = map
-          )
-          currentSampler += 1
-          uniform
+    new Binding(program) { binding =>
+      val attributes =
+        for( location <- 0 until numAttributes ) yield {
+          val name = glGetActiveAttrib(id, location, 1000, sizetypeBuffer)
+          val size = sizetypeBuffer.get(0)
+          val _type = sizetypeBuffer.get(1)
+          new Attribute(program, name, location, size, _type)
         }
-        else{
-          _type match {
-            case GL_FLOAT =>
-              new FloatUniform(map)
-            case GL_FLOAT_VEC2 =>
-              new Vec2Uniform(map)
-            case GL_FLOAT_VEC3 =>
-              new Vec3Uniform(map)
-            case GL_FLOAT_VEC4 =>
-              new Vec4Uniform(map)
-            case GL_FLOAT_MAT4 =>
-              new Mat4Uniform(map)
-            case _ =>
-              throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(_type) )
+
+      val uniforms:Seq[Uniform] =
+        for( i <- 0 until numUniforms) yield {
+          val name = glGetActiveUniform(id, i, 1000, sizetypeBuffer)
+          val size = sizetypeBuffer.get(0)
+          val _type = sizetypeBuffer.get(1)
+          val location = glGetUniformLocation(id, name)
+
+          val map = Map(
+            "program" -> program,
+            "binding" -> binding,
+            "name" -> name,
+            "location" -> location,
+            "position" -> currentSampler,
+            "type" -> _type,
+            "size" -> size
+          )
+
+          if( Program.isSampler(_type) ) {
+            val uniform = new TextureUniform(
+              position = currentSampler,
+              map = map
+            )
+            currentSampler += 1
+            uniform
+          }
+          else{
+            _type match {
+              case GL_FLOAT =>
+                new FloatUniform(map)
+              case GL_FLOAT_VEC2 =>
+                new Vec2Uniform(map)
+              case GL_FLOAT_VEC3 =>
+                new Vec3Uniform(map)
+              case GL_FLOAT_VEC4 =>
+                new Vec4Uniform(map)
+              case GL_FLOAT_MAT4 =>
+                new Mat4Uniform(map)
+              case _ =>
+                throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(_type) )
+            }
           }
         }
-      }
+    }
+  }
 
-    new Binding(this,attributes, uniforms)
+  def setupTransformFeedbackBuffer() {
+    import EXTTransformFeedback._
+    import ARBUniformBufferObject._
+
+    val attr = Array[CharSequence]("gl_Position")
+    Util.checkGLError()
+    // generating the buffer, note that GL_TRANSFORM_FEEDBACK_BUFFER is NOT a buffer type
+    val tfvbo = glGenBuffers
+    glBindBuffer( GL_ARRAY_BUFFER, tfvbo )
+    glBufferData( GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(2*3*4), GL_DYNAMIC_DRAW )
+
+    // bind the TFB to get the feedback;  MUST be done here, not in display() !
+    glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER_EXT, 0, tfvbo )
+    glTransformFeedbackVaryingsEXT( id, attr, GL_INTERLEAVED_ATTRIBS_EXT )
+
+    Util.checkGLError()
   }
 
   def bind( binding:Binding ) {
+    assert(binding.program == this)
+
     val groupedAttributes = binding.attributes.groupBy( _.bufferBinding.buffer )
 
     for( (buffer, atList) <- groupedAttributes ) {
@@ -288,6 +311,13 @@ class Program(val name:String) {
 
   def use(block: => Unit) {
     glUseProgram(id)
+    block
+    glUseProgram(0)
+  }
+
+  def use(binding:Binding)(block: => Unit){
+    glUseProgram(id)
+    bind(binding)
     block
     glUseProgram(0)
   }

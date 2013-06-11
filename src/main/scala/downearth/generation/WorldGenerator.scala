@@ -39,12 +39,7 @@ object WorldGenerator {
     // while waiting for answer, start to sample node
     val NodeInfo(nodepos, nodesize) = nodeInfo
 		import HexaederMC._
-
-		// Predichtion hat kein eindeutiges Ergebnis,
-		// Bereich KANN Oberfläche enthalten
-		
-		// Bereich des Nodes wird vollständig abgetastet
-		//Draw addSampledNode toNodeinfo  // Für DebugDraw
+		// TODO hier mit prediction arbeiten
 
 		// Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 		// Marching-Cubes für n Cubes: n+1 Datenpunkte

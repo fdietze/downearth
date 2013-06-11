@@ -14,7 +14,7 @@ object Config extends Listener {
     getBoolean => loadBool
   }
 
-	var minMeshNodeSize = loader.preferences.getInt("minMeshNodeSize", 16)
+	var minMeshNodeSize = loadInt("minMeshNodeSize", 16)
 	var minPredictionSize = loadInt("minPredictionSize", 4)
 	var kdTreePrediction = loadBool("kdTreePrediction", true)
 	

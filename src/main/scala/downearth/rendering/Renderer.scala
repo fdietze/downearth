@@ -12,7 +12,7 @@ import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
 //import org.lwjgl.opengl.GL20._
 import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.{Display, ARBShaderObjects}
+import org.lwjgl.opengl._
 import org.lwjgl.opengl.ARBBufferObject._
 import org.lwjgl.opengl.ARBVertexBufferObject._
 
@@ -28,13 +28,15 @@ import downearth.rendering.shader.{VertexShader, FragmentShader, Shader, Program
 
 import java.nio.IntBuffer
 
-import simplex3d.math.Vec2i
+import simplex3d.data._
+import simplex3d.data.double._
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
 
 import scala.Tuple2
 import scala.collection.mutable.ArrayBuffer
-
+import downearth.worldoctree.NodeInfo
+import scala.Tuple2
 
 
 object Renderer extends Logger {
@@ -45,27 +47,47 @@ object Renderer extends Logger {
   ambientLight.rewind()
 
   lazy val shaderProgram = {
-    println("vertex Shader")
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
-    println("fragment Shader")
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
     Program("simple")(vertShader)(fragShader)
   }
 
+  lazy val testShader = {
+    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
+    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
+    Program("test")(vertShader)(fragShader)
+  }
+
   val programBinding = shaderProgram.getBinding
+  val testBinding = testShader.getBinding
   println(programBinding)
+  println(testBinding)
 
-  val a_texCoord = programBinding.attribute("a_texCoord")
-  a_texCoord.bufferBinding.buffer.bind()
-  a_texCoord.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.texCoordsBuf)
+  val a_testPos = testBinding.attribute("a_pos")
 
-  val a_normal = programBinding.attribute("a_normal")
-  a_normal.bufferBinding.buffer.bind()
-  a_normal.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.normalsBuf)
+  val data = BufferUtils.createFloatBuffer(4*4)
+  data.put( Array[Float](0.5f,0.5f,0,1, -0.5f,0.5f,0,1, -0.5f,-0.5f,0,1, 0.5f,-0.5f,0,1) )
+  data.flip()
 
-  val a_position = programBinding.attribute("a_position")
-  a_position.bufferBinding.buffer.bind()
-  a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
+  a_testPos.bufferBinding.buffer.bind{
+    glBufferData(GL_ARRAY_BUFFER, data , GL_STATIC_DRAW)
+  }
+
+  {
+    val a_texCoord = programBinding.attribute("a_texCoord")
+    a_texCoord.bufferBinding.buffer.bind()
+    a_texCoord.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.texCoordsBuf)
+
+    val a_normal = programBinding.attribute("a_normal")
+    a_normal.bufferBinding.buffer.bind()
+    a_normal.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.normalsBuf)
+
+    val a_position = programBinding.attribute("a_position")
+    a_position.bufferBinding.buffer.bind()
+    a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+  }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0)
 
@@ -84,6 +106,10 @@ object Renderer extends Logger {
 
     MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
     MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
+
+//    testShader.use(testBinding) {
+//      glDrawArrays(GL_QUADS, 0, 4)
+//    }
 
     GuiRenderer.renderGui()
   }
@@ -270,32 +296,48 @@ object Renderer extends Logger {
     val view = Mat4(camera.view)
     val projection = Mat4(camera.projection)
 
-    programBinding.bindUniformMat4("u_modelview", view * model )
-    programBinding.bindUniformMat4("u_mvp",       projection * view * model)
+    // programBinding.bindUniformMat4("u_modelview", view * model )
+    programBinding.bindUniformMat4("u_mvp",       projection * view)
     programBinding.bindUniformSampler2D("texture", TextureManager.box)
     programBinding.bindUniformVec4("ambientLight", Vec4(0.2))
     programBinding.bindUniformVec4("lightColor", Vec4(0.8))
     programBinding.bindUniformVec3("lightDir", normalize(Vec3(0.1,0.2,-1)))
+    programBinding.bindUniformVec4("tint", Vec4(0,0,1,1))
 
-    shaderProgram.use {
+    assert(programBinding.attribute("a_position").bufferBinding.buffer.hasData)
+
+
+    val position = Vec3(0)
+    var scale:Float = 1f
+    programBinding.bindUniformVec3("u_position", position)
+    programBinding.bindUniformFloat("u_scale", scale)
+
+    val posBuf = glGenBuffers()
+    val sizeBuf = glGenBuffers()
+
+
+    shaderProgram.use(programBinding) {
       for( info <- nodeInfoBufferGenerating ) {
         glBufferNodeInfoPosition.put( info.pos.x )
           .put( info.pos.y )
           .put( info.pos.z )
-          .put( 0 )
+          .put( 1 )
         glBufferNodeInfoSize.put( info.size )
 
-        model := Mat4( Mat4x3.translate( info.pos ).scale(info.size) )
+        position := Vec3(info.pos)
+        scale = info.size
 
-
-//        glPushMatrix()
-//        glTranslatef(info.pos.x, info.pos.y, info.pos.z)
-//        glScaled(info.size,info.size,info.size)
-//        GlDraw.texturedCube()
-//        glPopMatrix()
-
+        shaderProgram.bind(programBinding)
+        GlDraw.texturedCube()
         glDrawArrays(GL_QUADS, 0, 24)
       }
+
+      // val numInstances = nodeInfoBufferGenerating.size
+
+
+
+
+
     }
 
     val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )
@@ -429,6 +471,7 @@ object Renderer extends Logger {
     if(Config.useShaders)
       glUseProgramObjectARB(0)
   }
+
 }
 
 

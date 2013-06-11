@@ -15,6 +15,12 @@ import java.nio.ByteBuffer
  * Time: 21:55
  */
 
+object Texture {
+  glActiveTexture(GL_TEXTURE0 + 0);
+
+  glActiveTexture(GL_TEXTURE1)
+}
+
 class Texture(val width:Int, val height:Int, pixels:ByteBuffer) {
   var id = glGenTextures()
 
