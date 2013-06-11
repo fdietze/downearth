@@ -289,8 +289,8 @@ object Renderer extends Logger {
         true
     }
 
-    val glBufferNodeInfoPosition = BufferUtils.createFloatBuffer( 4 * nodeInfoBufferGenerating.size )
-    val glBufferNodeInfoSize     = BufferUtils.createFloatBuffer( nodeInfoBufferGenerating.size )
+//    val glBufferNodeInfoPosition = BufferUtils.createFloatBuffer( 4 * nodeInfoBufferGenerating.size )
+//    val glBufferNodeInfoSize     = BufferUtils.createFloatBuffer( nodeInfoBufferGenerating.size )
 
     val model = Mat4(1)
     val view = Mat4(camera.view)
@@ -306,38 +306,29 @@ object Renderer extends Logger {
 
     assert(programBinding.attribute("a_position").bufferBinding.buffer.hasData)
 
+    val u_position = programBinding.uniformVec3("u_position")
+    var u_scale    = programBinding.uniformFloat("u_scale")
 
-    val position = Vec3(0)
-    var scale:Float = 1f
-    programBinding.bindUniformVec3("u_position", position)
-    programBinding.bindUniformFloat("u_scale", scale)
-
-    val posBuf = glGenBuffers()
-    val sizeBuf = glGenBuffers()
-
+//    val posBuf = glGenBuffers()
+//    val sizeBuf = glGenBuffers()
 
     shaderProgram.use(programBinding) {
       for( info <- nodeInfoBufferGenerating ) {
-        glBufferNodeInfoPosition.put( info.pos.x )
-          .put( info.pos.y )
-          .put( info.pos.z )
-          .put( 1 )
-        glBufferNodeInfoSize.put( info.size )
+//        glBufferNodeInfoPosition.put( info.pos.x )
+//          .put( info.pos.y )
+//          .put( info.pos.z )
+//          .put( 1 )
+//        glBufferNodeInfoSize.put( info.size )
 
-        position := Vec3(info.pos)
-        scale = info.size
+        u_position := Vec3(info.pos)
+        u_scale := info.size
 
-        shaderProgram.bind(programBinding)
+        shaderProgram.bindChanges(programBinding)
         GlDraw.texturedCube()
         glDrawArrays(GL_QUADS, 0, 24)
       }
 
       // val numInstances = nodeInfoBufferGenerating.size
-
-
-
-
-
     }
 
     val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )

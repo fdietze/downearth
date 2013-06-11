@@ -21,7 +21,7 @@ import downearth.util._
  * Date: 02.06.13
  * Time: 20:43
  */
-abstract class Uniform(map:Map[String,Any]) extends AddString {
+abstract class Uniform[T](map:Map[String,Any]) extends AddString {
   val program:Program   = map("program").asInstanceOf[Program]
   val binding:Binding   = map("binding").asInstanceOf[Binding]
   val location:Int      = map("location").asInstanceOf[Int]
@@ -29,12 +29,13 @@ abstract class Uniform(map:Map[String,Any]) extends AddString {
   val glType:Int        = map("type").asInstanceOf[Int]
   val size:Int          = map("size").asInstanceOf[Int]
 
-//  type T
 //  protected var _value:T = null
 //  def value_=(v:T) {
 //    _value = v
 //
 //  }
+
+  def :=(v:T)
 
   /// stores the saved data
   def writeData()
@@ -44,16 +45,20 @@ abstract class Uniform(map:Map[String,Any]) extends AddString {
 
 }
 
-class Vec4Uniform(map:Map[String,Any]) extends Uniform(map) {
-  var vec: () => ReadVec4 = null
+class Vec4Uniform(map:Map[String,Any]) extends Uniform[ReadVec4](map) {
+  private[this] val data = Vec4(0)
+
+  def :=(v:ReadVec4) {
+    data := v
+    binding.changedUniforms.enqueue(this)
+  }
 
   def writeData() {
     // require( glGetInteger(GL_CURRENT_PROGRAM) == program.id )
     // require( location == glGetUniformLocation(program.id, name), s"location should be $location, but it is ${glGetUniformLocation(program.id, name)}")
-
-    val value = vec()
-    glUniform4f(location, value.x.toFloat, value.y.toFloat, value.z.toFloat, value.w.toFloat)
+    glUniform4f(location, data.x.toFloat, data.y.toFloat, data.z.toFloat, data.w.toFloat)
   }
+
 }
 
 //class Vec4UniformInstanced(map:Map[String,Any]) extends Uniform(map) {
@@ -69,50 +74,65 @@ class Vec4Uniform(map:Map[String,Any]) extends Uniform(map) {
 //
 //}
 
-class Vec3Uniform(map:Map[String,Any]) extends Uniform(map) {
-  var vec: () => ReadVec3 = null
+class Vec3Uniform(map:Map[String,Any]) extends Uniform[ReadVec3](map) {
+
+  private[this] val data = Vec3(0)
+
+  def :=(v:ReadVec3) {
+    data := v
+    binding.changedUniforms.enqueue(this)
+  }
 
   def writeData() {
-    val value = vec()
-    glUniform3f(location, value.x.toFloat, value.y.toFloat, value.z.toFloat)
+    glUniform3f(location, data.x.toFloat, data.y.toFloat, data.z.toFloat)
   }
 }
 
-class Vec2Uniform(map:Map[String,Any]) extends Uniform(map) {
-  var vec: () => ReadVec2 = null
+class Vec2Uniform(map:Map[String,Any]) extends Uniform[ReadVec2](map) {
+  private[this] val data = Vec2(0)
+
+  def :=(v:ReadVec2) {
+    data := v
+    binding.changedUniforms.enqueue(this)
+  }
 
   def writeData() {
-    val value = vec()
-    glUniform2f(location, value.x.toFloat, value.y.toFloat)
+    glUniform2f(location, data.x.toFloat, data.y.toFloat)
   }
 }
 
-class FloatUniform(map:Map[String,Any]) extends Uniform(map) {
-  var f: () => Float = null
+class FloatUniform(map:Map[String,Any]) extends Uniform[Float](map) {
+  private[this] var data:Float = 0
+
+  def :=(v:Float) {
+    data = v
+    binding.changedUniforms.enqueue(this)
+  }
 
   def writeData() {
-    val value = f()
-    glUniform1f(location, value)
+    glUniform1f(location, data)
   }
 }
 
-class TextureUniform(val position:Int, map:Map[String,Any]) extends Uniform(map) {
-  var texture: () => Texture = null
+class TextureUniform(val position:Int, map:Map[String,Any]) extends Uniform[Texture](map) {
+  private[this] var texture: Texture = null
+
+  def :=(v:Texture) {
+    texture = v
+    binding.changedUniforms.enqueue(this)
+  }
 
   def writeData() {
     glUniform1i(location, position)
     glActiveTexture(GL_TEXTURE0 + position)
-    texture().bind()
+    texture.bind()
   }
-
 }
 
-class Mat4Uniform(map:Map[String,Any]) extends Uniform(map) {
-  var mat: () => ReadMat4 = null
+class Mat4Uniform(map:Map[String,Any]) extends Uniform[ReadMat4](map) {
   val buffer = BufferUtils.createFloatBuffer(16)
 
-  def writeData() {
-    val m = mat()
+  def :=(m:ReadMat4) {
     var i = 0
     while( i < 16 ) {
       val x = i >> 2
@@ -121,6 +141,10 @@ class Mat4Uniform(map:Map[String,Any]) extends Uniform(map) {
       i += 1
     }
     buffer.flip()
+    binding.changedUniforms.enqueue(this)
+  }
+
+  def writeData() {
     glUniformMatrix4(location, true, buffer)
   }
 }

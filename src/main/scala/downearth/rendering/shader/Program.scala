@@ -212,7 +212,7 @@ class Program(val name:String) { program =>
           new Attribute(program, name, location, size, _type)
         }
 
-      val uniforms:Seq[Uniform] =
+      val uniforms:Seq[Uniform[_]] =
         for( i <- 0 until numUniforms) yield {
           val name = glGetActiveUniform(id, i, 1000, sizetypeBuffer)
           val size = sizetypeBuffer.get(0)
@@ -276,7 +276,7 @@ class Program(val name:String) { program =>
   }
 
   def bind( binding:Binding ) {
-    assert(binding.program == this)
+    require(binding.program == this)
 
     val groupedAttributes = binding.attributes.groupBy( _.bufferBinding.buffer )
 
@@ -289,6 +289,14 @@ class Program(val name:String) { program =>
 
     for( binding <- binding.uniforms ) {
       binding.writeData()
+    }
+  }
+
+  def bindChanges( binding:Binding ) {
+    require(binding.program == this)
+
+    while( !binding.changedUniforms.isEmpty ){
+      binding.changedUniforms.dequeue().writeData()
     }
   }
 
