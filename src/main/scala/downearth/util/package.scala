@@ -28,6 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import downearth.rendering.GlDraw
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
+import simplex3d.math.floatx._
 
 
 package object util {
@@ -57,9 +58,12 @@ package object util {
     else if( t =:= typeOf[Mat4d] ) 4*4*8
     else if( t =:= typeOf[Mat3d] ) 3*3*8
     else if( t =:= typeOf[Mat2d] ) 2*2*8
-//     else if( t =:= typeOf[Vec4f] ) 4*4
-//     else if( t =:= typeOf[Vec3f] ) 3*4
-//     else if( t =:= typeOf[Vec2f] ) 2*4
+    else if( t =:= typeOf[Vec4f] ) 4*4
+    else if( t =:= typeOf[Vec3f] ) 3*4
+    else if( t =:= typeOf[Vec2f] ) 2*4
+    else if( t =:= typeOf[Mat4f] ) 4*4*4
+    else if( t =:= typeOf[Mat3f] ) 3*3*4
+    else if( t =:= typeOf[Mat2f] ) 2*2*4
     else ???
   }
 

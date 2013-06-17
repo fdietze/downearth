@@ -4,6 +4,7 @@ import simplex3d.math.double._
 import downearth.rendering.Texture
 import downearth.util.AddString
 import scala.collection.mutable
+import simplex3d.math.floatx.{ReadVec4f, ReadVec3f, ReadVec2f, ReadMat4f}
 
 /**
  * User: arne
@@ -12,7 +13,7 @@ import scala.collection.mutable
  */
 
 abstract class Binding( val program:Program ) extends AddString {
-  val attributes:Seq[Attribute]
+  val attributes:Seq[Attribute[_]]
   val uniforms:Seq[Uniform[_]]
 
   val changedUniforms = mutable.Queue[Uniform[_]]()
@@ -27,17 +28,17 @@ abstract class Binding( val program:Program ) extends AddString {
 
   def attribute(name:String) = attributes.find( _.name == name ).get
 
-  def uniformFloat(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[FloatUniform]
-  def uniformVec2(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec2Uniform]
-  def uniformVec3(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec3Uniform]
+  def uniformFloat(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformFloat]
+  def uniformVec2(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec2f]
+  def uniformVec3(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec3f]
   def uniformVec4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec4Uniform]
-  def uniformMat4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Mat4Uniform]
-  def uniformSampler2D(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[TextureUniform]
+  def uniformMat4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformMat4f]
+  def uniformSampler2D(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformSampler2D]
 
   def bindUniformFloat(name:String, v: Float) {
     val binding = uniforms.find( _.name == name )
     binding match {
-      case Some( uniform:FloatUniform ) =>
+      case Some( uniform:UniformFloat ) =>
         uniform := v
       case _ =>
         System.err.println( "can't bind uniform "+name+" Float" )
@@ -45,7 +46,7 @@ abstract class Binding( val program:Program ) extends AddString {
   }
 
 
-  def bindUniformVec4(name:String, v: ReadVec4) {
+  def bindUniformVec4(name:String, v: ReadVec4f) {
     val binding = uniforms.find( _.name == name )
     binding match {
       case Some( uniform:Vec4Uniform ) =>
@@ -55,30 +56,30 @@ abstract class Binding( val program:Program ) extends AddString {
     }
   }
 
-  def bindUniformVec3(name:String, v: ReadVec3) {
+  def bindUniformVec3(name:String, v: ReadVec3f) {
     val binding = uniforms.find( _.name == name )
     binding match {
-      case Some( uniform:Vec3Uniform ) =>
+      case Some( uniform:UniformVec3f ) =>
         uniform := v
       case _ =>
         System.err.println( "can't bind uniform "+name+" Vec3" )
     }
   }
 
-  def bindUniformVec2(name:String, v: ReadVec2) {
+  def bindUniformVec2(name:String, v: ReadVec2f) {
     val binding = uniforms.find( _.name == name )
     binding match {
-      case Some( uniform:Vec2Uniform ) =>
+      case Some( uniform:UniformVec2f ) =>
         uniform := v
       case _ =>
         System.err.println( "can't bind uniform "+name+" Vec2" )
     }
   }
 
-  def bindUniformMat4(name:String, v: ReadMat4) {
+  def bindUniformMat4(name:String, v: ReadMat4f) {
     val binding = uniforms.find( _.name == name )
     binding match {
-      case Some( uniform:Mat4Uniform ) =>
+      case Some( uniform:UniformMat4f ) =>
         uniform := v
       case _ =>
         System.err.println( "can't bind uniform "+name+" Mat4" )
@@ -88,7 +89,7 @@ abstract class Binding( val program:Program ) extends AddString {
   def bindUniformSampler2D(name:String, v: Texture) {
     val binding = uniforms.find( _.name == name )
     binding match {
-      case Some( uniform:TextureUniform ) =>
+      case Some( uniform:UniformSampler2D ) =>
         uniform := v
       case _ =>
         System.err.println( "can't bind uniform "+name+" Texture" )

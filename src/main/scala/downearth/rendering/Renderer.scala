@@ -8,6 +8,8 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
+import simplex3d.math.floatx.{Mat4f, Vec4f, Vec3f}
+
 //import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
 import org.lwjgl.opengl.GL20._
 //import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
@@ -32,12 +34,12 @@ import simplex3d.data._
 import simplex3d.data.double._
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
+import simplex3d.math.float.functions.normalize
 
 import scala.Tuple2
 import scala.collection.mutable.ArrayBuffer
 import downearth.worldoctree.NodeInfo
 import scala.Tuple2
-
 
 object Renderer extends Logger {
 
@@ -73,6 +75,11 @@ object Renderer extends Logger {
     glBufferData(GL_ARRAY_BUFFER, data , GL_STATIC_DRAW)
   }
 
+  // programBinding.bindUniformMat4("u_modelview", view * model )
+  val u_mvp = programBinding.uniformMat4("u_mvp")
+  val u_position = programBinding.uniformVec3("u_position")
+  var u_scale    = programBinding.uniformFloat("u_scale")
+
   {
     val a_texCoord = programBinding.attribute("a_texCoord")
     a_texCoord.bufferBinding.buffer.bind()
@@ -87,6 +94,13 @@ object Renderer extends Logger {
     a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+    // constants
+    programBinding.bindUniformSampler2D("texture", TextureManager.box)
+    programBinding.bindUniformVec4("ambientLight", Vec4f(0.2f) )
+    programBinding.bindUniformVec4("lightColor", Vec4f(0.8f) )
+    programBinding.bindUniformVec3("lightDir", normalize(Vec3f(0.1f,0.2f,-1)))
+    programBinding.bindUniformVec4("tint", Vec4f(0,0,1,1) )
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -296,21 +310,14 @@ object Renderer extends Logger {
     val view = Mat4(camera.view)
     val projection = Mat4(camera.projection)
 
-    // programBinding.bindUniformMat4("u_modelview", view * model )
-    programBinding.bindUniformMat4("u_mvp",       projection * view)
-    programBinding.bindUniformSampler2D("texture", TextureManager.box)
-    programBinding.bindUniformVec4("ambientLight", Vec4(0.2))
-    programBinding.bindUniformVec4("lightColor", Vec4(0.8))
-    programBinding.bindUniformVec3("lightDir", normalize(Vec3(0.1,0.2,-1)))
-    programBinding.bindUniformVec4("tint", Vec4(0,0,1,1))
-
     assert(programBinding.attribute("a_position").bufferBinding.buffer.hasData)
 
-    val u_position = programBinding.uniformVec3("u_position")
-    var u_scale    = programBinding.uniformFloat("u_scale")
 
-//    val posBuf = glGenBuffers()
-//    val sizeBuf = glGenBuffers()
+
+    u_mvp := Mat4f(projection * view)
+
+    // val posBuf = glGenBuffers()
+    // val sizeBuf = glGenBuffers()
 
     shaderProgram.use(programBinding) {
       for( info <- nodeInfoBufferGenerating ) {
@@ -320,16 +327,16 @@ object Renderer extends Logger {
 //          .put( 1 )
 //        glBufferNodeInfoSize.put( info.size )
 
-        u_position := Vec3(info.pos)
+        u_position := Vec3f(info.pos)
         u_scale := info.size
 
         shaderProgram.bindChanges(programBinding)
-        GlDraw.texturedCube()
         glDrawArrays(GL_QUADS, 0, 24)
       }
-
       // val numInstances = nodeInfoBufferGenerating.size
     }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )
     glGenQueries( buffer )

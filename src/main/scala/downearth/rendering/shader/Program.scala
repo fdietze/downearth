@@ -3,6 +3,8 @@ package downearth.rendering.shader
 
 import org.lwjgl.opengl._
 import org.lwjgl.opengl.GL11._
+import simplex3d.math.floatx._
+
 //import org.lwjgl.opengl.GL20._
 import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 import org.lwjgl.BufferUtils
@@ -208,8 +210,26 @@ class Program(val name:String) { program =>
         for( location <- 0 until numAttributes ) yield {
           val name = glGetActiveAttrib(id, location, 1000, sizetypeBuffer)
           val size = sizetypeBuffer.get(0)
+          if( size != 1 ) {
+            throw new NotImplementedError("currently not supported attribute size: "+size)
+          }
           val _type = sizetypeBuffer.get(1)
-          new Attribute(program, name, location, size, _type)
+
+          _type match {
+            case GL_FLOAT =>
+              new AttributeFloat(program, name, location)
+            case GL_FLOAT_VEC2 =>
+              new AttributeVec2f(program, name, location)
+            case GL_FLOAT_VEC3 =>
+              new AttributeVec3f(program, name, location)
+            case GL_FLOAT_VEC4 =>
+              new AttributeVec4f(program, name, location)
+            case _ =>
+              throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(_type) )
+
+          }
+
+
         }
 
       val uniforms:Seq[Uniform[_]] =
@@ -219,36 +239,37 @@ class Program(val name:String) { program =>
           val _type = sizetypeBuffer.get(1)
           val location = glGetUniformLocation(id, name)
 
-          val map = Map(
-            "program" -> program,
-            "binding" -> binding,
-            "name" -> name,
-            "location" -> location,
-            "position" -> currentSampler,
-            "type" -> _type,
-            "size" -> size
+          println(s"size:$size type:${_type}")
+
+          val config = new UniformConfig(
+            program = program,
+            binding = binding,
+            name = name,
+            location = location,
+            glType = _type,
+            size = size
           )
 
           if( Program.isSampler(_type) ) {
-            val uniform = new TextureUniform(
-              position = currentSampler,
-              map = map
+            val uniform = new UniformSampler2D(
+              currentSampler,
+              config
             )
             currentSampler += 1
             uniform
           }
-          else{
+          else {
             _type match {
               case GL_FLOAT =>
-                new FloatUniform(map)
+                new UniformFloat(config)
               case GL_FLOAT_VEC2 =>
-                new Vec2Uniform(map)
+                new UniformVec2f(config)
               case GL_FLOAT_VEC3 =>
-                new Vec3Uniform(map)
+                new UniformVec3f(config)
               case GL_FLOAT_VEC4 =>
-                new Vec4Uniform(map)
+                new Vec4Uniform(config)
               case GL_FLOAT_MAT4 =>
-                new Mat4Uniform(map)
+                new UniformMat4f(config)
               case _ =>
                 throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(_type) )
             }

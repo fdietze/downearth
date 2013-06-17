@@ -9,21 +9,27 @@ package downearth.rendering.shader
 import org.lwjgl.opengl.GL12._
 import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.GL13._
-import org.lwjgl.opengl.GL14._
 import org.lwjgl.opengl.GL20._
 import downearth.util.AddString
-import scala.collection.mutable.ArrayBuffer
 import org.lwjgl.opengl.Util
+
+import scala.reflect.runtime.universe._
+import org.lwjgl.BufferUtils
+import simplex3d.math.floatx.{Vec4f, Vec3f, Vec2f}
 
 class BufferBinding(val buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int){
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
+  //require( stride > 0 )
 }
 
-class Attribute(val program:Program, val name:CharSequence, val location:Int, val size:Int, val glType:Int)  extends AddString {
+abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
+  val program:Program
+  val name:CharSequence
+  val location:Int
+
   glEnableVertexAttribArray(location) // is there ever a reason to disable an attribArray?
 
-  if( size != 1 ){
+  if( size != 1 ) {
     throw new NotImplementedError("arrays not yet implemented")
   }
 
@@ -34,11 +40,11 @@ class Attribute(val program:Program, val name:CharSequence, val location:Int, va
     val bb = new BufferBinding(
       buffer = b,
       size = glType match {
-        case GL_FLOAT => 1
+        case GL_FLOAT | GL_INT => 1
         case GL_FLOAT_VEC2 => 2
         case GL_FLOAT_VEC3 => 3
         case GL_FLOAT_VEC4 => 4
-        case _ => 1 // TODO implement other types
+        case _ => ??? // TODO implement other types
       },
       glType = glType match {
         case GL_FLOAT => GL_FLOAT
@@ -56,18 +62,93 @@ class Attribute(val program:Program, val name:CharSequence, val location:Int, va
     bb
   }
   // TODO find a solution for interleaved data
-
+  def :=(seq:Seq[T])
 
   // TODO is size/type from glVertexAtribPointer and glGetActiveAttrib different?
 
   def writeData() {
     val bb = bufferBinding
-    import bb._
-    glVertexAttribPointer(location, bb.size, bb.glType, normalized, stride, offset)
+    glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
   }
 
   override def addString(sb:StringBuilder) = {
     sb append s"layout(location = $location) attribute ${Program.shaderTypeString(glType)} $name ${if(size > 1) (s"[$size]") else ""}"
   }
 
+}
+
+class AttributeInt(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Int](size = 1, glType = GL_INT) {
+  def := (seq:Seq[Int]) {
+    val data = BufferUtils.createIntBuffer(seq.size * 1)
+    for( v <- seq ) {
+      data.put(v)
+    }
+    data.flip()
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.load(data)
+    }
+  }
+}
+
+class AttributeFloat(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Float](size = 1, glType = GL_FLOAT) {
+  def := (seq:Seq[Float]) {
+    val data = BufferUtils.createFloatBuffer(seq.size * 1)
+    for( v <- seq ) {
+      data.put(v)
+    }
+    data.flip()
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.load(data)
+    }
+  }
+}
+
+class AttributeVec2f(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Vec2f](size = 1, glType = GL_FLOAT_VEC2 ) {
+  def := (seq:Seq[Vec2f]) {
+    val data = BufferUtils.createFloatBuffer(seq.size * 2)
+    for( v <- seq ) {
+      data.put(v.x)
+      data.put(v.y)
+    }
+    data.flip()
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.load(data)
+    }
+  }
+}
+
+class AttributeVec3f(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Vec3f](size = 1, glType = GL_FLOAT_VEC3 ) {
+  def := (seq:Seq[Vec3f]) {
+    val data = BufferUtils.createFloatBuffer(seq.size * 3)
+    for( v <- seq ) {
+      data.put(v.x)
+      data.put(v.y)
+      data.put(v.z)
+    }
+
+    data.flip()
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.load(data)
+    }
+  }
+}
+
+class AttributeVec4f(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Vec4f](size = 1, glType = GL_FLOAT_VEC4 ) {
+  def := (seq:Seq[Vec4f]) {
+    val data = BufferUtils.createFloatBuffer(seq.size * 4)
+    for( v <- seq ) {
+      data.put(v.x)
+      data.put(v.y)
+      data.put(v.z)
+      data.put(v.w)
+    }
+
+    data.flip()
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.load(data)
+    }
+  }
 }

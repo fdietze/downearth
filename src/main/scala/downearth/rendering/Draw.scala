@@ -125,29 +125,47 @@ object GlDraw extends Draw {
   }
 
   def texturedCube() {
-    val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
-    val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
-    var i = 0
-    glBegin(GL_QUADS)
+
+
+
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glEnableClientState(GL_NORMAL_ARRAY)
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
     glColor3f(1,1,1)
-    for(idx <- indices) {
-      val x = (idx & 1) >> 0
-      val y = (idx & 2) >> 1
-      val z = (idx & 4) >> 2
 
-      val j = i & 3
-      val k = (i >> 2) << 2
+    glVertexPointer(3, 0, texturedCubeBuffer.positionsBuf.asFloatBuffer())
+    glTexCoordPointer(2, 0, texturedCubeBuffer.texCoordsBuf.asFloatBuffer())
+    glNormalPointer(0, texturedCubeBuffer.normalsBuf.asFloatBuffer())
 
-      val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
-      val v = (j & 2) >> 1
+    glDrawArrays(GL_QUADS, 0, 4*6)
 
-      glNormal3f( normals(k), normals(k+1), normals(k+2) )
-      glTexCoord2f(u,v)
-      glVertex3f(x,y,z)
+    glDisableClientState(GL_VERTEX_ARRAY)
+    glDisableClientState(GL_NORMAL_ARRAY)
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
-      i += 1
-    }
-    glEnd()
+//    val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
+//    val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
+//    var i = 0
+//    glBegin(GL_QUADS)
+//    for(idx <- indices) {
+//      val x = (idx & 1) >> 0
+//      val y = (idx & 2) >> 1
+//      val z = (idx & 4) >> 2
+//
+//      val j = i & 3
+//      val k = (i >> 2) << 2
+//
+//      val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
+//      val v = (j & 2) >> 1
+//
+//      glNormal3f( normals(k), normals(k+1), normals(k+2) )
+//      glTexCoord2f(u,v)
+//      glVertex3f(x,y,z)
+//
+//      i += 1
+//    }
+//    glEnd()
   }
 
 	def plainCube() {

@@ -1,39 +1,39 @@
 package downearth.rendering.shader
 
 
-import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.GL13._
-import org.lwjgl.opengl.GL20._
+import org.lwjgl.opengl._
+import GL11._
+import GL13._
+import GL20._
+import ARBInstancedArrays._
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.Util
 
-import simplex3d.math.double._
-import simplex3d.data.DataView
-import simplex3d.math.integration.RFloat
+import simplex3d.math.floatx._
 
 import downearth.rendering.Texture
 import downearth.util._
 
-
+class UniformConfig(
+  val program:Program,
+  val binding:Binding,
+  val location:Int,
+  val name:CharSequence,
+  val glType:Int,
+  val size:Int
+)
 
 /**
  * User: arne
  * Date: 02.06.13
  * Time: 20:43
  */
-abstract class Uniform[T](map:Map[String,Any]) extends AddString {
-  val program:Program   = map("program").asInstanceOf[Program]
-  val binding:Binding   = map("binding").asInstanceOf[Binding]
-  val location:Int      = map("location").asInstanceOf[Int]
-  val name:CharSequence = map("name").asInstanceOf[String]
-  val glType:Int        = map("type").asInstanceOf[Int]
-  val size:Int          = map("size").asInstanceOf[Int]
-
-//  protected var _value:T = null
-//  def value_=(v:T) {
-//    _value = v
-//
-//  }
+abstract class Uniform[T](config:UniformConfig) extends AddString {
+  val program:Program   = config.program
+  val binding:Binding   = config.binding
+  val location:Int      = config.location
+  val name:CharSequence = config.name
+  val glType:Int        = config.glType
+  val size:Int          = config.size
 
   def :=(v:T)
 
@@ -45,10 +45,10 @@ abstract class Uniform[T](map:Map[String,Any]) extends AddString {
 
 }
 
-class Vec4Uniform(map:Map[String,Any]) extends Uniform[ReadVec4](map) {
-  private[this] val data = Vec4(0)
+class Vec4Uniform(config:UniformConfig) extends Uniform[ReadVec4f](config) {
+  private[this] val data = Vec4f(0)
 
-  def :=(v:ReadVec4) {
+  def :=(v:ReadVec4f) {
     data := v
     binding.changedUniforms.enqueue(this)
   }
@@ -61,47 +61,56 @@ class Vec4Uniform(map:Map[String,Any]) extends Uniform[ReadVec4](map) {
 
 }
 
-//class Vec4UniformInstanced(map:Map[String,Any]) extends Uniform(map) {
-//  var data: () => DataView[Vec4,RFloat] = null
-//
-//  def writeData() {
-//    val d = data()
-//
-//    glEnableVertexAttribArray(location)
-//    glVertexAttribPointer(location, 4, GL_FLOAT, false, sizeOf[Vec4], sizeOf[Float] * 4)
-//    glVertexAttribDivisor(location, 1)
-//  }
-//
-//}
 
-class Vec3Uniform(map:Map[String,Any]) extends Uniform[ReadVec3](map) {
 
-  private[this] val data = Vec3(0)
+class UniformVec4fInstanced(config:UniformConfig) extends Uniform[Seq[ReadVec4f]](config) {
 
-  def :=(v:ReadVec3) {
+  val buffer = new ArrayGlBuffer
+
+  def := (seq:Seq[ReadVec4f]) {
+    buffer.bind {
+      val data = BufferUtils.createFloatBuffer(4*seq.size)
+      seq.foreach( v => data.put(v.x).put(v.y).put(v.z).put(v.w) )
+      data.flip
+      buffer.load(data)
+    }
+  }
+
+  def writeData() {
+    glEnableVertexAttribArray(location)
+    glVertexAttribPointer(location, 4, GL_FLOAT, false, sizeOf[Vec4f], 0)
+    glVertexAttribDivisorARB(location, 1)
+  }
+}
+
+class UniformVec3f(config:UniformConfig) extends Uniform[ReadVec3f](config) {
+
+  private[this] val data = Vec3f(0)
+
+  def :=(v:ReadVec3f) {
     data := v
     binding.changedUniforms.enqueue(this)
   }
 
   def writeData() {
-    glUniform3f(location, data.x.toFloat, data.y.toFloat, data.z.toFloat)
+    glUniform3f(location, data.x, data.y, data.z)
   }
 }
 
-class Vec2Uniform(map:Map[String,Any]) extends Uniform[ReadVec2](map) {
-  private[this] val data = Vec2(0)
+class UniformVec2f(config:UniformConfig) extends Uniform[ReadVec2f](config) {
+  private[this] val data = Vec2f(0)
 
-  def :=(v:ReadVec2) {
+  def :=(v:ReadVec2f) {
     data := v
     binding.changedUniforms.enqueue(this)
   }
 
   def writeData() {
-    glUniform2f(location, data.x.toFloat, data.y.toFloat)
+    glUniform2f(location, data.x, data.y)
   }
 }
 
-class FloatUniform(map:Map[String,Any]) extends Uniform[Float](map) {
+class UniformFloat(config:UniformConfig) extends Uniform[Float](config) {
   private[this] var data:Float = 0
 
   def :=(v:Float) {
@@ -114,7 +123,7 @@ class FloatUniform(map:Map[String,Any]) extends Uniform[Float](map) {
   }
 }
 
-class TextureUniform(val position:Int, map:Map[String,Any]) extends Uniform[Texture](map) {
+class UniformSampler2D(val position:Int, config:UniformConfig) extends Uniform[Texture](config) {
   private[this] var texture: Texture = null
 
   def :=(v:Texture) {
@@ -129,15 +138,15 @@ class TextureUniform(val position:Int, map:Map[String,Any]) extends Uniform[Text
   }
 }
 
-class Mat4Uniform(map:Map[String,Any]) extends Uniform[ReadMat4](map) {
+class UniformMat4f(config:UniformConfig) extends Uniform[ReadMat4f](config) {
   val buffer = BufferUtils.createFloatBuffer(16)
 
-  def :=(m:ReadMat4) {
+  def :=(m:ReadMat4f) {
     var i = 0
     while( i < 16 ) {
       val x = i >> 2
       val y = i & 3
-      buffer.put( m(c=y,r=x).toFloat )
+      buffer.put( m(c=y,r=x) )
       i += 1
     }
     buffer.flip()
