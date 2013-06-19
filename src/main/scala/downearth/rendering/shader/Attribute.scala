@@ -7,7 +7,6 @@ package downearth.rendering.shader
  */
 
 import org.lwjgl.opengl.GL12._
-import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL20._
 import downearth.util.AddString
@@ -15,17 +14,46 @@ import org.lwjgl.opengl.Util
 
 import scala.reflect.runtime.universe._
 import org.lwjgl.BufferUtils
-import simplex3d.math.floatx.{Vec4f, Vec3f, Vec2f}
+import simplex3d.math.floatx._
+import java.nio.ByteBuffer
+import downearth.util.sizeOf
 
-class BufferBinding(val buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int){
+final class BufferBinding(val buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int) {
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
-  //require( stride > 0 )
+  var data:ByteBuffer = null
+
+  def load() {
+    buffer.load(data)
+  }
+
+  def defineCapacity(capacity:Int) {
+    if(data == null) {
+      data = BufferUtils.createByteBuffer(capacity)
+    }
+    else if( data.capacity() < capacity  ) {
+      val newData = BufferUtils.createByteBuffer(capacity)
+      newData.put(data)
+      newData.rewind
+      data = newData
+    }
+    else if( data.capacity() > capacity ) {
+      val newData = BufferUtils.createByteBuffer(capacity)
+      data.limit(capacity)
+      newData.put(data)
+      newData.rewind
+      data = newData
+    }
+  }
+
+  require( stride > 0 )
 }
 
 abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
   val program:Program
+  val binding:Binding
   val name:CharSequence
   val location:Int
+  val bufferBinding:BufferBinding
 
   glEnableVertexAttribArray(location) // is there ever a reason to disable an attribArray?
 
@@ -33,42 +61,22 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
     throw new NotImplementedError("arrays not yet implemented")
   }
 
-  val bufferBinding = {
-    val b = new ArrayGlBuffer()
-    b.create()
-    b.bind()
-    val bb = new BufferBinding(
-      buffer = b,
-      size = glType match {
-        case GL_FLOAT | GL_INT => 1
-        case GL_FLOAT_VEC2 => 2
-        case GL_FLOAT_VEC3 => 3
-        case GL_FLOAT_VEC4 => 4
-        case _ => ??? // TODO implement other types
-      },
-      glType = glType match {
-        case GL_FLOAT => GL_FLOAT
-        case GL_FLOAT_VEC2 => GL_FLOAT
-        case GL_FLOAT_VEC3 => GL_FLOAT
-        case GL_FLOAT_VEC4 => GL_FLOAT
-        case _ => glType // TODO implement other types
-      },
-      normalized = false,
-      stride = 0,
-      offset = 0
-    )
-    glBindBuffer(b.target,0)
-    Util.checkGLError()
-    bb
-  }
   // TODO find a solution for interleaved data
   def :=(seq:Seq[T])
+
+  def :=(data:ByteBuffer) {
+    bufferBinding.data = data
+    binding.changedAttributes.enqueue(this)
+  }
 
   // TODO is size/type from glVertexAtribPointer and glGetActiveAttrib different?
 
   def writeData() {
     val bb = bufferBinding
     glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
+    bufferBinding.buffer.bind {
+      bufferBinding.load()
+    }
   }
 
   override def addString(sb:StringBuilder) = {
@@ -77,78 +85,82 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
 
 }
 
-class AttributeInt(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Int](size = 1, glType = GL_INT) {
+class AttributeInt(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[Int](size = 1, glType = GL_INT) {
   def := (seq:Seq[Int]) {
-    val data = BufferUtils.createIntBuffer(seq.size * 1)
-    for( v <- seq ) {
-      data.put(v)
-    }
-    data.flip()
+    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
+    val data = bufferBinding.data
 
-    bufferBinding.buffer.bind {
-      bufferBinding.buffer.load(data)
+    data.clear()
+    for( (v,i) <- seq.zipWithIndex ) {
+      import bufferBinding.{offset,stride}
+      data.putInt(offset + i*stride + 0, v)
     }
+
+    binding.changedAttributes.enqueue(this)
   }
 }
 
-class AttributeFloat(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Float](size = 1, glType = GL_FLOAT) {
+class AttributeFloat(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[Float](size = 1, glType = GL_FLOAT) {
   def := (seq:Seq[Float]) {
-    val data = BufferUtils.createFloatBuffer(seq.size * 1)
-    for( v <- seq ) {
-      data.put(v)
-    }
-    data.flip()
+    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
+    val data = bufferBinding.data
 
-    bufferBinding.buffer.bind {
-      bufferBinding.buffer.load(data)
+    data.clear()
+    for( (v,i) <- seq.zipWithIndex ) {
+      import bufferBinding.{offset,stride}
+      data.putFloat(offset + i*stride + 0, v)
     }
+
+    binding.changedAttributes.enqueue(this)
   }
 }
 
-class AttributeVec2f(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Vec2f](size = 1, glType = GL_FLOAT_VEC2 ) {
-  def := (seq:Seq[Vec2f]) {
-    val data = BufferUtils.createFloatBuffer(seq.size * 2)
-    for( v <- seq ) {
-      data.put(v.x)
-      data.put(v.y)
-    }
-    data.flip()
+class AttributeVec2f(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[ReadVec2f](size = 1, glType = GL_FLOAT_VEC2 ) {
+  def := (seq:Seq[ReadVec2f]) {
+    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
+    val data = bufferBinding.data
 
-    bufferBinding.buffer.bind {
-      bufferBinding.buffer.load(data)
+    data.clear()
+    for( (v,i) <- seq.zipWithIndex ) {
+      import bufferBinding.{offset,stride}
+      data.putFloat(offset + i*stride + 0, v.x)
+      data.putFloat(offset + i*stride + 4, v.y)
     }
+
+    binding.changedAttributes.enqueue(this)
   }
 }
 
-class AttributeVec3f(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Vec3f](size = 1, glType = GL_FLOAT_VEC3 ) {
-  def := (seq:Seq[Vec3f]) {
-    val data = BufferUtils.createFloatBuffer(seq.size * 3)
-    for( v <- seq ) {
-      data.put(v.x)
-      data.put(v.y)
-      data.put(v.z)
+class AttributeVec3f(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[ReadVec3f](size = 1, glType = GL_FLOAT_VEC3 ) {
+  def := (seq:Seq[ReadVec3f]) {
+    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
+    val data = bufferBinding.data
+
+    data.clear()
+    for( (v,i) <- seq.zipWithIndex ) {
+      import bufferBinding.{offset,stride}
+      data.putFloat(offset + i*stride + 0, v.x)
+      data.putFloat(offset + i*stride + 4, v.y)
+      data.putFloat(offset + i*stride + 8, v.z)
     }
 
-    data.flip()
-    bufferBinding.buffer.bind {
-      bufferBinding.buffer.load(data)
-    }
+    binding.changedAttributes.enqueue(this)
   }
 }
 
-class AttributeVec4f(val program:Program, val name:CharSequence, val location:Int) extends Attribute[Vec4f](size = 1, glType = GL_FLOAT_VEC4 ) {
-  def := (seq:Seq[Vec4f]) {
-    val data = BufferUtils.createFloatBuffer(seq.size * 4)
-    for( v <- seq ) {
-      data.put(v.x)
-      data.put(v.y)
-      data.put(v.z)
-      data.put(v.w)
+class AttributeVec4f(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[ReadVec4f](size = 1, glType = GL_FLOAT_VEC4 ) {
+  def := (seq:Seq[ReadVec4f]) {
+    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
+    val data = bufferBinding.data
+    data.clear()
+    for( (v,i) <- seq.zipWithIndex ) {
+      import bufferBinding.{offset,stride}
+      data.putFloat(offset + i*stride + 0,  v.x)
+      data.putFloat(offset + i*stride + 4,  v.y)
+      data.putFloat(offset + i*stride + 8,  v.z)
+      data.putFloat(offset * i*stride + 12, v.w)
     }
 
-    data.flip()
-    bufferBinding.buffer.bind {
-      bufferBinding.buffer.load(data)
-    }
+    binding.changedAttributes.enqueue(this)
   }
 }

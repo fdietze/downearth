@@ -8,7 +8,7 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
-import simplex3d.math.floatx.{Mat4f, Vec4f, Vec3f}
+import simplex3d.math.floatx.{Vec2f, Mat4f, Vec4f, Vec3f}
 
 //import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
 import org.lwjgl.opengl.GL20._
@@ -48,6 +48,8 @@ object Renderer extends Logger {
   ambientLight.put( Array(0.2f, 0.2f, 0.2f, 1f) )
   ambientLight.rewind()
 
+  var frameCount = 0
+
   lazy val shaderProgram = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
@@ -65,7 +67,7 @@ object Renderer extends Logger {
   println(programBinding)
   println(testBinding)
 
-  val a_testPos = testBinding.attribute("a_pos")
+  val a_testPos = testBinding.attributeVec4f("a_pos")
 
   val data = BufferUtils.createFloatBuffer(4*4)
   data.put( Array[Float](0.5f,0.5f,0,1, -0.5f,0.5f,0,1, -0.5f,-0.5f,0,1, 0.5f,-0.5f,0,1) )
@@ -76,22 +78,24 @@ object Renderer extends Logger {
   }
 
   // programBinding.bindUniformMat4("u_modelview", view * model )
-  val u_mvp = programBinding.uniformMat4("u_mvp")
+  val u_mvp      = programBinding.uniformMat4("u_mvp")
   val u_position = programBinding.uniformVec3("u_position")
   var u_scale    = programBinding.uniformFloat("u_scale")
 
   {
-    val a_texCoord = programBinding.attribute("a_texCoord")
-    a_texCoord.bufferBinding.buffer.bind()
-    a_texCoord.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.texCoordsBuf)
+    import GlDraw.texturedCubeBuffer.{texCoordsBuf, normalsBuf, positionsBuf}
 
-    val a_normal = programBinding.attribute("a_normal")
-    a_normal.bufferBinding.buffer.bind()
-    a_normal.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.normalsBuf)
+    programBinding.attributeVec2f("a_texCoord")  := texCoordsBuf
+//    a_texCoord.bufferBinding.buffer.bind()
+//    a_texCoord.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.texCoordsBuf)
 
-    val a_position = programBinding.attribute("a_position")
-    a_position.bufferBinding.buffer.bind()
-    a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
+    programBinding.attributeVec3f("a_normal") := normalsBuf
+//    a_normal.bufferBinding.buffer.bind()
+//    a_normal.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.normalsBuf)
+
+    programBinding.attributeVec3f("a_position") := positionsBuf
+//    a_position.bufferBinding.buffer.bind()
+//    a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0)
 
@@ -126,6 +130,8 @@ object Renderer extends Logger {
 //    }
 
     GuiRenderer.renderGui()
+
+    frameCount += 1
   }
 
   var drawCalls = 0
@@ -288,8 +294,6 @@ object Renderer extends Logger {
     if( !Config.visibleOcclusionTest )
       glColorMask(false,false,false,false)
 
-    // TODO hier weiter machen
-    // TODO next time add comment, what is still work in Progress
     octree.queryRegion( test ) (order) {
       case (info, UngeneratedInnerNode) =>
         nodeInfoBufferUngenerated += info
@@ -310,17 +314,16 @@ object Renderer extends Logger {
     val view = Mat4(camera.view)
     val projection = Mat4(camera.projection)
 
-    assert(programBinding.attribute("a_position").bufferBinding.buffer.hasData)
-
-
-
     u_mvp := Mat4f(projection * view)
 
     // val posBuf = glGenBuffers()
     // val sizeBuf = glGenBuffers()
 
-    shaderProgram.use(programBinding) {
-      for( info <- nodeInfoBufferGenerating ) {
+    val magicNr = 8
+    val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == frameCount % magicNr)
+
+    shaderProgram.use {
+      for( info <- nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated) ) {
 //        glBufferNodeInfoPosition.put( info.pos.x )
 //          .put( info.pos.y )
 //          .put( info.pos.z )
@@ -330,18 +333,26 @@ object Renderer extends Logger {
         u_position := Vec3f(info.pos)
         u_scale := info.size
 
-        shaderProgram.bindChanges(programBinding)
+        programBinding.bindChanges()
+
         glDrawArrays(GL_QUADS, 0, 24)
       }
       // val numInstances = nodeInfoBufferGenerating.size
     }
 
+    assert(programBinding.attributeVec3f("a_position").bufferBinding.buffer.hasData)
+
     glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-    val buffer = BufferUtils.createIntBuffer( nodeInfoBufferUngenerated.size )
+
+
+
+
+    val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
+    val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
     glGenQueries( buffer )
 
-    val queries = new Query(buffer, nodeInfoBufferUngenerated)
+    val queries = new Query(buffer, reducedNodeInfos)
     for( (queryId, info) <- queries ) {
       glBeginQuery(GL_SAMPLES_PASSED, queryId )
 

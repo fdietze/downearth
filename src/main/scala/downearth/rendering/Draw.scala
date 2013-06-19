@@ -14,6 +14,7 @@ import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
 import downearth.DisplayEvent
 import downearth.Main
 import org.lwjgl.BufferUtils
+import simplex3d.math.floatx.{Vec2f, Vec3f}
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -91,9 +92,9 @@ object GlDraw extends Draw {
 
   lazy val texturedCubeBuffer = new {
     // GL_QUADS
-    val normalsBuf   = BufferUtils.createByteBuffer(4 * 3 * 24)
-    val texCoordsBuf = BufferUtils.createByteBuffer(4 * 2 * 24)
-    val positionsBuf = BufferUtils.createByteBuffer(4 * 3 * 24)
+    val normalsBuf   = BufferUtils.createByteBuffer(sizeOf[Vec3f] * 24)
+    val texCoordsBuf = BufferUtils.createByteBuffer(sizeOf[Vec2f] * 24)
+    val positionsBuf = BufferUtils.createByteBuffer(sizeOf[Vec3f] * 24)
 
     {
       val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)

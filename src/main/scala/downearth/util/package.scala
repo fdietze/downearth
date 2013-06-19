@@ -64,6 +64,18 @@ package object util {
     else if( t =:= typeOf[Mat4f] ) 4*4*4
     else if( t =:= typeOf[Mat3f] ) 3*3*4
     else if( t =:= typeOf[Mat2f] ) 2*2*4
+    else if( t =:= typeOf[ReadVec4d] ) 4*8
+    else if( t =:= typeOf[ReadVec3d] ) 3*8
+    else if( t =:= typeOf[ReadVec2d] ) 2*8
+    else if( t =:= typeOf[ReadMat4d] ) 4*4*8
+    else if( t =:= typeOf[ReadMat3d] ) 3*3*8
+    else if( t =:= typeOf[ReadMat2d] ) 2*2*8
+    else if( t =:= typeOf[ReadVec4f] ) 4*4
+    else if( t =:= typeOf[ReadVec3f] ) 3*4
+    else if( t =:= typeOf[ReadVec2f] ) 2*4
+    else if( t =:= typeOf[ReadMat4f] ) 4*4*4
+    else if( t =:= typeOf[ReadMat3f] ) 3*3*4
+    else if( t =:= typeOf[ReadMat2f] ) 2*2*4
     else ???
   }
 

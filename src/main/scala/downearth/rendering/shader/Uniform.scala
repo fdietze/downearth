@@ -54,10 +54,9 @@ class Vec4Uniform(config:UniformConfig) extends Uniform[ReadVec4f](config) {
   }
 
   def writeData() {
-    // require( glGetInteger(GL_CURRENT_PROGRAM) == program.id )
-    // require( location == glGetUniformLocation(program.id, name), s"location should be $location, but it is ${glGetUniformLocation(program.id, name)}")
     glUniform4f(location, data.x.toFloat, data.y.toFloat, data.z.toFloat, data.w.toFloat)
   }
+
 
 }
 

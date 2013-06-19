@@ -3,10 +3,9 @@ package downearth.rendering.shader
 
 import org.lwjgl.opengl._
 import org.lwjgl.opengl.GL11._
-import simplex3d.math.floatx._
+import org.lwjgl.opengl.GL20._
+//import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 
-//import org.lwjgl.opengl.GL20._
-import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL13._
 
@@ -39,7 +38,6 @@ object Program {
     program
   }
 
-  import GL20._
   import GL21._
   import GL30._
   import GL31._
@@ -213,23 +211,55 @@ class Program(val name:String) { program =>
           if( size != 1 ) {
             throw new NotImplementedError("currently not supported attribute size: "+size)
           }
-          val _type = sizetypeBuffer.get(1)
+          val glType = sizetypeBuffer.get(1)
 
-          _type match {
-            case GL_FLOAT =>
-              new AttributeFloat(program, name, location)
-            case GL_FLOAT_VEC2 =>
-              new AttributeVec2f(program, name, location)
-            case GL_FLOAT_VEC3 =>
-              new AttributeVec3f(program, name, location)
-            case GL_FLOAT_VEC4 =>
-              new AttributeVec4f(program, name, location)
-            case _ =>
-              throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(_type) )
-
+          val bufferBinding = {
+            val b = new ArrayGlBuffer()
+            b.create()
+            b.bind()
+            val bb = new BufferBinding(
+              buffer = b,
+              size = glType match {
+                case GL_FLOAT | GL_INT => 1
+                case GL_FLOAT_VEC2 => 2
+                case GL_FLOAT_VEC3 => 3
+                case GL_FLOAT_VEC4 => 4
+                case _ => ??? // TODO implement other types
+              },
+              glType = glType match {
+                case GL_FLOAT => GL_FLOAT
+                case GL_FLOAT_VEC2 => GL_FLOAT
+                case GL_FLOAT_VEC3 => GL_FLOAT
+                case GL_FLOAT_VEC4 => GL_FLOAT
+                case _ => glType // TODO implement other types
+              },
+              normalized = false,
+              stride = size * glType match {
+                case GL_FLOAT | GL_INT => 4
+                case GL_FLOAT_VEC2 => 8
+                case GL_FLOAT_VEC3 => 12
+                case GL_FLOAT_VEC4 => 16
+              },
+              offset = 0
+            )
+            glBindBuffer(b.target,0)
+            Util.checkGLError()
+            bb
           }
 
+          glType match {
+            case GL_FLOAT =>
+              new AttributeFloat(program, binding, name, location, bufferBinding)
+            case GL_FLOAT_VEC2 =>
+              new AttributeVec2f(program, binding, name, location, bufferBinding)
+            case GL_FLOAT_VEC3 =>
+              new AttributeVec3f(program, binding, name, location, bufferBinding)
+            case GL_FLOAT_VEC4 =>
+              new AttributeVec4f(program, binding, name, location, bufferBinding)
+            case _ =>
+              throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(glType) )
 
+          }
         }
 
       val uniforms:Seq[Uniform[_]] =
@@ -296,30 +326,7 @@ class Program(val name:String) { program =>
     Util.checkGLError()
   }
 
-  def bind( binding:Binding ) {
-    require(binding.program == this)
 
-    val groupedAttributes = binding.attributes.groupBy( _.bufferBinding.buffer )
-
-    for( (buffer, atList) <- groupedAttributes ) {
-      buffer.bind()
-      for( binding <- atList ) {
-        binding.writeData()
-      }
-    }
-
-    for( binding <- binding.uniforms ) {
-      binding.writeData()
-    }
-  }
-
-  def bindChanges( binding:Binding ) {
-    require(binding.program == this)
-
-    while( !binding.changedUniforms.isEmpty ){
-      binding.changedUniforms.dequeue().writeData()
-    }
-  }
 
   def create() {
     id = glCreateProgram
@@ -340,13 +347,6 @@ class Program(val name:String) { program =>
 
   def use(block: => Unit) {
     glUseProgram(id)
-    block
-    glUseProgram(0)
-  }
-
-  def use(binding:Binding)(block: => Unit){
-    glUseProgram(id)
-    bind(binding)
     block
     glUseProgram(0)
   }

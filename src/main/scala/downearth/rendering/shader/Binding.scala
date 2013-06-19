@@ -17,6 +17,33 @@ abstract class Binding( val program:Program ) extends AddString {
   val uniforms:Seq[Uniform[_]]
 
   val changedUniforms = mutable.Queue[Uniform[_]]()
+  val changedAttributes = mutable.Queue[Attribute[_]]()
+
+
+  def bind() {
+    bind(attributes, uniforms)
+  }
+
+  def bindChanges() {
+    val t:Any => Boolean = _ => true
+    bind(changedAttributes.dequeueAll(t), changedUniforms.dequeueAll(t))
+  }
+
+  private def bind(attributes:Seq[Attribute[_]],uniforms:Seq[Uniform[_]]) {
+    val groupedAttributes = attributes.groupBy( _.bufferBinding.buffer )
+
+    for( (buffer, atList) <- groupedAttributes ) {
+      buffer.bind()
+      for( binding <- atList ) {
+        binding.writeData()
+      }
+    }
+
+    for( binding <- uniforms ) {
+      binding.writeData()
+    }
+  }
+
 
   def addString(sb:StringBuilder) = {
     sb append program
@@ -26,7 +53,11 @@ abstract class Binding( val program:Program ) extends AddString {
     sb
   }
 
-  def attribute(name:String) = attributes.find( _.name == name ).get
+  def attributeInt(name:String)   = attributes.find( _.name == name ).get.asInstanceOf[AttributeInt]
+  def attributeFloat(name:String) = attributes.find( _.name == name ).get.asInstanceOf[AttributeFloat]
+  def attributeVec2f(name:String) = attributes.find( _.name == name ).get.asInstanceOf[AttributeVec2f]
+  def attributeVec3f(name:String) = attributes.find( _.name == name ).get.asInstanceOf[AttributeVec3f]
+  def attributeVec4f(name:String) = attributes.find( _.name == name ).get.asInstanceOf[AttributeVec4f]
 
   def uniformFloat(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformFloat]
   def uniformVec2(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec2f]
