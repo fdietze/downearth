@@ -22,10 +22,12 @@ abstract class GlBuffer() {
   var usage = GL_STATIC_DRAW
 
   def bind() {
+    require(id != 0)
     glBindBuffer(target, id)
   }
 
   def bind( env: => Unit ) {
+    require(id != 0)
     glBindBuffer(target, id)
     env
     glBindBuffer(target, 0)

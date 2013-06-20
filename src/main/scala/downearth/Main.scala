@@ -114,9 +114,6 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     glClearColor(91/255f,203/255f,255/255f,1f)
 
-    if(useShaders)
-      Renderer.shaderProgram
-
     World
 
     Mouse setGrabbed true

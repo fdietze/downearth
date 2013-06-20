@@ -30,6 +30,8 @@ abstract class Binding( val program:Program ) extends AddString {
   }
 
   private def bind(attributes:Seq[Attribute[_]],uniforms:Seq[Uniform[_]]) {
+    require(program.isActive, "program must be active before data is written")
+
     val groupedAttributes = attributes.groupBy( _.bufferBinding.buffer )
 
     for( (buffer, atList) <- groupedAttributes ) {

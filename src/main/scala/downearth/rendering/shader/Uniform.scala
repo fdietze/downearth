@@ -56,11 +56,7 @@ class Vec4Uniform(config:UniformConfig) extends Uniform[ReadVec4f](config) {
   def writeData() {
     glUniform4f(location, data.x.toFloat, data.y.toFloat, data.z.toFloat, data.w.toFloat)
   }
-
-
 }
-
-
 
 class UniformVec4fInstanced(config:UniformConfig) extends Uniform[Seq[ReadVec4f]](config) {
 

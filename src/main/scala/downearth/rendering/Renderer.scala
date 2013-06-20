@@ -8,7 +8,11 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.ARBInstancedArrays._
+import org.lwjgl.opengl.ARBDrawInstanced._
 import simplex3d.math.floatx.{Vec2f, Mat4f, Vec4f, Vec3f}
+import downearth.worldoctree.NodeInfo
+import scala.Tuple2
 
 //import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
 import org.lwjgl.opengl.GL20._
@@ -26,7 +30,7 @@ import downearth.worldoctree._
 import downearth.world.World
 import downearth.entity.{Entity, SimpleEntity}
 import downearth.generation.MaterialManager
-import downearth.rendering.shader.{VertexShader, FragmentShader, Shader, Program}
+import downearth.rendering.shader._
 
 import java.nio.IntBuffer
 
@@ -285,6 +289,9 @@ object Renderer extends Logger {
 
   var randomizer = 0
 
+  val testBuffer = new ArrayGlBuffer
+  testBuffer.create()
+
   def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
     TextureManager.box.bind()
 
@@ -307,9 +314,6 @@ object Renderer extends Logger {
         true
     }
 
-//    val glBufferNodeInfoPosition = BufferUtils.createFloatBuffer( 4 * nodeInfoBufferGenerating.size )
-//    val glBufferNodeInfoSize     = BufferUtils.createFloatBuffer( nodeInfoBufferGenerating.size )
-
     val model = Mat4(1)
     val view = Mat4(camera.view)
     val projection = Mat4(camera.projection)
@@ -321,32 +325,49 @@ object Renderer extends Logger {
 
     val magicNr = 8
     val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == frameCount % magicNr)
+    val renderNodeInfos = nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated)
+
+
+    testBuffer.bind {
+      val bufferData = BufferUtils.createFloatBuffer( 4 * renderNodeInfos.size )
+      for( info <- renderNodeInfos ) {
+        bufferData.put( info.pos.x )
+          .put( info.pos.y )
+          .put( info.pos.z )
+          .put( 0 )
+      }
+      bufferData.rewind()
+      testBuffer.load(bufferData)
+    }
 
     shaderProgram.use {
-      for( info <- nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated) ) {
-//        glBufferNodeInfoPosition.put( info.pos.x )
-//          .put( info.pos.y )
-//          .put( info.pos.z )
-//          .put( 1 )
-//        glBufferNodeInfoSize.put( info.size )
+      if( Config.instancing ) {
+        testBuffer.bind {
+          glEnableVertexAttribArray(u_position.location)
+          glVertexAttribPointer(u_position.location, 3, GL_FLOAT, false, sizeOf[Vec4f], 0)
+          glVertexAttribDivisorARB(u_position.location, 1)
 
-        u_position := Vec3f(info.pos)
-        u_scale := info.size
+          glEnableVertexAttribArray(u_scale.location)
+          glVertexAttribPointer(u_scale.location, 1, GL_FLOAT, false, sizeOf[Vec4f], sizeOf[Vec3f])
+          glVertexAttribDivisorARB(u_scale.location, 1)
+        }
 
         programBinding.bindChanges()
-
-        glDrawArrays(GL_QUADS, 0, 24)
+        glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
       }
-      // val numInstances = nodeInfoBufferGenerating.size
+      else {
+        for( info <- renderNodeInfos ) {
+          u_position := Vec3f(info.pos)
+          u_scale := info.size
+          programBinding.bindChanges()
+          glDrawArraysInstancedARB(GL_QUADS, 0, 24, 1)
+        }
+      }
     }
 
     assert(programBinding.attributeVec3f("a_position").bufferBinding.buffer.hasData)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-
-
-
 
     val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
     val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
@@ -467,20 +488,6 @@ object Renderer extends Logger {
       emptyDrawCalls += 1
     }
   }
-
-  def activateShader(func: => Unit) {
-    import ARBShaderObjects._
-
-    if(Config.useShaders) {
-      shaderProgram.use()
-    }
-
-    func
-
-    if(Config.useShaders)
-      glUseProgramObjectARB(0)
-  }
-
 }
 
 

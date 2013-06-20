@@ -16,16 +16,14 @@ object Config extends Listener {
 
 	var minMeshNodeSize = loadInt("minMeshNodeSize", 16)
 	var minPredictionSize = loadInt("minPredictionSize", 4)
-	var kdTreePrediction = loadBool("kdTreePrediction", true)
 	
 	var worldWindowSize = loadInt("worldWindowSize", 64)
-	val useShaders = loadBool("useShaders", false)
 	val vertexMaterials = true
-	val smoothShading = loadBool("smoothShading", false)
+	val smoothShading = false
 	
 	val hexaederResolution = 8
 	
-	val skybox = loadBool("skybox", false)
+	val skybox =false
 	
 	lazy val ungeneratedDefault = Leaf(FullHexaeder,-1)
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
@@ -43,7 +41,7 @@ object Config extends Listener {
 	val startAsGhost = false
 	val buildrange = 100
 	
-	var fullscreen = loadBool("fullscreen", false)
+	var fullscreen = false
 
 	// Vollbild-Modus mit höchster Auflösung
 	def fullscreenDisplayMode = Display.getDesktopDisplayMode
@@ -87,6 +85,7 @@ object Config extends Listener {
   var wireframe = false
   var streamWorld = false
   var frustumCulling = true
+  var instancing = false
   var turbo = false
   var occlusionTest = true
   var visibleOcclusionTest = true

@@ -351,6 +351,8 @@ class Program(val name:String) { program =>
     glUseProgram(0)
   }
 
+  def isActive = id == glGetInteger(GL_CURRENT_PROGRAM)
+
   def delete() {
     glDeleteProgram(id)
     id = 0
