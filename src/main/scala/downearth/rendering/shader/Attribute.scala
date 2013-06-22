@@ -16,7 +16,8 @@ import scala.reflect.runtime.universe._
 import org.lwjgl.BufferUtils
 import simplex3d.math.floatx._
 import java.nio.ByteBuffer
-import downearth.util.sizeOf
+import downearth.util._
+import org.lwjgl.opengl.ARBInstancedArrays._
 
 final class BufferBinding(val buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int) {
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
@@ -81,6 +82,16 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
 
   override def addString(sb:StringBuilder) = {
     sb append s"layout(location = $location) attribute ${Program.shaderTypeString(glType)} $name ${if(size > 1) (s"[$size]") else ""}"
+  }
+
+  def divisor:Int = {
+    val data = sharedIntBuffer(1)
+    glGetVertexAttrib(location, GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ARB, data)
+    data.get(0)
+  }
+
+  def divisor_=(i:Int) {
+    glVertexAttribDivisorARB(location, i)
   }
 
 }

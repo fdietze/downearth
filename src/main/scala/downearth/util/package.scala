@@ -42,6 +42,39 @@ package object util {
     }
   }
 
+  private[this] var sharedFloatBufferInstance = BufferUtils.createFloatBuffer(16)
+  private[this] var sharedIntBufferInstance = BufferUtils.createIntBuffer(16)
+  private[this] var sharedByteBufferInstance = BufferUtils.createByteBuffer(16)
+
+  def sharedFloatBuffer(capacity:Int) = {
+    if(sharedFloatBufferInstance.capacity() < capacity){
+      sharedFloatBufferInstance = BufferUtils.createFloatBuffer(capacity)
+    }
+    sharedFloatBufferInstance.clear()
+    sharedFloatBufferInstance.limit(capacity)
+    sharedFloatBufferInstance
+  }
+
+  def sharedIntBuffer(capacity:Int) = {
+    if(sharedIntBufferInstance.capacity() < capacity) {
+      sharedIntBufferInstance = BufferUtils.createIntBuffer(capacity)
+    }
+
+    sharedIntBufferInstance.clear()
+    sharedIntBufferInstance.limit(capacity)
+    sharedIntBufferInstance
+  }
+
+  def sharedByteBuffer(capacity:Int) = {
+    if(sharedByteBufferInstance.capacity() < capacity) {
+      sharedByteBufferInstance = BufferUtils.createByteBuffer(capacity)
+    }
+
+    sharedByteBufferInstance.clear()
+    sharedByteBufferInstance.limit(capacity)
+    sharedByteBufferInstance
+  }
+
   import scala.reflect.runtime.universe._
 
   def sizeOf[T : TypeTag](x:T):Int = sizeOf[T]

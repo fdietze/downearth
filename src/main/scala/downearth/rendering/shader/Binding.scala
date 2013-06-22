@@ -19,7 +19,6 @@ abstract class Binding( val program:Program ) extends AddString {
   val changedUniforms = mutable.Queue[Uniform[_]]()
   val changedAttributes = mutable.Queue[Attribute[_]]()
 
-
   def bind() {
     bind(attributes, uniforms)
   }
@@ -45,7 +44,6 @@ abstract class Binding( val program:Program ) extends AddString {
       binding.writeData()
     }
   }
-
 
   def addString(sb:StringBuilder) = {
     sb append program

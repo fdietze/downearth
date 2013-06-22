@@ -39,16 +39,19 @@ abstract class GlBuffer() {
   }
 
   def load( buffer:ByteBuffer ) {
+    require( buffer.position() == 0 )
     hasData = true
     glBufferData(target, buffer, usage)
   }
 
   def load( buffer:FloatBuffer ) {
+    require( buffer.position() == 0 )
     hasData = true
     glBufferData(target, buffer, usage)
   }
 
   def load( buffer:IntBuffer ) {
+    require( buffer.position() == 0 )
     hasData = true
     glBufferData(target, buffer, usage)
   }

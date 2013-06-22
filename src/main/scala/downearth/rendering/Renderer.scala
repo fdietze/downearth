@@ -351,7 +351,6 @@ object Renderer extends Logger {
           glVertexAttribPointer(u_scale.location, 1, GL_FLOAT, false, sizeOf[Vec4f], sizeOf[Vec3f])
           glVertexAttribDivisorARB(u_scale.location, 1)
         }
-
         programBinding.bindChanges()
         glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
       }
@@ -419,6 +418,8 @@ object Renderer extends Logger {
 
     MaterialManager.textureAtlas.bind()
 
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
+
     glEnableClientState(GL_VERTEX_ARRAY)
     glEnableClientState(GL_NORMAL_ARRAY)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
@@ -441,9 +442,7 @@ object Renderer extends Logger {
       glPopMatrix()
     }
 
-    glDisableClientState(GL_VERTEX_ARRAY)
-    glDisableClientState(GL_NORMAL_ARRAY)
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+    glPopClientAttrib()
   }
 
   def drawObjMesh(mesh:ObjMesh) {
