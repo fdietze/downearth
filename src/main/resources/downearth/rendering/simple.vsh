@@ -4,12 +4,12 @@ attribute vec3 a_position;
 attribute vec3 a_normal;
 attribute vec2 a_texCoord;
 
+attribute vec3 u_position;
+attribute float u_scale;
+
 uniform mat4 u_mvp;
 uniform mat4 u_projection;
 uniform mat4 u_modelview;
-
-uniform vec3 u_position;
-uniform float u_scale;
 
 varying vec3 v_normal;
 varying vec2 v_texCoord;

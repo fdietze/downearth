@@ -45,7 +45,7 @@ abstract class Uniform[T](config:UniformConfig) extends AddString {
 
 }
 
-class Vec4Uniform(config:UniformConfig) extends Uniform[ReadVec4f](config) {
+class UniformVec4f(config:UniformConfig) extends Uniform[ReadVec4f](config) {
   private[this] val data = Vec4f(0)
 
   def :=(v:ReadVec4f) {

@@ -10,19 +10,16 @@ object Config extends Listener {
 	val loader = new ConfigLoader(this)
 
   import loader.preferences.{
-    getInt => loadInt,
-    getBoolean => loadBool
+    getInt => loadInt
   }
 
 	var minMeshNodeSize = loadInt("minMeshNodeSize", 16)
 	var minPredictionSize = loadInt("minPredictionSize", 4)
-	
 	var worldWindowSize = loadInt("worldWindowSize", 64)
+
 	val vertexMaterials = true
 	val smoothShading = false
-	
 	val hexaederResolution = 8
-	
 	val skybox =false
 	
 	lazy val ungeneratedDefault = Leaf(FullHexaeder,-1)
@@ -40,7 +37,6 @@ object Config extends Listener {
 	val cameraTurboSpeed = 32
 	val startAsGhost = false
 	val buildrange = 100
-	
 	var fullscreen = false
 
 	// Vollbild-Modus mit höchster Auflösung
@@ -85,7 +81,6 @@ object Config extends Listener {
   var wireframe = false
   var streamWorld = false
   var frustumCulling = true
-  var instancing = false
   var turbo = false
   var occlusionTest = true
   var visibleOcclusionTest = true

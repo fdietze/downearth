@@ -60,70 +60,9 @@ abstract class Binding( val program:Program ) extends AddString {
   def attributeVec4f(name:String) = attributes.find( _.name == name ).get.asInstanceOf[AttributeVec4f]
 
   def uniformFloat(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformFloat]
-  def uniformVec2(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec2f]
-  def uniformVec3(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec3f]
-  def uniformVec4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[Vec4Uniform]
-  def uniformMat4(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformMat4f]
+  def uniformVec2f(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec2f]
+  def uniformVec3f(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec3f]
+  def uniformVec4f(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformVec4f]
+  def uniformMat4f(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformMat4f]
   def uniformSampler2D(name:String) = uniforms.find( _.name == name ).get.asInstanceOf[UniformSampler2D]
-
-  def bindUniformFloat(name:String, v: Float) {
-    val binding = uniforms.find( _.name == name )
-    binding match {
-      case Some( uniform:UniformFloat ) =>
-        uniform := v
-      case _ =>
-        System.err.println( "can't bind uniform "+name+" Float" )
-    }
-  }
-
-
-  def bindUniformVec4(name:String, v: ReadVec4f) {
-    val binding = uniforms.find( _.name == name )
-    binding match {
-      case Some( uniform:Vec4Uniform ) =>
-        uniform := v
-      case _ =>
-        System.err.println( "can't bind uniform "+name+" Vec4" )
-    }
-  }
-
-  def bindUniformVec3(name:String, v: ReadVec3f) {
-    val binding = uniforms.find( _.name == name )
-    binding match {
-      case Some( uniform:UniformVec3f ) =>
-        uniform := v
-      case _ =>
-        System.err.println( "can't bind uniform "+name+" Vec3" )
-    }
-  }
-
-  def bindUniformVec2(name:String, v: ReadVec2f) {
-    val binding = uniforms.find( _.name == name )
-    binding match {
-      case Some( uniform:UniformVec2f ) =>
-        uniform := v
-      case _ =>
-        System.err.println( "can't bind uniform "+name+" Vec2" )
-    }
-  }
-
-  def bindUniformMat4(name:String, v: ReadMat4f) {
-    val binding = uniforms.find( _.name == name )
-    binding match {
-      case Some( uniform:UniformMat4f ) =>
-        uniform := v
-      case _ =>
-        System.err.println( "can't bind uniform "+name+" Mat4" )
-    }
-  }
-
-  def bindUniformSampler2D(name:String, v: Texture) {
-    val binding = uniforms.find( _.name == name )
-    binding match {
-      case Some( uniform:UniformSampler2D ) =>
-        uniform := v
-      case _ =>
-        System.err.println( "can't bind uniform "+name+" Texture" )
-    }
-  }
 }

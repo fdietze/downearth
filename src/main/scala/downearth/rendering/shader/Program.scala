@@ -297,7 +297,7 @@ class Program(val name:String) { program =>
               case GL_FLOAT_VEC3 =>
                 new UniformVec3f(config)
               case GL_FLOAT_VEC4 =>
-                new Vec4Uniform(config)
+                new UniformVec4f(config)
               case GL_FLOAT_MAT4 =>
                 new UniformMat4f(config)
               case _ =>

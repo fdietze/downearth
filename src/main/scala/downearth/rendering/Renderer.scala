@@ -82,9 +82,12 @@ object Renderer extends Logger {
   }
 
   // programBinding.bindUniformMat4("u_modelview", view * model )
-  val u_mvp      = programBinding.uniformMat4("u_mvp")
-  val u_position = programBinding.uniformVec3("u_position")
-  var u_scale    = programBinding.uniformFloat("u_scale")
+  val u_mvp      = programBinding.uniformMat4f("u_mvp")
+
+  val u_position = programBinding.attributeVec3f("u_position")
+  u_position.divisor = 1
+  var u_scale    = programBinding.attributeFloat("u_scale")
+  u_scale.divisor = 1
 
   {
     import GlDraw.texturedCubeBuffer.{texCoordsBuf, normalsBuf, positionsBuf}
@@ -104,11 +107,11 @@ object Renderer extends Logger {
     glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     // constants
-    programBinding.bindUniformSampler2D("texture", TextureManager.box)
-    programBinding.bindUniformVec4("ambientLight", Vec4f(0.2f) )
-    programBinding.bindUniformVec4("lightColor", Vec4f(0.8f) )
-    programBinding.bindUniformVec3("lightDir", normalize(Vec3f(0.1f,0.2f,-1)))
-    programBinding.bindUniformVec4("tint", Vec4f(0,0,1,1) )
+    programBinding.uniformSampler2D("texture") := TextureManager.box
+    programBinding.uniformVec4f("ambientLight") := Vec4f(0.2f)
+    programBinding.uniformVec4f("lightColor") := Vec4f(0.8f)
+    programBinding.uniformVec3f("lightDir") := normalize(Vec3f(0.1f,0.2f,-1))
+    programBinding.uniformVec4f("tint") := Vec4f(0,0,1,1)
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -341,27 +344,10 @@ object Renderer extends Logger {
     }
 
     shaderProgram.use {
-      if( Config.instancing ) {
-        testBuffer.bind {
-          glEnableVertexAttribArray(u_position.location)
-          glVertexAttribPointer(u_position.location, 3, GL_FLOAT, false, sizeOf[Vec4f], 0)
-          glVertexAttribDivisorARB(u_position.location, 1)
-
-          glEnableVertexAttribArray(u_scale.location)
-          glVertexAttribPointer(u_scale.location, 1, GL_FLOAT, false, sizeOf[Vec4f], sizeOf[Vec3f])
-          glVertexAttribDivisorARB(u_scale.location, 1)
-        }
+        u_position := renderNodeInfos.map( info => Vec3f(info.pos) )
+        u_scale := renderNodeInfos.map( info => info.size.toFloat )
         programBinding.bindChanges()
         glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
-      }
-      else {
-        for( info <- renderNodeInfos ) {
-          u_position := Vec3f(info.pos)
-          u_scale := info.size
-          programBinding.bindChanges()
-          glDrawArraysInstancedARB(GL_QUADS, 0, 24, 1)
-        }
-      }
     }
 
     assert(programBinding.attributeVec3f("a_position").bufferBinding.buffer.hasData)
