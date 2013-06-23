@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.{Display, ARBShaderObjects}
 import org.lwjgl.BufferUtils
 
-import java.nio.FloatBuffer
+import java.nio.{ByteBuffer, IntBuffer, FloatBuffer}
 import java.io._
 import java.awt.image.BufferedImage
 import java.util.Date
@@ -42,39 +42,55 @@ package object util {
     }
   }
 
-  private[this] var sharedFloatBufferInstance = BufferUtils.createFloatBuffer(16)
-  private[this] var sharedIntBufferInstance = BufferUtils.createIntBuffer(16)
-  private[this] var sharedByteBufferInstance = BufferUtils.createByteBuffer(16)
+  private[this] val sharedFloatBufferInstance = new ThreadLocal[FloatBuffer]{ override def initialValue = BufferUtils.createFloatBuffer(16)}
+  private[this] val sharedIntBufferInstance = new ThreadLocal[IntBuffer]{ override def initialValue = BufferUtils.createIntBuffer(16)}
+  private[this] val sharedByteBufferInstance = new ThreadLocal[ByteBuffer]{ override def initialValue = BufferUtils.createByteBuffer(16)}
 
   def sharedFloatBuffer(capacity:Int) = {
-    if(sharedFloatBufferInstance.capacity() < capacity){
-      sharedFloatBufferInstance = BufferUtils.createFloatBuffer(capacity)
+    var buffer = sharedFloatBufferInstance.get
+
+    if(buffer.capacity() < capacity) {
+      buffer = BufferUtils.createFloatBuffer(capacity)
+      sharedFloatBufferInstance set buffer
     }
-    sharedFloatBufferInstance.clear()
-    sharedFloatBufferInstance.limit(capacity)
-    sharedFloatBufferInstance
+    else {
+      buffer.clear()
+      buffer.limit(capacity)
+    }
+
+    buffer
   }
 
   def sharedIntBuffer(capacity:Int) = {
-    if(sharedIntBufferInstance.capacity() < capacity) {
-      sharedIntBufferInstance = BufferUtils.createIntBuffer(capacity)
+    var buffer = sharedIntBufferInstance.get
+
+    if(buffer.capacity() < capacity) {
+      buffer = BufferUtils.createIntBuffer(capacity)
+      sharedIntBufferInstance set buffer
+    }
+    else {
+      buffer.clear()
+      buffer.limit(capacity)
     }
 
-    sharedIntBufferInstance.clear()
-    sharedIntBufferInstance.limit(capacity)
-    sharedIntBufferInstance
+    buffer
   }
 
   /// thread local byte buffer that can be reused whenever needed
   // TODO create one instance per thread (needed as soon as multithreaded rendering is used)
   def sharedByteBuffer(capacity:Int) = {
-    if(sharedByteBufferInstance.capacity() < capacity) {
-      sharedByteBufferInstance = BufferUtils.createByteBuffer(capacity)
+    var buffer = sharedByteBufferInstance.get
+
+    if(buffer.capacity() < capacity) {
+      buffer = BufferUtils.createByteBuffer(capacity)
+      sharedByteBufferInstance set buffer
+    }
+    else {
+      buffer.clear()
+      buffer.limit(capacity)
     }
 
-    sharedByteBufferInstance.clear()
-    sharedByteBufferInstance.limit(capacity)
-    sharedByteBufferInstance
+    buffer
   }
 
   import scala.reflect.runtime.universe._

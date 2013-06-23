@@ -72,44 +72,21 @@ object Renderer extends Logger {
   val testBinding = testProgram.getBinding
   println( testBinding )
 
-  val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
-  data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
-//  testBinding.attributeVec4f("a_pos") := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
+  // val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
+  // data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
   val a_pos = testBinding.attributeVec4f("a_pos")
-  a_pos := data
-
-  testProgram.use{
-    testBinding.bindChanges()
-    val test = a_pos.read(4)
-    println(test)
-  }
+  a_pos := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
 
   // programBinding.bindUniformMat4("u_modelview", view * model )
   val u_mvp      = programBinding.uniformMat4f("u_mvp")
 
-  val u_position = programBinding.attributeVec3f("u_position")
-  u_position.divisor = 1
-  var u_scale    = programBinding.attributeFloat("u_scale")
-  u_scale.divisor = 1
+  val a_instance_position = programBinding.attributeVec3f("a_instance_position")
+  a_instance_position.divisor = 1
+  val a_instance_scale    = programBinding.attributeFloat("a_instance_scale")
+  a_instance_scale.divisor = 1
+  val u_tint = programBinding.uniformVec4f("u_tint")
 
-  {
-    import GlDraw.texturedCubeBuffer._
-
-    programBinding.attributeVec2f("a_texCoord") := texCoordsData
-    programBinding.attributeVec3f("a_normal") := normalsData
-    programBinding.attributeVec3f("a_position") := positionsData
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-    // constants
-    programBinding.uniformSampler2D("texture") := TextureManager.box
-    programBinding.uniformVec4f("ambientLight") := Vec4f(0.2f)
-    programBinding.uniformVec4f("lightColor") := Vec4f(0.8f)
-    programBinding.uniformVec3f("lightDir") := normalize(Vec3f(0.1f,0.2f,-1))
-    programBinding.uniformVec4f("tint") := Vec4f(0,0,1,1)
-  }
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0)
+  programBinding.attributeVec3f("a_position") := GlDraw.texturedCubeBuffer.positionsData
 
   // this is occlusion querry from the last frame
   var query:Query = null
@@ -122,20 +99,21 @@ object Renderer extends Logger {
 
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-    renderWorld( Player.camera )
-
-    MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
-    MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
 
     testProgram.use {
       testBinding.enableAttributes()
 
+      testBinding.bind()
 
-
-      testBinding.bindChanges
       glDrawArrays(GL_QUADS, 0, 4)
+
       testBinding.disableAttributes()
     }
+
+    renderWorld( Player.camera )
+
+    MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
+    MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
 
     GuiRenderer.renderGui()
 
@@ -325,51 +303,44 @@ object Renderer extends Logger {
 
     val magicNr = 8
     val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == frameCount % magicNr)
-    val renderNodeInfos = nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated)
-
-
-//    testBuffer.bind {
-//      val bufferData = BufferUtils.createFloatBuffer( 4 * renderNodeInfos.size )
-//      for( info <- renderNodeInfos ) {
-//        bufferData.put( info.pos.x )
-//          .put( info.pos.y )
-//          .put( info.pos.z )
-//          .put( 0 )
-//      }
-//      bufferData.rewind()
-//      testBuffer.putData(bufferData)
-//    }
-
-    shaderProgram.use {
-      programBinding.enableAttributes()
-
-      u_position := renderNodeInfos.map( info => Vec3f(info.pos) )
-      u_scale := renderNodeInfos.map( info => info.size.toFloat )
-      programBinding.bindChanges()
-      glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
-
-      programBinding.disableAttributes()
-    }
-
-    assert(programBinding.attributeVec3f("a_position").bufferBinding.buffer.hasData)
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0)
+    // val renderNodeInfos = nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated)
+    val renderNodeInfos1 = nodeInfoBufferGenerating
+    val renderNodeInfos2 = (noTest map nodeInfoBufferUngenerated)
 
     val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
     val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
     glGenQueries( buffer )
-
     val queries = new Query(buffer, reducedNodeInfos)
-    for( (queryId, info) <- queries ) {
-      glBeginQuery(GL_SAMPLES_PASSED, queryId )
 
-      glPushMatrix()
-      glTranslatef(info.pos.x, info.pos.y, info.pos.z)
-      glScaled(info.size,info.size,info.size)
-      GlDraw.texturedCube()
-      glPopMatrix()
+    shaderProgram.use {
+      programBinding.enableAttributes()
 
-      glEndQuery(GL_SAMPLES_PASSED)
+
+      for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) ) {
+        u_tint := tint
+        a_instance_position := renderNodeInfos.map( info => Vec3f(info.pos) )
+        a_instance_scale := renderNodeInfos.map( info => info.size.toFloat )
+        programBinding.bindChanges()
+        glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
+      }
+
+      glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+      for( (queryId, info) <- queries ) {
+        glBeginQuery(GL_SAMPLES_PASSED, queryId )
+
+        u_tint := Vec4f(1,0,0,1)
+        a_instance_position := Seq( Vec3f( info.pos ) )
+        a_instance_scale := Seq( info.size.toFloat )
+
+        programBinding.bindChanges()
+
+        glDrawArraysInstancedARB(GL_QUADS, 0, 24, 1)
+
+        glEndQuery(GL_SAMPLES_PASSED)
+      }
+
+      programBinding.disableAttributes()
     }
 
     glColorMask(true, true, true, true)

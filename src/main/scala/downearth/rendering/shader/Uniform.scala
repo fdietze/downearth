@@ -60,7 +60,7 @@ class UniformFake[T](program:Program, binding:Binding, _name:String) extends Uni
   }
 
   override def addString( sb:StringBuilder) =
-    sb append "(broken) uniform " append name
+    sb append "unbound uniform " append name
 }
 
 class UniformVec4f(config:UniformConfig) extends Uniform[ReadVec4f](config) {

@@ -20,34 +20,7 @@ import downearth.util._
 import org.lwjgl.opengl.ARBInstancedArrays._
 
 final class BufferBinding(var buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int) {
-
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
-  var data:ByteBuffer = null
-
-  def load() {
-    assert( data != null )
-    buffer.putData(data)
-  }
-
-  def defineCapacity(capacity:Int) {
-    if(data == null) {
-      data = BufferUtils.createByteBuffer(capacity)
-    }
-    else if( data.capacity() < capacity  ) {
-      val newData = BufferUtils.createByteBuffer(capacity)
-      newData.put(data)
-      newData.rewind
-      data = newData
-    }
-    else if( data.capacity() > capacity ) {
-      val newData = BufferUtils.createByteBuffer(capacity)
-      data.limit(capacity)
-      newData.put(data)
-      newData.rewind
-      data = newData
-    }
-  }
-
   require( stride > 0 )
 }
 
@@ -78,7 +51,10 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
   def :=(seq:Seq[T])
 
   def :=(data:ByteBuffer) {
-    bufferBinding.data = data
+    bufferBinding.buffer.bind{
+      bufferBinding.buffer.putData( data )
+    }
+
     binding.changedAttributes.enqueue(this)
   }
 
@@ -89,10 +65,6 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
   def writeData() {
     val bb = bufferBinding
     glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
-
-    bufferBinding.buffer.bind {
-      bufferBinding.load()
-    }
   }
 
   override def addString(sb:StringBuilder) = {
@@ -118,7 +90,7 @@ class AttributeFake[T](val program:Program, val binding:Binding, val name:CharSe
   val bufferBinding:BufferBinding = null
 
   override def addString(sb:StringBuilder) = {
-    sb append "(broken) attribute " append name
+    sb append "unbound attribute " append name
   }
 
   override def divisor:Int = -1
@@ -135,63 +107,101 @@ class AttributeFake[T](val program:Program, val binding:Binding, val name:CharSe
 }
 
 class AttributeInt(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[Int](size = 1, glType = GL_INT) {
-  def := (seq:Seq[Int]) {
-    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
-    val data = bufferBinding.data
 
-    data.clear()
+  def := (seq:Seq[Int]) {
+    val data = sharedByteBuffer(bufferBinding.stride * seq.size)
+
     for( (v,i) <- seq.zipWithIndex ) {
       import bufferBinding.{offset,stride}
       data.putInt(offset + i*stride + 0, v)
     }
 
-    binding.changedAttributes.enqueue(this)
-  }
-
-  def read(size:Int) = ???
-}
-
-class AttributeFloat(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[Float](size = 1, glType = GL_FLOAT) {
-  def := (seq:Seq[Float]) {
-    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
-    val data = bufferBinding.data
-
-    data.clear()
-    for( (v,i) <- seq.zipWithIndex ) {
-      import bufferBinding.{offset,stride}
-      data.putFloat(offset + i*stride + 0, v)
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.putData( data )
     }
 
     binding.changedAttributes.enqueue(this)
   }
 
-  def read(size:Int) = ???
+  def read(size:Int) = {
+    import bufferBinding.{offset,stride}
+
+    val data = sharedByteBuffer(size * stride)
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.getData(data)
+    }
+
+    for(i <- 0 until size) yield data.getInt(offset + i*stride + 0)
+  }
+}
+
+class AttributeFloat(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[Float](size = 1, glType = GL_FLOAT) {
+  def := (seq:Seq[Float]) {
+    val data = sharedByteBuffer(bufferBinding.stride * seq.size)
+
+    for( (v,i) <- seq.zipWithIndex ) {
+      import bufferBinding.{offset,stride}
+      data.putFloat(offset + i*stride + 0, v)
+    }
+
+    bufferBinding.buffer.bind{
+      bufferBinding.buffer.putData( data )
+    }
+
+    binding.changedAttributes.enqueue(this)
+  }
+
+  def read(size:Int) = {
+    import bufferBinding.{offset,stride}
+
+    val data = sharedByteBuffer(size * stride)
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.getData(data)
+    }
+
+    for(i <- 0 until size) yield data.getFloat(offset + i*stride + 0)
+  }
 }
 
 class AttributeVec2f(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[ReadVec2f](size = 1, glType = GL_FLOAT_VEC2 ) {
   def := (seq:Seq[ReadVec2f]) {
-    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
-    val data = bufferBinding.data
+    val data = sharedByteBuffer(bufferBinding.stride * seq.size)
 
-    data.clear()
     for( (v,i) <- seq.zipWithIndex ) {
       import bufferBinding.{offset,stride}
       data.putFloat(offset + i*stride + 0, v.x)
       data.putFloat(offset + i*stride + 4, v.y)
     }
 
+    bufferBinding.buffer.bind{
+      bufferBinding.buffer.putData( data )
+    }
+
     binding.changedAttributes.enqueue(this)
   }
 
-  def read(size:Int) = ???
+  def read(size:Int) = {
+    import bufferBinding.{offset,stride}
+
+    val data = sharedByteBuffer(size * stride)
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.getData(data)
+    }
+
+    for(i <- 0 until size) yield ConstVec2f(
+      x = data.getFloat(offset + i*stride + 0),
+      y = data.getFloat(offset + i*stride + 4)
+    )
+  }
 }
 
 class AttributeVec3f(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[ReadVec3f](size = 1, glType = GL_FLOAT_VEC3 ) {
   def := (seq:Seq[ReadVec3f]) {
-    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
-    val data = bufferBinding.data
+    val data = sharedByteBuffer(bufferBinding.stride * seq.size)
 
-    data.clear()
     for( (v,i) <- seq.zipWithIndex ) {
       import bufferBinding.{offset,stride}
       data.putFloat(offset + i*stride + 0, v.x)
@@ -199,17 +209,34 @@ class AttributeVec3f(val program:Program, val binding:Binding, val name:CharSequ
       data.putFloat(offset + i*stride + 8, v.z)
     }
 
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.putData( data )
+    }
+
     binding.changedAttributes.enqueue(this)
   }
 
-  def read(size:Int) = ???
+  def read(size:Int) = {
+    import bufferBinding.{offset,stride}
+
+    val data = sharedByteBuffer(size * stride)
+
+    bufferBinding.buffer.bind {
+      bufferBinding.buffer.getData(data)
+    }
+
+    for(i <- 0 until size) yield ConstVec3f(
+      x = data.getFloat(offset + i*stride + 0),
+      y = data.getFloat(offset + i*stride + 4),
+      z = data.getFloat(offset + i*stride + 8)
+    )
+  }
 }
 
 class AttributeVec4f(val program:Program, val binding:Binding, val name:CharSequence, val location:Int, val bufferBinding:BufferBinding) extends Attribute[ReadVec4f](size = 1, glType = GL_FLOAT_VEC4 ) {
   def := (seq:Seq[ReadVec4f]) {
-    bufferBinding.defineCapacity(bufferBinding.stride * seq.size)
-    val data = bufferBinding.data
-    data.clear()
+    val data = sharedByteBuffer(bufferBinding.stride * seq.size)
+
     for( (v,i) <- seq.zipWithIndex ) {
       import bufferBinding.{offset,stride}
       data.putFloat(offset + i*stride + 0,  v.x)
@@ -218,17 +245,21 @@ class AttributeVec4f(val program:Program, val binding:Binding, val name:CharSequ
       data.putFloat(offset * i*stride + 12, v.w)
     }
 
+    bufferBinding.buffer.bind{
+      bufferBinding.buffer.putData( data )
+    }
+
     binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) = {
-    val data = sharedByteBuffer(size * sizeOf[ReadVec4f])
+    import bufferBinding.{offset,stride}
+
+    val data = sharedByteBuffer(size * stride)
 
     bufferBinding.buffer.bind {
       bufferBinding.buffer.getData(data)
     }
-
-    import bufferBinding.{offset,stride}
 
     for(i <- 0 until size) yield ConstVec4f(
       x = data.getFloat(offset + i*stride + 0),
@@ -238,3 +269,4 @@ class AttributeVec4f(val program:Program, val binding:Binding, val name:CharSequ
     )
   }
 }
+
