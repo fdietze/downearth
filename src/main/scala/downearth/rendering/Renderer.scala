@@ -60,25 +60,28 @@ object Renderer extends Logger {
     Program("simple")(vertShader)(fragShader)
   }
 
-  lazy val testShader = {
+  val testProgram = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
     Program("test")(vertShader)(fragShader)
   }
 
   val programBinding = shaderProgram.getBinding
-  val testBinding = testShader.getBinding
   println(programBinding)
-  println(testBinding)
 
-  val a_testPos = testBinding.attributeVec4f("a_pos")
+  val testBinding = testProgram.getBinding
+  println( testBinding )
 
-  val data = BufferUtils.createFloatBuffer(4*4)
-  data.put( Array[Float](0.5f,0.5f,0,1, -0.5f,0.5f,0,1, -0.5f,-0.5f,0,1, 0.5f,-0.5f,0,1) )
-  data.flip()
+  val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
+  data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
+//  testBinding.attributeVec4f("a_pos") := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
+  val a_pos = testBinding.attributeVec4f("a_pos")
+  a_pos := data
 
-  a_testPos.bufferBinding.buffer.bind{
-    glBufferData(GL_ARRAY_BUFFER, data , GL_STATIC_DRAW)
+  testProgram.use{
+    testBinding.bindChanges()
+    val test = a_pos.read(4)
+    println(test)
   }
 
   // programBinding.bindUniformMat4("u_modelview", view * model )
@@ -90,19 +93,11 @@ object Renderer extends Logger {
   u_scale.divisor = 1
 
   {
-    import GlDraw.texturedCubeBuffer.{texCoordsBuf, normalsBuf, positionsBuf}
+    import GlDraw.texturedCubeBuffer._
 
-    programBinding.attributeVec2f("a_texCoord")  := texCoordsBuf
-//    a_texCoord.bufferBinding.buffer.bind()
-//    a_texCoord.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.texCoordsBuf)
-
-    programBinding.attributeVec3f("a_normal") := normalsBuf
-//    a_normal.bufferBinding.buffer.bind()
-//    a_normal.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.normalsBuf)
-
-    programBinding.attributeVec3f("a_position") := positionsBuf
-//    a_position.bufferBinding.buffer.bind()
-//    a_position.bufferBinding.buffer.load(GlDraw.texturedCubeBuffer.positionsBuf)
+    programBinding.attributeVec2f("a_texCoord") := texCoordsData
+    programBinding.attributeVec3f("a_normal") := normalsData
+    programBinding.attributeVec3f("a_position") := positionsData
 
     glBindBuffer(GL_ARRAY_BUFFER, 0)
 
@@ -132,9 +127,15 @@ object Renderer extends Logger {
     MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
     MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
 
-//    testShader.use(testBinding) {
-//      glDrawArrays(GL_QUADS, 0, 4)
-//    }
+    testProgram.use {
+      testBinding.enableAttributes()
+
+
+
+      testBinding.bindChanges
+      glDrawArrays(GL_QUADS, 0, 4)
+      testBinding.disableAttributes()
+    }
 
     GuiRenderer.renderGui()
 
@@ -157,7 +158,6 @@ object Renderer extends Logger {
 
     octree.queryRegion(test)(order) {
     case (info,octant) =>
-
       if(! octant.hasChildren) {
         glPushMatrix()
         val p = info.pos
@@ -323,31 +323,32 @@ object Renderer extends Logger {
 
     u_mvp := Mat4f(projection * view)
 
-    // val posBuf = glGenBuffers()
-    // val sizeBuf = glGenBuffers()
-
     val magicNr = 8
     val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == frameCount % magicNr)
     val renderNodeInfos = nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated)
 
 
-    testBuffer.bind {
-      val bufferData = BufferUtils.createFloatBuffer( 4 * renderNodeInfos.size )
-      for( info <- renderNodeInfos ) {
-        bufferData.put( info.pos.x )
-          .put( info.pos.y )
-          .put( info.pos.z )
-          .put( 0 )
-      }
-      bufferData.rewind()
-      testBuffer.load(bufferData)
-    }
+//    testBuffer.bind {
+//      val bufferData = BufferUtils.createFloatBuffer( 4 * renderNodeInfos.size )
+//      for( info <- renderNodeInfos ) {
+//        bufferData.put( info.pos.x )
+//          .put( info.pos.y )
+//          .put( info.pos.z )
+//          .put( 0 )
+//      }
+//      bufferData.rewind()
+//      testBuffer.putData(bufferData)
+//    }
 
     shaderProgram.use {
-        u_position := renderNodeInfos.map( info => Vec3f(info.pos) )
-        u_scale := renderNodeInfos.map( info => info.size.toFloat )
-        programBinding.bindChanges()
-        glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
+      programBinding.enableAttributes()
+
+      u_position := renderNodeInfos.map( info => Vec3f(info.pos) )
+      u_scale := renderNodeInfos.map( info => info.size.toFloat )
+      programBinding.bindChanges()
+      glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
+
+      programBinding.disableAttributes()
     }
 
     assert(programBinding.attributeVec3f("a_position").bufferBinding.buffer.hasData)

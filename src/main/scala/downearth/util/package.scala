@@ -65,6 +65,8 @@ package object util {
     sharedIntBufferInstance
   }
 
+  /// thread local byte buffer that can be reused whenever needed
+  // TODO create one instance per thread (needed as soon as multithreaded rendering is used)
   def sharedByteBuffer(capacity:Int) = {
     if(sharedByteBufferInstance.capacity() < capacity) {
       sharedByteBufferInstance = BufferUtils.createByteBuffer(capacity)

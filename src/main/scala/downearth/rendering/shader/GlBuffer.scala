@@ -1,6 +1,6 @@
 package downearth.rendering.shader
 
-//import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.GL15.glGetBufferSubData
 import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
 import java.nio.{IntBuffer, FloatBuffer, ByteBuffer}
 
@@ -14,8 +14,9 @@ abstract class GlBuffer() {
   var id:Int = 0
   var hasData = false
 
-  def create() {
+  def create():this.type = {
     id = glGenBuffers()
+    this
   }
 
   def target:Int
@@ -38,23 +39,18 @@ abstract class GlBuffer() {
     id = 0
   }
 
-  def load( buffer:ByteBuffer ) {
-    require( buffer.position() == 0 )
+  def putData( buffer:ByteBuffer ) {
+    require( buffer.position() == 0, "forgot to flip the buffer?" )
     hasData = true
     glBufferData(target, buffer, usage)
   }
 
-  def load( buffer:FloatBuffer ) {
-    require( buffer.position() == 0 )
-    hasData = true
-    glBufferData(target, buffer, usage)
+  def getData( buffer:ByteBuffer, offset:Int = 0 ) = {
+    require( buffer.position() == 0, "forgot to flip the buffer?" )
+    glGetBufferSubData(target, offset, buffer)
+    buffer
   }
 
-  def load( buffer:IntBuffer ) {
-    require( buffer.position() == 0 )
-    hasData = true
-    glBufferData(target, buffer, usage)
-  }
 }
 
 class ArrayGlBuffer extends GlBuffer {

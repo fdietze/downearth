@@ -184,7 +184,6 @@ object Program {
     GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY -> "uimage2DMSArray",
     GL_UNSIGNED_INT_ATOMIC_COUNTER -> "atomic_uint"
   )
-
 }
 
 class Program(val name:String) { program =>
@@ -198,7 +197,6 @@ class Program(val name:String) { program =>
   def getBinding = {
     val numUniforms   = glGetProgrami(id, GL_ACTIVE_UNIFORMS)
     val numAttributes = glGetProgrami(id, GL_ACTIVE_ATTRIBUTES)
-
     val sizetypeBuffer = BufferUtils.createIntBuffer(2)
 
     var currentSampler = 0
@@ -211,14 +209,11 @@ class Program(val name:String) { program =>
           if( size != 1 ) {
             throw new NotImplementedError("currently not supported attribute size: "+size)
           }
+
           val glType = sizetypeBuffer.get(1)
 
-          val bufferBinding = {
-            val b = new ArrayGlBuffer()
-            b.create()
-            b.bind()
-            val bb = new BufferBinding(
-              buffer = b,
+          val bufferBinding = new BufferBinding(
+              buffer = new ArrayGlBuffer() create(),
               size = glType match {
                 case GL_FLOAT | GL_INT => 1
                 case GL_FLOAT_VEC2 => 2
@@ -241,11 +236,7 @@ class Program(val name:String) { program =>
                 case GL_FLOAT_VEC4 => 16
               },
               offset = 0
-            )
-            glBindBuffer(b.target,0)
-            Util.checkGLError()
-            bb
-          }
+          )
 
           glType match {
             case GL_FLOAT =>
@@ -258,7 +249,6 @@ class Program(val name:String) { program =>
               new AttributeVec4f(program, binding, name, location, bufferBinding)
             case _ =>
               throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(glType) )
-
           }
         }
 
@@ -281,10 +271,14 @@ class Program(val name:String) { program =>
           )
 
           if( Program.isSampler(_type) ) {
-            val uniform = new UniformSampler2D(
-              currentSampler,
-              config
-            )
+
+            val uniform =
+            _type match {
+              case GL_SAMPLER_2D => new UniformSampler2D(currentSampler, config)
+              case GL_SAMPLER_CUBE => new UniformSamplerCube(currentSampler, config)
+              case _ => ???
+            }
+
             currentSampler += 1
             uniform
           }
@@ -325,8 +319,6 @@ class Program(val name:String) { program =>
 
     Util.checkGLError()
   }
-
-
 
   def create() {
     id = glCreateProgram

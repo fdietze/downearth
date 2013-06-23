@@ -127,6 +127,8 @@ final class Surface(val width:Int, val height:Int, val data:Array[Int] ) {
   require( ((height - 1) & height) == 0 )
   require( data.length == width * height, "data length is %d , but should be %d, width: %d, height: %d".format(data.length,width*height,width,height) )
 
+  def this(width:Int,height:Int) = this(width,height, new Array[Int](width*height))
+
   def apply(x:Int,y:Int) = data( indexOf(x,y) )
 
   def update(x:Int,y:Int, color:Int) {
@@ -134,8 +136,8 @@ final class Surface(val width:Int, val height:Int, val data:Array[Int] ) {
   }
 
   def checkBounds( rect:Rect ) = {
-    rect.x > 0 &&
-    rect.y > 0 &&
+    0 <= rect.x &&
+    0 <= rect.y &&
     rect.x + rect.w <= width &&
     rect.y + rect.h <= height
   }
@@ -254,13 +256,48 @@ class TextureLoader {
     new Surface(image.getWidth, image.getHeight, pixels)
   }
 
-  def loadAsTexture(filename:String):Texture = {
+  def loadAsSkybox(filename:String):TextureCube = {
+    val surface = readImageRaster(filename)
+    val size = surface.height / 2
+
+    val s1 = new Surface(size,size)
+    val s2 = new Surface(size,size)
+    val s3 = new Surface(size,size)
+    val s4 = new Surface(size,size)
+    val s5 = new Surface(size,size)
+    val s6 = new Surface(size,size)
+
+    Surface.blit(surface, new Rect(0*size,0*size,size,size), s1, new Rect(0,0,size,size))
+    Surface.blit(surface, new Rect(1*size,0*size,size,size), s2, new Rect(0,0,size,size))
+    Surface.blit(surface, new Rect(2*size,0*size,size,size), s3, new Rect(0,0,size,size))
+    Surface.blit(surface, new Rect(3*size,0*size,size,size), s4, new Rect(0,0,size,size))
+    Surface.blit(surface, new Rect(0*size,1*size,size,size), s5, new Rect(0,0,size,size))
+    Surface.blit(surface, new Rect(1*size,1*size,size,size), s6, new Rect(0,0,size,size))
+
+    val d1 = BufferUtils.createByteBuffer(size*size*4)
+    val d2 = BufferUtils.createByteBuffer(size*size*4)
+    val d3 = BufferUtils.createByteBuffer(size*size*4)
+    val d4 = BufferUtils.createByteBuffer(size*size*4)
+    val d5 = BufferUtils.createByteBuffer(size*size*4)
+    val d6 = BufferUtils.createByteBuffer(size*size*4)
+
+    d1.asIntBuffer().put( s1.data )
+    d2.asIntBuffer().put( s2.data )
+    d3.asIntBuffer().put( s3.data )
+    d4.asIntBuffer().put( s4.data )
+    d5.asIntBuffer().put( s5.data )
+    d6.asIntBuffer().put( s6.data )
+
+    new TextureCube(size,d1,d2,d3,d4,d5,d6)
+  }
+
+  def loadAsTexture(filename:String):Texture2D = {
     import downearth.util.time
     time("load: " + filename) {
       val raster = readImageRaster(filename:String)
       val buffer = BufferUtils.createByteBuffer(raster.width*raster.height*4)
       buffer.asIntBuffer.put(raster.data)
-      new Texture(raster.width, raster.height, buffer)
+      new Texture2D(raster.width, raster.height, buffer)
     }
   }
 }

@@ -13,7 +13,13 @@ uniform sampler2D texture;
 void main() {
     vec4 tex = texture2D(texture, v_texCoord);
     float light = dot( lightDir, v_normal );
+    // float light = dot( lightDir, vec3(0,0,1) );
     light = max(0, light);
 
-    gl_FragColor = ( lightColor * vec4(light) + ambientLight ) * tex * tint;
+    if( sin( (gl_FragCoord.x + gl_FragCoord.y) / 16 ) > 0)
+        // gl_FragColor = vec4(light) * tex;
+        gl_FragColor = ( lightColor * vec4(light) + ambientLight ) * tex * tint;
+        // gl_FragColor = tex;
+    else
+        gl_FragColor = vec4(1,1,0,0);
 }

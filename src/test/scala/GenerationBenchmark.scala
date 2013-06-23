@@ -38,7 +38,6 @@ class GenerationBenchmark extends FunSuite {
 			//overwrite global Config
 			Config.minMeshNodeSize = minMeshNodeSize.asInstanceOf[Int]
 			Config.minPredictionSize = minPredictionSize.asInstanceOf[Int]
-			Config.kdTreePrediction = kdTreePrediction.asInstanceOf[Boolean]
 			Config.worldWindowSize = worldWindowSize.asInstanceOf[Int]
 			WorldNodeGenerator.master ! GetFinishedJobs
 			

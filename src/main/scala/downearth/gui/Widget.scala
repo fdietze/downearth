@@ -5,7 +5,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import downearth.util._
-import downearth.rendering.{ConsoleFont, Texture}
+import downearth.rendering.{ConsoleFont, Texture2D}
 import downearth.gui.Border._
 import downearth.gui.Background._
 import System.{currentTimeMillis => time}
@@ -111,7 +111,7 @@ class Button(val position:Vec2i, val text:String) extends Widget {
   }
 }
 
-abstract class TextureWidget(val texture:Texture, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
+abstract class TextureWidget(val texture:Texture2D, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
 
 // a panel a gui element that has children
 abstract class Panel extends Widget { thispanel =>

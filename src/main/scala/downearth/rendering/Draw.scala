@@ -5,6 +5,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.Display
 import org.newdawn.slick.Color
 import downearth.util._
@@ -15,6 +16,7 @@ import downearth.DisplayEvent
 import downearth.Main
 import org.lwjgl.BufferUtils
 import simplex3d.math.floatx.{Vec2f, Vec3f}
+import downearth.rendering.shader.ArrayGlBuffer
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -92,9 +94,15 @@ object GlDraw extends Draw {
 
   lazy val texturedCubeBuffer = new {
     // GL_QUADS
-    val normalsBuf   = BufferUtils.createByteBuffer(sizeOf[Vec3f] * 24)
-    val texCoordsBuf = BufferUtils.createByteBuffer(sizeOf[Vec2f] * 24)
-    val positionsBuf = BufferUtils.createByteBuffer(sizeOf[Vec3f] * 24)
+
+
+    val normalsBuf   = new ArrayGlBuffer create()
+    val texCoordsBuf = new ArrayGlBuffer create()
+    val positionsBuf = new ArrayGlBuffer create()
+
+    val normalsData = BufferUtils.createByteBuffer( sizeOf[Vec3f] * 24 )
+    val texCoordsData = BufferUtils.createByteBuffer( sizeOf[Vec2f] * 24 )
+    val positionsData = BufferUtils.createByteBuffer( sizeOf[Vec3f] * 24 )
 
     {
       val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
@@ -112,22 +120,30 @@ object GlDraw extends Draw {
         val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
         val v = (j & 2) >> 1
 
-        normalsBuf.putFloat( normals(k) ).putFloat(normals(k+1)).putFloat(normals(k+2))
-        texCoordsBuf.putFloat(u).putFloat(v)
-        positionsBuf.putFloat(x).putFloat(y).putFloat(z)
+        normalsData.putFloat( normals(k) ).putFloat(normals(k+1)).putFloat(normals(k+2))
+        texCoordsData.putFloat(u).putFloat(v)
+        positionsData.putFloat(x).putFloat(y).putFloat(z)
 
         i += 1
       }
 
-      normalsBuf.flip
-      texCoordsBuf.flip
-      positionsBuf.flip
+      normalsData.flip
+      texCoordsData.flip
+      positionsData.flip
+
+      normalsBuf.bind()
+      normalsBuf.putData(normalsData)
+      texCoordsBuf.bind()
+      texCoordsBuf.putData(texCoordsData)
+      positionsBuf.bind()
+      positionsBuf.putData(positionsData)
+
+      glBindBuffer( GL_ARRAY_BUFFER, 0 )
     }
   }
 
   def texturedCube() {
-
-
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
 
     glEnableClientState(GL_VERTEX_ARRAY)
     glEnableClientState(GL_NORMAL_ARRAY)
@@ -135,38 +151,19 @@ object GlDraw extends Draw {
 
     glColor3f(1,1,1)
 
-    glVertexPointer(3, 0, texturedCubeBuffer.positionsBuf.asFloatBuffer())
-    glTexCoordPointer(2, 0, texturedCubeBuffer.texCoordsBuf.asFloatBuffer())
-    glNormalPointer(0, texturedCubeBuffer.normalsBuf.asFloatBuffer())
+    import texturedCubeBuffer.{ positionsBuf, texCoordsBuf, normalsBuf }
+
+    positionsBuf.bind()
+    glVertexPointer(3, GL_FLOAT, 0, 0)
+    texCoordsBuf.bind()
+    glTexCoordPointer(2, GL_FLOAT, 0, 0)
+    normalsBuf.bind()
+    glNormalPointer(GL_FLOAT, 0, 0)
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     glDrawArrays(GL_QUADS, 0, 4*6)
 
-    glDisableClientState(GL_VERTEX_ARRAY)
-    glDisableClientState(GL_NORMAL_ARRAY)
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-
-//    val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
-//    val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
-//    var i = 0
-//    glBegin(GL_QUADS)
-//    for(idx <- indices) {
-//      val x = (idx & 1) >> 0
-//      val y = (idx & 2) >> 1
-//      val z = (idx & 4) >> 2
-//
-//      val j = i & 3
-//      val k = (i >> 2) << 2
-//
-//      val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
-//      val v = (j & 2) >> 1
-//
-//      glNormal3f( normals(k), normals(k+1), normals(k+2) )
-//      glTexCoord2f(u,v)
-//      glVertex3f(x,y,z)
-//
-//      i += 1
-//    }
-//    glEnd()
+    glPopClientAttrib()
   }
 
 	def plainCube() {
