@@ -1,5 +1,7 @@
 package downearth;
 
+import "math.proto";
+
 option java_package = "downearth.message";
 option java_outer_classname = "PersistentWorld";
 
