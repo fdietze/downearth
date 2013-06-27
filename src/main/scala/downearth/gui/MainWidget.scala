@@ -8,7 +8,7 @@ import org.lwjgl.opengl.Display
 import simplex3d.math.Vec2i
 import simplex3d.math.double._
 import downearth.tools._
-import downearth.generation.MaterialManager
+import downearth.resources.MaterialManager
 
 object MainWidget extends Panel {
   val position = Vec2i(0)

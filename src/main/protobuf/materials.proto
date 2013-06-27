@@ -1,0 +1,20 @@
+package downearth;
+
+option java_package = "downearth.message";
+option java_outer_classname = "MaterialDefinitions";
+
+message MaterialSet {
+  repeated Material set = 1;
+}
+
+message Material {
+  required uint32 id = 1;
+  required string name = 2;
+  repeated Property properties = 3;
+  repeated uint32 parents = 4;
+}
+
+message Property {
+  required string key = 1;
+  required double value = 2;
+}

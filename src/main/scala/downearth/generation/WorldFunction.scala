@@ -3,6 +3,7 @@ package downearth.generation
 import simplex3d.math.double._
 import interval.{Interval, Interval3}
 import simplex3d.math.Vec3i
+import downearth.resources.Material
 
 abstract class WorldFunction {
   val perlinNoise3:(Vec3 => Double) = noise.perlin.simple _

@@ -8,7 +8,7 @@ import downearth.rendering.TextureManager
 import simplex3d.math.doublex.functions._
 import downearth.util.Logger
 import downearth.tools.{ConstructionTool, PlayerTool}
-import downearth.generation.Material
+import downearth.resources.Material
 
 class MaterialWidget(val material:Material, val position:Vec2i)
 	extends TextureWidget(material.texture, material.texPos, material.texSize )
