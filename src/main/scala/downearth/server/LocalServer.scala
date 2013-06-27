@@ -4,7 +4,6 @@ import akka.actor.{Actor, Props, ActorSystem}
 import simplex3d.math.Vec3i
 import collection.mutable
 import downearth.util._
-import downearth.worldoctree.{FullHexaeder, Polyeder, EmptyHexaeder}
 import java.io.{FileInputStream, File, FileOutputStream}
 import downearth.message._
 import downearth.message.implicits._
@@ -17,7 +16,9 @@ object LocalServer {
 class LocalServer extends Actor {
   val file = new File("worlddelta.save")
   val deltaSet = new mutable.HashMap[Vec3i,Block] {
-    def +=(d:Delta):Unit = update(d.pos, d.block)
+    def +=(d:Delta) {
+      update(d.pos, d.block)
+    }
     def apply(range:NodeInfo) = DeltaSet(this.collect {
       case (pos, block) if indexInRange(pos, range.pos, range.size) => Delta(pos,block)
     }.toVector)
@@ -50,7 +51,7 @@ class LocalServer extends Actor {
     case m => println("Server: Unknown Message: " + m)
   }
 
-  override def postStop {
+  override def postStop() {
     save()
     println("Server: Stopped")
   }
