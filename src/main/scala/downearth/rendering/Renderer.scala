@@ -81,9 +81,13 @@ object Renderer extends Logger {
   val u_mvp      = programBinding.uniformMat4f("u_mvp")
 
   val a_instance_position = programBinding.attributeVec3f("a_instance_position")
-  a_instance_position.divisor = 1
   val a_instance_scale    = programBinding.attributeFloat("a_instance_scale")
-  a_instance_scale.divisor = 1
+
+  shaderProgram.use{
+    a_instance_position.divisor = 1
+    a_instance_scale.divisor = 1
+  }
+
   val u_tint = programBinding.uniformVec4f("u_tint")
 
   programBinding.attributeVec3f("a_position") := GlDraw.texturedCubeBuffer.positionsData
@@ -104,7 +108,6 @@ object Renderer extends Logger {
       testBinding.enableAttributes()
 
       testBinding.bind()
-
       glDrawArrays(GL_QUADS, 0, 4)
 
       testBinding.disableAttributes()

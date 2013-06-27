@@ -30,9 +30,15 @@ object Main extends Logger {
 
     log.println( "started" )
 
+    val ca = new ContextAttribs(2,1)
+    val alpha = 8
+    val depth = 16
+    val stencil = 0
+    val pf = new PixelFormat(alpha, depth, stencil)
+
     Display.setDisplayMode( new DisplayMode(Config.windowResolutionWidth,Config.windowResolutionHeight) )
     Display.setResizable(true)
-    Display.create()
+    Display.create(pf, ca)
 
     log.println( "display created" )
 
