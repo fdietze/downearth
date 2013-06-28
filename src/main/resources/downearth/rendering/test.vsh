@@ -1,4 +1,4 @@
-// attribute vec4 a_pos;
+#version 150
 
 attribute vec4 a_pos;
 

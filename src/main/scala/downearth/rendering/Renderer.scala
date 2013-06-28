@@ -8,15 +8,10 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
-import org.lwjgl.opengl.ARBInstancedArrays._
-import org.lwjgl.opengl.ARBDrawInstanced._
-import simplex3d.math.floatx.{Vec2f, Mat4f, Vec4f, Vec3f}
+import simplex3d.math.floatx.{Mat4f, Vec4f, Vec3f}
 import downearth.worldoctree.NodeInfo
 import scala.Tuple2
 
-//import simplex3d.backend.lwjgl.ArbEquivalents.GL15._
-import org.lwjgl.opengl.GL20._
-//import simplex3d.backend.lwjgl.ArbEquivalents.GL20._
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl._
 import org.lwjgl.opengl.ARBBufferObject._
@@ -66,16 +61,25 @@ object Renderer extends Logger {
     Program("test")(vertShader)(fragShader)
   }
 
-  val programBinding = shaderProgram.getBinding
-  println(programBinding)
+  val vaoShaderProgram = GL30.glGenVertexArrays()
+  val vaoTestProgram = GL30.glGenVertexArrays()
 
+
+  GL30.glBindVertexArray(vaoTestProgram)
   val testBinding = testProgram.getBinding
   println( testBinding )
+
+
 
   // val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
   // data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
   val a_pos = testBinding.attributeVec4f("a_pos")
   a_pos := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
+
+  GL30.glBindVertexArray(vaoShaderProgram)
+
+  val programBinding = shaderProgram.getBinding
+  println(programBinding)
 
   // programBinding.bindUniformMat4("u_modelview", view * model )
   val u_mvp      = programBinding.uniformMat4f("u_mvp")
@@ -92,6 +96,8 @@ object Renderer extends Logger {
 
   programBinding.attributeVec3f("a_position") := GlDraw.texturedCubeBuffer.positionsData
 
+  GL30.glBindVertexArray(0)
+
   // this is occlusion querry from the last frame
   var query:Query = null
 
@@ -104,6 +110,7 @@ object Renderer extends Logger {
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
+    GL30.glBindVertexArray(vaoTestProgram)
     testProgram.use {
       testBinding.enableAttributes()
 
@@ -112,6 +119,7 @@ object Renderer extends Logger {
 
       testBinding.disableAttributes()
     }
+    GL30.glBindVertexArray(0)
 
     renderWorld( Player.camera )
 
@@ -211,7 +219,6 @@ object Renderer extends Logger {
           World.octree.generateNode(result)
       query = findUngeneratedNodes(camera, World.octree, frustumTest, order)
     } else { // perform frustum test only
-      val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
       World.octree.queryRegion( frustumTest ) (order) {
         case (info, UngeneratedInnerNode) =>
           World.octree.generateNode(info)
@@ -282,9 +289,6 @@ object Renderer extends Logger {
     val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
     val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
 
-    if( !Config.visibleOcclusionTest )
-      glColorMask(false,false,false,false)
-
     octree.queryRegion( test ) (order) {
       case (info, UngeneratedInnerNode) =>
         nodeInfoBufferUngenerated += info
@@ -302,6 +306,11 @@ object Renderer extends Logger {
     val view = Mat4(camera.view)
     val projection = Mat4(camera.projection)
 
+    GL30.glBindVertexArray(vaoShaderProgram)
+
+    if( !Config.visibleOcclusionTest )
+      glColorMask(false,false,false,false)
+
     u_mvp := Mat4f(projection * view)
 
     val magicNr = 8
@@ -315,16 +324,17 @@ object Renderer extends Logger {
     glGenQueries( buffer )
     val queries = new Query(buffer, reducedNodeInfos)
 
+
+
     shaderProgram.use {
       programBinding.enableAttributes()
-
 
       for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) ) {
         u_tint := tint
         a_instance_position := renderNodeInfos.map( info => Vec3f(info.pos) )
         a_instance_scale := renderNodeInfos.map( info => info.size.toFloat )
         programBinding.bindChanges()
-        glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderNodeInfos.size)
+        GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
       }
 
       glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -338,7 +348,7 @@ object Renderer extends Logger {
 
         programBinding.bindChanges()
 
-        glDrawArraysInstancedARB(GL_QUADS, 0, 24, 1)
+        GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
 
         glEndQuery(GL_SAMPLES_PASSED)
       }
@@ -347,6 +357,10 @@ object Renderer extends Logger {
     }
 
     glColorMask(true, true, true, true)
+
+    GL30.glBindVertexArray(0)
+
+
 
     queries
   }

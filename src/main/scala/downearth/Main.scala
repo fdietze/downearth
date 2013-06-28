@@ -30,7 +30,7 @@ object Main extends Logger {
 
     log.println( "started" )
 
-    val ca = new ContextAttribs(2,1)
+    val ca = new ContextAttribs(3,2).withProfileCompatibility(true)
     val alpha = 8
     val depth = 16
     val stencil = 0
@@ -259,7 +259,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
       // Keyboard Events
       while ( Keyboard.next ) {
-        if( getEventKey != KEY_NONE ){
+        if( getEventKey != KEY_NONE ) {
           if( getEventKeyState )
             publish( KeyPress(getEventKey) )
           else
