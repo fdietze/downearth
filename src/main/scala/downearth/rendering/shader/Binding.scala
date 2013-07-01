@@ -46,9 +46,10 @@ abstract class Binding( val program:Program ) extends AddString {
     val groupedAttributes = attributes.groupBy( _.bufferBinding.buffer )
 
     for( (buffer, atList) <- groupedAttributes ) {
-      buffer.bind()
-      for( binding <- atList ) {
-        binding.writeData()
+      buffer.bind {
+        for( binding <- atList ) {
+          binding.writeData()
+        }
       }
     }
 

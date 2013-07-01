@@ -20,7 +20,7 @@ import downearth.util._
 import org.lwjgl.opengl.ARBInstancedArrays._
 
 
-case class BufferBinding(buffer:ArrayGlBuffer, size:Int, glType:Int, normalized:Boolean, stride:Int, offset:Int) {
+case class BufferBinding(buffer:ArrayBuffer, size:Int, glType:Int, normalized:Boolean, stride:Int, offset:Int) {
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
   require( stride > 0 )
 
@@ -69,7 +69,6 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
 
   def writeData() {
     val bb = bufferBinding
-
     glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
   }
 

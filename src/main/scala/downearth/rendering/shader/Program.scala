@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL15._
  * Date: 02.06.13
  * Time: 20:47
  */
+
 object Program {
   def apply(name:String)(vertexShaders: VertexShader*)(fragmentShaders: FragmentShader*) = {
 
@@ -27,13 +28,19 @@ object Program {
     val program = new Program(name)
     program.create()
 
-    for(shader <- shaderList)
+    for(shader <- shaderList){
       program attach shader
+    }
+
+    if( fragmentShaders.isEmpty ){
+      val attributes = Array[CharSequence]("gl_Position")
+      program.transformFeedbackVaryings( attributes )
+    }
 
     program.link()
 
 //    for(shader <- shaderList)
-//      program detach shader
+//      program detach shader x
 
     program
   }
@@ -194,6 +201,32 @@ class Program(val name:String) { program =>
 
   override def toString = name
 
+  def transformFeedbackVaryings(names: Array[CharSequence], interleaved:Boolean = false) {
+    val mode =  if(interleaved) GL30.GL_INTERLEAVED_ATTRIBS else GL30.GL_SEPARATE_ATTRIBS
+    GL30.glTransformFeedbackVaryings(id, names, mode)
+  }
+
+  def getTransformFeedback = {
+    val numTransformFeedback = GL20.glGetProgrami(id, GL30.GL_TRANSFORM_FEEDBACK_VARYINGS)
+
+    val lengthBuf = BufferUtils.createIntBuffer(1)
+    val sizeBuf = BufferUtils.createIntBuffer(1)
+    val ttypeBuf = BufferUtils.createIntBuffer(1)
+    val nameBuf = BufferUtils.createByteBuffer(100)
+
+    for(i <- 0 until numTransformFeedback) yield {
+      GL30.glGetTransformFeedbackVarying(id, i, lengthBuf, sizeBuf, ttypeBuf, nameBuf)
+      val length = lengthBuf.get(0)
+      val size = sizeBuf.get(0)
+      val ttype = ttypeBuf.get(0)
+      nameBuf.limit(length)
+      val sb = new StringBuilder(length)
+      for(i <- 0 until length) { sb += nameBuf.get(i).toChar }
+      val name = sb.result()
+        s"location: $i, size: $size, type:${Program.shaderTypeString(ttype)}, name:$name "
+    }
+  }
+
   def getBinding = {
     val numUniforms   = glGetProgrami(id, GL_ACTIVE_UNIFORMS)
     val numAttributes = glGetProgrami(id, GL_ACTIVE_ATTRIBUTES)
@@ -213,7 +246,7 @@ class Program(val name:String) { program =>
           val glType = sizetypeBuffer.get(1)
 
           val bufferBinding = new BufferBinding(
-              buffer = new ArrayGlBuffer() create(),
+              buffer = new ArrayBuffer() create(),
               size = glType match {
                 case GL_FLOAT | GL_INT => 1
                 case GL_FLOAT_VEC2 => 2
@@ -256,24 +289,22 @@ class Program(val name:String) { program =>
         for( i <- 0 until numUniforms) yield {
           val name = glGetActiveUniform(id, i, 1000, sizetypeBuffer)
           val size = sizetypeBuffer.get(0)
-          val _type = sizetypeBuffer.get(1)
+          val ttype = sizetypeBuffer.get(1)
           val location = glGetUniformLocation(id, name)
-
-          println(s"size:$size type:${_type}")
 
           val config = new UniformConfig(
             program = program,
             binding = binding,
             name = name,
             location = location,
-            glType = _type,
+            glType = ttype,
             size = size
           )
 
-          if( Program.isSampler(_type) ) {
+          if( Program.isSampler(ttype) ) {
 
             val uniform =
-            _type match {
+            ttype match {
               case GL_SAMPLER_2D => new UniformSampler2D(currentSampler, config)
               case GL_SAMPLER_CUBE => new UniformSamplerCube(currentSampler, config)
               case _ => ???
@@ -283,7 +314,7 @@ class Program(val name:String) { program =>
             uniform
           }
           else {
-            _type match {
+            ttype match {
               case GL_FLOAT =>
                 new UniformFloat(config)
               case GL_FLOAT_VEC2 =>
@@ -295,29 +326,11 @@ class Program(val name:String) { program =>
               case GL_FLOAT_MAT4 =>
                 new UniformMat4f(config)
               case _ =>
-                throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(_type) )
+                throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(ttype) )
             }
           }
         }
     }
-  }
-
-  def setupTransformFeedbackBuffer() {
-    import EXTTransformFeedback._
-    import ARBUniformBufferObject._
-
-    val attr = Array[CharSequence]("gl_Position")
-    Util.checkGLError()
-    // generating the buffer, note that GL_TRANSFORM_FEEDBACK_BUFFER is NOT a buffer type
-    val tfvbo = glGenBuffers
-    glBindBuffer( GL_ARRAY_BUFFER, tfvbo )
-    glBufferData( GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(2*3*4), GL_DYNAMIC_DRAW )
-
-    // bind the TFB to get the feedback;  MUST be done here, not in display() !
-    glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER_EXT, 0, tfvbo )
-    glTransformFeedbackVaryingsEXT( id, attr, GL_INTERLEAVED_ATTRIBS_EXT )
-
-    Util.checkGLError()
   }
 
   def create() {
@@ -333,14 +346,15 @@ class Program(val name:String) { program =>
     checkLinkStatus()
   }
 
-  def use() {
+  private def use() {
     glUseProgram(id)
   }
 
   def use(block: => Unit) {
+    val outerScope = glGetInteger(GL_CURRENT_PROGRAM)
     glUseProgram(id)
     block
-    glUseProgram(0)
+    glUseProgram(outerScope)
   }
 
   def isActive = id == glGetInteger(GL_CURRENT_PROGRAM)

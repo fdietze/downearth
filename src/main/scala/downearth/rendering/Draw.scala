@@ -16,7 +16,7 @@ import downearth.DisplayEvent
 import downearth.Main
 import org.lwjgl.BufferUtils
 import simplex3d.math.floatx.{Vec2f, Vec3f}
-import downearth.rendering.shader.ArrayGlBuffer
+import downearth.rendering.shader.ArrayBuffer
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -96,9 +96,9 @@ object GlDraw extends Draw {
     // GL_QUADS
 
 
-    val normalsBuf   = new ArrayGlBuffer create()
-    val texCoordsBuf = new ArrayGlBuffer create()
-    val positionsBuf = new ArrayGlBuffer create()
+    val normalsBuf   = new ArrayBuffer create()
+    val texCoordsBuf = new ArrayBuffer create()
+    val positionsBuf = new ArrayBuffer create()
 
     val normalsData = BufferUtils.createByteBuffer( sizeOf[Vec3f] * 24 )
     val texCoordsData = BufferUtils.createByteBuffer( sizeOf[Vec2f] * 24 )
@@ -131,14 +131,15 @@ object GlDraw extends Draw {
       texCoordsData.flip
       positionsData.flip
 
-      normalsBuf.bind()
-      normalsBuf.putData(normalsData)
-      texCoordsBuf.bind()
-      texCoordsBuf.putData(texCoordsData)
-      positionsBuf.bind()
-      positionsBuf.putData(positionsData)
-
-      glBindBuffer( GL_ARRAY_BUFFER, 0 )
+      normalsBuf.bind{
+        normalsBuf.putData(normalsData)
+      }
+      texCoordsBuf.bind{
+        texCoordsBuf.putData(texCoordsData)
+      }
+      positionsBuf.bind{
+        positionsBuf.putData(positionsData)
+      }
     }
   }
 
@@ -153,14 +154,15 @@ object GlDraw extends Draw {
 
     import texturedCubeBuffer.{ positionsBuf, texCoordsBuf, normalsBuf }
 
-    positionsBuf.bind()
-    glVertexPointer(3, GL_FLOAT, 0, 0)
-    texCoordsBuf.bind()
-    glTexCoordPointer(2, GL_FLOAT, 0, 0)
-    normalsBuf.bind()
-    glNormalPointer(GL_FLOAT, 0, 0)
-    glBindBuffer(GL_ARRAY_BUFFER, 0)
-
+    positionsBuf.bind{
+      glVertexPointer(3, GL_FLOAT, 0, 0)
+    }
+    texCoordsBuf.bind{
+      glTexCoordPointer(2, GL_FLOAT, 0, 0)
+    }
+    normalsBuf.bind{
+      glNormalPointer(GL_FLOAT, 0, 0)
+    }
     glDrawArrays(GL_QUADS, 0, 4*6)
 
     glPopClientAttrib()

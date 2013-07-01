@@ -61,7 +61,7 @@ object Skybox {
 
     dataBuffer.flip()
 
-    val buffer = new ArrayGlBuffer
+    val buffer = new ArrayBuffer
     buffer.create()
     buffer.bind{
       buffer.putData(dataBuffer)

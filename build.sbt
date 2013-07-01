@@ -43,7 +43,7 @@ javaOptions in run ++= Seq(
   "-XX:+ExplicitGCInvokesConcurrent",
   "-Xmx512m",
   "-Dorg.lwjgl.util.Debug=true",
-  "-Dorg.lwjgl.opengl.Window.undecorated=true",
+//  "-Dorg.lwjgl.opengl.Window.undecorated=true",
   "-Dmyprocessname"
 )
 

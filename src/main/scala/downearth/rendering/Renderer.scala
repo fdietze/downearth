@@ -52,8 +52,21 @@ object Renderer extends Logger {
   lazy val shaderProgram = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
-    Program("simple")(vertShader)(fragShader)
+    val program = Program("simple")(vertShader)(fragShader)
+    vertShader.delete()
+    fragShader.delete()
+    program
   }
+
+  lazy val trasformFeedbackTest = {
+    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
+    val program = Program("simple")(vertShader)()
+    vertShader.delete()
+    program
+  }
+
+  println(trasformFeedbackTest.getTransformFeedback.mkString("\n"))
+
 
 //  val testProgram = {
 //    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
