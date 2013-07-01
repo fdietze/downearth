@@ -19,9 +19,14 @@ import java.nio.ByteBuffer
 import downearth.util._
 import org.lwjgl.opengl.ARBInstancedArrays._
 
-final class BufferBinding(var buffer:ArrayGlBuffer, val size:Int, val glType:Int, val normalized:Boolean, val stride:Int, val offset:Int) {
+
+case class BufferBinding(buffer:ArrayGlBuffer, size:Int, glType:Int, normalized:Boolean, stride:Int, offset:Int) {
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
   require( stride > 0 )
+
+  override def toString = {
+    s"BufferBinding($buffer, size: $size, ${Program.shaderTypeString(glType)}, normalized: $normalized, stride: $stride, offset: $offset)"
+  }
 }
 
 abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
@@ -64,7 +69,10 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
 
   def writeData() {
     val bb = bufferBinding
+
     glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
+
+    println( name, location, bb );
   }
 
   override def addString(sb:StringBuilder) = {
@@ -242,7 +250,7 @@ class AttributeVec4f(val program:Program, val binding:Binding, val name:CharSequ
       data.putFloat(offset + i*stride + 0,  v.x)
       data.putFloat(offset + i*stride + 4,  v.y)
       data.putFloat(offset + i*stride + 8,  v.z)
-      data.putFloat(offset * i*stride + 12, v.w)
+      data.putFloat(offset + i*stride + 12, v.w)
     }
 
     bufferBinding.buffer.bind{

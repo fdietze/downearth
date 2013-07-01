@@ -36,6 +36,7 @@ abstract class GlBuffer() {
 
   def delete() {
     glDeleteBuffers(id)
+    hasData = false
     id = 0
   }
 
@@ -45,11 +46,20 @@ abstract class GlBuffer() {
     glBufferData(target, buffer, usage)
   }
 
+  def putData( buffer:FloatBuffer ) {
+      require( buffer.position() == 0, "forgot to flip the buffer?" )
+      hasData = true
+      glBufferData(target, buffer, usage)
+    }
+
+
   def getData( buffer:ByteBuffer, offset:Int = 0 ) = {
     require( buffer.position() == 0, "forgot to flip the buffer?" )
     glGetBufferSubData(target, offset, buffer)
     buffer
   }
+
+  override def toString = s"GlBuffer($id)"
 
 }
 

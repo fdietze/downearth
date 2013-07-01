@@ -69,8 +69,6 @@ object Renderer extends Logger {
   val testBinding = testProgram.getBinding
   println( testBinding )
 
-
-
   // val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
   // data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
   val a_pos = testBinding.attributeVec4f("a_pos")
@@ -115,7 +113,7 @@ object Renderer extends Logger {
       testBinding.enableAttributes()
 
       testBinding.bind()
-      glDrawArrays(GL_QUADS, 0, 4)
+      glDrawArrays(GL_TRIANGLES, 0, 3)
 
       testBinding.disableAttributes()
     }

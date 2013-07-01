@@ -61,11 +61,13 @@ abstract class Shader {
 
   def checkCompileStatus() {
     val status = glGetShaderi(id, GL_COMPILE_STATUS)
+    val infoLogLength = glGetShaderi(id, GL_INFO_LOG_LENGTH)
+    val strInfoLog = if( infoLogLength > 0 ) glGetShaderInfoLog(id, infoLogLength) else ""
+    if( infoLogLength > 0 ){
+      println(strInfoLog)
+    }
     if (status == GL_FALSE)
     {
-      val infoLogLength = glGetShaderi(id, GL_INFO_LOG_LENGTH)
-      val strInfoLog = glGetShaderInfoLog(id, infoLogLength)
-
       val strShaderType = shaderType match {
         case GL_VERTEX_SHADER   => "vertex"
         //      case GL_GEOMETRY_SHADER => "geometry"
