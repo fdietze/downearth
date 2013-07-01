@@ -13,7 +13,7 @@ abstract class Resource
 
 
 object Material {
-  type Property = Symbol
+  type Property = String
 
   // map material definition from WorldDefinition
   def apply(id:Int, r:Double, g:Double, b:Double):Material = Resources.materials(id)
@@ -70,7 +70,7 @@ object Resources {
           mat.id,
           mat.name,
           mat.parents.toList,
-          mat.properties.map{case message.Property(name,value) => (Symbol(name) -> value)}.toMap)
+          mat.properties.map{case message.Property(name,value) => (name -> value)}.toMap)
           )
 
       // inherit properties
@@ -81,7 +81,7 @@ object Resources {
       // set indirect parent ids
       def collectParents(id:Int):List[Int] = this(id).parents ::: this(id).parents.flatMap(collectParents)
       for( (id,mat) <- this )
-        this(id) = mat.copy(parents = collectParents(id))
+        this(id) = mat.copy(parents = collectParents(id).distinct)
 
       println(this.values.mkString("\n"))
     }
