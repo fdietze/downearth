@@ -71,8 +71,6 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
     val bb = bufferBinding
 
     glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
-
-    println( name, location, bb );
   }
 
   override def addString(sb:StringBuilder) = {

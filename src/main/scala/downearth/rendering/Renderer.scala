@@ -55,24 +55,24 @@ object Renderer extends Logger {
     Program("simple")(vertShader)(fragShader)
   }
 
-  val testProgram = {
-    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
-    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
-    Program("test")(vertShader)(fragShader)
-  }
+//  val testProgram = {
+//    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
+//    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
+//    Program("test")(vertShader)(fragShader)
+//  }
 
   val vaoShaderProgram = GL30.glGenVertexArrays()
-  val vaoTestProgram = GL30.glGenVertexArrays()
+// val vaoTestProgram = GL30.glGenVertexArrays()
 
 
-  GL30.glBindVertexArray(vaoTestProgram)
-  val testBinding = testProgram.getBinding
-  println( testBinding )
-
-  // val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
-  // data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
-  val a_pos = testBinding.attributeVec4f("a_pos")
-  a_pos := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
+//  GL30.glBindVertexArray(vaoTestProgram)
+//  val testBinding = testProgram.getBinding
+//  println( testBinding )
+//
+//  // val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
+//  // data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
+//  val a_pos = testBinding.attributeVec4f("a_pos")
+//  a_pos := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
 
   GL30.glBindVertexArray(vaoShaderProgram)
 
@@ -92,7 +92,13 @@ object Renderer extends Logger {
 
   val u_tint = programBinding.uniformVec4f("u_tint")
 
-  programBinding.attributeVec3f("a_position") := GlDraw.texturedCubeBuffer.positionsData
+  val a_position = programBinding.attributeVec3f("a_position")
+  a_position := GlDraw.texturedCubeBuffer.positionsData
+
+  val data = a_position.read(24).map(v => s"${v.x} ${v.y} ${v.z}").grouped(4).mkString("\n")
+  println(data)
+
+
 
   GL30.glBindVertexArray(0)
 
@@ -108,16 +114,16 @@ object Renderer extends Logger {
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
-    GL30.glBindVertexArray(vaoTestProgram)
-    testProgram.use {
-      testBinding.enableAttributes()
-
-      testBinding.bind()
-      glDrawArrays(GL_TRIANGLES, 0, 3)
-
-      testBinding.disableAttributes()
-    }
-    GL30.glBindVertexArray(0)
+//    GL30.glBindVertexArray(vaoTestProgram)
+//    testProgram.use {
+//      testBinding.enableAttributes()
+//
+//      testBinding.bind()
+//      glDrawArrays(GL_TRIANGLES, 0, 3)
+//
+//      testBinding.disableAttributes()
+//    }
+//    GL30.glBindVertexArray(0)
 
     renderWorld( Player.camera )
 
@@ -278,9 +284,6 @@ object Renderer extends Logger {
 
   var randomizer = 0
 
-  val testBuffer = new ArrayGlBuffer
-  testBuffer.create()
-
   def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
     TextureManager.box.bind()
 
@@ -321,8 +324,6 @@ object Renderer extends Logger {
     val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
     glGenQueries( buffer )
     val queries = new Query(buffer, reducedNodeInfos)
-
-
 
     shaderProgram.use {
       programBinding.enableAttributes()
