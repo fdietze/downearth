@@ -14,6 +14,7 @@ import downearth.server.LocalServer
 import scala.concurrent.Await
 import akka.pattern.ask
 import downearth.message.implicits._
+import collection.mutable
 
 object WorldGenerator {
 	import Config.{worldWindowSize => cubesize}
@@ -28,7 +29,7 @@ object WorldGenerator {
 
 		octree
 	}
-	
+
 	def genWorldAt(nodeInfo:NodeInfo):NodeOverMesh = {
 
     // Ask server for World delta asynchronly
@@ -39,7 +40,9 @@ object WorldGenerator {
     // while waiting for answer, start to sample node
     val NodeInfo(nodepos, nodesize) = nodeInfo
 		import HexaederMC._
-		// TODO hier mit prediction arbeiten
+
+
+		val toSample = findNodesToSample(nodeInfo)
 
 		// Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 		// Marching-Cubes für n Cubes: n+1 Datenpunkte
@@ -93,6 +96,8 @@ object WorldGenerator {
       case message.Delta(pos, block) => (messageToSimplexVec3i(pos) -> block)
     }).toMap
 
+
+
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
     // Berücksichtigt auch gespeicherte User-Ändarungen
 		def fillfun(v:Vec3i) = {
@@ -115,5 +120,25 @@ object WorldGenerator {
 
     root.genMesh( nodeInfo, minMeshNodeSize, (x => {if( nodeInfo.indexInRange(x) ) root(nodeInfo,x).h else fillfun(x) }) )
 	}
+
+  // Find areas inside Node to be sampled (using range prediction)
+  def findNodesToSample(nodeInfo: NodeInfo): mutable.ArrayBuffer[NodeInfo] = {
+    def split(node: NodeInfo) = List.fill(8)(node)
+    val toSample = mutable.ArrayBuffer.empty[NodeInfo]
+    val toCheck = mutable.Queue.empty[NodeInfo]
+
+    toCheck ++= split(nodeInfo)
+    while (toCheck.nonEmpty) {
+      val current = toCheck.dequeue()
+      val range = WorldDefinition.range(current.toInterval3)
+      val surfaceInArea = range(0)
+      if (surfaceInArea)
+        if (current.size > Config.minPredictionSize)
+          toCheck ++= split(nodeInfo)
+        else
+          toSample += current
+    }
+    toSample
+  }
 }
 

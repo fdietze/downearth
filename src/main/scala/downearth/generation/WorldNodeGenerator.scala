@@ -96,27 +96,28 @@ class Worker (id:Int) extends Actor {
 
   def receive = {
     case info:NodeInfo =>
+      // Prediction:
+      // Hier wird bis zur minMeshnodeSize geteilt
+      // in genWorldAt wird dann mithilfe der Prediction schlauer gesampled
+
       val interval = WorldDefinition.range(info.toInterval3)
+      val surfaceNotInArea = !interval(0)
 
-      if(!interval(0)) {
+      if( surfaceNotInArea ) {
         GlDraw addPredictedCuboid info.toCuboid  // Für DebugDraw
-
-
         val meshnode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
         meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
         sender ! Tuple2(info, meshnode)
       }
-
       else if( info.size/2 >= Config.minMeshNodeSize ) {
         // if the area is too big, it will be splitted
         val data = Array.fill[NodeOverMesh](8)(UngeneratedInnerNode)
         val node = new InnerNodeOverMesh(data)
         sender ! Tuple2(info, node)
       }
-        // sonst samplen
-      else {
+      else { // sonst samplen
         val meshnode = WorldGenerator genWorldAt info
         sender ! Tuple2(info, meshnode)  // Master
       }
