@@ -289,12 +289,12 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 			None
 	}
 
-  def toMessage = {
+  /*def toMessage = {
     import downearth.message.implicits._
     message.Octree(
       pos  = rootNodePos,
       size = rootNodeSize,
       root = root.toMessage
     )
-  }
+  }}*/
 }

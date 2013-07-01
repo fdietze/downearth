@@ -29,7 +29,7 @@ import downearth.tools._
 import downearth.worldoctree._
 import downearth.world.World
 import downearth.entity.{Entity, SimpleEntity}
-import downearth.generation.MaterialManager
+import downearth.resources.MaterialManager
 import downearth.rendering.shader._
 
 import java.nio.IntBuffer

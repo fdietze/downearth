@@ -25,7 +25,7 @@ sealed trait Node {
 
   def getChild(i:Int):Node
 
-  def toMessage:message.Octant = if(hasChildren)
+  /*def toMessage:message.Octant = if(hasChildren)
     message.Octant(
       children = Vector.tabulate(8)( getChild(_).toMessage )
     )
@@ -35,7 +35,7 @@ sealed trait Node {
         material = Some(leaf.material)
       )
       case _ => message.Octant()
-    }
+    }*/
 }
 
 // im Octree wird unterschieden, ob sich der Node oberhalb oder unterhalb des

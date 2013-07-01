@@ -2,13 +2,14 @@ package downearth.worldoctree
 
 import downearth._
 import downearth.util._
-import downearth.generation.{MaterialManager, WorldDefinition}
+import downearth.generation.WorldDefinition
 import downearth.world.World
 
 import simplex3d.math.{Vec2i, Vec3i}
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
 import downearth.rendering.{Update, TextureMeshBuilder, ObjMesh}
+import downearth.resources.MaterialManager
 
 
 /**
