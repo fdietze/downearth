@@ -17,7 +17,7 @@ class Noise extends FunSuite {
 	//TODO: add accuracy test
 	//TODO: add composition / prediction speed test
   test("perlin noise range (improved)") {
-    val n = 1000000
+    val n = 100000
     import scala.util.Random.{nextDouble => r}
     var low = Double.MaxValue
     var high = Double.MinValue
@@ -32,7 +32,7 @@ class Noise extends FunSuite {
   }
 
   test("perlin noise range (simple)") {
-    val n = 1000000
+    val n = 100000
     import scala.util.Random.{nextDouble => r}
     var low = Double.MaxValue
     var high = Double.MinValue
@@ -47,7 +47,7 @@ class Noise extends FunSuite {
   }
 
   test("perlin noise range (worley)") {
-    val n = 1000000
+    val n = 100000
     import scala.util.Random.{nextDouble => r}
     var low = Vec4(Double.MaxValue)
     var high = Vec4(Double.MinValue)
@@ -68,7 +68,7 @@ class Noise extends FunSuite {
 
     val noisetimer = new Timer
     val predictiontimer = new Timer
-    val n = 2000
+    val n = 200
     for( i <- 0 until n )
     {
       import scala.util.Random.{nextDouble => r}
@@ -92,7 +92,7 @@ class Noise extends FunSuite {
 
     val noisetimer = new Timer
     val predictiontimer = new Timer
-    val n = 2000
+    val n = 200
     for( i <- 0 until n )
     {
       import scala.util.Random.{nextDouble => r}
