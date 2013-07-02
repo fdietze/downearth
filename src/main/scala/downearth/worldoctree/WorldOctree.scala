@@ -54,7 +54,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 
     val infoQueue = mutable.Queue[NodeInfo](rootNodeInfo)
     val nodeQueue = mutable.Queue[Node](root)
-    val dummyOrder = if(camera == null) Array.range(0,7) else null
+    val dummyOrder = if(camera == null) Array.range(0,8) else null
 
     while( nodeQueue.nonEmpty ) {
       val currentInfo = infoQueue.dequeue()

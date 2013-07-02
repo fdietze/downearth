@@ -45,7 +45,9 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		NodeInfo(pos+v*hsize,hsize)
 	}
 
-	def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,size)
+  def split = List.tabulate(8)(apply)
+
+  def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,size)
 	
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
 	
@@ -80,14 +82,15 @@ case class NodeInfo(pos:Vec3i, size:Int) {
   }
 
   def inside(that:NodeInfo) = {
-    any(lessThan(this.pos, that.pos)) || any(greaterThan(this.upperPos,that.upperPos))
+    all(greaterThanEqual(this.pos, that.pos)) &&
+    all(lessThanEqual(this.upperPos, that.upperPos))
   }
 	
 	def toCuboid = Cuboid(pos, Vec3i(size))
 	def toInterval3 = Interval3(Vec3(pos), Vec3(pos+size))
 }
 
-@deprecated("move everything to NodeInfo")
+//TODO: @deprecated("move everything to NodeInfo")
 case class Cuboid(pos:Vec3i, size:Vec3i) {
 	def toInterval3 = Interval3(Vec3(pos), Vec3(pos + size))
 	def toNodeinfo = {

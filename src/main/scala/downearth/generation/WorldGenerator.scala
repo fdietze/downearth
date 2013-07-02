@@ -123,18 +123,17 @@ object WorldGenerator {
 
   // Find areas inside Node to be sampled (using range prediction)
   def findNodesToSample(nodeInfo: NodeInfo): mutable.ArrayBuffer[NodeInfo] = {
-    def split(node: NodeInfo) = List.fill(8)(node)
     val toSample = mutable.ArrayBuffer.empty[NodeInfo]
     val toCheck = mutable.Queue.empty[NodeInfo]
 
-    toCheck ++= split(nodeInfo)
+    toCheck ++= nodeInfo.split
     while (toCheck.nonEmpty) {
       val current = toCheck.dequeue()
       val range = WorldDefinition.range(current.toInterval3)
       val surfaceInArea = range(0)
       if (surfaceInArea)
         if (current.size > Config.minPredictionSize)
-          toCheck ++= split(nodeInfo)
+          toCheck ++= current.split
         else
           toSample += current
     }
