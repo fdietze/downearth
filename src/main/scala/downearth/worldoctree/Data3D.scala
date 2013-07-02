@@ -33,8 +33,6 @@ trait Data3D[A]{
 			this(v) = f
 		}
 	}
-
-  def fillSubareas(Iterable:)
 }
 
 class Array3D[@specialized(Byte,Short,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])

@@ -14,6 +14,7 @@ import downearth.util._
 // um Metainformationen der Kindknoten berechnen zu können.
 case class NodeInfo(pos:Vec3i, size:Int) {
 	def upperPos = pos+size
+
 	// Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
 	// Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an 
 	// vielen stellen wird noch sein Verhalten imitiert.
@@ -29,7 +30,7 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 	
 	// Erzeugung des NodeInfo vom Kindknoten, aus einem Vektor-Index
 	def apply(p:Vec3i):(Int,NodeInfo) = {
-		assert( indexInRange(p) )
+		require( indexInRange(p) )
 		val v = indexVec(p,pos,size)
 		val index = flat(v)
 		val hsize = size >> 1
@@ -53,11 +54,37 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		val pos2 = min(upperPos,that.upperPos)
 		pos1 until pos2
 	}
+
+  def center = pos + (size >> 2)
+
+  // front to back Traversal order seen from point p
+  def traversalOrder(camera:ReadVec3):Array[Int] = {
+    val dir = center-camera
+    val  x = if( dir.x < 0 ) 1 else 0
+    val  y = if( dir.y < 0 ) 2 else 0
+    val  z = if( dir.z < 0 ) 4 else 0
+
+    val nx = if( dir.x < 0 ) 0 else 1
+    val ny = if( dir.y < 0 ) 0 else 2
+    val nz = if( dir.z < 0 ) 0 else 4
+
+    val v1 =  x |  y |  z
+    val v2 =  x |  y | nz
+    val v3 =  x | ny |  z
+    val v4 =  x | ny | nz
+    val v5 = nx |  y |  z
+    val v6 = nx |  y | nz
+    val v7 = nx | ny |  z
+    val v8 = nx | ny | nz
+
+    Array(v1,v2,v3,v4,v5,v6,v7,v8)
+  }
 	
 	def toCuboid = Cuboid(pos, Vec3i(size))
 	def toInterval3 = Interval3(Vec3(pos), Vec3(pos+size))
 }
 
+@deprecated("move everything to NodeInfo")
 case class Cuboid(pos:Vec3i, size:Vec3i) {
 	def toInterval3 = Interval3(Vec3(pos), Vec3(pos + size))
 	def toNodeinfo = {
