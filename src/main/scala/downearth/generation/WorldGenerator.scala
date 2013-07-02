@@ -11,10 +11,12 @@ import downearth.worldoctree.NodeInfo
 import downearth.rendering.ObjManager
 import akka.util.Timeout
 import downearth.server.LocalServer
-import scala.concurrent.Await
+import scala.concurrent.{ExecutionContext, Future, Await}
 import akka.pattern.ask
 import downearth.message.implicits._
 import collection.mutable
+import ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 object WorldGenerator {
 	import Config.worldWindowSize
@@ -30,26 +32,19 @@ object WorldGenerator {
 		octree
 	}
 
-	def genWorldAt(nodeInfo:NodeInfo):NodeOverMesh = {
-
-    // Ask server for World delta asynchronly
-    import scala.concurrent.duration._
-    implicit val timeout = Timeout(5 seconds)
-    val deltaSetFuture = LocalServer.server ? message.NodeInfo(nodeInfo.pos, nodeInfo.size)
-
-    // while waiting for answer, start to sample node
+	def genWorldAt(nodeInfo:NodeInfo,
+                 worldFunction:WorldFunction = WorldDefinition,
+                 deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()}):NodeOverMesh = {
     val NodeInfo(nodepos, nodesize) = nodeInfo
 		import HexaederMC._
-
-
-		val toSample = findNodesToSample(nodeInfo)
+		//TODO: val toSample = findNodesToSample(nodeInfo, worldFunction)
 
 		// Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
 		// Marching-Cubes für n Cubes: n+1 Datenpunkte
 		// Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
 		val originalNoiseData = new Array3D[Double](Vec3i(nodesize+3))
 		// Füllen der Datenpunkte mit Hilfe der Dichtefunktion
-		originalNoiseData.fill(v =>	WorldDefinition.density(Vec3(nodepos+v-1)))
+		originalNoiseData.fill(v =>	worldFunction.density(Vec3(nodepos+v-1)))
 		val modifiedNoiseData = originalNoiseData.clone
 		val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 	
@@ -65,8 +60,8 @@ object WorldGenerator {
 			// Datenpunkte extrahieren
 			val originalData = originalNoiseData.extract(coord)
 			val modifiedData = modifiedNoiseData.extract(coord)
-			// Fall für diesen Cube auslesen und benennen
 
+			// Fall für diesen Cube auslesen und benennen
 			val exactCase = exactCaseData(coord)
 			val caseType = caseTypeLookup(exactCase)
 	
@@ -91,9 +86,9 @@ object WorldGenerator {
 		}
 
     // wait for world d from server to overwrite generated blocks
-    val deltaSet = Await.result(deltaSetFuture, timeout.duration).asInstanceOf[message.DeltaSet]
+    val deltaSet = Await.result(deltaSetFuture, Timeout(5 seconds).duration).asInstanceOf[message.DeltaSet]
     val deltaMap = (deltaSet.set map {
-      case message.Delta(pos, block) => (messageToSimplexVec3i(pos) -> block)
+      case message.Delta(pos, block) => messageToSimplexVec3i(pos) -> block
     }).toMap
 
 
@@ -118,18 +113,27 @@ object WorldGenerator {
     // TODO use prediction here
     val root = EmptyLeaf.fill( nodeInfo, pos => Leaf(fillfun(pos)) )
 
-    root.genMesh( nodeInfo, minMeshNodeSize, (x => {if( nodeInfo.indexInRange(x) ) root(nodeInfo,x).h else fillfun(x) }) )
+    root.genMesh( nodeInfo, minMeshNodeSize, x => {
+      if (nodeInfo.indexInRange(x)) root(nodeInfo, x).h else fillfun(x)
+    } )
 	}
 
+
+  // Ask server for World delta asynchronly
+  def askServerForDeltas(nodeInfo: NodeInfo): Future[message.DeltaSet] = {
+    implicit val timeout = Timeout(5 seconds)
+    (LocalServer.server ? message.NodeInfo(nodeInfo.pos, nodeInfo.size)).asInstanceOf[Future[message.DeltaSet]]
+  }
+
   // Find areas inside Node to be sampled (using range prediction)
-  def findNodesToSample(nodeInfo: NodeInfo): mutable.ArrayBuffer[NodeInfo] = {
+  def findNodesToSample(nodeInfo: NodeInfo, worldFunction:WorldFunction = WorldDefinition): mutable.ArrayBuffer[NodeInfo] = {
     val toSample = mutable.ArrayBuffer.empty[NodeInfo]
     val toCheck = mutable.Queue.empty[NodeInfo]
 
     toCheck ++= nodeInfo.split
     while (toCheck.nonEmpty) {
       val current = toCheck.dequeue()
-      val range = WorldDefinition.range(current.toInterval3)
+      val range = worldFunction.range(current.toInterval3)
       val surfaceInArea = range(0)
       if (surfaceInArea)
         if (current.size > Config.minPredictionSize)
