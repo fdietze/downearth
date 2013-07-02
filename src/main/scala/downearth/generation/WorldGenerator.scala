@@ -17,11 +17,11 @@ import downearth.message.implicits._
 import collection.mutable
 
 object WorldGenerator {
-	import Config.{worldWindowSize => cubesize}
+	import Config.worldWindowSize
 	
 	def genWorld:WorldOctree = {
 		// val rootNodeInfo = NodeInfo(Vec3i(-cubesize/2), cubesize)
-		val initArea = NodeInfo( Vec3i(-cubesize/4), cubesize/2 )
+		val initArea = NodeInfo( pos = Vec3i(-worldWindowSize/4), size = worldWindowSize/2 )
 		val octree = new WorldOctree(initArea,genWorldAt(initArea))
 		octree.incDepth()
 
