@@ -14,8 +14,6 @@ import interval.{Interval, Interval3}
 
 class Noise extends FunSuite {
 
-	//TODO: add accuracy test
-	//TODO: add composition / prediction speed test
   test("perlin noise range (improved)") {
     val n = 100000
     import scala.util.Random.{nextDouble => r}
