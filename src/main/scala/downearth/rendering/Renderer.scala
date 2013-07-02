@@ -232,7 +232,7 @@ object Renderer extends Logger {
   var drawCalls = 0
   var emptyDrawCalls = 0
 
-  def drawDebugOctree(octree:WorldOctree, order:Array[Int], test:FrustumTest) {
+  def drawDebugOctree(octree:WorldOctree, camera:ReadVec3, test:FrustumTest) {
 
     glPushMatrix()
     val pos2 = octree.worldWindowPos + 0.05
@@ -243,7 +243,7 @@ object Renderer extends Logger {
 
     var maximumDrawCalls = Config.maxDebugDrawQubes
 
-    octree.queryRegion(test)(order) {
+    octree.queryRegion(test,camera) {
     case (info,octant) =>
       if(! octant.hasChildren) {
         glPushMatrix()
@@ -290,9 +290,7 @@ object Renderer extends Logger {
     drawCalls = 0
     emptyDrawCalls = 0
 
-    val order = WorldOctree.frontToBackOrder(camera.direction)
-
-    drawOctree(World.octree, frustumTest, order)
+    drawOctree(World.octree, frustumTest, camera.position)
 
     World.dynamicWorld.entities foreach {
       case simple:SimpleEntity => ()
@@ -304,9 +302,9 @@ object Renderer extends Logger {
     }
 
     if( Config.occlusionTest ) {
-      OcclusionTest.doIt(camera, frustumTest, order)
+      OcclusionTest.doIt(camera, frustumTest)
     } else { // perform frustum test only
-      World.octree.queryRegion( frustumTest ) (order) {
+      World.octree.queryRegion( frustumTest, camera.position) {
         case (info, UngeneratedInnerNode) =>
           World.octree.generateNode(info)
           false
@@ -327,7 +325,7 @@ object Renderer extends Logger {
     render3dCursor()
 
     if( (debugDraw & DebugDrawOctreeBit) != 0 )
-      drawDebugOctree(World.octree, order, frustumTest)
+      drawDebugOctree(World.octree, camera.position, frustumTest)
     if( (debugDraw & DebugDrawPhysicsBit) != 0 )
       BulletPhysics.debugDrawWorld()
     if( (debugDraw & DebugDrawSampledNodesBit) != 0 )
@@ -366,7 +364,7 @@ object Renderer extends Logger {
 
   var randomizer = 0
 
-  def drawOctree(octree:WorldOctree, test:FrustumTest, order:Array[Int]) {
+  def drawOctree(octree:WorldOctree, test:FrustumTest, camera:ReadVec3) {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
@@ -380,7 +378,7 @@ object Renderer extends Logger {
 
     val objMeshes = ArrayBuffer[(NodeInfo,ObjMesh)]()
 
-    octree.queryRegion( test ) (order) {
+    octree.queryRegion( test, camera ) {
       case (info, node:MeshNode) =>
         drawTextureMesh(node.mesh)
         objMeshes ++= node.objMeshes

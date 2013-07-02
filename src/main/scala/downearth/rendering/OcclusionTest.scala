@@ -14,6 +14,7 @@ import downearth.worldoctree.NodeInfo
 import java.nio.IntBuffer
 import downearth.world.World
 import simplex3d.backend.lwjgl.ArbEquivalents
+import simplex3d.math.ReadVec3i
 
 /**
  * User: arne
@@ -44,13 +45,13 @@ object OcclusionTest {
     occTest_binding.setAttributePointers()
   }
 
-  def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
+  def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest) = {
     TextureManager.box.bind()
 
     val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
     val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
 
-    octree.queryRegion( test ) (order) {
+    octree.queryRegion(test, camera.position) {
       case (info, UngeneratedInnerNode) =>
         nodeInfoBufferUngenerated += info
         false
@@ -149,11 +150,11 @@ object OcclusionTest {
   }
 
 
-  def doIt(camera:Camera, frustumTest:FrustumTest, order:Array[Int]) {
+  def doIt(camera:Camera, frustumTest:FrustumTest) {
     if( query != null )
       for( result <- evalQueries(query).visible )
         World.octree.generateNode(result)
-    query = findUngeneratedNodes(camera, World.octree, frustumTest, order)
+    query = findUngeneratedNodes(camera, World.octree, frustumTest)
   }
 
 }

@@ -16,64 +16,20 @@ import downearth.generation.{GetFinishedJobs, WorldNodeGenerator}
 import downearth.{BulletPhysics, Config, util}
 import downearth.Config._
 import downearth.message
-
-
-object WorldOctree {
-  def frontToBackOrder(dir:Vec3):Array[Int] = {
-    val  x = if( dir.x < 0 ) 1 else 0
-    val  y = if( dir.y < 0 ) 2 else 0
-    val  z = if( dir.z < 0 ) 4 else 0
-
-    val nx = if( dir.x < 0 ) 0 else 1
-    val ny = if( dir.y < 0 ) 0 else 2
-    val nz = if( dir.z < 0 ) 0 else 4
-
-    val v1 =  x |  y |  z
-    val v2 = nx |  y |  z
-    val v3 =  x | ny |  z
-    val v4 = nx | ny |  z
-    val v5 =  x |  y | nz
-    val v6 = nx |  y | nz
-    val v7 =  x | ny | nz
-    val v8 = nx | ny | nz
-
-    Array(v1,v2,v3,v4,v5,v6,v7,v8)
-  }
-}
+import collection.mutable
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] {
-  var worldWindowPos:Vec3i = rootNodePos.clone
-  val worldWindowSize:Int = rootNodeSize
-
-  def worldWindowCenter = worldWindowPos + worldWindowSize/2
-
-  val vsize = Vec3i(worldWindowSize)
-
-  override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
-
   def rootNodePos = rootNodeInfo.pos
   def rootNodeSize = rootNodeInfo.size
 
-  def queryRegion(test:(NodeInfo) => Boolean)(order:Array[Int])(function: (NodeInfo,Node) => Boolean) {
-    require(order.length == 8)
+  var worldWindowPos:Vec3i = rootNodePos.clone
+  val worldWindowSize:Int = rootNodeSize
+  def worldWindowCenter = worldWindowPos + worldWindowSize/2
 
-    val infoQueue = collection.mutable.Queue[NodeInfo](rootNodeInfo)
-    val nodeQueue = collection.mutable.Queue[Node](root)
-
-    while( !nodeQueue.isEmpty ) {
-      val currentInfo = infoQueue.dequeue()
-      val currentNode = nodeQueue.dequeue()
-      if( test(currentInfo) && function(currentInfo,currentNode) && currentNode.hasChildren ) {
-        var i = 0
-        while(i < 8) {
-          nodeQueue += currentNode.getChild(order(i))
-          infoQueue += currentInfo(order(i))
-          i += 1
-        }
-      }
-    }
-  }
+  // for Data3D interface
+  val vsize = Vec3i(worldWindowSize)
+  override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
 
   def apply(p:Vec3i) = {
     if( rootNodeInfo.indexInRange(p) )
@@ -88,6 +44,30 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
     }
     else{
       printf(s"update out of area at $p, $rootNodeInfo\n")
+    }
+  }
+
+  // traverse the octree in a front to back order from point camera
+  // filter the nodes by predicate (for example frustum test)
+  // and apply action to every found node, stop if action returns false
+  def queryRegion(predicate:(NodeInfo) => Boolean, camera:ReadVec3 = null)(action: (NodeInfo,Node) => Boolean ) {
+
+    val infoQueue = mutable.Queue[NodeInfo](rootNodeInfo)
+    val nodeQueue = mutable.Queue[Node](root)
+    val dummyOrder = if(camera == null) Array.range(0,7) else null
+
+    while( nodeQueue.nonEmpty ) {
+      val currentInfo = infoQueue.dequeue()
+      val currentNode = nodeQueue.dequeue()
+      if( predicate(currentInfo) && action(currentInfo, currentNode) && currentNode.hasChildren ) {
+        val order = if(camera != null) currentInfo.traversalOrder(camera) else dummyOrder
+        var i = 0
+        while(i < 8) {
+          nodeQueue += currentNode.getChild(order(i))
+          infoQueue += currentInfo(order(i))
+          i += 1
+        }
+      }
     }
   }
 
@@ -110,7 +90,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 
     var list = List[NodeInfo]()
 
-    queryRegion(_ indexInRange info) ( Array.range(0,8) ) {
+    queryRegion(_ indexInRange info) {
       case (nodeInfo, node) =>
         if( node == UngeneratedInnerNode ) {
           list ::= nodeInfo
