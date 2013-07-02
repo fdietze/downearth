@@ -2,20 +2,21 @@ package downearth.worldoctree
 
 import simplex3d.math._
 import simplex3d.math.double._
-import simplex3d.math.double.functions._
 
 
 import interval.Interval3
 import scala.Predef._
 import downearth.util._
+import simplex3d.math.doublex.functions._
 
 // NodeInfo enthält die Metainformationen für einen Knoten im Octree, also
 // Position in Weltkoordanaten und Größe. Zudem hat die Klasse noch Methoden,
 // um Metainformationen der Kindknoten berechnen zu können.
 case class NodeInfo(pos:Vec3i, size:Int) {
 	def upperPos = pos+size
+  def center = pos + (size >> 2)
 
-	// Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
+  // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
 	// Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an 
 	// vielen stellen wird noch sein Verhalten imitiert.
 	def indexVec(p:Vec3i,nodepos:Vec3i = pos,nodesize:Int = size) = ((p-nodepos)*2)/nodesize
@@ -55,8 +56,6 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		pos1 until pos2
 	}
 
-  def center = pos + (size >> 2)
-
   // front to back Traversal order seen from point p
   def traversalOrder(camera:ReadVec3):Array[Int] = {
     val dir = center-camera
@@ -78,6 +77,10 @@ case class NodeInfo(pos:Vec3i, size:Int) {
     val v8 = nx | ny | nz
 
     Array(v1,v2,v3,v4,v5,v6,v7,v8)
+  }
+
+  def inside(that:NodeInfo) = {
+    any(lessThan(this.pos, that.pos)) || any(greaterThan(this.upperPos,that.upperPos))
   }
 	
 	def toCuboid = Cuboid(pos, Vec3i(size))

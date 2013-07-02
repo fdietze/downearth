@@ -47,7 +47,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
     }
   }
 
-  // traverse the octree in a front to back order from point camera
+  // traverse the octree in a front to back order from view of point camera
   // filter the nodes by predicate (for example frustum test)
   // and apply action to every found node, stop if action returns false
   def queryRegion(predicate:(NodeInfo) => Boolean, camera:ReadVec3 = null)(action: (NodeInfo,Node) => Boolean ) {
@@ -71,13 +71,14 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
     }
   }
 
-  def insert( nodeinfo:NodeInfo, that:NodeOverMesh ) {
-    val NodeInfo(nodepos,nodesize) = nodeinfo
+  // insert Node "that" at position and size of nodeinfo
+  def insert( nodeInfo:NodeInfo, that:NodeOverMesh ) {
+    val NodeInfo(nodepos,nodesize) = nodeInfo
 
-    if( any(lessThan(nodepos, rootNodePos)) || any(greaterThan(nodepos+nodesize,rootNodePos+rootNodeSize)) )
+    if( !(nodeInfo inside rootNodeInfo) )
       incDepth()
 
-    root = root.insertNode(rootNodeInfo, nodeinfo, that)
+    root = root.insertNode(rootNodeInfo, nodeInfo, that)
   }
 
   override def toString = "Octree("+root.toString+")"
