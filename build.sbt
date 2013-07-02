@@ -6,6 +6,8 @@ version := "0.2.0"
 
 scalaVersion := "2.10.1"
 
+mainClass in (Compile, run) := Some("downearth.Main")
+
 resolvers ++= Seq(
   //"Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
   //"Slick" at "http://slick.cokeandcode.com/mavenrepo"
