@@ -15,8 +15,9 @@ import interval.{Interval, Interval3}
 class Noise extends FunSuite {
 
   test("perlin noise range (improved)") {
-    val n = 100000
-    import scala.util.Random.{nextDouble => r}
+    val n = 10000
+    val rng = new scala.util.Random(0)
+    import rng.{nextDouble => r}
     var low = Double.MaxValue
     var high = Double.MinValue
     for( _ <- 0 until n ) {
@@ -30,8 +31,9 @@ class Noise extends FunSuite {
   }
 
   test("perlin noise range (simple)") {
-    val n = 100000
-    import scala.util.Random.{nextDouble => r}
+    val n = 10000
+    val rng = new scala.util.Random(0)
+    import rng.{nextDouble => r}
     var low = Double.MaxValue
     var high = Double.MinValue
     for( _ <- 0 until n ) {
@@ -44,9 +46,10 @@ class Noise extends FunSuite {
     assert(bounds(low) && bounds(high))
   }
 
-  test("perlin noise range (worley)") {
-    val n = 100000
-    import scala.util.Random.{nextDouble => r}
+  test("worley noise range") {
+    val n = 10000
+    val rng = new scala.util.Random(0)
+    import rng.{nextDouble => r}
     var low = Vec4(Double.MaxValue)
     var high = Vec4(Double.MinValue)
     for( _ <- 0 until n ) {
@@ -59,65 +62,15 @@ class Noise extends FunSuite {
     assert(bounds(low) && bounds(high))
   }
 
-
-
-
-  test("perlin noise prediction speed (improved)") {
-
-    val noisetimer = new Timer
-    val predictiontimer = new Timer
-    val n = 200
-    for( i <- 0 until n )
-    {
-      import scala.util.Random.{nextDouble => r}
-
-      val x0 = 1/r
-      val y0 = 1/r
-      val z0 = 1/r
-      val x1 = x0 + r/30
-      val y1 = y0 + r/30
-      val z1 = z0 + r/30
-
-      val volume = Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
-      predictiontimer.measure { bezierImproved(volume) }
-      noisetimer.measure{ perlin.improved(x0,y0,z0) }
-    }
-    println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
-  }
-
-
-  test("perlin noise prediction speed (simple)") {
-
-    val noisetimer = new Timer
-    val predictiontimer = new Timer
-    val n = 200
-    for( i <- 0 until n )
-    {
-      import scala.util.Random.{nextDouble => r}
-
-      val x0 = 1/r
-      val y0 = 1/r
-      val z0 = 1/r
-      val x1 = x0 + r/30
-      val y1 = y0 + r/30
-      val z1 = z0 + r/30
-
-      val volume = Interval3(Vec3(x0,y0,z0), Vec3(x1,y1,z1))
-      predictiontimer.measure { bezierSimple(volume) }
-      noisetimer.measure{ perlin.simple(x0,y0,z0) }
-    }
-    println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
-  }
-
-
-
   test("perlin noise prediction correctness by sampling (improved)") {
     val n = 100
     val samples = 10
+
+    val rng = new scala.util.Random(0)
+    import rng.{nextDouble => r}
+
     for( i <- 0 until n )
     {
-      import scala.util.Random.{nextDouble => r}
-
       val x0 = 1/r
       val y0 = 1/r
       val z0 = 1/r
@@ -141,10 +94,12 @@ class Noise extends FunSuite {
   test("perlin noise prediction correctness by sampling (simple)") {
     val n = 100
     val samples = 10
+
+    val rng = new scala.util.Random(0)
+    import rng.{nextDouble => r}
+
     for( i <- 0 until n )
     {
-      import scala.util.Random.{nextDouble => r}
-
       val x0 = 1/r
       val y0 = 1/r
       val z0 = 1/r
