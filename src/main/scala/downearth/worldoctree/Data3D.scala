@@ -26,13 +26,19 @@ trait Data3D[A]{
 		i.z < vsize.z
 	}
 	
-	def fill( foo: Vec3i => A ) {
-		for( v <- Vec3i(0) until vsize ) {
-			val f = foo(v)
+	def fill( elem: Vec3i => A ) {
+		for( pos <- Vec3i(0) until vsize ) {
+			val f = elem(pos)
 			assert(f != null)
-			this(v) = f
+			this(pos) = f
 		}
 	}
+
+  def fill(elem: Vec3i => A, areas:Iterable[NodeInfo]) {
+    for( area <- areas; pos <- area.coordinates ) {
+      this(pos) = elem(area.pos - pos)
+    }
+  }
 }
 
 class Array3D[@specialized(Byte,Short,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])
@@ -54,7 +60,7 @@ extends Data3D[A] with Iterable[A] {
 	}
 
 	def update(v:Vec3i,value:A){
-		assert( indexInRange(v) )
+		assert( indexInRange(v), s"$v not in range $vsize")
 		data( index(v) ) = value
 	}
 

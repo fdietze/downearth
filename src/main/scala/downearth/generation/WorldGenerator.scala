@@ -37,15 +37,14 @@ object WorldGenerator {
                  deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()}):NodeOverMesh = {
     val NodeInfo(nodepos, nodesize) = nodeInfo
     import HexaederMC._
-    //TODO: val toSample = findNodesToSample(nodeInfo, worldFunction)
+    val toSample = findNodesToSample(nodeInfo, worldFunction)
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
     val originalNoiseData = new Array3D[Double](Vec3i(nodesize+3))
     // Füllen der Datenpunkte mit Hilfe der Dichtefunktion
-    originalNoiseData.fill(v =>	worldFunction.density(Vec3(nodepos+v-1)))
-    val modifiedNoiseData = originalNoiseData.clone
+    originalNoiseData.fill(v =>	worldFunction.density(Vec3(nodepos+v-1)), toSample)
     val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 
 
@@ -55,6 +54,7 @@ object WorldGenerator {
       exactCaseData(coord) = exactCase.toShort
     }
 
+    val modifiedNoiseData = originalNoiseData.clone
     // für jeden Cube:
     for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
       // Datenpunkte extrahieren

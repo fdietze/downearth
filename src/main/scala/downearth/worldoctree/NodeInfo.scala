@@ -15,6 +15,7 @@ import simplex3d.math.doublex.functions._
 case class NodeInfo(pos:Vec3i, size:Int) {
 	def upperPos = pos+size
   def center = pos + (size >> 2)
+  def coordinates = pos until upperPos
 
   // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
 	// Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an 
