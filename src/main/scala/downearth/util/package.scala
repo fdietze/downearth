@@ -409,23 +409,44 @@ package object util {
 
 	implicit def toRichVec3i(u: Vec3i) = new RichVec3i(u)
 
-	class Timer {
-		var starttime = 0L
-		var passedtime = 0L
+  class Timer {
+    var startTime = 0L
+    var passedTime = 0L
 
-		def getTime = System.nanoTime
+    def now = System.nanoTime
 
-		def start  { starttime = getTime }
-		def stop   { passedtime += getTime - starttime }
-		def measure[A](function: => A) = {
-			start
-			val returnvalue = function
-			stop
-			returnvalue
-		}
-		def reset  { passedtime = 0 }
-		def read =   passedtime/1000000000.0
-	}
+    def reset()   { passedTime = 0 }
+    def start()   { startTime = now }
+    def restart() {reset(); start()}
+    def stop()    { passedTime += now - startTime }
+
+    def measure[A](function: => A) = {
+      start()
+      val returnValue = function
+      stop()
+      returnValue
+    }
+
+    def read = (if(passedTime == 0) now - startTime else passedTime)/1000000000.0
+    def readHuman:String = readHuman(3)
+    def readHuman(precision:Int = 8) = {
+      val time = read
+      val fraction = time - math.floor(time)
+      var s = time.toInt
+      val sb = new StringBuilder
+      val d = s / 86400; s -= d*86400
+      if( d > 0 ) sb ++= "%dd " format d
+
+      val h = s / 3600; s -= h*3600
+      if( h > 0 ) sb ++= "%dh " format h
+
+      val m = s / 60; s -= m*60
+      if( m > 0 ) sb ++= "%dm " format m
+
+      sb ++= "%."+precision+"fs" format (s+fraction)
+      sb.toString
+    }
+  }
 	
 	def time[A](msg:String)(foo: => A) = {
 		val start = System.nanoTime

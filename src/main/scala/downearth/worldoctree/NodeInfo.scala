@@ -65,21 +65,24 @@ case class NodeInfo(pos:Vec3i, size:Int) {
     val  y = if( dir.y < 0 ) 2 else 0
     val  z = if( dir.z < 0 ) 4 else 0
 
-    val nx = if( dir.x < 0 ) 0 else 1
-    val ny = if( dir.y < 0 ) 0 else 2
-    val nz = if( dir.z < 0 ) 0 else 4
+    val nx = 1 - x
+    val ny = 2 - y
+    val nz = 4 - z
+    
+    val order = new Array[Int](8)
+    
+    order(0) =  x |  y |  z
+    order(1) =  x |  y | nz
+    order(2) =  x | ny |  z
+    order(3) =  x | ny | nz
+    order(4) = nx |  y |  z
+    order(5) = nx |  y | nz
+    order(6) = nx | ny |  z
+    order(7) = nx | ny | nz
 
-    val v1 =  x |  y |  z
-    val v2 =  x |  y | nz
-    val v3 =  x | ny |  z
-    val v4 =  x | ny | nz
-    val v5 = nx |  y |  z
-    val v6 = nx |  y | nz
-    val v7 = nx | ny |  z
-    val v8 = nx | ny | nz
-
-    Array(v1,v2,v3,v4,v5,v6,v7,v8)
+    order
   }
+
 
   def inside(that:NodeInfo) = {
     all(greaterThanEqual(this.pos, that.pos)) &&
