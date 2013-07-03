@@ -79,7 +79,7 @@ object Resources {
       for( (id,mat) <- this )
         this(id) = mat.copy(parents = collectParents(id).distinct)
 
-      println(this.values.mkString("\n"))
+      //println(this.values.mkString("\n"))
     }
   }
 
