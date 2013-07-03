@@ -29,6 +29,55 @@ case class BufferBinding(buffer:ArrayBuffer, size:Int, glType:Int, normalized:Bo
   }
 }
 
+object Attribute {
+  def apply(program:Program, binding:Binding, name:String, location:Int, size:Int, ttype:Int) = {
+
+
+    if( size != 1 ) {
+      throw new NotImplementedError("currently not supported attribute size: "+size)
+    }
+
+    val bufferBinding = new BufferBinding(
+        buffer = new ArrayBuffer() create(),
+        size = ttype match {
+          case GL_FLOAT | GL_INT => 1
+          case GL_FLOAT_VEC2 => 2
+          case GL_FLOAT_VEC3 => 3
+          case GL_FLOAT_VEC4 => 4
+          case _ => ??? // TODO implement other types
+        },
+        glType = ttype match {
+          case GL_FLOAT => GL_FLOAT
+          case GL_FLOAT_VEC2 => GL_FLOAT
+          case GL_FLOAT_VEC3 => GL_FLOAT
+          case GL_FLOAT_VEC4 => GL_FLOAT
+          case _ => ttype // TODO implement other types
+        },
+        normalized = false,
+        stride = size * ttype match {
+          case GL_FLOAT | GL_INT => 4
+          case GL_FLOAT_VEC2 => 8
+          case GL_FLOAT_VEC3 => 12
+          case GL_FLOAT_VEC4 => 16
+        },
+        offset = 0
+    )
+
+    ttype match {
+      case GL_FLOAT =>
+        new AttributeFloat(program, binding, name, location, bufferBinding)
+      case GL_FLOAT_VEC2 =>
+        new AttributeVec2f(program, binding, name, location, bufferBinding)
+      case GL_FLOAT_VEC3 =>
+        new AttributeVec3f(program, binding, name, location, bufferBinding)
+      case GL_FLOAT_VEC4 =>
+        new AttributeVec4f(program, binding, name, location, bufferBinding)
+      case _ =>
+        throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(glType) )
+    }
+  }
+}
+
 abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
   val program:Program
   val binding:Binding

@@ -349,8 +349,6 @@ object Renderer extends Logger {
         GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
       }
 
-      glBindBuffer(GL_ARRAY_BUFFER, 0)
-
       for( (queryId, info) <- queries ) {
         glBeginQuery(GL_SAMPLES_PASSED, queryId )
 

@@ -27,6 +27,32 @@ class UniformConfig(
  * Date: 02.06.13
  * Time: 20:43
  */
+
+object Uniform {
+  def apply(program:Program, binding:Binding, name:String, location:Int, ttype:Int, size:Int, nextSampler: () => Int) : Uniform[_] = {
+    val config = new UniformConfig(
+        program = program,
+        binding = binding,
+        name = name,
+        location = location,
+        glType = ttype,
+        size = size
+      )
+
+      ttype match {
+        case GL_SAMPLER_2D => new UniformSampler2D(nextSampler(), config)
+        case GL_SAMPLER_CUBE => new UniformSamplerCube(nextSampler(), config)
+        case GL_FLOAT => new UniformFloat(config)
+        case GL_FLOAT_VEC2 => new UniformVec2f(config)
+        case GL_FLOAT_VEC3 => new UniformVec3f(config)
+        case GL_FLOAT_VEC4 => new UniformVec4f(config)
+        case GL_FLOAT_MAT4 => new UniformMat4f(config)
+        case _ => throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(ttype) )
+    }
+  }
+}
+
+
 abstract class Uniform[T](config:UniformConfig) extends AddString {
   val program:Program   = config.program
   val binding:Binding   = config.binding

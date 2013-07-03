@@ -233,56 +233,15 @@ class Program(val name:String) { program =>
     val sizetypeBuffer = BufferUtils.createIntBuffer(2)
 
     var currentSampler = 0
+    val nextSampler: () => Int = () => {currentSampler += 1; currentSampler-1}
 
     new Binding(program) { binding =>
       val attributes =
         for( location <- 0 until numAttributes ) yield {
           val name = glGetActiveAttrib(id, location, 1000, sizetypeBuffer)
           val size = sizetypeBuffer.get(0)
-          if( size != 1 ) {
-            throw new NotImplementedError("currently not supported attribute size: "+size)
-          }
-
-          val glType = sizetypeBuffer.get(1)
-
-          val bufferBinding = new BufferBinding(
-              buffer = new ArrayBuffer() create(),
-              size = glType match {
-                case GL_FLOAT | GL_INT => 1
-                case GL_FLOAT_VEC2 => 2
-                case GL_FLOAT_VEC3 => 3
-                case GL_FLOAT_VEC4 => 4
-                case _ => ??? // TODO implement other types
-              },
-              glType = glType match {
-                case GL_FLOAT => GL_FLOAT
-                case GL_FLOAT_VEC2 => GL_FLOAT
-                case GL_FLOAT_VEC3 => GL_FLOAT
-                case GL_FLOAT_VEC4 => GL_FLOAT
-                case _ => glType // TODO implement other types
-              },
-              normalized = false,
-              stride = size * glType match {
-                case GL_FLOAT | GL_INT => 4
-                case GL_FLOAT_VEC2 => 8
-                case GL_FLOAT_VEC3 => 12
-                case GL_FLOAT_VEC4 => 16
-              },
-              offset = 0
-          )
-
-          glType match {
-            case GL_FLOAT =>
-              new AttributeFloat(program, binding, name, location, bufferBinding)
-            case GL_FLOAT_VEC2 =>
-              new AttributeVec2f(program, binding, name, location, bufferBinding)
-            case GL_FLOAT_VEC3 =>
-              new AttributeVec3f(program, binding, name, location, bufferBinding)
-            case GL_FLOAT_VEC4 =>
-              new AttributeVec4f(program, binding, name, location, bufferBinding)
-            case _ =>
-              throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(glType) )
-          }
+          val ttype = sizetypeBuffer.get(1)
+          Attribute(program, binding, name, location, size, ttype)
         }
 
       val uniforms:Seq[Uniform[_]] =
@@ -291,44 +250,7 @@ class Program(val name:String) { program =>
           val size = sizetypeBuffer.get(0)
           val ttype = sizetypeBuffer.get(1)
           val location = glGetUniformLocation(id, name)
-
-          val config = new UniformConfig(
-            program = program,
-            binding = binding,
-            name = name,
-            location = location,
-            glType = ttype,
-            size = size
-          )
-
-          if( Program.isSampler(ttype) ) {
-
-            val uniform =
-            ttype match {
-              case GL_SAMPLER_2D => new UniformSampler2D(currentSampler, config)
-              case GL_SAMPLER_CUBE => new UniformSamplerCube(currentSampler, config)
-              case _ => ???
-            }
-
-            currentSampler += 1
-            uniform
-          }
-          else {
-            ttype match {
-              case GL_FLOAT =>
-                new UniformFloat(config)
-              case GL_FLOAT_VEC2 =>
-                new UniformVec2f(config)
-              case GL_FLOAT_VEC3 =>
-                new UniformVec3f(config)
-              case GL_FLOAT_VEC4 =>
-                new UniformVec4f(config)
-              case GL_FLOAT_MAT4 =>
-                new UniformMat4f(config)
-              case _ =>
-                throw new NotImplementedError("currently not supported uniform type: "+Program.shaderTypeString(ttype) )
-            }
-          }
+          Uniform(program, binding, name, location, size, ttype, nextSampler)
         }
     }
   }
