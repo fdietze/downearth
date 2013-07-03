@@ -77,6 +77,7 @@ object bezierImproved {
 
     // Calculate the heights of the bezier curve, converted from the 3d perlin noise polynomial with fadeImproved-function of degree 5
     // resulting polynomial has degree 6. This gives 7^3 Bezier points
+    //TODO: use flat array
     val bezierheights =
       Array(Array(Array(0,g0z*0.16666666666666666,g0z*0.3333333333333333,-(g4z-g0z)*0.5,-g4z*0.3333333333333333,-g4z*0.16666666666666666,0),Array(g0y*0.16666666666666666,(g0z+g0y)*0.16666666666666666,(2*g0z+g0y)*0.16666666666666666,-(6*g4z-g4y-6*g0z-g0y)*0.08333333333333333,-(2*g4z-g4y)*0.16666666666666666,-(g4z-g4y)*0.16666666666666666,g4y*0.16666666666666666),Array(g0y*0.3333333333333333,
         (g0z+2*g0y)*0.16666666666666666,(g0z+g0y)*0.3333333333333333,-(3*g4z-g4y-3*g0z-g0y)*0.16666666666666666,-(g4z-g4y)*0.3333333333333333,-(g4z-2*g4y)*0.16666666666666666,g4y*0.3333333333333333),Array(-(g2y-g0y)*0.5,(g2z-6*g2y+g0z+6*g0y)*0.08333333333333333,(g2z-3*g2y+g0z+3*g0y)*0.16666666666666666,-
