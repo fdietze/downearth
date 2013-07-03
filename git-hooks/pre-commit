@@ -2,7 +2,7 @@
 
 echo "Executing pre-commit hook..."
 git stash --keep-index --include-untracked
-  echo -e "clean\nclean-files\nexit\n" | ./sbt
+  #echo -e "clean\nclean-files\nexit\n" | ./sbt
   ./sbt compile && ./sbt test
   retcode=$?
 git stash pop --quiet
