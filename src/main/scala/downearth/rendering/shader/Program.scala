@@ -206,27 +206,6 @@ class Program(val name:String) { program =>
     GL30.glTransformFeedbackVaryings(id, names, mode)
   }
 
-  def getTransformFeedback = {
-    val numTransformFeedback = GL20.glGetProgrami(id, GL30.GL_TRANSFORM_FEEDBACK_VARYINGS)
-
-    val lengthBuf = BufferUtils.createIntBuffer(1)
-    val sizeBuf = BufferUtils.createIntBuffer(1)
-    val ttypeBuf = BufferUtils.createIntBuffer(1)
-    val nameBuf = BufferUtils.createByteBuffer(100)
-
-    for(i <- 0 until numTransformFeedback) yield {
-      GL30.glGetTransformFeedbackVarying(id, i, lengthBuf, sizeBuf, ttypeBuf, nameBuf)
-      val length = lengthBuf.get(0)
-      val size = sizeBuf.get(0)
-      val ttype = ttypeBuf.get(0)
-      nameBuf.limit(length)
-      val sb = new StringBuilder(length)
-      for(i <- 0 until length) { sb += nameBuf.get(i).toChar }
-      val name = sb.result()
-        s"location: $i, size: $size, type:${Program.shaderTypeString(ttype)}, name:$name "
-    }
-  }
-
   def getBinding = {
     val numUniforms   = glGetProgrami(id, GL_ACTIVE_UNIFORMS)
     val numAttributes = glGetProgrami(id, GL_ACTIVE_ATTRIBUTES)
@@ -250,8 +229,29 @@ class Program(val name:String) { program =>
           val size = sizetypeBuffer.get(0)
           val ttype = sizetypeBuffer.get(1)
           val location = glGetUniformLocation(id, name)
-          Uniform(program, binding, name, location, size, ttype, nextSampler)
+          Uniform(program, binding, name, location, ttype, size, nextSampler)
         }
+
+      val transformFeedback:Seq[Attribute[_]] = {
+        val numTransformFeedback = GL20.glGetProgrami(id, GL30.GL_TRANSFORM_FEEDBACK_VARYINGS)
+
+        val lengthBuf = BufferUtils.createIntBuffer(1)
+        val sizeBuf = BufferUtils.createIntBuffer(1)
+        val ttypeBuf = BufferUtils.createIntBuffer(1)
+        val nameBuf = BufferUtils.createByteBuffer(100)
+
+        for(i <- 0 until numTransformFeedback) yield {
+          GL30.glGetTransformFeedbackVarying(id, i, lengthBuf, sizeBuf, ttypeBuf, nameBuf)
+          val length = lengthBuf.get(0)
+          val size = sizeBuf.get(0)
+          val ttype = ttypeBuf.get(0)
+          nameBuf.limit(length)
+          val sb = new StringBuilder(length)
+          for(i <- 0 until length) { sb += nameBuf.get(i).toChar }
+          val name = sb.result()
+          Attribute(program, binding, name, i, size, ttype)
+        }
+      }
     }
   }
 

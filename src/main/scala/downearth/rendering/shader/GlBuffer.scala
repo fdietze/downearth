@@ -26,6 +26,10 @@ abstract class GlBuffer() {
     this
   }
 
+  def bindBase(index:Int) = {
+    glBindBufferBase(target, index, id)
+  }
+
   def target:Int
   def binding:Int
   var usage = GL_STATIC_DRAW

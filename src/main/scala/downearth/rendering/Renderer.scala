@@ -8,6 +8,7 @@ package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
+
 import simplex3d.math.floatx.{Mat4f, Vec4f, Vec3f}
 import downearth.worldoctree.NodeInfo
 import scala.Tuple2
@@ -58,15 +59,25 @@ object Renderer extends Logger {
     program
   }
 
-  lazy val trasformFeedbackTest = {
+  lazy val transformFeedbackTest = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
-    val program = Program("simple")(vertShader)()
+    val program = Program("transformFeedbackTest")(vertShader)()
     vertShader.delete()
     program
   }
 
-  println(trasformFeedbackTest.getTransformFeedback.mkString("\n"))
+  val tfbBinding = transformFeedbackTest.getBinding
+  println(tfbBinding)
 
+  val tfb_a_instance_position = tfbBinding.attributeVec3f("a_instance_position")
+  tfb_a_instance_position.divisor = 1
+  val tfb_instance_scale = tfbBinding.attributeFloat("a_instance_scale")
+  tfb_instance_scale.divisor = 1
+  val tfb_a_position =  tfbBinding.attributeVec3f("tfb_a_position")
+
+  val tfb_u_mvp =  tfbBinding.uniformMat4f("u_mvp")
+
+  val gl_Position = tfbBinding.transformFeedbackVec4f("gl_Position")
 
 //  val testProgram = {
 //    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
@@ -75,6 +86,7 @@ object Renderer extends Logger {
 //  }
 
   val vaoShaderProgram = GL30.glGenVertexArrays()
+  val vaoTransformFeedbackTest = GL30.glGenVertexArrays()
 // val vaoTestProgram = GL30.glGenVertexArrays()
 
 
@@ -126,6 +138,38 @@ object Renderer extends Logger {
 
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+
+    import org.lwjgl.opengl.GL30._
+    import org.lwjgl.opengl.GL31._
+
+
+    {
+           // Disable rasterisation, vertices processing only!
+      glEnable(GL_RASTERIZER_DISCARD)
+      val Query = glGenQueries()
+
+      transformFeedbackTest.use{
+
+        tfb_a_instance_position := Seq(Vec3f(0))
+        tfb_instance_scale := Seq[Float]( 0.0f )
+        tfb_u_mvp := Mat4f(1)
+
+        tfbBinding.bind()
+
+        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, gl_Position.location)
+
+        glBindVertexArray(vaoTransformFeedbackTest)
+
+        glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query)
+        glBeginTransformFeedback(GL_TRIANGLES)
+        glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, 1)
+        glEndTransformFeedback()
+        glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
+    }
+
+    glDisable(GL_RASTERIZER_DISCARD);
+}
+
 
 //    GL30.glBindVertexArray(vaoTestProgram)
 //    testProgram.use {

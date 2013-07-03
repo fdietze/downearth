@@ -15,6 +15,7 @@ import simplex3d.math.floatx._
 abstract class Binding( val program:Program ) extends AddString {
   val attributes:Seq[Attribute[_]]
   val uniforms:Seq[Uniform[_]]
+  val transformFeedback:Seq[Attribute[_]]
 
   val changedUniforms = mutable.Queue[Uniform[_]]()
   val changedAttributes = mutable.Queue[Attribute[_]]()
@@ -62,9 +63,12 @@ abstract class Binding( val program:Program ) extends AddString {
     sb append program
     attributes.addString(sb,"\n\t","\n\t","\n\t")
     uniforms.addString(sb,"\n\t","\n\t","\n\t")
+    transformFeedback.addString(sb,"\n\t","\n\t","\n\t")
     sb append "\n"
     sb
   }
+
+  def transformFeedbackVec4f(name:String) = transformFeedback.collect{ case at:AttributeVec4f => at }.head
 
   def attributeInt(name:String)   = attributes.collect{ case at:AttributeInt   if at.name == name => at }.headOption.getOrElse(new AttributeFake[Int](program, this, name))
   def attributeFloat(name:String) = attributes.collect{ case at:AttributeFloat if at.name == name => at }.headOption.getOrElse(new AttributeFake[Float](program, this, name))

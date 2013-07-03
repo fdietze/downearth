@@ -20,7 +20,7 @@ import downearth.util._
 import org.lwjgl.opengl.ARBInstancedArrays._
 
 
-case class BufferBinding(buffer:ArrayBuffer, size:Int, glType:Int, normalized:Boolean, stride:Int, offset:Int) {
+case class BufferBinding(buffer:GlBuffer, size:Int, glType:Int, normalized:Boolean, stride:Int, offset:Int) {
   require( size == 1 || size == 2 || size == 3 || size == 4 || size == GL_BGRA )
   require( stride > 0 )
 
@@ -73,7 +73,7 @@ object Attribute {
       case GL_FLOAT_VEC4 =>
         new AttributeVec4f(program, binding, name, location, bufferBinding)
       case _ =>
-        throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(glType) )
+        throw new NotImplementedError("currently not supported attribute type: "+Program.shaderTypeString(ttype) )
     }
   }
 }
