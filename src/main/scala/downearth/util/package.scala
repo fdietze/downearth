@@ -414,19 +414,32 @@ package object util {
     var passedTime = 0L
 
     def now = System.nanoTime
+    def passed = now - startTime
 
     def reset()   { passedTime = 0 }
     def start()   { startTime = now }
     def restart() {reset(); start()}
-    def stop()    { passedTime += now - startTime }
+    def stop()    { passedTime += passed }
 
-    def measure[A](function: => A) = {
+    def measure[A](code: => A) = {
       start()
-      val returnValue = function
+      val returnValue = code
       stop()
       returnValue
     }
 
+    def benchmark(n:Int)(code: => Unit):Double = {
+      var i = 0
+      start()
+      while( i < n ) {
+        code
+        i += 1
+      }
+      passedTime += passed / n
+      
+      return passed.toDouble / n
+    }
+  
     def read = (if(passedTime == 0) now - startTime else passedTime)/1000000000.0
     def readHuman:String = readHuman(3)
     def readHuman(precision:Int = 8) = {
