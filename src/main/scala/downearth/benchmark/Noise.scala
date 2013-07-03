@@ -11,7 +11,7 @@ object Noise {
     println("perlin noise prediction speed (improved)")
     val noisetimer = new Timer
     val predictiontimer = new Timer
-    val n = 20000
+    val n = 2000
 
     val rng = new scala.util.Random(0)
     import rng.{nextDouble => r}
@@ -38,7 +38,7 @@ object Noise {
 
     val noisetimer = new Timer
     val predictiontimer = new Timer
-    val n = 20000
+    val n = 2000
 
     val rng = new scala.util.Random(0)
     import rng.{nextDouble => r}
