@@ -24,15 +24,20 @@ object Generation {
   }
 
   def FullGeneration() {
-    println("Full Generation")
+    println("Full 16x16x16 Generation")
     val timer = new Timer
     
     dummyOpenGLContext()
-    
-    timer.start()
     genWorldAt(NodeInfo(pos=Vec3i(0),size=16),
                worldFunction = WorldDefinition)
-    timer.stop()
+    
+    Thread.sleep(500)
+    
+    timer.benchmark(50) {
+      genWorldAt(NodeInfo(pos=Vec3i(0),size=16),
+                 worldFunction = WorldDefinition)
+    }
+
     println(s"${timer.read}s")
   }
 }
