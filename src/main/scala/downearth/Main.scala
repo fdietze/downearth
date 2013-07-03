@@ -127,8 +127,6 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     glClearColor(0.4f, 0.6f, 0.9f, 1f)
 
-    resources.Resources.init()
-
     World
 
     Mouse setGrabbed true

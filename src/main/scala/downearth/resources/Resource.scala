@@ -38,10 +38,6 @@ class Product extends Resource
 object Resources {
   val file = new File("materialdefinitions.bin")
 
-  def init() {
-    materials.fromMessage(testData)
-  }
-
   val testData = {
     import downearth.{message => m}
     m.MaterialSet(Vector(
@@ -86,6 +82,9 @@ object Resources {
       println(this.values.mkString("\n"))
     }
   }
+
+  materials.fromMessage(testData)
+  materials(0) = Material(0)
 
   def load() {
     println("Resources: Loading Material Definitions")
