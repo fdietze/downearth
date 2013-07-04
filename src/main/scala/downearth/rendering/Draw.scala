@@ -103,6 +103,8 @@ object GlDraw extends Draw {
     val texCoordsData = BufferUtils.createByteBuffer( sizeOf[Vec2f] * 24 )
     val positionsData = BufferUtils.createByteBuffer( sizeOf[Vec4f] * 24 )
 
+    val positions = Seq.fill(24)(Vec4f(0))
+
     {
       val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
       val normals = Array(0,0,-1,0, -1,0,0,0, 0,-1,0,0, 1,0,0,0, 0,0,1,0, 0,1,0,0)
@@ -122,6 +124,7 @@ object GlDraw extends Draw {
         putVec3f(normalsData, normals(k), normals(k+1), normals(k+2))
         putVec2f(texCoordsData, u, v)
         putVec4f(positionsData, x, y, z,1)
+        positions(i) := Vec4f(x,y,z,1)
 
         i += 1
       }

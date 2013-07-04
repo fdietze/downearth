@@ -1,17 +1,13 @@
 #version 150
 
-in vec4 a_position;
+in vec4 a_pos;
+in vec4 offset;
+in float scale;
 
-in vec3 a_instance_position;
-in float a_instance_scale;
-
-uniform mat4 u_mvp;
-
-// out vec3 v_pos;
+uniform mat4 matrix;
 
 void main() {
-    vec4 pos = vec4(a_instance_position,0) + a_position * vec4( a_instance_scale, a_instance_scale, a_instance_scale, 1);
-    gl_Position = u_mvp * pos;
+    gl_Position = matrix * (offset + a_pos * vec4(vec3(scale),1));
 }
 
 

@@ -50,20 +50,6 @@ object Renderer extends Logger {
 
   var frameCount = 0
 
-  val vaoShaderProgram = VertexArrayObject.create
-  val vaoTransformFeedbackTest = VertexArrayObject.create
-  val vaoTestProgram = VertexArrayObject.create
-  val vaoTest2 = VertexArrayObject.create
-
-  lazy val occTestProgram = {
-    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
-    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
-    val program = Program("simple")(vertShader)(fragShader)
-    vertShader.delete()
-    fragShader.delete()
-    program
-  }
-
   lazy val transformFeedbackTest = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
     val program = Program("transformFeedbackTest")(vertShader)()
@@ -77,21 +63,38 @@ object Renderer extends Logger {
   val tfb_a_instance_position = tfbBinding.attributeVec3f("a_instance_position")
   val tfb_instance_scale = tfbBinding.attributeFloat("a_instance_scale")
 
+  val vaoTransformFeedbackTest = VertexArrayObject.create
+
   vaoTransformFeedbackTest.bind {
     tfb_instance_scale.divisor = 1
     tfb_a_instance_position.divisor = 1
   }
 
   val tfb_a_position =  tfbBinding.attributeVec3f("tfb_a_position")
-
   val tfb_u_mvp =  tfbBinding.uniformMat4f("u_mvp")
-
   val gl_Position = tfbBinding.transformFeedbackVec4f("gl_Position")
+
+
+
 
   val testProgram = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
     Program("test")(vertShader)(fragShader)
+  }
+
+  val testBinding = testProgram.getBinding
+  println( testBinding )
+
+  val test_a_pos = testBinding.attributeVec4f("a_pos")
+  val test_a_offset = testBinding.attributeVec4f("offset")
+  test_a_pos    := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
+  test_a_offset := Seq( Vec4f(0), Vec4f(0.3f,0.3f,0.3f,0) )
+
+  val vaoTestProgram = VertexArrayObject.create
+
+  vaoTestProgram.bind {
+    test_a_offset.divisor = 1
   }
 
   lazy val test2Program = {
@@ -100,43 +103,58 @@ object Renderer extends Logger {
     Program("test2")(vertShader)(fragShader)
   }
 
-  val testBinding = testProgram.getBinding
-  println( testBinding )
   val test2Binding = test2Program.getBinding
 
-  val test_a_pos = testBinding.attributeVec4f("a_pos")
-  val test_a_offset = testBinding.attributeVec4f("offset")
-  test_a_pos    := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
-  test_a_offset := Seq( Vec4f(0), Vec4f(0.3f,0.3f,0.3f,0) )
-
   val test2_a_pos = test2Binding.attributeVec4f("a_pos")
+  val test2_offset = test2Binding.attributeVec4f("offset")
+  val test2_scale  = test2Binding.attributeFloat("scale")
+
+  val vaoTest2 = VertexArrayObject.create
+
+  vaoTest2.bind {
+    test2_offset.divisor = 1
+    test2_scale.divisor = 1
+  }
 
   test2_a_pos    := GlDraw.texturedCubeBuffer.positionsData
+  test2_offset   := Seq( Vec4f(0,0,0,0), Vec4f(2,0,0,0), Vec4f(0,3,0,0), Vec4f(0,0,5,0)  )
+  test2_scale    := Seq[Float]( 1,2,3,4 )
   println( "test2_a_pos: " + test2_a_pos.read )
   //test2_a_pos    := Seq( Vec4f(-0.4f,-0.4f, 0,1), Vec4f(0.4f, -0.4f, 0, 1), Vec4f(0.4f, 0.4f, 0, 1), Vec4f(-0.4f, 0.4f, 0, 1),
   //                   Vec4f(-0.4f,-0.4f, 0,1), Vec4f(0.4f, -0.4f, 0, 1), Vec4f(0.4f, 0.4f, 0, 1), Vec4f(-0.4f, 0.4f, 0, 1) )
 
   val test2_matrix = test2Binding.uniformMat4f("matrix")
 
-  vaoTestProgram.bind {
-    test_a_offset.divisor = 1
-  }
+
 
   println("test a_pos: " + test_a_pos.read)
 
+
+
+  lazy val occTestProgram = {
+    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
+    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
+    val program = Program("simple")(vertShader)(fragShader)
+    vertShader.delete()
+    fragShader.delete()
+    program
+  }
+
   val occTestBinding = occTestProgram.getBinding
 
-  val occTest_u_mvp               = occTestBinding.uniformMat4f("u_mvp")
-  val occTest_a_instance_position = occTestBinding.attributeVec3f("a_instance_position")
-  val occTest_a_instance_scale    = occTestBinding.attributeFloat("a_instance_scale")
-  val occTest_u_tint              = occTestBinding.uniformVec4f("u_tint")
-  val occTest_a_position          = occTestBinding.attributeVec4f("a_position")
+  val occTest_matrix  = occTestBinding.uniformMat4f("matrix")
+  val occTest_offset  = occTestBinding.attributeVec4f("offset")
+  val occTest_scale   = occTestBinding.attributeFloat("scale")
+  val occTest_u_tint  = occTestBinding.uniformVec4f("u_tint")
+  val occTest_a_pos   = occTestBinding.attributeVec4f("a_pos")
 
-  occTest_a_position := GlDraw.texturedCubeBuffer.positionsData
+  occTest_a_pos := GlDraw.texturedCubeBuffer.positions
+
+  val vaoShaderProgram = VertexArrayObject.create
 
   vaoShaderProgram.bind {
-    occTest_a_instance_position.divisor = 1
-    occTest_a_instance_scale.divisor = 1
+    occTest_offset.divisor = 1
+    occTest_scale.divisor = 1
   }
 
   var query:Query = null
@@ -202,17 +220,17 @@ object Renderer extends Logger {
         test2_matrix := projection * view
 
         test2Binding.bindChanges()
-        glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
+        glDrawArraysInstanced(GL_QUADS, 0, 24, 4)
         test2Binding.disableAttributes()
       }
     }
 
     vaoShaderProgram.bind {
       occTestProgram.use{
-        occTest_u_mvp := projection * view
+        occTest_matrix := projection * view
 
-        occTest_a_instance_position := Seq( Vec3f(0,0,0) )
-        occTest_a_instance_scale    := Seq( 16.0f )
+        occTest_offset := Seq( Vec4f(0,0,0,0) )
+        occTest_scale  := Seq( 16.0f )
 
 
         occTestBinding.bindChanges()
@@ -420,37 +438,28 @@ object Renderer extends Logger {
         if( !Config.visibleOcclusionTest )
           glColorMask(false,false,false,false)
 
-        occTest_u_mvp := Mat4f(projection * view)
+        occTest_matrix := Mat4f(projection * view)
 
         for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) if renderNodeInfos.size > 0 ) {
           occTest_u_tint := tint
 
-          val instance_positions = renderNodeInfos.map( info => Vec3f(info.pos) )
+          val instance_positions = renderNodeInfos.map( info => Vec4f(info.pos,0) )
           val instance_scales = renderNodeInfos.map( info => info.size.toFloat )
 
-          occTest_a_instance_position := instance_positions
-          occTest_a_instance_scale := instance_scales
+          occTest_offset := instance_positions
+          occTest_scale := instance_scales
 
           occTestBinding.bindChanges()
 
           GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
-
-          println("*"*80)
-          println( occTest_a_position.read )
-          println( "instance pos divisor:" + occTest_a_instance_position.divisor )
-          println( occTest_a_instance_position.read )
-          println( "instance scale divisor:" + occTest_a_instance_scale.divisor )
-          println( occTest_a_instance_scale.read )
-          occTest_a_instance_scale.divisor
-          println("*"*80)
         }
 
         for( (queryId, info) <- queries ) {
           glBeginQuery(GL_SAMPLES_PASSED, queryId )
 
           occTest_u_tint := Vec4f(1,0,0,1)
-          occTest_a_instance_position := Seq( Vec3f( info.pos ) )
-          occTest_a_instance_scale := Seq( info.size.toFloat )
+          occTest_offset := Seq( Vec4f( info.pos, 0) )
+          occTest_scale := Seq( info.size.toFloat )
 
           occTestBinding.bindChanges()
 
