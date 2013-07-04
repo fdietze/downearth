@@ -113,6 +113,12 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
   }
 
   def read(size:Int) : Seq[T]
+  def read:Seq[T] = {
+    bufferBinding.buffer.bind {
+      val size = bufferBinding.buffer.size / bufferBinding.stride
+      read(size)
+    }
+  }
 
   // TODO is size/type from glVertexAtribPointer and glGetActiveAttrib different?
 
@@ -126,7 +132,7 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
   }
 
   def divisor:Int = {
-    val data = sharedIntBuffer(1)
+    val data = sharedIntBuffer(4)
     glGetVertexAttrib(location, GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ARB, data)
     data.get(0)
   }

@@ -50,7 +50,12 @@ object Renderer extends Logger {
 
   var frameCount = 0
 
-  lazy val shaderProgram = {
+  val vaoShaderProgram = VertexArrayObject.create
+  val vaoTransformFeedbackTest = VertexArrayObject.create
+  val vaoTestProgram = VertexArrayObject.create
+  val vaoTest2 = VertexArrayObject.create
+
+  lazy val occlusionTestProgram = {
     val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
     val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
     val program = Program("simple")(vertShader)(fragShader)
@@ -70,64 +75,71 @@ object Renderer extends Logger {
   println(tfbBinding)
 
   val tfb_a_instance_position = tfbBinding.attributeVec3f("a_instance_position")
-  tfb_a_instance_position.divisor = 1
   val tfb_instance_scale = tfbBinding.attributeFloat("a_instance_scale")
-  tfb_instance_scale.divisor = 1
+
+  vaoTransformFeedbackTest.bind {
+    tfb_instance_scale.divisor = 1
+    tfb_a_instance_position.divisor = 1
+  }
+
   val tfb_a_position =  tfbBinding.attributeVec3f("tfb_a_position")
 
   val tfb_u_mvp =  tfbBinding.uniformMat4f("u_mvp")
 
   val gl_Position = tfbBinding.transformFeedbackVec4f("gl_Position")
 
-//  val testProgram = {
-//    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
-//    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
-//    Program("test")(vertShader)(fragShader)
-//  }
-
-  val vaoShaderProgram = GL30.glGenVertexArrays()
-  val vaoTransformFeedbackTest = GL30.glGenVertexArrays()
-// val vaoTestProgram = GL30.glGenVertexArrays()
-
-
-//  GL30.glBindVertexArray(vaoTestProgram)
-//  val testBinding = testProgram.getBinding
-//  println( testBinding )
-//
-//  // val data = BufferUtils.createByteBuffer(sizeOf[Vec4f]*4)
-//  // data.asFloatBuffer().put( Array[Float](-0.5f,-0.5f, 0,1, 0.5f, -0.5f, 0, 1,  0.5f, 0.5f, 0, 1,  -0.5f, 0.5f, 0, 1) )
-//  val a_pos = testBinding.attributeVec4f("a_pos")
-//  a_pos := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
-
-  GL30.glBindVertexArray(vaoShaderProgram)
-
-  val programBinding = shaderProgram.getBinding
-  println(programBinding)
-
-  // programBinding.bindUniformMat4("u_modelview", view * model )
-  val u_mvp      = programBinding.uniformMat4f("u_mvp")
-
-  val a_instance_position = programBinding.attributeVec3f("a_instance_position")
-  val a_instance_scale    = programBinding.attributeFloat("a_instance_scale")
-
-  shaderProgram.use{
-    a_instance_position.divisor = 1
-    a_instance_scale.divisor = 1
+  val testProgram = {
+    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
+    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
+    Program("test")(vertShader)(fragShader)
   }
 
-  val u_tint = programBinding.uniformVec4f("u_tint")
+  lazy val test2Program = {
+    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test2.vsh") )
+    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test2.fsh") )
+    Program("test2")(vertShader)(fragShader)
+  }
 
+  val testBinding = testProgram.getBinding
+  println( testBinding )
+  val test2Binding = test2Program.getBinding
+
+  val test_a_pos = testBinding.attributeVec4f("a_pos")
+  val test_a_offset = testBinding.attributeVec4f("offset")
+  test_a_pos    := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1),
+                   Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
+  test_a_offset := Seq( Vec4f(0), Vec4f(0.3f,0.3f,0.3f,0) )
+
+  val test2_a_pos = test2Binding.attributeVec4f("a_pos")
+  val test2_a_offset = test2Binding.attributeVec4f("offset")
+  test2_a_pos    := Seq( Vec4f(-0.4f,-0.4f, 0,1), Vec4f(0.4f, -0.4f, 0, 1), Vec4f(0.4f, 0.4f, 0, 1), Vec4f(-0.4f, 0.4f, 0, 1),
+                   Vec4f(-0.4f,-0.4f, 0,1), Vec4f(0.4f, -0.4f, 0, 1), Vec4f(0.4f, 0.4f, 0, 1), Vec4f(-0.4f, 0.4f, 0, 1) )
+  test2_a_offset := Seq( Vec4f(0), Vec4f(0.3f,0.3f,0.3f,0) )
+
+  vaoTestProgram.bind {
+    test_a_offset.divisor = 1
+  }
+
+  vaoTest2.bind {
+    test2_a_offset.divisor = 1
+  }
+
+  println(test_a_pos.read)
+
+  val programBinding = occlusionTestProgram.getBinding
+
+  val u_mvp      = programBinding.uniformMat4f("u_mvp")
+  val a_instance_position = programBinding.attributeVec3f("a_instance_position")
+  val a_instance_scale    = programBinding.attributeFloat("a_instance_scale")
+  val u_tint = programBinding.uniformVec4f("u_tint")
   val a_position = programBinding.attributeVec3f("a_position")
   a_position := GlDraw.texturedCubeBuffer.positionsData
 
-  val data = a_position.read(24).map(v => s"${v.x} ${v.y} ${v.z}").grouped(4).mkString("\n")
-  println(data)
+//  vaoShaderProgram.bind {
+//    a_instance_position.divisor = 1
+//    a_instance_scale.divisor = 1
+//  }
 
-
-
-  GL30.glBindVertexArray(0)
-
-  // this is occlusion querry from the last frame
   var query:Query = null
 
   class Query(val buffer:IntBuffer,val nodeInfos:Seq[NodeInfo]) extends IndexedSeq[(Int,NodeInfo)] {
@@ -142,14 +154,14 @@ object Renderer extends Logger {
     import org.lwjgl.opengl.GL30._
     import org.lwjgl.opengl.GL31._
 
+    if(false) {
+      val VertexCount = 23
 
-    {
-           // Disable rasterisation, vertices processing only!
+      // Disable rasterisation, vertices processing only!
       glEnable(GL_RASTERIZER_DISCARD)
       val Query = glGenQueries()
 
       transformFeedbackTest.use{
-
         tfb_a_instance_position := Seq(Vec3f(0))
         tfb_instance_scale := Seq[Float]( 0.0f )
         tfb_u_mvp := Mat4f(1)
@@ -158,29 +170,34 @@ object Renderer extends Logger {
 
         glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, gl_Position.location)
 
-        glBindVertexArray(vaoTransformFeedbackTest)
-
-        glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query)
-        glBeginTransformFeedback(GL_TRIANGLES)
-        glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, 1)
-        glEndTransformFeedback()
-        glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
+        vaoTransformFeedbackTest.bind{
+          glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query)
+          glBeginTransformFeedback(GL_TRIANGLES)
+          glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, 1)
+          glEndTransformFeedback()
+          glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
+        }
+      }
+      glDisable(GL_RASTERIZER_DISCARD);
     }
 
-    glDisable(GL_RASTERIZER_DISCARD);
-}
+    vaoTestProgram.bind {
+      testProgram.use {
+        testBinding.enableAttributes()
+        testBinding.bind()
+        glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
+        testBinding.disableAttributes()
+      }
+    }
 
-
-//    GL30.glBindVertexArray(vaoTestProgram)
-//    testProgram.use {
-//      testBinding.enableAttributes()
-//
-//      testBinding.bind()
-//      glDrawArrays(GL_TRIANGLES, 0, 3)
-//
-//      testBinding.disableAttributes()
-//    }
-//    GL30.glBindVertexArray(0)
+    vaoTest2.bind {
+      test2Program.use {
+        test2Binding.enableAttributes()
+        test2Binding.bind()
+        glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
+        test2Binding.disableAttributes()
+      }
+    }
 
     renderWorld( Player.camera )
 
@@ -364,57 +381,77 @@ object Renderer extends Logger {
     val view = Mat4(camera.view)
     val projection = Mat4(camera.projection)
 
-    GL30.glBindVertexArray(vaoShaderProgram)
-
-    if( !Config.visibleOcclusionTest )
-      glColorMask(false,false,false,false)
-
-    u_mvp := Mat4f(projection * view)
-
     val magicNr = 8
     val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == frameCount % magicNr)
-    // val renderNodeInfos = nodeInfoBufferGenerating ++ (noTest map nodeInfoBufferUngenerated)
-    val renderNodeInfos1 = nodeInfoBufferGenerating
-    val renderNodeInfos2 = (noTest map nodeInfoBufferUngenerated)
 
+    val renderNodeInfos1 = nodeInfoBufferGenerating
+    val renderNodeInfos2 = noTest map nodeInfoBufferUngenerated
     val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
     val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
     glGenQueries( buffer )
     val queries = new Query(buffer, reducedNodeInfos)
 
-    shaderProgram.use {
-      programBinding.enableAttributes()
+    occlusionTestProgram.use {
+      vaoShaderProgram.bind {
+        programBinding.enableAttributes()
 
-      for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) ) {
-        u_tint := tint
-        a_instance_position := renderNodeInfos.map( info => Vec3f(info.pos) )
-        a_instance_scale := renderNodeInfos.map( info => info.size.toFloat )
-        programBinding.bindChanges()
-        GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
+        if( !Config.visibleOcclusionTest )
+          glColorMask(false,false,false,false)
+
+        u_mvp := Mat4f(projection * view)
+
+        for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) if renderNodeInfos.size > 0 ) {
+          u_tint := tint
+
+          val instance_positions = renderNodeInfos.map( info => Vec3f(info.pos) )
+          val instance_scales = renderNodeInfos.map( info => info.size.toFloat )
+
+          for( (instance_position,instance_scale) <- instance_positions zip instance_scales  ){
+            a_instance_position := Seq.fill(24)(instance_position)
+            a_instance_scale := Seq.fill(24)(instance_scale)
+            programBinding.bindChanges()
+
+            GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
+          }
+
+
+
+//          a_instance_position := instance_positions
+//          a_instance_scale := instance_scales
+
+//          GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
+
+          /*
+          println("*"*80)
+          println( "instance pos divisor:" + a_instance_position.divisor )
+          println( a_instance_position.read )
+          println( "instance scale divisor:" + a_instance_scale.divisor )
+          println( a_instance_scale.read )
+          a_instance_scale.divisor
+          println("*"*80)
+          */
+
+        }
+
+        for( (queryId, info) <- queries ) {
+          glBeginQuery(GL_SAMPLES_PASSED, queryId )
+
+          u_tint := Vec4f(1,0,0,1)
+          a_instance_position := Seq( Vec3f( info.pos ) )
+          a_instance_scale := Seq( info.size.toFloat )
+
+          programBinding.bindChanges()
+
+          GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
+
+          glEndQuery(GL_SAMPLES_PASSED)
+        }
+
+        programBinding.disableAttributes()
       }
 
-      for( (queryId, info) <- queries ) {
-        glBeginQuery(GL_SAMPLES_PASSED, queryId )
-
-        u_tint := Vec4f(1,0,0,1)
-        a_instance_position := Seq( Vec3f( info.pos ) )
-        a_instance_scale := Seq( info.size.toFloat )
-
-        programBinding.bindChanges()
-
-        GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
-
-        glEndQuery(GL_SAMPLES_PASSED)
-      }
-
-      programBinding.disableAttributes()
+      glColorMask(true, true, true, true)
     }
-
-    glColorMask(true, true, true, true)
-
-    GL30.glBindVertexArray(0)
-
-
 
     queries
   }

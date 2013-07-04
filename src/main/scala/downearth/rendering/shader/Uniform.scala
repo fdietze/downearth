@@ -204,28 +204,40 @@ class UniformMat4f(config:UniformConfig) extends Uniform[ReadMat4f](config) {
   val buffer = BufferUtils.createFloatBuffer(16)
 
   def :=(m:ReadMat4f) {
-    var i = 0
-    while( i < 16 ) {
-      val x = i >> 2
-      val y = i & 3
-      buffer.put( m(c=y,r=x) )
-      i += 1
-    }
+    buffer.put(m.m00)
+    buffer.put(m.m10)
+    buffer.put(m.m20)
+    buffer.put(m.m30)
+
+    buffer.put(m.m01)
+    buffer.put(m.m11)
+    buffer.put(m.m21)
+    buffer.put(m.m31)
+
+    buffer.put(m.m02)
+    buffer.put(m.m12)
+    buffer.put(m.m22)
+    buffer.put(m.m32)
+
+    buffer.put(m.m03)
+    buffer.put(m.m13)
+    buffer.put(m.m23)
+    buffer.put(m.m33)
+
     buffer.flip()
     binding.changedUniforms.enqueue(this)
   }
 
   def get = {
-    // untested
     val data = sharedFloatBuffer(16)
     glGetUniform(program.id, location, data)
-    ConstMat4f(data get  0, data get  1, data get  2, data get   3,
-               data get  4, data get  5, data get  6, data get   7,
-               data get  8, data get  9, data get 10, data get  11,
-               data get 12, data get 13, data get 14, data get  15)
+    ConstMat4f(data get  0, data get  4, data get  8, data get  12,
+               data get  1, data get  5, data get  9, data get  13,
+               data get  2, data get  6, data get 10, data get  14,
+               data get  3, data get  7, data get 11, data get  15)
   }
 
   def writeData() {
-    glUniformMatrix4(location, true, buffer)
+    glUniformMatrix4(location, false, buffer)
   }
 }

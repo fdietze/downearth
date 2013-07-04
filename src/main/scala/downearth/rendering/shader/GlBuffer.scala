@@ -17,7 +17,7 @@ import java.nio.{IntBuffer, FloatBuffer, ByteBuffer}
  * Time: 20:50
  */
 
-abstract class GlBuffer() {
+abstract class GlBuffer() extends GlObject {
   var id:Int = 0
   var hasData = false
 
@@ -34,12 +34,13 @@ abstract class GlBuffer() {
   def binding:Int
   var usage = GL_STATIC_DRAW
 
-  def bind( env: => Unit ) {
+  def bind[T]( block: => T ) = {
     require(id != 0)
     val outer = glGetInteger( binding )
     glBindBuffer(target, id)
-    env
+    val v = block
     glBindBuffer(target, outer)
+    v
   }
 
   def delete() {
@@ -67,8 +68,9 @@ abstract class GlBuffer() {
     buffer
   }
 
-  override def toString = s"GlBuffer($id)"
+  def size = glGetBufferParameteri(target, GL_BUFFER_SIZE)
 
+  override def toString = s"GlBuffer($id)"
 }
 
 class ArrayBuffer extends GlBuffer {

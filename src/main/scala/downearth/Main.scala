@@ -118,7 +118,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
       println("can't do instancing")
     }
 
-    glClearColor(91/255f,203/255f,255/255f,1f)
+    glClearColor(0.4f, 0.6f, 0.9f, 1f)
 
     resources.Resources.init()
 
