@@ -13,6 +13,10 @@ import simplex3d.math.doublex.functions._
 // Position in Weltkoordanaten und Größe. Zudem hat die Klasse noch Methoden,
 // um Metainformationen der Kindknoten berechnen zu können.
 case class NodeInfo(pos:Vec3i, size:Int) {
+  require(size > 0)
+  //require(downearth.util.isPowerOfTwo(size))
+
+  def vsize = Vec3i(size)
 	def upperPos = pos+size
   def center = pos + (size >> 2)
   def coordinates = pos until upperPos
@@ -27,8 +31,7 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 	def flat(ivec:Vec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
 	
 	// macht aus einem flachen Index wieder ein Vec3i-Index
-	def index2vec(idx:Int) =
-		Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
+	def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
 	
 	// Erzeugung des NodeInfo vom Kindknoten, aus einem Vektor-Index
 	def apply(p:Vec3i):(Int,NodeInfo) = {
@@ -46,7 +49,7 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 		NodeInfo(pos+v*hsize,hsize)
 	}
 
-  def split = List.tabulate(8)(apply)
+  def split = Array.tabulate(8)(apply)
 
   def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,size)
 	
@@ -92,6 +95,7 @@ case class NodeInfo(pos:Vec3i, size:Int) {
 	
 	def toCuboid = Cuboid(pos, Vec3i(size))
 	def toInterval3 = Interval3(Vec3(pos), Vec3(pos+size))
+  def volume = size*size*size
 }
 
 //TODO: @deprecated("move everything to NodeInfo")
@@ -106,7 +110,7 @@ case class Cuboid(pos:Vec3i, size:Vec3i) {
 
 	def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,size)
 	def indexInRange(p:NodeInfo):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.size-1)
-	
+
 	def longestedge:Int = {
 		// Z als erstes, da es Sinn macht als erstes Horizontal zu zerteilen
 		if( size.z >= size.x && size.z >= size.y )
@@ -130,7 +134,7 @@ case class Cuboid(pos:Vec3i, size:Vec3i) {
 	def splitlongest:Array[Cuboid] = {
 		var halfsize = Vec3i(0)
 		var offset = Vec3i(0)
-		
+
 		if( longestedge == 0 ) {
 			halfsize = size / Vec3i(2,1,1)
 			offset = Vec3i(halfsize(0), 0, 0)
@@ -155,7 +159,7 @@ case class Cuboid(pos:Vec3i, size:Vec3i) {
 			Cuboid(pos + v*childsize, Vec3i(childsize))
 		).toArray
 	}
-	
+
 	def nodeinfos = {
 		val nodeinfosize = size(shortestedge)
 		for(

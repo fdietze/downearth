@@ -32,6 +32,13 @@ trait Data3D[A]{
     }
   }
 
+  def fill(elem: Vec3i => A, areas:Iterable[NodeInfo], offset:Vec3i) {
+    for( area <- areas; rawPos <- area.coordinates ) {
+      val pos = offset + rawPos
+      this(pos) = elem(pos)
+    }
+  }
+
   def fillBorder( elem: Vec3i => A ) {
     for( x <- Seq(0, vsize.x-1); yzpos <- Vec2i(0) until vsize.yz ) {
       val pos = Vec3i(x,yzpos)
@@ -44,13 +51,6 @@ trait Data3D[A]{
     for( z <- Seq(0, vsize.z-1); xypos <- Vec2i(0) until vsize.xy ) {
       val pos = Vec3i(xypos, z)
       this(pos) = elem(pos)
-    }
-  }
-
-  def fillWithoutBorder(elem: Vec3i => A, areas:Iterable[NodeInfo]) {
-    for( area <- areas; pos <- area.coordinates ) {
-      val relativePos = pos - area.pos + 1
-      this(relativePos) = elem(relativePos)
     }
   }
 }
@@ -92,9 +92,11 @@ extends Data3D[A] with Iterable[A] {
 	import collection.Iterator
 	
 	def iterator = data.iterator
-	
-	override def toString = data.mkString
-	
+
+  def alignString[T](a:Array[T]) = a.toList.grouped(vsize.z).map(_.mkString(", ")).grouped(vsize.y).map(_.mkString("\n")).mkString("\n\n")
+  override def toString = alignString(data)
+  def toStringRounded(n:Int) = alignString(data.map(s"%.${n}f" format _))
+
 	override def clone = {
 		new Array3D(vsize,data.clone)
 	}

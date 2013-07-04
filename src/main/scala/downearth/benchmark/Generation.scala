@@ -29,13 +29,13 @@ object Generation {
     
     dummyOpenGLContext()
     genWorldAt(NodeInfo(pos=Vec3i(0),size=16),
-               worldFunction = WorldDefinition)
+               worldFunction = TestingWorldDefinition)
     
     Thread.sleep(500)
     
     timer.benchmark(50) {
       genWorldAt(NodeInfo(pos=Vec3i(0),size=16),
-                 worldFunction = WorldDefinition)
+                 worldFunction = TestingWorldDefinition)
     }
 
     println(s"${timer.read}s")

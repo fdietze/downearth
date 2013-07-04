@@ -54,7 +54,7 @@ trait NodeOverMesh extends Node {
 	
 	// extrahiert alle Polygone an einer Position, extrahiert sie also aus dem 
 	// Mesh heraus
-	def getPolygons( info:NodeInfo, pos:Vec3i):Seq[ConstVec3] 
+	def getPolygons( info:NodeInfo, pos:Vec3i):Seq[ConstVec3]
 	
 	// Ähnlich wie updated, nur dass nicht ein einzelner Hexaeder eingefügt wird,
 	// sonden ein ganzer Teilbaum. Funktioniert zur Zeit nur mit MeshNodes, und 
@@ -70,7 +70,7 @@ trait NodeUnderMesh extends Node {
 	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Polyeder)): NodeOverMesh
 	// Generiert die Polygone des gesamten Knotens, und fügt sie zum meshBuilder 
 	// hinzu, worldaccess wird für den Verdeckungstest mit den Nachbarn gebraucht.
-	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int	
+	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
 	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):NodeUnderMesh

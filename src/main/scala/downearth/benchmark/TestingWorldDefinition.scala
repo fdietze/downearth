@@ -6,7 +6,7 @@ import simplex3d.math.double.functions._
 import downearth.resources.Material
 import downearth.generation.WorldFunction
 
-object WorldDefinition extends WorldFunction {
+object TestingWorldDefinition extends WorldFunction {
 
    
 def density(world:Vec3) = {

@@ -335,6 +335,7 @@ package object util {
 		case 64 => 6
 		case  x =>(log(x)/0.6931471805599453).toInt
 	}
+  def halves(n:Int) = (n/2, n-n/2)
 
 	import scala.collection.IterableLike
 	import scala.collection.generic.CanBuildFrom

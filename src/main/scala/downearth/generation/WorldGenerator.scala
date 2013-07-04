@@ -17,6 +17,8 @@ import downearth.message.implicits._
 import collection.mutable
 import ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import downearth.worldoctree.NodeInfo
+import downearth.worldoctree.NodeInfo
 
 object WorldGenerator {
 	import Config.worldWindowSize
@@ -32,23 +34,43 @@ object WorldGenerator {
 		octree
 	}
 
+  def sample(nodeInfo:NodeInfo, worldFunction:WorldFunction) = {
+    // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
+    // Marching-Cubes für n Cubes: n+1 Datenpunkte
+    // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
+    val data = new Array3D[Double](Vec3i(nodeInfo.size+3))
+    data.fill(v =>	worldFunction.density(Vec3(nodeInfo.pos+v-1)))
+    data
+  }
+
+  def samplePredicted(nodeInfo:NodeInfo, worldFunction:WorldFunction) = {
+    // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
+    // Marching-Cubes für n Cubes: n+1 Datenpunkte
+    // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
+    val data = new Array3D[Double](Vec3i(nodeInfo.size+3))
+    //data.fillBorder(v =>	worldFunction.density(Vec3(nodeInfo.pos+v-1)))
+
+
+    val (toSample, positives, negatives) = findNodesToSample(nodeInfo, worldFunction, 1)
+    // fill without border (offset + 1)
+    //worldFunction.density(Vec3(nodeInfo.pos+v-1))
+    data.fill(v => 1.1, toSample, offset = -nodeInfo.pos + 1)
+
+    data.fill(v =>  6.6, positives, offset = -nodeInfo.pos)
+    data.fill(v => -7.7, negatives, offset = -nodeInfo.pos)
+    data
+  }
+
   def genWorldAt(nodeInfo:NodeInfo,
                  worldFunction:WorldFunction = WorldDefinition,
                  deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()}):NodeOverMesh = {
     val NodeInfo(nodepos, nodesize) = nodeInfo
     import HexaederMC._
-    val (toSample, positives, negatives) = findNodesToSample(nodeInfo, worldFunction)
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val originalNoiseData = new Array3D[Double](Vec3i(nodesize+3))
-    // Füllen der Datenpunkte mit Hilfe der Dichtefunktion
-    //originalNoiseData.fill(v =>	worldFunction.density(Vec3(nodepos+v-1)))
-    originalNoiseData.fillBorder(v =>	worldFunction.density(Vec3(nodepos+v-1)))
-    originalNoiseData.fillWithoutBorder(v =>	worldFunction.density(Vec3(nodepos+v-1)), toSample)
-    //originalNoiseData.fill(v =>	0, positives)
-    //originalNoiseData.fill(v =>	0, negatives)
+    val originalNoiseData = samplePredicted(nodeInfo, worldFunction)
     val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 
 
@@ -139,7 +161,7 @@ object WorldGenerator {
     val negatives = mutable.ArrayBuffer.empty[NodeInfo]
     val toCheck = mutable.Queue.empty[NodeInfo]
 
-    toCheck ++= nodeInfo.split
+    toCheck += nodeInfo //TODO: don't double check in higher level prediction phase
     while (toCheck.nonEmpty) {
       val current = toCheck.dequeue()
       val range = worldFunction.range(current.toInterval3)
