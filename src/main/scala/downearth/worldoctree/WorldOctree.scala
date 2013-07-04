@@ -19,7 +19,7 @@ import downearth.message
 import collection.mutable
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] {
+class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] {
   def rootNodePos = rootNodeInfo.pos
   def rootNodeSize = rootNodeInfo.size
 
@@ -50,9 +50,9 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
   // traverse the octree in a front to back order from view of point camera
   // filter the nodes by predicate (for example frustum test)
   // and apply action to every found node, stop if action returns false
-  def queryRegion(predicate:(NodeInfo) => Boolean, camera:ReadVec3 = null)(action: (NodeInfo,Node) => Boolean ) {
+  def queryRegion(predicate:(PowerOfTwoCube) => Boolean, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
 
-    val infoQueue = mutable.Queue[NodeInfo](rootNodeInfo)
+    val infoQueue = mutable.Queue[PowerOfTwoCube](rootNodeInfo)
     val nodeQueue = mutable.Queue[Node](root)
     val dummyOrder = if(camera == null) Array.range(0,8) else null
 
@@ -72,8 +72,8 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
   }
 
   // insert Node "that" at position and size of nodeinfo
-  def insert( nodeInfo:NodeInfo, that:NodeOverMesh ) {
-    val NodeInfo(nodepos,nodesize) = nodeInfo
+  def insert( nodeInfo:PowerOfTwoCube, that:NodeOverMesh ) {
+    val PowerOfTwoCube(nodepos,nodesize) = nodeInfo
 
     if( !(nodeInfo inside rootNodeInfo) )
       incDepth()
@@ -83,13 +83,13 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 
   override def toString = "Octree("+root.toString+")"
 
-  def generateNode(info:NodeInfo) {
+  def generateNode(info:PowerOfTwoCube) {
     // require(!isSet(info)) // TODO this fails sometimes
     while(!(rootNodeInfo indexInRange info)){
       incDepth()
     }
 
-    var list = List[NodeInfo]()
+    var list = List[PowerOfTwoCube]()
 
     queryRegion(_ indexInRange info) {
       case (nodeInfo, node) =>
@@ -109,7 +109,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 
   def makeUpdates() {
     implicit val timeout = Timeout(1000 seconds)
-    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(NodeInfo, NodeOverMesh)]]
+    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(PowerOfTwoCube, NodeOverMesh)]]
     val s = Await.result(future, 1000 seconds)
 
     for( (nodeinfo, node) <- s ) {
@@ -126,7 +126,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 		val slicesize = (Vec3i(1) - abs(dir)) * (worldWindowSize / minMeshNodeSize) + abs(dir)
 		
 		for(vi <- Vec3i(0) until slicesize) {
-			val nodeinfo = NodeInfo(slicepos + vi*minMeshNodeSize,minMeshNodeSize)
+			val nodeinfo = PowerOfTwoCube(slicepos + vi*minMeshNodeSize,minMeshNodeSize)
 			generateNode(nodeinfo)
 		}
 	}
@@ -159,7 +159,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
     // TODO add test for correct subdivision of the area. Depending on where the root is, it should be extended differently.
 
     var newRoot:NodeOverMesh = new InnerNodeOverMesh(Array.fill[NodeOverMesh](8)(UngeneratedInnerNode))
-    val newRootNodeInfo = NodeInfo(rootNodePos - rootNodeSize/2, rootNodeSize*2)
+    val newRootNodeInfo = PowerOfTwoCube(rootNodePos - rootNodeSize/2, rootNodeSize*2)
 
     if( root.isInstanceOf[MeshNode] )
       root = root.asInstanceOf[MeshNode].split(rootNodeInfo)
@@ -180,7 +180,7 @@ class WorldOctree(var rootNodeInfo:NodeInfo, var root:NodeOverMesh = Ungenerated
 		}
 	}
 
-	def isSet(info:NodeInfo):Boolean = {
+	def isSet(info:PowerOfTwoCube):Boolean = {
 		if(rootNodeInfo indexInRange info)
 			return root.isSet(rootNodeInfo,info)
 		else

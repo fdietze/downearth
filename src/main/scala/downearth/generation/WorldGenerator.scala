@@ -7,7 +7,7 @@ import downearth._
 import downearth.Config._
 import downearth.worldoctree._
 import downearth.util._
-import downearth.worldoctree.NodeInfo
+import downearth.worldoctree.PowerOfTwoCube
 import downearth.rendering.ObjManager
 import akka.util.Timeout
 import downearth.server.LocalServer
@@ -17,15 +17,15 @@ import downearth.message.implicits._
 import collection.mutable
 import ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import downearth.worldoctree.NodeInfo
-import downearth.worldoctree.NodeInfo
+import downearth.worldoctree.PowerOfTwoCube
+import downearth.worldoctree.PowerOfTwoCube
 
 object WorldGenerator {
 	import Config.worldWindowSize
 	
 	def genWorld:WorldOctree = {
-		// val rootNodeInfo = NodeInfo(Vec3i(-cubesize/2), cubesize)
-		val initArea = NodeInfo( pos = Vec3i(-worldWindowSize/4), size = worldWindowSize/2 )
+		// val rootNodeInfo = Cube(Vec3i(-cubesize/2), cubesize)
+		val initArea = PowerOfTwoCube( pos = Vec3i(-worldWindowSize/4), size = worldWindowSize/2 )
 		val octree = new WorldOctree(initArea,genWorldAt(initArea))
 		octree.incDepth()
 
@@ -34,7 +34,7 @@ object WorldGenerator {
 		octree
 	}
 
-  def sample(nodeInfo:NodeInfo, worldFunction:WorldFunction) = {
+  def sample(nodeInfo:PowerOfTwoCube, worldFunction:WorldFunction) = {
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
@@ -43,7 +43,7 @@ object WorldGenerator {
     data
   }
 
-  def samplePredicted(nodeInfo:NodeInfo, worldFunction:WorldFunction) = {
+  def samplePredicted(nodeInfo:PowerOfTwoCube, worldFunction:WorldFunction) = {
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
@@ -61,10 +61,10 @@ object WorldGenerator {
     data
   }
 
-  def genWorldAt(nodeInfo:NodeInfo,
+  def genWorldAt(nodeInfo:PowerOfTwoCube,
                  worldFunction:WorldFunction = WorldDefinition,
                  deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()}):NodeOverMesh = {
-    val NodeInfo(nodepos, nodesize) = nodeInfo
+    val PowerOfTwoCube(nodepos, nodesize) = nodeInfo
     import HexaederMC._
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
@@ -146,20 +146,20 @@ object WorldGenerator {
 
 
   // Ask server for World delta asynchronly
-  def askServerForDeltas(nodeInfo: NodeInfo): Future[message.DeltaSet] = {
+  def askServerForDeltas(nodeInfo: PowerOfTwoCube): Future[message.DeltaSet] = {
     implicit val timeout = Timeout(5 seconds)
     (LocalServer.server ? message.NodeInfo(nodeInfo.pos, nodeInfo.size)).asInstanceOf[Future[message.DeltaSet]]
   }
 
   // Find areas inside Node to be sampled (using range prediction)
-  def findNodesToSample(nodeInfo: NodeInfo,
+  def findNodesToSample(nodeInfo: PowerOfTwoCube,
                         worldFunction:WorldFunction = WorldDefinition,
                         minPredictionSize: Int = Config.minPredictionSize
-                         ): (Seq[NodeInfo],Seq[NodeInfo],Seq[NodeInfo]) = {
-    val toSample = mutable.ArrayBuffer.empty[NodeInfo]
-    val positives = mutable.ArrayBuffer.empty[NodeInfo]
-    val negatives = mutable.ArrayBuffer.empty[NodeInfo]
-    val toCheck = mutable.Queue.empty[NodeInfo]
+                         ): (Seq[PowerOfTwoCube],Seq[PowerOfTwoCube],Seq[PowerOfTwoCube]) = {
+    val toSample = mutable.ArrayBuffer.empty[PowerOfTwoCube]
+    val positives = mutable.ArrayBuffer.empty[PowerOfTwoCube]
+    val negatives = mutable.ArrayBuffer.empty[PowerOfTwoCube]
+    val toCheck = mutable.Queue.empty[PowerOfTwoCube]
 
     toCheck += nodeInfo //TODO: don't double check in higher level prediction phase
     while (toCheck.nonEmpty) {

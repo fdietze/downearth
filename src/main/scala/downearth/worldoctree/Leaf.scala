@@ -24,13 +24,13 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
   override def getChild(i:Int) = throw new NoSuchElementException("a leaf in a tree doesn't have children")
   // kann kein deadNode sein
-  def isSet(info:NodeInfo,pos:NodeInfo) = true
+  def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
 
-  def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:Node) = insertnode
+  def insertNode(info:PowerOfTwoCube, insertinfo:PowerOfTwoCube, insertnode:Node) = insertnode
 
-  override def apply(info:NodeInfo, p:Vec3i) = this
+  override def apply(info:PowerOfTwoCube, p:Vec3i) = this
 
-  override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) = {
+  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) = {
     if(h == newLeaf.h)
       this
     else{
@@ -135,7 +135,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
       0
   }
 
-  override def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i => Polyeder)):Int = {
+  override def genPolygons(info:PowerOfTwoCube, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i => Polyeder)):Int = {
     import info.{pos => nodepos, size => nodesize}
     assert(meshBuilder != null)
     var vertexCounter = 0
@@ -179,7 +179,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     vertexCounter
   }
 
-  override def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
+  override def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
     val replacement = updated(info, p, newLeaf)
 
     val builder = new TextureMeshBuilder
@@ -188,19 +188,19 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     (replacement,update)
   }
 
-  override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
+  override def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
     val builder = new TextureMeshBuilder
     genPolygons(info, builder, v => World.octree(v).h )
     Update(vertpos,vertcount,builder.result)
   }
 
-  override def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Polyeder) ):NodeOverMesh = {
+  override def genMesh(info:PowerOfTwoCube, dstnodesize: Int, worldaccess:(Vec3i => Polyeder) ):NodeOverMesh = {
     (new MeshNode(this)).genMesh(info,dstnodesize,worldaccess)
   }
 
-  def draw(info:NodeInfo,test:FrustumTest){}
+  def draw(info:PowerOfTwoCube,test:FrustumTest){}
 
-  override def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
+  override def getPolygons( info:PowerOfTwoCube, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
     (from,to)
   }
 
@@ -241,7 +241,7 @@ object Leaf {
 }
 
 case object EmptyLeaf extends Leaf(EmptyHexaeder) {
-  def fill(info:NodeInfo, func: (Vec3i) => Leaf ) : NodeUnderMesh = {
+  def fill(info:PowerOfTwoCube, func: (Vec3i) => Leaf ) : NodeUnderMesh = {
     if(info.size >= 2){
 
       val array = new Array[NodeUnderMesh](8)

@@ -14,12 +14,12 @@ import downearth.rendering.{Update, TextureMeshBuilder, TextureMeshData}
 sealed trait Node {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
 	// Elternknoten ableiten lässt. Beim Traversieren durch den baum wird diese
-	// Information in Form einer Instanz von NodeInfo weitergereicht.
+	// Information in Form einer Instanz von Cube weitergereicht.
 	
 	// Greift mit absoluten Koordinaten auf den Oktant zu
-	def apply(info:NodeInfo, p:Vec3i) : Leaf
+	def apply(info:PowerOfTwoCube, p:Vec3i) : Leaf
 
-  def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):Node
+  def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):Node
 
   def hasChildren:Boolean
 
@@ -42,24 +42,24 @@ sealed trait Node {
 // Meshes befindet
 trait NodeOverMesh extends Node {
 	// Überprüft, ob ein bestimmter Teilbereich des Knotens schon generiert wurde.
-	def isSet(info:NodeInfo, pos:NodeInfo):Boolean
+	def isSet(info:PowerOfTwoCube, pos:PowerOfTwoCube):Boolean
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):NodeOverMesh
+	def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):NodeOverMesh
 	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
 	// Polygonverdeckungstest aufzufrischen.
-	def repolyWorld(info:NodeInfo, p:Vec3i):Unit
+	def repolyWorld(info:PowerOfTwoCube, p:Vec3i):Unit
 	
 	// extrahiert alle Polygone an einer Position, extrahiert sie also aus dem 
 	// Mesh heraus
-	def getPolygons( info:NodeInfo, pos:Vec3i):Seq[ConstVec3]
+	def getPolygons( info:PowerOfTwoCube, pos:Vec3i):Seq[ConstVec3]
 	
 	// Ähnlich wie updated, nur dass nicht ein einzelner Hexaeder eingefügt wird,
 	// sonden ein ganzer Teilbaum. Funktioniert zur Zeit nur mit MeshNodes, und 
 	// Elternknoten von MeshNodes
-	def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:NodeOverMesh): NodeOverMesh
+	def insertNode(info:PowerOfTwoCube, insertinfo:PowerOfTwoCube, insertnode:NodeOverMesh): NodeOverMesh
 }
 
 trait NodeUnderMesh extends Node {
@@ -67,26 +67,26 @@ trait NodeUnderMesh extends Node {
 	// aktiviert die Polygongenerierung. Der Baum mit InnerNodes (erbt von 
 	// NodeUnderMesh) initialisiert, und anschließend werden im genMesh
 	// Schritt die Knoten ersetzt, die tatsächlich höher liegen.
-	def genMesh(info:NodeInfo, dstnodesize: Int, worldaccess:(Vec3i => Polyeder)): NodeOverMesh
+	def genMesh(info:PowerOfTwoCube, dstnodesize: Int, worldaccess:(Vec3i => Polyeder)): NodeOverMesh
 	// Generiert die Polygone des gesamten Knotens, und fügt sie zum meshBuilder 
 	// hinzu, worldaccess wird für den Verdeckungstest mit den Nachbarn gebraucht.
-	def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int
+	def genPolygons(info:PowerOfTwoCube, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):NodeUnderMesh
+	def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):NodeUnderMesh
 	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
 	// Polygonverdeckungstest aufzufrischen.
-	def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) : Update
+	def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) : Update
 	
 	// extrahiert alle Polygone an einer Position in form des Bereichs von 
 	// Polygonen aus dem Mesh
-	def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int)
+	def getPolygons( info:PowerOfTwoCube, pos:Vec3i, from:Int, to:Int):(Int,Int)
 	
 	// Ähnlich zu updated, aber diese Funktion generierd auch Updates für das 
 	// Mesh, welches sich verändert.
-	def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update)
+	def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update)
 }
 
 class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
@@ -94,7 +94,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 
   override def getChild(i:Int) = data(i)
 	
-	def isSet(info:NodeInfo,pos:NodeInfo) = {
+	def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = {
 		assert(info indexInRange pos,"Not in range: "+info+pos)
 		if(info == pos)
 			true
@@ -104,16 +104,16 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		}
 	}
 	
-	def apply(info:NodeInfo, p:Vec3i) = {
+	def apply(info:PowerOfTwoCube, p:Vec3i) = {
 		val (index,nodeinfo) = info(p)
 		data(index)(nodeinfo,p)
 	}
 	
-	override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf):NodeOverMesh = {
+	override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):NodeOverMesh = {
 		val (index,childinfo) = info(p)
 		data(index) = data(index).updated(childinfo,p, newLeaf)
 		
-		// TODO refactor diesen teil so weit es geht nach NodeInfo auslagern
+		// TODO refactor diesen teil so weit es geht nach Cube auslagern
 		import info.{pos => nodepos, size => nodesize}
 		// nachbarn von p, die in verschidenen kindknoten sitzen
 		val neigbours = ((0 until  6) map (i => {val v = Vec3i(0); v(i/2) = 2*(i&1)-1; p+v} )
@@ -126,20 +126,20 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		val hsize = info.size >> 1
 		for( (n,nv) <- neigbours if(nv != v) ){
 			val index = info.flat(nv)
-			data(index).repolyWorld(NodeInfo(nodepos+nv*hsize,hsize),n)
+			data(index).repolyWorld(PowerOfTwoCube(nodepos+nv*hsize,hsize),n)
 		}
 		
 		joinChildren
 	}
 
-	override def repolyWorld(info:NodeInfo, p:Vec3i) = {
+	override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) = {
 		val (index,childinfo) = info(p)
 		data(index).repolyWorld(childinfo,p)
 	}
 	
 	override def toString = data.mkString("(",",",")")
 	
-	override def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:NodeOverMesh) = {
+	override def insertNode(info:PowerOfTwoCube, insertinfo:PowerOfTwoCube, insertnode:NodeOverMesh) = {
 		if(info == insertinfo)
 			insertnode
 		else {
@@ -149,7 +149,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		}
 	}
 	
-	override def getPolygons( info:NodeInfo, pos:Vec3i) = {
+	override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {
 		val (index,nodeinfo) = info(pos)
 		data(index).getPolygons( nodeinfo,pos )
 	}
@@ -199,24 +199,24 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 			this
 	}
 	
-	def apply(info:NodeInfo, p:Vec3i) = {
+	def apply(info:PowerOfTwoCube, p:Vec3i) = {
 		val (index,nodeinfo) = info(p)
 		data(index)(nodeinfo,p)
 	}
 	
-	def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) = {
+	def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) = {
 		val (index,childinfo) = info(p)
 		data(index) = data(index).updated(childinfo,p,newLeaf)
 		merge
 	}
 	
-	override def genPolygons(info:NodeInfo, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i => Polyeder)) = {
+	override def genPolygons(info:PowerOfTwoCube, meshBuilder:TextureMeshBuilder,worldaccess:(Vec3i => Polyeder)) = {
 		for(i <- 0 until 8)
 			vvertcount(i) = data(i).genPolygons(info(i),meshBuilder,worldaccess)
 		vvertcount.sum
 	}
 	
-	override def patchWorld(info:NodeInfo, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) = {
+	override def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) = {
 		val (index,childinfo) = info(p)
 		
 		val newvertpos = vertpos + vvertcount.view(0,index).sum
@@ -238,7 +238,7 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 			(this,patch)
 	}
 
-	override def repolyWorld(info:NodeInfo, p:Vec3i, vertpos:Int, vertcount:Int) = {
+	override def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) = {
 		val (index,childinfo) = info(p)
 		val newvertpos = vertpos + vvertcount.view(0,index).sum
 		val newvertcount = vvertcount(index)
@@ -250,7 +250,7 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 		patch
 	}
 
-	override def genMesh(info:NodeInfo, destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
+	override def genMesh(info:PowerOfTwoCube, destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
 		if(info.size <= destnodesize){
 			val replacement = new MeshNode(this)
 			replacement.genMesh(info,destnodesize,worldaccess)
@@ -264,7 +264,7 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 		}
 	}
 	
-	override def getPolygons( info:NodeInfo, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
+	override def getPolygons( info:PowerOfTwoCube, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
 		val (index,nodeinfo) = info(pos)
 		val newfrom = from+vvertcount.view(0,index).sum
 		val newto = newfrom + vvertcount(index)
@@ -281,11 +281,11 @@ abstract class LeafOverMesh extends NodeOverMesh {
 
   override def getChild(i:Int) = throw new NoSuchElementException("ungenerated inner node doesn't have children")
 
-	def apply(info:NodeInfo, p:Vec3i) = Config.ungeneratedDefault
+	def apply(info:PowerOfTwoCube, p:Vec3i) = Config.ungeneratedDefault
 	
-	override def repolyWorld(info: NodeInfo, p: Vec3i){}
+	override def repolyWorld(info: PowerOfTwoCube, p: Vec3i){}
 	
-	override def insertNode(info:NodeInfo, insertinfo:NodeInfo, insertnode:NodeOverMesh):NodeOverMesh = {
+	override def insertNode(info:PowerOfTwoCube, insertinfo:PowerOfTwoCube, insertnode:NodeOverMesh):NodeOverMesh = {
 		// assert(nodesize >= insertnodesize)
 		
 		if(info == insertinfo)
@@ -299,24 +299,24 @@ abstract class LeafOverMesh extends NodeOverMesh {
 	}
 
 	// deadNodes haben keine Polygone
-	override def getPolygons( info:NodeInfo, pos:Vec3i) = Nil
+	override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = Nil
 }
 
 object UngeneratedInnerNode extends LeafOverMesh {
-  def isSet(info:NodeInfo,pos:NodeInfo) = false
+  def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = false
 
   //similar to updated, but this function also generates patches to update the mesh
-  override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
+  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
     println("ungenerated nodes can't have updates" + info)
     this
   }
 }
 
 object GeneratingNode extends LeafOverMesh {
-  def isSet(info:NodeInfo,pos:NodeInfo) = true
+  def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
 
   //similar to updated, but this function also generates patches to update the mesh
-  override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
+  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
     println("generating nodes can't have updates " + info)
     this
   }

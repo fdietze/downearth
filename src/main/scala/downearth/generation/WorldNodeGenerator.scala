@@ -13,7 +13,7 @@ import scala.Tuple2
 import downearth.worldoctree._
 import downearth.{Player, FrustumTestImpl, Config}
 import downearth.rendering.{MutableTextureMesh, TextureMeshData, GlDraw, Draw}
-import downearth.worldoctree.NodeInfo
+import downearth.worldoctree.PowerOfTwoCube
 import downearth.worldoctree.Cuboid
 import scala.Tuple2
 import downearth.server.LocalServer
@@ -31,8 +31,8 @@ case object ActiveJobsEmpty
 case object AllJobsEmpty
 
 class Master extends Actor {
-  val jobqueue = new Queue[NodeInfo]
-  val done  = new Queue[(NodeInfo, NodeOverMesh)] //TODO: im worldoctree speichern
+  val jobqueue = new Queue[PowerOfTwoCube]
+  val done  = new Queue[(PowerOfTwoCube, NodeOverMesh)] //TODO: im worldoctree speichern
   val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(classOf[Worker],i) ))
 
   val idleWorkers = Queue(workers:_*)
@@ -46,7 +46,7 @@ class Master extends Actor {
       sender ! (jobqueue.isEmpty && done.isEmpty)
 
     // Master erhält neuen Job und verteilt ihn.
-    case area:NodeInfo =>
+    case area:PowerOfTwoCube =>
 
       if( idleWorkers.isEmpty )
         jobqueue enqueue area //Warteschlange
@@ -54,7 +54,7 @@ class Master extends Actor {
         idleWorkers.dequeue ! area //Verteilen
 
     // Worker has finished Job
-    case ( oldjob:NodeInfo, node:NodeOverMesh ) =>
+    case ( oldjob:PowerOfTwoCube, node:NodeOverMesh ) =>
       done enqueue Tuple2(oldjob,node)
 
       if( jobqueue.isEmpty )
@@ -95,7 +95,7 @@ class Worker (id:Int) extends Actor {
   }
 
   def receive = {
-    case info:NodeInfo =>
+    case info:PowerOfTwoCube =>
       // Prediction:
       // Hier wird bis zur minMeshnodeSize geteilt
       // in genWorldAt wird dann mithilfe der Prediction schlauer gesampled
@@ -104,7 +104,7 @@ class Worker (id:Int) extends Actor {
       val surfaceNotInArea = !interval(0)
 
       if( surfaceNotInArea ) {
-        GlDraw addPredictedCuboid info.toCuboid  // Für DebugDraw
+        GlDraw addPredictedCuboid info  // Für DebugDraw
         val meshnode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))

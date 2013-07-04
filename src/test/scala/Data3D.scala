@@ -1,4 +1,4 @@
-import downearth.worldoctree.{NodeInfo, Array3D}
+import downearth.worldoctree.{PowerOfTwoCube, Array3D}
 import org.scalatest.FunSuite
 import simplex3d.math._
 import simplex3d.math.double._
@@ -13,7 +13,7 @@ class Data3D extends FunSuite {
 
   test("fill (areas)"){
     val a = new Array3D[Int](Vec3i(4))
-    a.fill((v) => 1, Seq(NodeInfo(Vec3i(5),4)), offset = Vec3i(-5))
+    a.fill((v) => 1, Seq(PowerOfTwoCube(Vec3i(5),4)), offset = Vec3i(-5))
     assert( a.data === Array.fill(4*4*4)(1) )
   }
 
@@ -25,7 +25,7 @@ class Data3D extends FunSuite {
   }
 
   test("fill without border (areas)"){
-    val area = NodeInfo(Vec3i(1234),1)
+    val area = PowerOfTwoCube(Vec3i(1234),1)
     val a = new Array3D[Int](Vec3i(3))
     a.fill((v) => 2)
     a.fill(a.index, Seq(area), offset=Vec3i(-area.pos + 1))

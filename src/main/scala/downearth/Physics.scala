@@ -21,7 +21,7 @@ import simplex3d.math.double._
 import simplex3d.math._
 
 import downearth.rendering.{GlDraw, DirectDrawer}
-import downearth.worldoctree.{Array3D, NodeInfo}
+import downearth.worldoctree.{Array3D, PowerOfTwoCube}
 import downearth.util._
 
 import org.lwjgl.opengl.GL11._
@@ -74,7 +74,7 @@ object BulletPhysics {
 		}
 	}
 	
-	def worldChange(nodeinfo:NodeInfo) {
+	def worldChange(nodeinfo:PowerOfTwoCube) {
 		for( Body( _ , _ , stream ) <- bodies ) {
 			for(pos <- nodeinfo intersection stream.nodeinfo) {
 				stream reloadAt pos
@@ -156,7 +156,7 @@ object BulletPhysics {
 		val pos = centerpos - radius
 		val size = 2*radius
 		
-		def nodeinfo = NodeInfo(pos,size)
+		def nodeinfo = PowerOfTwoCube(pos,size)
 		
 		val bodies = new Array3D[T](Vec3i(size))
 		bodies fill fillfunc

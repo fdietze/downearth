@@ -5,16 +5,12 @@ import downearth.{FrustumTest, Camera, Config}
 import org.lwjgl.opengl.GL11._
 import simplex3d.math.floatx.{Mat4f, Vec4f}
 import downearth.worldoctree._
-import org.lwjgl.opengl.GL31
 import org.lwjgl.opengl.GL15._
-import downearth.worldoctree.NodeInfo
 import org.lwjgl.BufferUtils
 import scala.collection.mutable.ArrayBuffer
-import downearth.worldoctree.NodeInfo
 import java.nio.IntBuffer
 import downearth.world.World
 import simplex3d.backend.lwjgl.ArbEquivalents
-import simplex3d.math.ReadVec3i
 
 /**
  * User: arne
@@ -48,10 +44,10 @@ object OcclusionTest {
   def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest) = {
     TextureManager.box.bind()
 
-    val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
-    val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
+    val nodeInfoBufferGenerating  = ArrayBuffer[PowerOfTwoCube]()
+    val nodeInfoBufferUngenerated = ArrayBuffer[PowerOfTwoCube]()
 
-    octree.queryRegion(test, camera.position) {
+    octree.queryRegion( test, camera.position) {
       case (info, UngeneratedInnerNode) =>
         nodeInfoBufferUngenerated += info
         false
@@ -85,7 +81,7 @@ object OcclusionTest {
 
         occTest_matrix := projection * view
 
-        for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) if renderNodeInfos.size > 0 ) {
+        for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[PowerOfTwoCube])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) if renderNodeInfos.size > 0 ) {
           occTest_u_tint := tint
 
           val instance_positions = renderNodeInfos.map( info => Vec4f(info.pos,0) )
@@ -119,19 +115,19 @@ object OcclusionTest {
     queries
   }
 
-  case class QueryResult(visible:Seq[NodeInfo], occluded:Seq[NodeInfo])
+  case class QueryResult(visible:Seq[PowerOfTwoCube], occluded:Seq[PowerOfTwoCube])
 
   var query:Query = null
 
-  class Query(val buffer:IntBuffer,val nodeInfos:Seq[NodeInfo]) extends IndexedSeq[(Int,NodeInfo)] {
+  class Query(val buffer:IntBuffer,val nodeInfos:Seq[PowerOfTwoCube]) extends IndexedSeq[(Int,PowerOfTwoCube)] {
     require(buffer.limit == nodeInfos.length)
     val length    = buffer.limit()
     def apply(i:Int) = Tuple2(buffer.get(i), nodeInfos(i))
   }
 
   def evalQueries(queries:Query) = {
-    val visible  = ArrayBuffer[NodeInfo]()
-    val occluded = ArrayBuffer[NodeInfo]()
+    val visible  = ArrayBuffer[PowerOfTwoCube]()
+    val occluded = ArrayBuffer[PowerOfTwoCube]()
 
     for( (id,info) <- queries ) {
       while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {

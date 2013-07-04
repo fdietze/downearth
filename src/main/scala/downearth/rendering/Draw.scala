@@ -10,7 +10,7 @@ import org.lwjgl.opengl.Display
 import org.newdawn.slick.Color
 
 import java.nio.FloatBuffer
-import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
+import downearth.worldoctree.{CuboidLike, Cuboid, PowerOfTwoCube, Polyeder}
 import downearth.DisplayEvent
 import downearth.util._
 import org.lwjgl.BufferUtils
@@ -249,7 +249,7 @@ object GlDraw extends Draw {
 		glPopMatrix()
 	}
 
-	def drawNodeInfo(nodeinfo:NodeInfo) {
+	def drawNodeInfo(nodeinfo:PowerOfTwoCube) {
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
@@ -259,21 +259,21 @@ object GlDraw extends Draw {
 		glPopMatrix()
 	}
 
-	def drawCuboid(cuboid:Cuboid) {
+	def drawCuboid(cuboid:CuboidLike) {
 		glDisable(GL_LIGHTING)
 		glDisable(GL_TEXTURE_2D)
 
 		glPushMatrix()
 			glTranslate3dv(cuboid.pos + 0.1)
-			GlDraw.renderCuboid(cuboid.size - 0.2)
+			GlDraw.renderCuboid(cuboid.vsize - 0.2)
 		glPopMatrix()
 	}
 
 	// Für den Debugdraw: alle Bereiche, die gesampled werden
-//	var sampledNodes:List[NodeInfo] = Nil
-	var predictedCuboids:List[Cuboid] = Nil
-//	def addSampledNode(toNodeinfo:NodeInfo) { sampledNodes ::= toNodeinfo }
-	def addPredictedCuboid(cuboid:Cuboid) { predictedCuboids ::= cuboid }
+//	var sampledNodes:List[Cube] = Nil
+	var predictedCuboids:List[CuboidLike] = Nil
+//	def addSampledNode(toNodeinfo:Cube) { sampledNodes ::= toNodeinfo }
+	def addPredictedCuboid(cuboid:CuboidLike) { predictedCuboids ::= cuboid }
 
 	def drawSampledNodes() {
 		for( cuboid <- predictedCuboids ) {

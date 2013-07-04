@@ -7,11 +7,7 @@
 package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.GL15._
-
-import simplex3d.math.floatx.{Mat4f, Vec4f, Vec3f}
-import downearth.worldoctree.NodeInfo
-import scala.Tuple2
+import simplex3d.math.floatx.Vec4f
 
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl._
@@ -28,18 +24,11 @@ import downearth.entity.{Entity, SimpleEntity}
 import downearth.resources.MaterialManager
 import downearth.rendering.shader._
 
-import java.nio.IntBuffer
 
-import simplex3d.data._
-import simplex3d.data.double._
 import simplex3d.math.double._
-import simplex3d.math.doublex.functions._
-import simplex3d.math.float.functions.normalize
 
-import scala.Tuple2
 import scala.collection.mutable.ArrayBuffer
-import downearth.worldoctree.NodeInfo
-import scala.Tuple2
+import downearth.worldoctree.PowerOfTwoCube
 
 object Renderer extends Logger {
 
@@ -283,7 +272,7 @@ object Renderer extends Logger {
         new FrustumTestImpl(camera.projection, camera.view)
       else {
         new FrustumTest {
-          def testNode( info:NodeInfo ) = true
+          def testNode( info:PowerOfTwoCube ) = true
         }
       }
 
@@ -376,7 +365,7 @@ object Renderer extends Logger {
     glEnableClientState(GL_NORMAL_ARRAY)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-    val objMeshes = ArrayBuffer[(NodeInfo,ObjMesh)]()
+    val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
     octree.queryRegion( test, camera ) {
       case (info, node:MeshNode) =>

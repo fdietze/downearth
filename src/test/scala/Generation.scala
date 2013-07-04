@@ -1,6 +1,6 @@
 import downearth.benchmark.TestingWorldDefinition
 import downearth.generation.WorldGenerator._
-import downearth.worldoctree.{Array3D, NodeInfo}
+import downearth.worldoctree.{Array3D, PowerOfTwoCube}
 import org.scalatest.FunSuite
 import simplex3d.math._
 import simplex3d.math.double._
@@ -8,20 +8,20 @@ import simplex3d.math.double._
 class Generation extends FunSuite {
 
   test("find nodes to sample (volume)"){
-    val area = NodeInfo(Vec3i(140),32)
+    val area = PowerOfTwoCube(Vec3i(140),32)
     val (toSample, pos, neg) = findNodesToSample(area, TestingWorldDefinition, 1)
     //println("sampling ratio: " + (toSample.map(_.volume).sum.toDouble/area.volume))
     assert((toSample ++ pos ++ neg).map(_.volume).sum === area.volume)
   }
 
   test("find nodes to sample (coverage)"){
-    val area = NodeInfo(Vec3i(6745),32)
+    val area = PowerOfTwoCube(Vec3i(6745),32)
     val (toSample, pos, neg) = findNodesToSample(area, TestingWorldDefinition, 1)
     assert((toSample ++ pos ++ neg).flatMap(_.coordinates).toSet === area.coordinates.toSet)
   }
 
   test("find nodes to sample (data3d fill coverage)"){
-    val area = NodeInfo(Vec3i(-345),32)
+    val area = PowerOfTwoCube(Vec3i(-345),32)
     val (toSample, pos, neg) = findNodesToSample(area, TestingWorldDefinition, 1)
     assert((toSample ++ pos ++ neg).map(_.volume).sum === area.volume)
     val data = new Array3D[Int](area.vsize)
@@ -31,7 +31,7 @@ class Generation extends FunSuite {
   }
 
   test("predicted fill (sign)"){
-    val area = NodeInfo(Vec3i(20),1)
+    val area = PowerOfTwoCube(Vec3i(20),1)
     val data1 = sample(area, TestingWorldDefinition)
     val data2 = samplePredicted(area, TestingWorldDefinition)
     /*println(data1.toStringRounded(1))

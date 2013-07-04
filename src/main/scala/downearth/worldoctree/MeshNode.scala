@@ -35,24 +35,24 @@ object MeshNode {
 //decorator pattern
 class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
   // Nodes unter dem MeshNode müssen gesetzt sein.
-  def isSet(info:NodeInfo,pos:NodeInfo) = true
+  def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
 
   override def hasChildren = node.hasChildren
 
   override def getChild(i:Int) = node.getChild(i)
 
-  override def insertNode(info: NodeInfo, insertinfo: NodeInfo, insertnode: NodeOverMesh) = {
+  override def insertNode(info: PowerOfTwoCube, insertinfo: PowerOfTwoCube, insertnode: NodeOverMesh) = {
     throw new Exception("nodes can't be inserted into MeshNodes" + info)
   }
 
-  def apply(info: NodeInfo, p: Vec3i) = node(info,p)
+  def apply(info: PowerOfTwoCube, p: Vec3i) = node(info,p)
 
   var mesh:MutableTextureMesh = null
 
-  val objMeshes = ArrayBuffer[(NodeInfo,ObjMesh)]()
+  val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
   // der einzige NodeOverMesh, der genMesh implementiert
-  def genMesh(info:NodeInfo , destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
+  def genMesh(info:PowerOfTwoCube , destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
     assert(mesh == null)
     val meshBuilder = new TextureMeshBuilder
 
@@ -83,9 +83,9 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     this
   }
 
-  override def updated(info:NodeInfo, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
+  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
 
-    val leafInfo = NodeInfo(p,1)
+    val leafInfo = PowerOfTwoCube(p,1)
 
     objMeshes.find {
       case (info, mesh) => info == leafInfo
@@ -97,7 +97,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 
     if( newLeaf.isInstanceOf[ObjLeaf] ) {
       println("inserting objMesh at " + info)
-      objMeshes += Tuple2( NodeInfo(p,1), newLeaf.asInstanceOf[ObjLeaf].mesh)
+      objMeshes += Tuple2( PowerOfTwoCube(p,1), newLeaf.asInstanceOf[ObjLeaf].mesh)
     }
 
     val (replacement,patch) = node.patchWorld(info, p, newLeaf, 0, mesh.size)
@@ -129,7 +129,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
       this
   }
 
-  def split(info: NodeInfo) = {
+  def split(info:PowerOfTwoCube) = {
     node match {
       case innernode:InnerNode =>
         val newdata = new Array[NodeOverMesh](8)
@@ -152,12 +152,12 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     }
   }
 
-  override def repolyWorld(info:NodeInfo, p:Vec3i) = {
+  override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) = {
     // vertpos und vertcount wird von node.repolyWorld gesetzt
     mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.size))
   }
 
-  override def getPolygons( info:NodeInfo, pos:Vec3i) = {
+  override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {
     val (from,to) = node.getPolygons( info, pos, 0, mesh.size )
     (from until to) map mesh.vertices
   }

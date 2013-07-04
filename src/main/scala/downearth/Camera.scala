@@ -8,7 +8,7 @@ import simplex3d.data._
 import simplex3d.data.double._
 
 import Config._
-import downearth.worldoctree.NodeInfo
+import downearth.worldoctree.PowerOfTwoCube
 import org.lwjgl.opengl.Display
 import org.lwjgl.BufferUtils
 import simplex3d.math.floatx.{Mat4f, ReadMat4f}
@@ -137,9 +137,9 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
   override def noTranslate:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat)))
 }
 
-trait FrustumTest extends Function1[NodeInfo,Boolean] {
-	def testNode( info:NodeInfo ):Boolean
-  def apply( info:NodeInfo ) = testNode(info)
+trait FrustumTest extends Function1[PowerOfTwoCube,Boolean] {
+	def testNode( info:PowerOfTwoCube ):Boolean
+  def apply( info:PowerOfTwoCube ) = testNode(info)
 }
 
 // Frustum Culling
@@ -155,7 +155,7 @@ class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
 	planes(4) = normalize(rows(3) - rows(2)) //far plane
 	planes(5) = normalize(rows(3) + rows(2)) //near plane
 
-	def testNode( info:NodeInfo ):Boolean = {
+	def testNode( info:PowerOfTwoCube ):Boolean = {
 		val inside = testCube(Vec3(info.pos + info.size / 2), info.size / 2)
 		return inside
 	}
