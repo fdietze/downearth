@@ -15,7 +15,7 @@ import interval.{Interval, Interval3}
 class Noise extends FunSuite {
 
   test("perlin noise range (improved)") {
-    val n = 10000
+    val n = 1000
     val rng = new scala.util.Random(0)
     import rng.{nextDouble => r}
     var low = Double.MaxValue
@@ -31,7 +31,7 @@ class Noise extends FunSuite {
   }
 
   test("perlin noise range (simple)") {
-    val n = 10000
+    val n = 1000
     val rng = new scala.util.Random(0)
     import rng.{nextDouble => r}
     var low = Double.MaxValue
@@ -47,7 +47,7 @@ class Noise extends FunSuite {
   }
 
   test("worley noise range") {
-    val n = 10000
+    val n = 100
     val rng = new scala.util.Random(0)
     import rng.{nextDouble => r}
     var low = Vec4(Double.MaxValue)
@@ -63,7 +63,7 @@ class Noise extends FunSuite {
   }
 
   test("perlin noise prediction correctness by sampling (improved)") {
-    val n = 100
+    val n = 10
     val samples = 10
 
     val rng = new scala.util.Random(0)
@@ -92,7 +92,7 @@ class Noise extends FunSuite {
   }
 
   test("perlin noise prediction correctness by sampling (simple)") {
-    val n = 100
+    val n = 10
     val samples = 10
 
     val rng = new scala.util.Random(0)

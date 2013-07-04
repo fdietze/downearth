@@ -37,14 +37,18 @@ object WorldGenerator {
                  deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()}):NodeOverMesh = {
     val NodeInfo(nodepos, nodesize) = nodeInfo
     import HexaederMC._
-    val toSample = findNodesToSample(nodeInfo, worldFunction)
+    val (toSample, positives, negatives) = findNodesToSample(nodeInfo, worldFunction)
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
     val originalNoiseData = new Array3D[Double](Vec3i(nodesize+3))
     // Füllen der Datenpunkte mit Hilfe der Dichtefunktion
-    originalNoiseData.fill(v =>	worldFunction.density(Vec3(nodepos+v-1)), toSample)
+    //originalNoiseData.fill(v =>	worldFunction.density(Vec3(nodepos+v-1)))
+    originalNoiseData.fillBorder(v =>	worldFunction.density(Vec3(nodepos+v-1)))
+    originalNoiseData.fillWithoutBorder(v =>	worldFunction.density(Vec3(nodepos+v-1)), toSample)
+    //originalNoiseData.fill(v =>	0, positives)
+    //originalNoiseData.fill(v =>	0, negatives)
     val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 
 
@@ -126,22 +130,31 @@ object WorldGenerator {
   }
 
   // Find areas inside Node to be sampled (using range prediction)
-  def findNodesToSample(nodeInfo: NodeInfo, worldFunction:WorldFunction = WorldDefinition): mutable.ArrayBuffer[NodeInfo] = {
+  def findNodesToSample(nodeInfo: NodeInfo,
+                        worldFunction:WorldFunction = WorldDefinition,
+                        minPredictionSize: Int = Config.minPredictionSize
+                         ): (Seq[NodeInfo],Seq[NodeInfo],Seq[NodeInfo]) = {
     val toSample = mutable.ArrayBuffer.empty[NodeInfo]
+    val positives = mutable.ArrayBuffer.empty[NodeInfo]
+    val negatives = mutable.ArrayBuffer.empty[NodeInfo]
     val toCheck = mutable.Queue.empty[NodeInfo]
 
     toCheck ++= nodeInfo.split
     while (toCheck.nonEmpty) {
       val current = toCheck.dequeue()
       val range = worldFunction.range(current.toInterval3)
-      val surfaceInArea = range(0)
-      if (surfaceInArea)
-        if (current.size > Config.minPredictionSize)
+      val surfaceInArea = range(0) // interval contains zero
+      if (surfaceInArea) {
+        if (current.size > minPredictionSize)
           toCheck ++= current.split
         else
           toSample += current
+      } else if( range.isPositive )
+        positives += current
+      else // range.isNegative
+        negatives += current
     }
-    toSample
+    (toSample, positives, negatives)
   }
 }
 

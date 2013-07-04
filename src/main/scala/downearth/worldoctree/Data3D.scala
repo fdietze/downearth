@@ -1,13 +1,13 @@
 package downearth.worldoctree
 
-import simplex3d.math.Vec3i
+import simplex3d.math.{Vec2i, Vec3i}
 
 import reflect.ClassTag
 import downearth.util._
 
 object Data3D{
 	// Abbildung der flachen Indices der Vertizes auf ihre 3D Indizes als Vec3i
-	val vectorIndices = for(i <- 0 until 8) yield Vec3i(i&1,(i&2)>>1,(i&4)>>2)
+	val vectorIndices = Array.tabulate(8)( (i) => Vec3i(i&1,(i&2)>>1,(i&4)>>2) )
 }
 
 import Data3D._
@@ -25,18 +25,32 @@ trait Data3D[A]{
 		i.y < vsize.y &&
 		i.z < vsize.z
 	}
-	
-	def fill( elem: Vec3i => A ) {
-		for( pos <- Vec3i(0) until vsize ) {
-			val f = elem(pos)
-			assert(f != null)
-			this(pos) = f
-		}
-	}
 
-  def fill(elem: Vec3i => A, areas:Iterable[NodeInfo]) {
+  def fill( elem: Vec3i => A ) {
+    for( pos <- Vec3i(0) until vsize ) {
+      this(pos) = elem(pos)
+    }
+  }
+
+  def fillBorder( elem: Vec3i => A ) {
+    for( x <- Seq(0, vsize.x-1); yzpos <- Vec2i(0) until vsize.yz ) {
+      val pos = Vec3i(x,yzpos)
+      this(pos) = elem(pos)
+    }
+    for( y <- Seq(0, vsize.y-1); xzpos <- Vec2i(0) until vsize.xz ) {
+      val pos = Vec3i(xzpos.x, y, xzpos.y)
+      this(pos) = elem(pos)
+    }
+    for( z <- Seq(0, vsize.z-1); xypos <- Vec2i(0) until vsize.xy ) {
+      val pos = Vec3i(xypos, z)
+      this(pos) = elem(pos)
+    }
+  }
+
+  def fillWithoutBorder(elem: Vec3i => A, areas:Iterable[NodeInfo]) {
     for( area <- areas; pos <- area.coordinates ) {
-      this(pos) = elem(area.pos - pos)
+      val relativePos = pos - area.pos + 1
+      this(relativePos) = elem(relativePos)
     }
   }
 }
