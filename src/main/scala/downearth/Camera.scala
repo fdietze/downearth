@@ -10,6 +10,9 @@ import simplex3d.data.double._
 import Config._
 import downearth.worldoctree.NodeInfo
 import org.lwjgl.opengl.Display
+import org.lwjgl.BufferUtils
+import simplex3d.math.floatx.{Mat4f, ReadMat4f}
+import java.nio.FloatBuffer
 
 abstract class Camera {
 	var position:ReadVec3
@@ -20,17 +23,45 @@ abstract class Camera {
   def projection:Mat4
   def view:Mat4
 
-  protected val m_viewBuffer = DataBuffer[Mat4,RFloat](1)
-  protected val m_projectionBuffer = DataBuffer[Mat4,RFloat](1)
+//  protected val m_viewBuffer = DataBuffer[Mat4,RFloat](1)
+//  protected val m_projectionBuffer = DataBuffer[Mat4,RFloat](1)
+
+  val m_viewBuffer = BufferUtils.createFloatBuffer(16)
+  val m_projectionBuffer = BufferUtils.createFloatBuffer(16)
+
+  def putMat(buffer:FloatBuffer, m:Mat4) {
+    buffer.put(m.m00.toFloat)
+    buffer.put(m.m01.toFloat)
+    buffer.put(m.m02.toFloat)
+    buffer.put(m.m03.toFloat)
+
+    buffer.put(m.m10.toFloat)
+    buffer.put(m.m11.toFloat)
+    buffer.put(m.m12.toFloat)
+    buffer.put(m.m13.toFloat)
+
+    buffer.put(m.m20.toFloat)
+    buffer.put(m.m21.toFloat)
+    buffer.put(m.m22.toFloat)
+    buffer.put(m.m23.toFloat)
+
+    buffer.put(m.m30.toFloat)
+    buffer.put(m.m31.toFloat)
+    buffer.put(m.m32.toFloat)
+    buffer.put(m.m33.toFloat)
+  }
 
   def viewBuffer = {
-    m_viewBuffer(0) = view
-    m_viewBuffer.buffer
+    putMat(m_viewBuffer, view)
+    m_viewBuffer.flip()
+    m_viewBuffer
   }
 
   def projectionBuffer = {
-    m_projectionBuffer(0) = projection
-    m_projectionBuffer.buffer()
+    putMat(m_projectionBuffer, projection)
+    m_projectionBuffer.flip()
+    assert(m_projectionBuffer.position() == 0 && m_projectionBuffer.limit() == 16, m_projectionBuffer)
+    m_projectionBuffer
   }
 }
 

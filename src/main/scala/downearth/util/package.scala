@@ -93,6 +93,54 @@ package object util {
     buffer
   }
 
+  def putVec2f( buffer:FloatBuffer, v:Vec2f ) {
+    putVec2f(buffer, v.x, v.y)
+  }
+
+  def putVec2f( buffer:FloatBuffer, f1:Float, f2:Float ) {
+    buffer.put(f1).put(f2)
+  }
+
+  def putVec2f( buffer:ByteBuffer, v:Vec2f ) {
+    putVec2f(buffer, v.x, v.y)
+  }
+
+  def putVec2f( buffer:ByteBuffer, f1:Float, f2:Float ) {
+    buffer.putFloat(f1).putFloat(f2)
+  }
+
+  def putVec3f( buffer:FloatBuffer, v:Vec3f ) {
+    putVec3f(buffer, v.x, v.y, v.z)
+  }
+
+  def putVec3f( buffer:FloatBuffer, f1:Float, f2:Float, f3:Float ) {
+    buffer.put(f1).put(f2).put(f3)
+  }
+
+  def putVec3f( buffer:ByteBuffer, v:Vec3f ) {
+    putVec3f(buffer, v.x, v.y, v.z)
+  }
+
+  def putVec3f( buffer:ByteBuffer, f1:Float, f2:Float, f3:Float ) {
+    buffer.putFloat(f1).putFloat(f2).putFloat(f3)
+  }
+
+  def putVec4f( buffer:FloatBuffer, v:Vec4f ) {
+    putVec4f(buffer, v.x, v.y, v.z, v.w)
+  }
+
+  def putVec4f( buffer:FloatBuffer, f1:Float, f2:Float, f3:Float, f4:Float ) {
+    buffer.put(f1).put(f2).put(f3).put(f4)
+  }
+
+  def putVec4f( buffer:ByteBuffer, v:Vec4f ) {
+    putVec4f(buffer, v.x, v.y, v.z, v.w)
+  }
+
+  def putVec4f( buffer:ByteBuffer, f1:Float, f2:Float, f3:Float, f4:Float ) {
+    buffer.putFloat(f1).putFloat(f2).putFloat(f3).putFloat(f4)
+  }
+
   import scala.reflect.runtime.universe._
 
   def sizeOf[T : TypeTag](x:T):Int = sizeOf[T]

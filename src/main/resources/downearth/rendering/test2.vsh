@@ -1,8 +1,9 @@
 #version 150
 
 in vec4 a_pos;
-in vec4 offset;
 
-void main(){
-    gl_Position = a_pos + offset;
+uniform mat4 matrix;
+
+void main() {
+    gl_Position = matrix * a_pos;
 }

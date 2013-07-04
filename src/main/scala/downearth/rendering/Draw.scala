@@ -8,14 +8,13 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.Display
 import org.newdawn.slick.Color
-import downearth.util._
 
 import java.nio.FloatBuffer
 import downearth.worldoctree.{Cuboid, NodeInfo, Polyeder}
 import downearth.DisplayEvent
-import downearth.Main
+import downearth.util._
 import org.lwjgl.BufferUtils
-import simplex3d.math.floatx.{Vec2f, Vec3f}
+import simplex3d.math.floatx.{Vec4f, Vec2f, Vec3f}
 import downearth.rendering.shader.ArrayBuffer
 
 object ConsoleFont {
@@ -102,7 +101,7 @@ object GlDraw extends Draw {
 
     val normalsData = BufferUtils.createByteBuffer( sizeOf[Vec3f] * 24 )
     val texCoordsData = BufferUtils.createByteBuffer( sizeOf[Vec2f] * 24 )
-    val positionsData = BufferUtils.createByteBuffer( sizeOf[Vec3f] * 24 )
+    val positionsData = BufferUtils.createByteBuffer( sizeOf[Vec4f] * 24 )
 
     {
       val indices = Array(0,2, 3,1,  4,6,2,0, 0, 1,5,4, 1,3,7,5, 4,5,7,6, 6,7,3,2)
@@ -120,9 +119,9 @@ object GlDraw extends Draw {
         val u = ((j & 1) >> 0) ^ ((j & 2) >> 1)
         val v = (j & 2) >> 1
 
-        normalsData.putFloat( normals(k) ).putFloat(normals(k+1)).putFloat(normals(k+2))
-        texCoordsData.putFloat(u).putFloat(v)
-        positionsData.putFloat(x).putFloat(y).putFloat(z)
+        putVec3f(normalsData, normals(k), normals(k+1), normals(k+2))
+        putVec2f(texCoordsData, u, v)
+        putVec4f(positionsData, x, y, z,1)
 
         i += 1
       }
