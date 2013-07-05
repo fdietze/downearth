@@ -2,18 +2,11 @@ package downearth.rendering
 
 import org.lwjgl.opengl._
 import GL11._
-import GL31._
 
-import org.lwjgl.BufferUtils
-
-import simplex3d.math.double._
-import simplex3d.math.double.functions._
 import simplex3d.math.floatx._
 
-import downearth.{Camera, Config, Player}
+import downearth.Camera
 import downearth.rendering.shader._
-import downearth.util.sizeOf
-
 
 object Skybox {
   val skybox_program = Program.auto("skybox")
@@ -29,12 +22,9 @@ object Skybox {
   skybox_vao.bind {
     skybox_binding.enableAttributes()
     skybox_binding.setAttributePointers()
-    skybox_position := Skybox.vertices
   }
 
-  println( skybox_binding )
-
-  def vertices = Seq(
+  skybox_position := Seq(
     Vec4f(1,1,1,1), Vec4f(-1,1,1,1), Vec4f(-1,1,-1,1), Vec4f(1,1,-1,1),
     Vec4f(-1,1,1,1), Vec4f(-1,-1,1,1), Vec4f(-1,-1,-1,1), Vec4f(-1,1,-1,1),
     Vec4f(-1,-1,1,1), Vec4f(1,-1,1,1), Vec4f(1,-1,-1,1), Vec4f(-1,-1,-1,1),
@@ -43,9 +33,10 @@ object Skybox {
     Vec4f(1,-1,1,1), Vec4f(-1,-1,1,1), Vec4f(-1,1,1,1), Vec4f(1,1,1,1),
     //bottom
     Vec4f(1,1,-1,1), Vec4f(-1,1,-1,1), Vec4f(-1,-1,-1,1), Vec4f(1,-1,-1,1)
-  ) map ( _ * Vec4f(16,16,16,1) )
+  )
 	
 	def render( camera:Camera ) {
+    glDisable(GL_DEPTH_TEST)
 
     val projection = Mat4f(camera.projection)
     val view = Mat4f(camera.noTranslate)
@@ -57,7 +48,7 @@ object Skybox {
         skybox_matrix := matrix
         skybox_binding.writeChangedUniforms()
 
-        glDrawArraysInstanced(GL_QUADS, 0, 6*4, 1)
+        glDrawArrays(GL_QUADS, 0, 6*4)
       }
     }
 	}

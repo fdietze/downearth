@@ -156,9 +156,9 @@ object Renderer extends Logger {
       }
     }
 
-    val projection = Mat4f(Player.camera.projection)
-    val view = Mat4f(Player.camera.view)
-    val matrix = projection * view
+//    val projection = Mat4f(Player.camera.projection)
+//    val view = Mat4f(Player.camera.view)
+//    val matrix = projection * view
 
 //    test2_vao.bind {
 //      test2Program.use {
@@ -183,14 +183,43 @@ object Renderer extends Logger {
 //      }
 //    }
 
-    if( Config.skybox ) {
-      Skybox.render( Player.camera )
+
+    val w = Display.getWidth
+    val h = Display.getHeight
+
+    def render(camera:Camera) {
+      if( Config.skybox ) {
+        Skybox.render( camera )
+      }
+      renderWorld( camera )
     }
 
-    glEnable( GL_DEPTH_TEST )
+    if( Config.stereoRender ) {
+      if( ! Config.anaglyph ) {
+        glViewport(0, 0, w/2, h)
+        render( Player.leftEye )
+        glViewport(w/2,0,w/2,h)
+        render( Player.rightEye )
+      }
+      else  {
+        glViewport(0, 0, w, h)
+        glColorMask(true,false,false,false)
+        glClear(GL_DEPTH_BUFFER_BIT)
+        render( Player.leftEye )
+        glColorMask(false,true,true,false)
+        glClear(GL_DEPTH_BUFFER_BIT)
+        render( Player.rightEye )
+      }
+    }
+    else {
+      glViewport(0, 0, w, h)
+      render(Player.camera)
+    }
 
-    renderWorld( Player.camera )
 
+
+
+    glViewport(0, 0, w, h)
     MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
     MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
 
@@ -235,23 +264,18 @@ object Renderer extends Logger {
   }
 
   def renderWorld(camera:Camera) {
-
-    glViewport(0, 0, Display.getWidth, Display.getHeight)
     glEnable(GL_CULL_FACE)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_TEXTURE_2D)
+    glEnable(GL_DEPTH_TEST)
 
     glMatrixMode( GL_PROJECTION )
     glLoadMatrix( camera.projectionBuffer )
-
-//    Skybox.render()
 
     glMatrixMode( GL_MODELVIEW )
     glLoadMatrix( camera.viewBuffer )
 
     lighting( camera.position )
-
-    glEnable( GL_DEPTH_TEST )
 
     val frustumTest:FrustumTest =
       if( Config.frustumCulling )
@@ -278,9 +302,6 @@ object Renderer extends Logger {
       case entity:Entity => ()
     }
 
-    // TODO this is not strictly render code
-    // here the occlusion query from the last frame is evaluated, and a new one is generated
-
     if( Config.occlusionTest ) {
       OcclusionTest.doIt(camera, frustumTest, order)
     } else { // perform frustum test only
@@ -296,7 +317,6 @@ object Renderer extends Logger {
           true
       }
     }
-
 
     import Config._
 
@@ -344,8 +364,6 @@ object Renderer extends Logger {
   }
 
   var randomizer = 0
-
-
 
   def drawOctree(octree:WorldOctree, test:FrustumTest, order:Array[Int]) {
     import org.lwjgl.opengl.GL11._
