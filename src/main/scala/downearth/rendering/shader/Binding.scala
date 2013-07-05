@@ -5,6 +5,7 @@ import downearth.rendering.{TextureCube, Texture2D}
 import downearth.util.AddString
 import scala.collection.mutable
 import simplex3d.math.floatx._
+import org.lwjgl.opengl.GL30
 
 /**
  * User: arne
@@ -18,16 +19,15 @@ abstract class Binding( val program:Program ) extends AddString {
   val transformFeedback:Seq[Attribute[_]]
 
   val changedUniforms = mutable.Queue[Uniform[_]]()
-  val changedAttributes = mutable.Queue[Attribute[_]]()
 
   def bind() {
-    bind(attributes, uniforms)
+    bind(uniforms)
   }
 
   def enableAttributes() {
     for( attrib <- attributes ){
       attrib.enable()
-    }
+    } 
   }
 
   def disableAttributes() {
@@ -37,25 +37,26 @@ abstract class Binding( val program:Program ) extends AddString {
   }
 
   def bindChanges() {
-    val t:Any => Boolean = _ => true
-    bind(changedAttributes.dequeueAll(t), changedUniforms.dequeueAll(t))
+    bind( changedUniforms.dequeueAll(_ => true) )
   }
 
-  private def bind(attributes:Seq[Attribute[_]],uniforms:Seq[Uniform[_]]) {
+  private def bind( uniforms:Seq[Uniform[_]] ) {
     require(program.isActive, "program must be active before data is written")
+    for( binding <- uniforms ) {
+      binding.writeData()
+    }
+  }
+
+  def setAttributePointers() {
 
     val groupedAttributes = attributes.groupBy( _.bufferBinding.buffer )
 
     for( (buffer, atList) <- groupedAttributes ) {
       buffer.bind {
         for( binding <- atList ) {
-          binding.writeData()
+          binding.setPointer()
         }
       }
-    }
-
-    for( binding <- uniforms ) {
-      binding.writeData()
     }
   }
 

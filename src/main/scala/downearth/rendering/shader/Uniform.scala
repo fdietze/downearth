@@ -204,26 +204,7 @@ class UniformMat4f(config:UniformConfig) extends Uniform[ReadMat4f](config) {
   val buffer = BufferUtils.createFloatBuffer(16)
 
   def :=(m:ReadMat4f) {
-    buffer.put(m.m00)
-    buffer.put(m.m01)
-    buffer.put(m.m02)
-    buffer.put(m.m03)
-
-    buffer.put(m.m10)
-    buffer.put(m.m11)
-    buffer.put(m.m12)
-    buffer.put(m.m13)
-
-    buffer.put(m.m20)
-    buffer.put(m.m21)
-    buffer.put(m.m22)
-    buffer.put(m.m23)
-
-    buffer.put(m.m30)
-    buffer.put(m.m31)
-    buffer.put(m.m32)
-    buffer.put(m.m33)
-
+    putMat4f(buffer,m)
     buffer.flip()
     binding.changedUniforms.enqueue(this)
   }

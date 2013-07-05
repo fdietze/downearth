@@ -51,14 +51,13 @@ object Renderer extends Logger {
   var frameCount = 0
 
   lazy val transformFeedbackTest = {
-    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
+    val vertShader = Shader[VertexShader]( getClass.getClassLoader.getResourceAsStream("shaders/simple.vsh") )
     val program = Program("transformFeedbackTest")(vertShader)()
     vertShader.delete()
     program
   }
 
   val tfbBinding = transformFeedbackTest.getBinding
-  println(tfbBinding)
 
   val tfb_a_instance_position = tfbBinding.attributeVec3f("a_instance_position")
   val tfb_instance_scale = tfbBinding.attributeFloat("a_instance_scale")
@@ -68,23 +67,17 @@ object Renderer extends Logger {
   vaoTransformFeedbackTest.bind {
     tfb_instance_scale.divisor = 1
     tfb_a_instance_position.divisor = 1
+
+    tfbBinding.setAttributePointers()
   }
 
   val tfb_a_position =  tfbBinding.attributeVec3f("tfb_a_position")
   val tfb_u_mvp =  tfbBinding.uniformMat4f("u_mvp")
   val gl_Position = tfbBinding.transformFeedbackVec4f("gl_Position")
 
-
-
-
-  val testProgram = {
-    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test.vsh") )
-    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test.fsh") )
-    Program("test")(vertShader)(fragShader)
-  }
+  val testProgram = Program.auto("test")
 
   val testBinding = testProgram.getBinding
-  println( testBinding )
 
   val test_a_pos = testBinding.attributeVec4f("a_pos")
   val test_a_offset = testBinding.attributeVec4f("offset")
@@ -95,13 +88,10 @@ object Renderer extends Logger {
 
   vaoTestProgram.bind {
     test_a_offset.divisor = 1
+    testBinding.setAttributePointers()
   }
 
-  lazy val test2Program = {
-    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("test2.vsh") )
-    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("test2.fsh") )
-    Program("test2")(vertShader)(fragShader)
-  }
+  lazy val test2Program = Program.auto("test2")
 
   val test2Binding = test2Program.getBinding
 
@@ -114,31 +104,17 @@ object Renderer extends Logger {
   vaoTest2.bind {
     test2_offset.divisor = 1
     test2_scale.divisor = 1
+
+    test2Binding.setAttributePointers()
   }
 
   test2_a_pos    := GlDraw.texturedCubeBuffer.positionsData
   test2_offset   := Seq( Vec4f(0,0,0,0), Vec4f(2,0,0,0), Vec4f(0,3,0,0), Vec4f(0,0,5,0)  )
   test2_scale    := Seq[Float]( 1,2,3,4 )
-  println( "test2_a_pos: " + test2_a_pos.read )
-  //test2_a_pos    := Seq( Vec4f(-0.4f,-0.4f, 0,1), Vec4f(0.4f, -0.4f, 0, 1), Vec4f(0.4f, 0.4f, 0, 1), Vec4f(-0.4f, 0.4f, 0, 1),
-  //                   Vec4f(-0.4f,-0.4f, 0,1), Vec4f(0.4f, -0.4f, 0, 1), Vec4f(0.4f, 0.4f, 0, 1), Vec4f(-0.4f, 0.4f, 0, 1) )
 
   val test2_matrix = test2Binding.uniformMat4f("matrix")
 
-
-
-  println("test a_pos: " + test_a_pos.read)
-
-
-
-  lazy val occTestProgram = {
-    val vertShader = Shader[VertexShader]( getClass.getResourceAsStream("simple.vsh") )
-    val fragShader = Shader[FragmentShader]( getClass.getResourceAsStream("simple.fsh") )
-    val program = Program("simple")(vertShader)(fragShader)
-    vertShader.delete()
-    fragShader.delete()
-    program
-  }
+  lazy val occTestProgram = Program.auto("simple")
 
   val occTestBinding = occTestProgram.getBinding
 
@@ -155,6 +131,8 @@ object Renderer extends Logger {
   vaoShaderProgram.bind {
     occTest_offset.divisor = 1
     occTest_scale.divisor = 1
+
+    occTestBinding.setAttributePointers()
   }
 
   var query:Query = null
@@ -231,7 +209,6 @@ object Renderer extends Logger {
 
         occTest_offset := Seq( Vec4f(0,0,0,0) )
         occTest_scale  := Seq( 16.0f )
-
 
         occTestBinding.bindChanges()
         glDrawArrays(GL_QUADS, 0, 6*4)

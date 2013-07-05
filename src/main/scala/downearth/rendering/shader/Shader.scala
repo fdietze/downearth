@@ -28,6 +28,10 @@ object Shader {
     shader.compile()
     shader
   }
+
+  def apply[T <: Shader:ClassTag](name:String):T = {
+    apply( getClass.getClassLoader.getResourceAsStream("shaders/" + name) )
+  }
 }
 
 class ShaderCompileError(message:String) extends Exception(message)

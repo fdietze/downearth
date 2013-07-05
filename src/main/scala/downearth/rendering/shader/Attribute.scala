@@ -108,8 +108,6 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
     bufferBinding.buffer.bind{
       bufferBinding.buffer.putData( data )
     }
-
-    binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) : Seq[T]
@@ -120,9 +118,7 @@ abstract class Attribute[T](val size:Int, val glType:Int)  extends AddString {
     }
   }
 
-  // TODO is size/type from glVertexAtribPointer and glGetActiveAttrib different?
-
-  def writeData() {
+  def setPointer() {
     val bb = bufferBinding
     glVertexAttribPointer(location, bb.size, bb.glType, bb.normalized, bb.stride, bb.offset)
   }
@@ -156,7 +152,7 @@ class AttributeFake[T](val program:Program, val binding:Binding, val name:CharSe
   override def divisor:Int = -1
   override def divisor_=(i:Int) { }
 
-  override def writeData() {
+  override def setPointer() {
     assert(false, "should not call this method")
   }
 
@@ -179,8 +175,6 @@ class AttributeInt(val program:Program, val binding:Binding, val name:CharSequen
     bufferBinding.buffer.bind {
       bufferBinding.buffer.putData( data )
     }
-
-    binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) = {
@@ -208,8 +202,6 @@ class AttributeFloat(val program:Program, val binding:Binding, val name:CharSequ
     bufferBinding.buffer.bind{
       bufferBinding.buffer.putData( data )
     }
-
-    binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) = {
@@ -238,8 +230,6 @@ class AttributeVec2f(val program:Program, val binding:Binding, val name:CharSequ
     bufferBinding.buffer.bind{
       bufferBinding.buffer.putData( data )
     }
-
-    binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) = {
@@ -272,8 +262,6 @@ class AttributeVec3f(val program:Program, val binding:Binding, val name:CharSequ
     bufferBinding.buffer.bind {
       bufferBinding.buffer.putData( data )
     }
-
-    binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) = {
@@ -308,8 +296,6 @@ class AttributeVec4f(val program:Program, val binding:Binding, val name:CharSequ
     bufferBinding.buffer.bind{
       bufferBinding.buffer.putData( data )
     }
-
-    binding.changedAttributes.enqueue(this)
   }
 
   def read(size:Int) = {

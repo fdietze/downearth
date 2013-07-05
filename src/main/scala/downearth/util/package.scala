@@ -141,6 +141,50 @@ package object util {
     buffer.putFloat(f1).putFloat(f2).putFloat(f3).putFloat(f4)
   }
 
+  def putMat4f( buffer:ByteBuffer, m:ReadMat4f ) {
+    buffer.putFloat(m.m00)
+    buffer.putFloat(m.m01)
+    buffer.putFloat(m.m02)
+    buffer.putFloat(m.m03)
+
+    buffer.putFloat(m.m10)
+    buffer.putFloat(m.m11)
+    buffer.putFloat(m.m12)
+    buffer.putFloat(m.m13)
+
+    buffer.putFloat(m.m20)
+    buffer.putFloat(m.m21)
+    buffer.putFloat(m.m22)
+    buffer.putFloat(m.m23)
+
+    buffer.putFloat(m.m30)
+    buffer.putFloat(m.m31)
+    buffer.putFloat(m.m32)
+    buffer.putFloat(m.m33)
+  }
+
+  def putMat4f( buffer:FloatBuffer, m:ReadMat4f ) {
+    buffer.put(m.m00)
+    buffer.put(m.m01)
+    buffer.put(m.m02)
+    buffer.put(m.m03)
+
+    buffer.put(m.m10)
+    buffer.put(m.m11)
+    buffer.put(m.m12)
+    buffer.put(m.m13)
+
+    buffer.put(m.m20)
+    buffer.put(m.m21)
+    buffer.put(m.m22)
+    buffer.put(m.m23)
+
+    buffer.put(m.m30)
+    buffer.put(m.m31)
+    buffer.put(m.m32)
+    buffer.put(m.m33)
+  }
+
   import scala.reflect.runtime.universe._
 
   def sizeOf[T : TypeTag](x:T):Int = sizeOf[T]

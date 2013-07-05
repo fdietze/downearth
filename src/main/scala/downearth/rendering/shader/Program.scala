@@ -20,6 +20,16 @@ import org.lwjgl.opengl.GL15._
  */
 
 object Program {
+
+  def auto(name:String) = {
+    val vert = Shader[VertexShader]( getClass.getClassLoader.getResourceAsStream(s"shaders/$name.vsh") )
+    val frag = Shader[FragmentShader]( getClass.getClassLoader.getResourceAsStream(s"shaders/$name.fsh") )
+    val result = apply(name)(vert)(frag)
+    vert.delete()
+    frag.delete()
+    result
+  }
+
   def apply(name:String)(vertexShaders: VertexShader*)(fragmentShaders: FragmentShader*) = {
 
 

@@ -38,6 +38,7 @@ object Config extends Listener {
 	val startAsGhost = false
 	val buildrange = 100
 	var fullscreen = false
+  var test = false
 
 	// Vollbild-Modus mit höchster Auflösung
 	def fullscreenDisplayMode = Display.getDesktopDisplayMode
