@@ -336,6 +336,15 @@ package object util {
 		case  x =>(log(x)/0.6931471805599453).toInt
 	}
   def halves(n:Int) = (n/2, n-n/2)
+  def halves(v:Vec3i) = (Vec3i(
+    v.x/2,
+    v.y/2,
+    v.z/2
+  ), Vec3i(
+    v.x-v.x/2,
+    v.y-v.y/2,
+    v.z-v.z/2
+  ))
 
 	import scala.collection.IterableLike
 	import scala.collection.generic.CanBuildFrom

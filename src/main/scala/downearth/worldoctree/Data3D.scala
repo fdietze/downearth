@@ -32,7 +32,7 @@ trait Data3D[A]{
     }
   }
 
-  def fill(elem: Vec3i => A, areas:Iterable[PowerOfTwoCube], offset:Vec3i) {
+  def fill(elem: Vec3i => A, areas:Iterable[PowerOfTwoCubeLike], offset:Vec3i) {
     for( area <- areas; rawPos <- area.coordinates ) {
       val pos = offset + rawPos
       this(pos) = elem(pos)

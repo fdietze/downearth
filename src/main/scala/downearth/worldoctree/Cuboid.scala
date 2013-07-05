@@ -9,6 +9,103 @@ import scala.Predef._
 import downearth.util._
 import simplex3d.math.doublex.functions._
 
+trait ChildAccess[T] {
+  // macht aus dem Vec3i index einen flachen index, der auf ein Array
+  // angewendet werden kann
+  def flat(ivec:Vec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
+
+  // macht aus einem flachen Index wieder ein Vec3i-Index
+  def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
+
+  def apply(i:Int):T = ???
+  def apply(p:Vec3i):(Int,T) = ???
+  def splitX:Array[T]   = ???
+  def splitY:Array[T]   = ???
+  def splitZ:Array[T]   = ???
+  def splitLongest:Array[T] = ???
+  def splitOct:Array[T] = ???
+}
+
+case class Cuboid(pos:Vec3i, vsize:Vec3i) extends CuboidLike with ChildAccess[Cuboid] {
+  // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
+  override def apply(i:Int):Cuboid = {
+    val v = index2vec(i)
+    val (a,b) = halves(vsize)
+    val relpos = Vec3i(
+      a.x*( i & 1    ),
+      a.y*((i & 2)>>1),
+      a.z*((i & 4)>>2)
+    )
+    val hsize = Vec3i(
+      b.x*( i & 1    ) + a.x*(1-( i & 1    )),
+      b.y*((i & 2)>>1) + a.y*(1-((i & 2)>>1)),
+      b.z*((i & 4)>>2) + a.z*(1-((i & 4)>>2))
+    )
+    Cuboid(pos+v*relpos,hsize)
+  }
+
+  def splitlongest = {
+    var halfsize = Vec3i(0)
+    var offset = Vec3i(0)
+    val longest = longestedge
+
+    if( longest == 0 ) {
+      halfsize = vsize / Vec3i(2,1,1)
+      offset = Vec3i(halfsize(0), 0, 0)
+    } else if( longest == 1 ) {
+      halfsize = vsize / Vec3i(1,2,1)
+      offset = Vec3i(0, halfsize(1), 0)
+    } else {// if( longest == 2 )
+      halfsize = vsize / Vec3i(1,1,2)
+      offset = Vec3i(0, 0, halfsize(2))
+    }
+    Array(Cuboid(pos, halfsize), Cuboid(pos + offset, halfsize))
+  }
+
+  override def splitOct = Array.tabulate(8)(apply)
+}
+
+case class Cube(pos:Vec3i, size:Int) extends CubeLike with ChildAccess[Cuboid] {
+  // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
+  override def apply(i:Int) = {
+    val v = index2vec(i)
+    val (a,b) = halves(size)
+    val relpos = Vec3i(
+      a*( i & 1    ),
+      a*((i & 2)>>1),
+      a*((i & 4)>>2)
+    )
+    val hsize = Vec3i(
+      b*( i & 1    ) + a*(1-( i & 1    )),
+      b*((i & 2)>>1) + a*(1-((i & 2)>>1)),
+      b*((i & 4)>>2) + a*(1-((i & 4)>>2))
+    )
+    Cuboid(pos+v*relpos,hsize)
+  }
+
+  override def splitOct = Array.tabulate(8)(apply)
+}
+
+case class PowerOfTwoCube(pos:Vec3i, size:Int) extends PowerOfTwoCubeLike with ChildAccess[PowerOfTwoCube] {
+  // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
+  override def apply(index:Int) = {
+    val v = index2vec(index)
+    val hsize = size >> 1
+    PowerOfTwoCube(pos+v*hsize,hsize)
+  }
+
+  // Erzeugung des Cube vom Kindknoten, aus einem Vektor-Index
+  override def apply(p:Vec3i):(Int,PowerOfTwoCube) = {
+    require( indexInRange(p) )
+    val v = indexVec(p,pos,size)
+    val index = flat(v)
+    val hsize = size >> 1
+    (index,PowerOfTwoCube(pos+v*hsize,hsize) )
+  }
+
+  override def splitOct = Array.tabulate(8)(apply)
+}
+
 trait CuboidLike {
   def pos:Vec3i
   def vsize:Vec3i
@@ -73,26 +170,6 @@ trait CuboidLike {
     else 2 // if( size.z <= size.x && size.z <= size.y )
   }
 
-  def splitlongest:Array[Cuboid] = {
-    var halfsize = Vec3i(0)
-    var offset = Vec3i(0)
-    val longest = longestedge
-
-    if( longest == 0 ) {
-      halfsize = vsize / Vec3i(2,1,1)
-      offset = Vec3i(halfsize(0), 0, 0)
-    } else if( longest == 1 ) {
-      halfsize = vsize / Vec3i(1,2,1)
-      offset = Vec3i(0, halfsize(1), 0)
-    } else {// if( longest == 2 )
-      halfsize = vsize / Vec3i(1,1,2)
-      offset = Vec3i(0, 0, halfsize(2))
-    }
-    Array(Cuboid(pos, halfsize), Cuboid(pos + offset, halfsize))
-  }
-
-  def splitOct = ???
-
   def toInterval3 = Interval3(Vec3(pos), Vec3(pos + vsize))
 }
 
@@ -100,42 +177,18 @@ trait CubeLike extends CuboidLike {
   def size:Int
   def vsize = Vec3i(size)
   require(isCube)
-}
 
-case class Cuboid(pos:Vec3i, vsize:Vec3i) extends CuboidLike
-
-case class Cube(pos:Vec3i, size:Int) extends CubeLike {
   override def volume = size*size*size
+
+  override def longestedge = 0
+  override def shortestedge = 0
 }
 
-case class PowerOfTwoCube(pos:Vec3i, size:Int) extends CubeLike {
+trait PowerOfTwoCubeLike extends CubeLike{
+  require( isPowerOfTwo(size) )
+
   // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
   // Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an
   // vielen stellen wird noch sein Verhalten imitiert.
   def indexVec(p:Vec3i, nodepos:Vec3i = pos, nodesize:Int = size) = ((p-nodepos)*2)/nodesize
-
-  // macht aus dem Vec3i index einen flachen index, der auf ein Array
-  // angewendet werden kann
-  def flat(ivec:Vec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
-
-  // macht aus einem flachen Index wieder ein Vec3i-Index
-  def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
-
-  // Erzeugung des Cube vom Kindknoten, aus einem Vektor-Index
-  def apply(p:Vec3i):(Int,PowerOfTwoCube) = {
-    require( indexInRange(p) )
-    val v = indexVec(p,pos,size)
-    val index = flat(v)
-    val hsize = size >> 1
-    (index,PowerOfTwoCube(pos+v*hsize,hsize) )
-  }
-
-  // Erzeugung des Cube vom Kindknoten, aus einem flachen Index
-  def apply(index:Int):PowerOfTwoCube = {
-    val v = index2vec(index)
-    val hsize = size >> 1
-    PowerOfTwoCube(pos+v*hsize,hsize)
-  }
-
-  def split = Array.tabulate(8)(apply)
 }

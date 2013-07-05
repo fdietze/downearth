@@ -70,7 +70,7 @@ object WorldGenerator {
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val originalNoiseData = samplePredicted(nodeInfo, worldFunction)
+    val originalNoiseData = sample(nodeInfo, worldFunction)
     val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 
 
@@ -168,7 +168,7 @@ object WorldGenerator {
       val surfaceInArea = range(0) // interval contains zero
       if (surfaceInArea) {
         if (current.size > minPredictionSize)
-          toCheck ++= current.split
+          toCheck ++= current.splitOct
         else
           toSample += current
       } else if( range.isPositive )
