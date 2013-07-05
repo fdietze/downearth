@@ -22,6 +22,7 @@ abstract class Camera {
 
   def projection:Mat4
   def view:Mat4
+  def noTranslate:Mat4
 
 //  protected val m_viewBuffer = DataBuffer[Mat4,RFloat](1)
 //  protected val m_projectionBuffer = DataBuffer[Mat4,RFloat](1)
@@ -114,6 +115,7 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
 	}
 
 	override def view:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))
+  override def noTranslate:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat)))
 }
 
 trait FrustumTest extends Function1[NodeInfo,Boolean] {

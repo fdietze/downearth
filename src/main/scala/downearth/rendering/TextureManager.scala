@@ -6,7 +6,7 @@ object TextureManager {
 	
 	lazy val box       = loadAsTexture("box.png")
 	lazy val skybox    = loadAsTexture("stormydays_rearrange_lowres.jpg")
-  lazy val skybox2   = loadAsSkybox("stormydays_rearrange_lowres.jpg")
+  lazy val skybox2   = loadAsSkybox("stormydays","jpg")
 	lazy val materials = loadAsTexture("materials.png")
 	lazy val tools     = loadAsTexture("werkzeug.png")
 

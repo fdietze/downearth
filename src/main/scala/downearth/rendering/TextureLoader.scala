@@ -256,23 +256,18 @@ class TextureLoader {
     new Surface(image.getWidth, image.getHeight, pixels)
   }
 
-  def loadAsSkybox(filename:String):TextureCube = {
-    val surface = readImageRaster(filename)
-    val size = surface.height / 2
+  def loadAsSkybox(filename:String, fileEnding:String):TextureCube = {
+    val posX = readImageRaster(filename+"_positiveX." + fileEnding)
+    val negX = readImageRaster(filename+"_negativeX." + fileEnding)
+    val posY = readImageRaster(filename+"_positiveY." + fileEnding)
+    val negY = readImageRaster(filename+"_negativeY." + fileEnding)
+    val posZ = readImageRaster(filename+"_positiveZ." + fileEnding)
+    val negZ = readImageRaster(filename+"_negativeZ." + fileEnding)
 
-    val s1 = new Surface(size,size)
-    val s2 = new Surface(size,size)
-    val s3 = new Surface(size,size)
-    val s4 = new Surface(size,size)
-    val s5 = new Surface(size,size)
-    val s6 = new Surface(size,size)
+    require( posX.width == posX.height )
 
-    Surface.blit(surface, new Rect(0*size,0*size,size,size), s1, new Rect(0,0,size,size))
-    Surface.blit(surface, new Rect(1*size,0*size,size,size), s2, new Rect(0,0,size,size))
-    Surface.blit(surface, new Rect(2*size,0*size,size,size), s3, new Rect(0,0,size,size))
-    Surface.blit(surface, new Rect(3*size,0*size,size,size), s4, new Rect(0,0,size,size))
-    Surface.blit(surface, new Rect(0*size,1*size,size,size), s5, new Rect(0,0,size,size))
-    Surface.blit(surface, new Rect(1*size,1*size,size,size), s6, new Rect(0,0,size,size))
+    val size = posX.width
+    require( List(negX,posY,negY,posZ,negZ).find( surface => size != surface.width || size != surface.height ) == None )
 
     val d1 = BufferUtils.createByteBuffer(size*size*4)
     val d2 = BufferUtils.createByteBuffer(size*size*4)
@@ -281,12 +276,12 @@ class TextureLoader {
     val d5 = BufferUtils.createByteBuffer(size*size*4)
     val d6 = BufferUtils.createByteBuffer(size*size*4)
 
-    d1.asIntBuffer().put( s1.data )
-    d2.asIntBuffer().put( s2.data )
-    d3.asIntBuffer().put( s3.data )
-    d4.asIntBuffer().put( s4.data )
-    d5.asIntBuffer().put( s5.data )
-    d6.asIntBuffer().put( s6.data )
+    d1.asIntBuffer().put( posX.data )
+    d2.asIntBuffer().put( negX.data )
+    d3.asIntBuffer().put( posY.data )
+    d4.asIntBuffer().put( negY.data )
+    d5.asIntBuffer().put( posZ.data )
+    d6.asIntBuffer().put( negZ.data )
 
     new TextureCube(size,d1,d2,d3,d4,d5,d6)
   }

@@ -118,6 +118,13 @@ class GameLoop extends Publisher with Logger { gameLoop =>
       println("can't do instancing")
     }
 
+    if( caps.GL_ARB_uniform_buffer_object ) {
+      println("uniform buffer object supported")
+    }
+    else {
+      println("uniform buffer object NOT supported")
+    }
+
     glClearColor(0.4f, 0.6f, 0.9f, 1f)
 
     resources.Resources.init()

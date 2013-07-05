@@ -57,38 +57,39 @@ object Renderer extends Logger {
     program
   }
 
-  val tfbBinding = transformFeedbackTest.getBinding
+  val tfb_binding = transformFeedbackTest.getBinding
 
-  val tfb_a_instance_position = tfbBinding.attributeVec3f("a_instance_position")
-  val tfb_instance_scale = tfbBinding.attributeFloat("a_instance_scale")
+  val tfb_a_instance_position = tfb_binding.attributeVec3f("a_instance_position")
+  val tfb_instance_scale = tfb_binding.attributeFloat("a_instance_scale")
+  val tfb_a_position =  tfb_binding.attributeVec3f("tfb_a_position")
+  val tfb_u_mvp =  tfb_binding.uniformMat4f("u_mvp")
+  val tfb_gl_Position = tfb_binding.transformFeedbackVec4f("gl_Position")
 
-  val vaoTransformFeedbackTest = VertexArrayObject.create
+  val tfb_vao = VertexArrayObject.create
 
-  vaoTransformFeedbackTest.bind {
+  tfb_vao.bind {
     tfb_instance_scale.divisor = 1
     tfb_a_instance_position.divisor = 1
 
-    tfbBinding.setAttributePointers()
+    tfb_binding.enableAttributes()
+    tfb_binding.setAttributePointers()
   }
 
-  val tfb_a_position =  tfbBinding.attributeVec3f("tfb_a_position")
-  val tfb_u_mvp =  tfbBinding.uniformMat4f("u_mvp")
-  val gl_Position = tfbBinding.transformFeedbackVec4f("gl_Position")
+  val test_program = Program.auto("test")
+  val test_binding = test_program.getBinding
 
-  val testProgram = Program.auto("test")
-
-  val testBinding = testProgram.getBinding
-
-  val test_a_pos = testBinding.attributeVec4f("a_pos")
-  val test_a_offset = testBinding.attributeVec4f("offset")
+  val test_a_pos = test_binding.attributeVec4f("a_pos")
+  val test_a_offset = test_binding.attributeVec4f("offset")
   test_a_pos    := Seq( Vec4f(-0.5f,-0.5f, 0,1), Vec4f(0.5f, -0.5f, 0, 1), Vec4f(0.5f, 0.5f, 0, 1), Vec4f(-0.5f, 0.5f, 0, 1) )
   test_a_offset := Seq( Vec4f(0), Vec4f(0.3f,0.3f,0.3f,0) )
 
-  val vaoTestProgram = VertexArrayObject.create
+  val test_vao = VertexArrayObject.create
 
-  vaoTestProgram.bind {
+  test_vao.bind {
     test_a_offset.divisor = 1
-    testBinding.setAttributePointers()
+
+    test_binding.enableAttributes()
+    test_binding.setAttributePointers()
   }
 
   lazy val test2Program = Program.auto("test2")
@@ -99,12 +100,13 @@ object Renderer extends Logger {
   val test2_offset = test2Binding.attributeVec4f("offset")
   val test2_scale  = test2Binding.attributeFloat("scale")
 
-  val vaoTest2 = VertexArrayObject.create
+  val test2_vao = VertexArrayObject.create
 
-  vaoTest2.bind {
+  test2_vao.bind {
     test2_offset.divisor = 1
     test2_scale.divisor = 1
 
+    test2Binding.enableAttributes()
     test2Binding.setAttributePointers()
   }
 
@@ -114,41 +116,11 @@ object Renderer extends Logger {
 
   val test2_matrix = test2Binding.uniformMat4f("matrix")
 
-  lazy val occTestProgram = Program.auto("simple")
-
-  val occTestBinding = occTestProgram.getBinding
-
-  val occTest_matrix  = occTestBinding.uniformMat4f("matrix")
-  val occTest_offset  = occTestBinding.attributeVec4f("offset")
-  val occTest_scale   = occTestBinding.attributeFloat("scale")
-  val occTest_u_tint  = occTestBinding.uniformVec4f("u_tint")
-  val occTest_a_pos   = occTestBinding.attributeVec4f("a_pos")
-
-  occTest_a_pos := GlDraw.texturedCubeBuffer.positions
-
-  val vaoShaderProgram = VertexArrayObject.create
-
-  vaoShaderProgram.bind {
-    occTest_offset.divisor = 1
-    occTest_scale.divisor = 1
-
-    occTestBinding.setAttributePointers()
-  }
-
-  var query:Query = null
-
-  class Query(val buffer:IntBuffer,val nodeInfos:Seq[NodeInfo]) extends IndexedSeq[(Int,NodeInfo)] {
-    require(buffer.limit == nodeInfos.length)
-    val length    = buffer.limit()
-    def apply(i:Int) = Tuple2(buffer.get(i), nodeInfos(i))
-  }
-
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
     import org.lwjgl.opengl.GL30._
     import org.lwjgl.opengl.GL31._
-
 
     if(false) {
       val VertexCount = 23
@@ -162,11 +134,11 @@ object Renderer extends Logger {
         tfb_instance_scale := Seq[Float]( 0.0f )
         tfb_u_mvp := Mat4f(1)
 
-        tfbBinding.bind()
+        tfb_binding.writeChangedUniforms()
 
-        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, gl_Position.location)
+        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tfb_gl_Position.location)
 
-        vaoTransformFeedbackTest.bind {
+        tfb_vao.bind {
           glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query)
           glBeginTransformFeedback(GL_TRIANGLES)
           glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, 1)
@@ -174,47 +146,48 @@ object Renderer extends Logger {
           glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
         }
       }
-      glDisable(GL_RASTERIZER_DISCARD);
+      glDisable(GL_RASTERIZER_DISCARD)
     }
 
-    vaoTestProgram.bind {
-      testProgram.use {
-        testBinding.enableAttributes()
-        testBinding.bind()
+    test_vao.bind {
+      test_program.use {
+        test_binding.writeAllUniforms()
         glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
-        testBinding.disableAttributes()
       }
     }
-
-    glEnable( GL_DEPTH_TEST )
 
     val projection = Mat4f(Player.camera.projection)
     val view = Mat4f(Player.camera.view)
+    val matrix = projection * view
 
-    vaoTest2.bind {
-      test2Program.use {
-        test2Binding.enableAttributes()
+//    test2_vao.bind {
+//      test2Program.use {
+//
+//
+//        test2_matrix := matrix
+//        test2Binding.writeChangedUniforms()
+//        glDrawArraysInstanced(GL_QUADS, 0, 24, 4)
+//      }
+//    }
 
-        test2_matrix := projection * view
+//    occTest_vao.bind {
+//      occTest_program.use {
+//        occTest_matrix := matrix
+//        occTest_offset := Seq( Vec4f(0,0,0,0) )
+//        occTest_scale  := Seq( 16.0f )
+//
+//        occTest_u_tint := Vec4f( 0.5f, 0.5f, 0.5f, 1.0f )
+//
+//        occTest_binding.writeChangedUniforms()
+//        glDrawArrays(GL_QUADS, 0, 6*4)
+//      }
+//    }
 
-        test2Binding.bindChanges()
-        glDrawArraysInstanced(GL_QUADS, 0, 24, 4)
-        test2Binding.disableAttributes()
-      }
+    if( Config.skybox ) {
+      Skybox.render( Player.camera )
     }
 
-    vaoShaderProgram.bind {
-      occTestProgram.use{
-        occTest_matrix := projection * view
-
-        occTest_offset := Seq( Vec4f(0,0,0,0) )
-        occTest_scale  := Seq( 16.0f )
-
-        occTestBinding.bindChanges()
-        glDrawArrays(GL_QUADS, 0, 6*4)
-        test2Binding.disableAttributes()
-      }
-    }
+    glEnable( GL_DEPTH_TEST )
 
     renderWorld( Player.camera )
 
@@ -271,7 +244,7 @@ object Renderer extends Logger {
     glMatrixMode( GL_PROJECTION )
     glLoadMatrix( camera.projectionBuffer )
 
-    Skybox.render
+//    Skybox.render()
 
     glMatrixMode( GL_MODELVIEW )
     glLoadMatrix( camera.viewBuffer )
@@ -309,10 +282,7 @@ object Renderer extends Logger {
     // here the occlusion query from the last frame is evaluated, and a new one is generated
 
     if( Config.occlusionTest ) {
-      if( query != null )
-        for( result <- evalQueries(query).visible )
-          World.octree.generateNode(result)
-      query = findUngeneratedNodes(camera, World.octree, frustumTest, order)
+      OcclusionTest.doIt(camera, frustumTest, order)
     } else { // perform frustum test only
       World.octree.queryRegion( frustumTest ) (order) {
         case (info, UngeneratedInnerNode) =>
@@ -375,106 +345,7 @@ object Renderer extends Logger {
 
   var randomizer = 0
 
-  def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest, order:Array[Int]) = {
-    TextureManager.box.bind()
 
-    val nodeInfoBufferGenerating  = ArrayBuffer[NodeInfo]()
-    val nodeInfoBufferUngenerated = ArrayBuffer[NodeInfo]()
-
-    octree.queryRegion( test ) (order) {
-      case (info, UngeneratedInnerNode) =>
-        nodeInfoBufferUngenerated += info
-        false
-      case (info, GeneratingNode) =>
-        nodeInfoBufferGenerating += info
-        false
-      case (info, node:MeshNode) =>
-        false
-      case _ =>
-        true
-    }
-
-    val model = Mat4(1)
-    val view = Mat4(camera.view)
-    val projection = Mat4(camera.projection)
-
-    val magicNr = 8
-    val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == frameCount % magicNr)
-
-    val renderNodeInfos1 = nodeInfoBufferGenerating
-    val renderNodeInfos2 = noTest map nodeInfoBufferUngenerated
-    val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
-    val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
-    glGenQueries( buffer )
-    val queries = new Query(buffer, reducedNodeInfos)
-
-    occTestProgram.use {
-      vaoShaderProgram.bind {
-        occTestBinding.enableAttributes()
-
-        if( !Config.visibleOcclusionTest )
-          glColorMask(false,false,false,false)
-
-        occTest_matrix := Mat4f(projection * view)
-
-        for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[NodeInfo])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) if renderNodeInfos.size > 0 ) {
-          occTest_u_tint := tint
-
-          val instance_positions = renderNodeInfos.map( info => Vec4f(info.pos,0) )
-          val instance_scales = renderNodeInfos.map( info => info.size.toFloat )
-
-          occTest_offset := instance_positions
-          occTest_scale := instance_scales
-
-          occTestBinding.bindChanges()
-
-          GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
-        }
-
-        for( (queryId, info) <- queries ) {
-          glBeginQuery(GL_SAMPLES_PASSED, queryId )
-
-          occTest_u_tint := Vec4f(1,0,0,1)
-          occTest_offset := Seq( Vec4f( info.pos, 0) )
-          occTest_scale := Seq( info.size.toFloat )
-
-          occTestBinding.bindChanges()
-
-          GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
-
-          glEndQuery(GL_SAMPLES_PASSED)
-        }
-
-        occTestBinding.disableAttributes()
-      }
-
-      glColorMask(true, true, true, true)
-    }
-
-    queries
-  }
-
-  case class QueryResult(visible:Seq[NodeInfo], occluded:Seq[NodeInfo])
-
-  def evalQueries(queries:Query) = {
-    val visible  = ArrayBuffer[NodeInfo]()
-    val occluded = ArrayBuffer[NodeInfo]()
-
-    for( (id,info) <- queries ) {
-      while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
-        Thread.sleep(1) //TODO: Don't wait! Instead check only once every frame
-      }
-      if( glGetQueryObjectui(id, GL_QUERY_RESULT) > 0 ) //TODO: Configurable pixel threshold
-        visible += info
-      else
-        occluded += info
-    }
-
-    //log.println( s"occlusion query result (${queries.buffer.limit}):\noccluded: ${occluded.size}, visible: ${visible.size}" )
-    glDeleteQueries(queries.buffer)
-
-    QueryResult(visible, occluded)
-  }
 
   def drawOctree(octree:WorldOctree, test:FrustumTest, order:Array[Int]) {
     import org.lwjgl.opengl.GL11._

@@ -20,14 +20,10 @@ abstract class Binding( val program:Program ) extends AddString {
 
   val changedUniforms = mutable.Queue[Uniform[_]]()
 
-  def bind() {
-    bind(uniforms)
-  }
-
   def enableAttributes() {
     for( attrib <- attributes ){
       attrib.enable()
-    } 
+    }
   }
 
   def disableAttributes() {
@@ -36,11 +32,19 @@ abstract class Binding( val program:Program ) extends AddString {
     }
   }
 
-  def bindChanges() {
-    bind( changedUniforms.dequeueAll(_ => true) )
+  def writeAllUniforms() {
+    writeUniforms(uniforms)
   }
 
-  private def bind( uniforms:Seq[Uniform[_]] ) {
+
+  /*
+    Uniforms are bound to the program, not the vertex Array object, that's bad
+   */
+  def writeChangedUniforms() {
+    writeUniforms( changedUniforms.dequeueAll(_ => true) )
+  }
+
+  private def writeUniforms( uniforms:Seq[Uniform[_]] ) {
     require(program.isActive, "program must be active before data is written")
     for( binding <- uniforms ) {
       binding.writeData()
@@ -48,9 +52,7 @@ abstract class Binding( val program:Program ) extends AddString {
   }
 
   def setAttributePointers() {
-
     val groupedAttributes = attributes.groupBy( _.bufferBinding.buffer )
-
     for( (buffer, atList) <- groupedAttributes ) {
       buffer.bind {
         for( binding <- atList ) {
