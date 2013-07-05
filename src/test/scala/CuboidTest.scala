@@ -3,7 +3,7 @@ import org.scalatest.FunSuite
 import simplex3d.math._
 import simplex3d.math.double._
 
-class NodeInfoTest extends FunSuite {
+class CuboidTest extends FunSuite {
 
   test("child creation by index"){
     val nodeInfo = PowerOfTwoCube(pos = Vec3i(0), size = 2)
