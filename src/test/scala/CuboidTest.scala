@@ -55,36 +55,37 @@ class CuboidTest extends FunSuite {
     }
   }
 
-  test("split (power of 2, volume)"){
-    val nodeInfo = PowerOfTwoCube(pos = Vec3i(-5), size = 4)
-    assert( nodeInfo.splitOct.map(_.volume).sum === nodeInfo.volume )
+  test("PowerOfTwoCube: splitOct (volume, coverage)") {
+    val sizes = Seq(2,4,8,16,32)
+    for( size <- sizes; pos <- positions ) {
+      val cube = PowerOfTwoCube(pos, size)
+      assert( cube.splitOct.map(_.volume).sum === cube.volume )
+      assert( cube.splitOct.flatMap(_.coordinates).toSet === cube.coordinates.toSet )
+    }
   }
 
-  test("split (power of 2, coverage)"){
-    val nodeInfo = PowerOfTwoCube(pos = Vec3i(-5), size = 4)
-    assert( nodeInfo.splitOct.flatMap(_.coordinates).toSet === nodeInfo.coordinates.toSet )
+  test("Cube: splitOct (volume, coverage)") {
+    val sizes = 2 until 17
+    for( size <- sizes; pos <- positions ) {
+      val cube = Cube(pos, size)
+      assert( cube.splitOct.map(_.volume).sum === cube.volume )
+      assert( cube.splitOct.flatMap(_.coordinates).toSet === cube.coordinates.toSet )
+    }
   }
 
-  /*test("split (not power of 2, volume)"){
-    val nodeInfo = Cube(pos = Vec3i(-5), size = 7)
-    assert( nodeInfo.split.map(_.volume).sum === nodeInfo.volume )
-
-    val nodeInfo2 = Cube(pos = Vec3i(-5), size = 17)
-    assert( nodeInfo2.split.map(_.volume).sum === nodeInfo2.volume )
+  test("Cuboid: splitOct (volume, coverage)") {
+    val sizes = Vec3i(2) until Vec3i(10)
+    for( size <- sizes; pos <- positions ) {
+      val cuboid = Cuboid(pos, size)
+      assert( cuboid.splitOct.map(_.volume).sum === cuboid.volume )
+      assert( cuboid.splitOct.flatMap(_.coordinates).toSet === cuboid.coordinates.toSet )
+    }
   }
-
-  test("split (not power of 2, coverage)"){
-    val nodeInfo = Cube(pos = Vec3i(-5), size = 7)
-    assert( nodeInfo.split.flatMap(_.coordinates).toSet === nodeInfo.coordinates.toSet )
-
-    val nodeInfo2 = Cube(pos = Vec3i(-5), size = 17)
-    assert( nodeInfo2.split.flatMap(_.coordinates).toSet === nodeInfo2.coordinates.toSet )
-  }*/
 
   test("traversalOrder 1"){
     val cube = PowerOfTwoCube(pos = Vec3i(0), size = 2)
     val camera = Vec3(-0.5, 0.5, -0.5)
-    assert( cube.traversalOrder(camera) === Array(2,6,0,4, 3,7,1,5) )
+    assert( cube.traversalOrder(camera) === Array(0,4,2,6, 1,5,3,7) )
   }
 
   test("traversalOrder 2"){

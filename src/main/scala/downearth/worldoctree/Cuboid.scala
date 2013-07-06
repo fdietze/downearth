@@ -19,6 +19,7 @@ trait ChildAccess[T] {
 
   def apply(i:Int):T = ???
   def apply(p:Vec3i):(Int,T) = ???
+
   def splitX:Array[T]   = ???
   def splitY:Array[T]   = ???
   def splitZ:Array[T]   = ???
