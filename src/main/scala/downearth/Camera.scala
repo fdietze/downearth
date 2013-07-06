@@ -100,18 +100,13 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
 		
 		directionQuat *= Quat4 rotateZ(α*pow(factor, 1.5))
 	}
-	
 
 	override def projection:Mat4 = {
     // TODO implement viewport
-		val v = Display.getWidth.toDouble / Display.getHeight.toDouble
-		
-		val n = 0.05     //near
-		val f = 1000.0   //far
-		val r = v*n      //right
-		val t = n        //top
-		
-		Mat4(n/r,0,0,0, 0,n/t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0)
+
+    // aspect Ratio
+    val v = Display.getWidth.toDouble / Display.getHeight.toDouble
+    downearth.util.projection(0.05, 1000, v)
 	}
 
 	override def view:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))
@@ -158,6 +153,6 @@ class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
 				return false
 			p += 1
 		}
-		return true
+		true
 	}
 }

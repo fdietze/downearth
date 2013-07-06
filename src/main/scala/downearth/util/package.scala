@@ -185,6 +185,26 @@ package object util {
     buffer.put(m.m33)
   }
 
+  def projection(l:Double,r:Double,b:Double,t:Double,n:Double,f:Double):Mat4 = {
+    val v1 = Vec4( (2*n)/(r-l),0,0,0 )
+    val v2 = Vec4( 0,(2*n)/(t-b),0,0 )
+    val v3 = Vec4( (r+l)/(r-l),(t+b)/(t-b),(f+n)/(n-f), -1 )
+    val v4 = Vec4( 0,0,2*f*n/(n-f),0 )
+
+    Mat4(v1,v2,v3,v4)
+  }
+
+  def projection(n:Double,f:Double,v:Double):Mat4 = {
+    val n = 0.05     // near
+    val f = 1000.0   // far
+    val l = - v * n  // left
+    val r =   v * n  // right
+    val t =  n       // top
+    val b = -n       // bottom
+
+    projection(l,r,b,t,n,f)
+  }
+
   import scala.reflect.runtime.universe._
 
   def sizeOf[T : TypeTag](x:T):Int = sizeOf[T]
