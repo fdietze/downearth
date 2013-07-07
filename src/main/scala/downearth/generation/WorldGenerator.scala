@@ -34,43 +34,46 @@ object WorldGenerator {
 		octree
 	}
 
-  def sample(nodeInfo:PowerOfTwoCube, worldFunction:WorldFunction) = {
+  def sample(area:CuboidLike, worldFunction:WorldFunction) = {
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val data = new Array3D[Double](Vec3i(nodeInfo.size+3))
-    data.fill(v =>	worldFunction.density(Vec3(nodeInfo.pos+v-1)))
+    val data = new Array3D[Double](Vec3i(area.vsize+3))
+    data.fill(v =>	worldFunction.density(Vec3(area.pos+v-1)))
     data
   }
 
-  def samplePredicted(nodeInfo:PowerOfTwoCube, worldFunction:WorldFunction) = {
+  def samplePredicted(area:Cuboid, worldFunction:WorldFunction) = {
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val data = new Array3D[Double](Vec3i(nodeInfo.size+3))
+    val data = new Array3D[Double](area.vsize+3)
     //data.fillBorder(v =>	worldFunction.density(Vec3(nodeInfo.pos+v-1)))
+    val sampleArea = area.copy(area.pos-1, area.vsize+3)
 
-
-    val (toSample, positives, negatives) = findNodesToSample(nodeInfo, worldFunction, 1)
+    val (toSample, positives, negatives) = findNodesToSample(sampleArea, worldFunction, 1)
     // fill without border (offset + 1)
     //worldFunction.density(Vec3(nodeInfo.pos+v-1))
-    data.fill(v => 1.1, toSample, offset = -nodeInfo.pos + 1)
-
-    data.fill(v =>  6.6, positives, offset = -nodeInfo.pos)
-    data.fill(v => -7.7, negatives, offset = -nodeInfo.pos)
+    data.fill(v => worldFunction.density(Vec3(area.pos+v-1)), toSample.map(_.withBorder(1)).map(_.intersection(sampleArea)), offset = -area.pos + 1)
+    //data.fill(v => 1, positives, offset = -area.pos + 1)
+    //data.fill(v => -1, negatives, offset = -area.pos + 1)
     data
   }
 
-  def genWorldAt(nodeInfo:PowerOfTwoCube,
+  def genWorldAt(area:PowerOfTwoCube,
                  worldFunction:WorldFunction = WorldDefinition,
-                 deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()}):NodeOverMesh = {
-    val PowerOfTwoCube(nodepos, nodesize) = nodeInfo
+                 deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()},
+                 prediction:Boolean = true):NodeOverMesh = {
+    val PowerOfTwoCube(nodepos, nodesize) = area
     import HexaederMC._
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val originalNoiseData = sample(nodeInfo, worldFunction)
+    val originalNoiseData = if(prediction)
+        samplePredicted(area.toCuboid, worldFunction)
+      else
+        sample(area.toCuboid, worldFunction)
     val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 
 
@@ -137,10 +140,10 @@ object WorldGenerator {
 
     // Octree mit Hexaedern füllen
     // TODO use prediction here
-    val root = EmptyLeaf.fill( nodeInfo, pos => Leaf(fillfun(pos)) )
+    val root = EmptyLeaf.fill( area, pos => Leaf(fillfun(pos)) )
 
-    root.genMesh( nodeInfo, minMeshNodeSize, x => {
-      if (nodeInfo.indexInRange(x)) root(nodeInfo, x).h else fillfun(x)
+    root.genMesh( area, minMeshNodeSize, x => {
+      if (area.indexInRange(x)) root(area, x).h else fillfun(x)
     } )
   }
 
@@ -152,22 +155,22 @@ object WorldGenerator {
   }
 
   // Find areas inside Node to be sampled (using range prediction)
-  def findNodesToSample(nodeInfo: PowerOfTwoCube,
+  def findNodesToSample(area: Cuboid,
                         worldFunction:WorldFunction = WorldDefinition,
                         minPredictionSize: Int = Config.minPredictionSize
-                         ): (Seq[PowerOfTwoCube],Seq[PowerOfTwoCube],Seq[PowerOfTwoCube]) = {
-    val toSample = mutable.ArrayBuffer.empty[PowerOfTwoCube]
-    val positives = mutable.ArrayBuffer.empty[PowerOfTwoCube]
-    val negatives = mutable.ArrayBuffer.empty[PowerOfTwoCube]
-    val toCheck = mutable.Queue.empty[PowerOfTwoCube]
+                         ): (Seq[Cuboid],Seq[Cuboid],Seq[Cuboid]) = {
+    val toSample = mutable.ArrayBuffer.empty[Cuboid]
+    val positives = mutable.ArrayBuffer.empty[Cuboid]
+    val negatives = mutable.ArrayBuffer.empty[Cuboid]
+    val toCheck = mutable.Queue.empty[Cuboid]
 
-    toCheck += nodeInfo //TODO: don't double check in higher level prediction phase
+    toCheck += area //TODO: don't double check in higher level prediction phase
     while (toCheck.nonEmpty) {
       val current = toCheck.dequeue()
       val range = worldFunction.range(current.toInterval3)
       val surfaceInArea = range(0) // interval contains zero
       if (surfaceInArea) {
-        if (current.size > minPredictionSize)
+        if (current.shortestEdgeLength > minPredictionSize)
           toCheck ++= current.splitOct
         else
           toSample += current

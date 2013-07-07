@@ -94,4 +94,9 @@ class CuboidTest extends FunSuite {
     assert( cube.traversalOrder(camera) === Array(5,1,7,3, 4,0,6,2) )
   }
 
+  test("intersection"){
+    assert( Cuboid(Vec3i(-2), Vec3i(4)).intersection(Cuboid(Vec3i(-1), Vec3i(1))) === Cuboid(Vec3i(-1), Vec3i(1)) )
+    assert( Cuboid(Vec3i(-1), Vec3i(2)).intersection(Cuboid(Vec3i(0), Vec3i(2))) === Cuboid(Vec3i(0), Vec3i(1)) )
+    assert( Cuboid(Vec3i(0), Vec3i(2)).intersection(Cuboid(Vec3i(-1), Vec3i(2))) === Cuboid(Vec3i(0), Vec3i(1)) )
+  }
 }

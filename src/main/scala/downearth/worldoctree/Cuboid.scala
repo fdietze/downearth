@@ -48,7 +48,7 @@ case class Cuboid(pos:Vec3i, vsize:Vec3i) extends CuboidLike with ChildAccess[Cu
   def splitlongest = {
     var halfsize = Vec3i(0)
     var offset = Vec3i(0)
-    val longest = longestedge
+    val longest = longestEdgeAxis
 
     if( longest == 0 ) {
       halfsize = vsize / Vec3i(2,1,1)
@@ -112,9 +112,9 @@ trait CuboidLike {
   def vsize:Vec3i
   def isDegenerate = vsize.x == 0 || vsize.y == 0 || vsize.z == 0
   def isCube = vsize.x == vsize.y && vsize.y == vsize.z
-  require(!isDegenerate)
+  require(!isDegenerate, "Cuboid cannot be degenerate: " + toString)
 
-  def upperPos = pos+vsize
+  def upperPos = pos + vsize
   def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,vsize)
   def indexInRange(p:CuboidLike):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.vsize-1)
   def center = pos + (vsize / 2)
@@ -127,7 +127,24 @@ trait CuboidLike {
   }
 
   // Listet alle die Koordinaten auf, die innerhalb von beiden Bereichen sind.
-  def intersection(that:PowerOfTwoCube):Iterable[Vec3i] = {
+  def intersection(that:Cuboid) = {
+    val newPos = max(this.pos, that.pos)
+    val newSize = min(this.upperPos, that.upperPos) - newPos
+    try {
+      Cuboid(newPos, newSize)
+    } catch {
+      case e:Throwable =>
+        println()
+        println(this)
+        println(that)
+        println(newPos)
+        println(newSize)
+      e.printStackTrace()
+        null
+    }
+  }
+
+  def intersectionCoordinates(that:PowerOfTwoCube):Iterable[Vec3i] = {
     val pos1 = max(pos,that.pos)
     val pos2 = min(upperPos,that.upperPos)
     pos1 until pos2
@@ -158,19 +175,24 @@ trait CuboidLike {
     return order
   }
 
-  def longestedge:Int = {
+  def longestEdgeAxis:Int = {
     // Z als erstes, da es Sinn macht als erstes Horizontal zu zerteilen
     if( vsize.z >= vsize.x && vsize.z >= vsize.y ) 2
     else if( vsize.x >= vsize.y && vsize.x >= vsize.z ) 0
     else 1 // if( vsize.y >= vsize.x && vsize.y >= vsize.z )
   }
 
-  def shortestedge:Int = {
+  def shortestEdgeAxis:Int = {
     if( vsize.x <= vsize.y && vsize.x <= vsize.z ) 0
     else if( vsize.y <= vsize.x && vsize.y <= vsize.z ) 1
     else 2 // if( size.z <= size.x && size.z <= size.y )
   }
 
+  def longestEdgeLength = max(max(vsize.x, vsize.y),vsize.z)
+  def shortestEdgeLength = min(min(vsize.x, vsize.y),vsize.z)
+
+  def withBorder(thickness:Int = 1) = Cuboid(pos - thickness, vsize + thickness*2)
+  def toCuboid = Cuboid(pos, vsize)
   def toInterval3 = Interval3(Vec3(pos), Vec3(pos + vsize))
 }
 
@@ -181,8 +203,8 @@ trait CubeLike extends CuboidLike {
 
   override def volume = size*size*size
 
-  override def longestedge = 0
-  override def shortestedge = 0
+  override def longestEdgeAxis = 0
+  override def shortestEdgeAxis = 0
 }
 
 trait PowerOfTwoCubeLike extends CubeLike{

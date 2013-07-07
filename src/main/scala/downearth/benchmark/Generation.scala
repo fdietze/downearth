@@ -6,6 +6,7 @@ import simplex3d.math.double._
 import downearth.worldoctree.PowerOfTwoCube
 import downearth.generation.WorldFunction
 import downearth.generation.WorldGenerator.genWorldAt
+import downearth.util._
 
 object Generation {
 
@@ -24,20 +25,34 @@ object Generation {
   }
 
   def FullGeneration() {
-    println("Full 16x16x16 Generation")
+    println("Full 32x32x32 Generation")
     val timer = new Timer
     
+    //warmup:
     dummyOpenGLContext()
-    genWorldAt(PowerOfTwoCube(pos=Vec3i(0),size=16),
+    genWorldAt(PowerOfTwoCube(pos=Vec3i(0),size=8),
                worldFunction = TestingWorldDefinition)
-    
-    Thread.sleep(500)
-    
-    timer.benchmark(50) {
-      genWorldAt(PowerOfTwoCube(pos=Vec3i(0),size=16),
-                 worldFunction = TestingWorldDefinition)
+
+    val positions = Vec3i(0) until Vec3i(3)
+    for( size <- Seq(1,2,4,8,16) ) {
+      timer.restart()
+      for( pos <- positions ) {
+        genWorldAt(PowerOfTwoCube(pos*size,size),
+          worldFunction = TestingWorldDefinition,
+          prediction = false)
+      }
+      timer.stop()
+      println(s"Size $size: ${timer.read/(positions.size)}s/node")
+
+      timer.restart()
+      for( pos <- positions ) {
+        genWorldAt(PowerOfTwoCube(pos*size,size),
+          worldFunction = TestingWorldDefinition,
+          prediction = true)
+      }
+      timer.stop()
+      println(s"Size $size: ${timer.read/(positions.size)}s/node (prediction)")
     }
 
-    println(s"${timer.read}s")
   }
 }

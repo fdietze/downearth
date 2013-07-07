@@ -13,7 +13,7 @@ object Octree {
     val nodeInfo = PowerOfTwoCube(Vec3i(-1),2)
     val camera = Vec3(10,20,30)
 
-    timer.benchmark(100000000) {
+    timer.benchmark(1000000) {
       nodeInfo.traversalOrder(camera)
     }
     

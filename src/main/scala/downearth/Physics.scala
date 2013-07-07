@@ -76,7 +76,7 @@ object BulletPhysics {
 	
 	def worldChange(nodeinfo:PowerOfTwoCube) {
 		for( Body( _ , _ , stream ) <- bodies ) {
-			for(pos <- nodeinfo intersection stream.nodeinfo) {
+			for(pos <- nodeinfo intersectionCoordinates stream.nodeinfo) {
 				stream reloadAt pos
 			}
 		}
