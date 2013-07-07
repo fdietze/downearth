@@ -101,12 +101,36 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
 		directionQuat *= Quat4 rotateZ(α*pow(factor, 1.5))
 	}
 
+  object State extends Enumeration {
+    val RightEye, LeftEye, Center = Value
+  }
+
+  var eyeState = State.Center
+
+  def rightEye() {
+    eyeState = State.RightEye
+  }
+  def leftEye() {
+    eyeState = State.LeftEye
+  }
+
 	override def projection:Mat4 = {
     // TODO implement viewport
 
     // aspect Ratio
     val v = Display.getWidth.toDouble / Display.getHeight.toDouble
-    downearth.util.projection(0.05, 1000, v)
+
+    import Config.test
+
+    eyeState match {
+      case State.RightEye =>
+        downearth.util.projection(l = -v - test, r = v - test, b = -1, t = 1, n = 1, f = 1000)
+      case State.LeftEye  =>
+        downearth.util.projection(l = -v + test, r = v + test, b = -1, t = 1, n = 1, f = 1000)
+      case State.Center   =>
+        downearth.util.projection(l = -v,       r = v,       b = -1, t = 1, n = 1, f = 1000)
+    }
+
 	}
 
 	override def view:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))

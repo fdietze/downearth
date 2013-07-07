@@ -67,6 +67,15 @@ object GuiRenderer {
         case NoBackground =>
       }
 
+      import widget.{lineBorderColor => c}
+
+      widget.border match {
+        case LineBorder =>
+          glColor4d(c.r,c.g,c.b,c.a)
+          drawLineBorder(widget.position, widget.size)
+        case NoBorder =>
+      }
+
       // no pattern matching, because branching in non-exclusive
       if( widget.isInstanceOf[ShapeWidget] ){
         drawShapeWidget(widget.asInstanceOf[ShapeWidget])
@@ -107,8 +116,6 @@ object GuiRenderer {
         GlDraw.drawString(textPos, text, white)
       }
 
-      import widget.{lineBorderColor => c}
-
       if( widget.isInstanceOf[GridPanel] && widget.asInstanceOf[GridPanel].border == LineBorder ) {
         glColor4d(c.r,c.g,c.b,c.a)
         drawLineGrid(widget.position, widget.size, widget.asInstanceOf[GridPanel].cellsize)
@@ -117,13 +124,6 @@ object GuiRenderer {
       if( widget.isInstanceOf[Panel] )
         for( child <- widget.asInstanceOf[Panel].children )
           drawWidget(child)
-
-      widget.border match {
-        case LineBorder =>
-          glColor4d(c.r,c.g,c.b,c.a)
-          drawLineBorder(widget.position, widget.size)
-        case NoBorder =>
-      }
     }
 
     def drawShapeWidget(widget:ShapeWidget) {

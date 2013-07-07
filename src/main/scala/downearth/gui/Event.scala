@@ -29,6 +29,7 @@ case object MouseOut extends WidgetEvent
 case class WidgetMoved(widget:Widget) extends WidgetEvent
 case class WidgetResized(widget:Widget) extends WidgetEvent
 case class ButtonClicked(widget:Widget) extends WidgetEvent
+case class SliderChanged(widget:Slider) extends WidgetEvent
 
 trait Listener {
   val reactions = ArrayBuffer[PartialFunction[Event,Unit]]()

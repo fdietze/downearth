@@ -22,8 +22,10 @@ object Player extends Ray {
   val camDistFromCenter = Vec3(0,0,0.8)
   
   private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
-  private val m_rightEye = new Camera3D(startpos,Vec3(1,0,0))
   private val m_leftEye  = new Camera3D(startpos,Vec3(1,0,0))
+  m_leftEye.leftEye()
+  private val m_rightEye = new Camera3D(startpos,Vec3(1,0,0))
+  m_rightEye.rightEye()
 
 
   def rightEye = {

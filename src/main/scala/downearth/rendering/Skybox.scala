@@ -33,7 +33,7 @@ object Skybox {
     Vec4f(1,-1,1,1), Vec4f(-1,-1,1,1), Vec4f(-1,1,1,1), Vec4f(1,1,1,1),
     //bottom
     Vec4f(1,1,-1,1), Vec4f(-1,1,-1,1), Vec4f(-1,-1,-1,1), Vec4f(1,-1,-1,1)
-  )
+  ) map ( _ * Vec4f(4,4,4,1) )
 	
 	def render( camera:Camera ) {
     glDisable(GL_DEPTH_TEST)

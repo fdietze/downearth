@@ -119,42 +119,43 @@ object Renderer extends Logger {
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
-    import org.lwjgl.opengl.GL30._
-    import org.lwjgl.opengl.GL31._
 
-    if(false) {
-      val VertexCount = 23
 
-      // Disable rasterisation, vertices processing only!
-      glEnable(GL_RASTERIZER_DISCARD)
-      val Query = glGenQueries()
+//    if(false) {
+//      val VertexCount = 23
+//      import org.lwjgl.opengl.GL30._
+//      import org.lwjgl.opengl.GL31._
+//
+//      // Disable rasterisation, vertices processing only!
+//      glEnable(GL_RASTERIZER_DISCARD)
+//      val Query = glGenQueries()
+//
+//      transformFeedbackTest.use {
+//        tfb_a_instance_position := Seq(Vec3f(0))
+//        tfb_instance_scale := Seq[Float]( 0.0f )
+//        tfb_u_mvp := Mat4f(1)
+//
+//        tfb_binding.writeChangedUniforms()
+//
+//        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tfb_gl_Position.location)
+//
+//        tfb_vao.bind {
+//          glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query)
+//          glBeginTransformFeedback(GL_TRIANGLES)
+//          glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, 1)
+//          glEndTransformFeedback()
+//          glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
+//        }
+//      }
+//      glDisable(GL_RASTERIZER_DISCARD)
+//    }
 
-      transformFeedbackTest.use {
-        tfb_a_instance_position := Seq(Vec3f(0))
-        tfb_instance_scale := Seq[Float]( 0.0f )
-        tfb_u_mvp := Mat4f(1)
-
-        tfb_binding.writeChangedUniforms()
-
-        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tfb_gl_Position.location)
-
-        tfb_vao.bind {
-          glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query)
-          glBeginTransformFeedback(GL_TRIANGLES)
-          glDrawArraysInstanced(GL_TRIANGLES, 0, VertexCount, 1)
-          glEndTransformFeedback()
-          glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
-        }
-      }
-      glDisable(GL_RASTERIZER_DISCARD)
-    }
-
-    test_vao.bind {
-      test_program.use {
-        test_binding.writeAllUniforms()
-        glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
-      }
-    }
+//    test_vao.bind {
+//      test_program.use {
+//        test_binding.writeAllUniforms()
+//        glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
+//      }
+//    }
 
 //    val projection = Mat4f(Player.camera.projection)
 //    val view = Mat4f(Player.camera.view)
@@ -198,7 +199,7 @@ object Renderer extends Logger {
       if( ! Config.anaglyph ) {
         glViewport(0, 0, w/2, h)
         render( Player.leftEye )
-        glViewport(w/2,0,w/2,h)
+        glViewport(w/2, 0, w/2, h)
         render( Player.rightEye )
       }
       else  {
@@ -213,7 +214,7 @@ object Renderer extends Logger {
     }
     else {
       glViewport(0, 0, w, h)
-      render(Player.camera)
+      render( Player.camera )
     }
 
 

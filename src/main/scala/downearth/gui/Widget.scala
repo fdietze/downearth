@@ -111,6 +111,47 @@ class Button(val position:Vec2i, val text:String) extends Widget {
   }
 }
 
+class Slider(val position:Vec2i) extends Panel { slider =>
+  val size = Vec2i( 256, 16 )
+
+  border = LineBorder
+  lineBorderColor := Vec4(1)
+
+  def value = slideable.value
+
+  val slideable = new Widget {
+    val size     = Vec2i( 8, 12 )
+    val position = slider.position + slider.size / 2 - size / 2
+    val minX     = slider.position.x + 2
+    val maxX     = slider.position.x + slider.size.x - size.x - 2
+    val width = maxX-minX
+
+    border = LineBorder
+    lineBorderColor := Vec4(1)
+
+    def value = (position.x - minX) / width.toDouble
+
+    addReaction {
+      case MouseIn => backGroundColor := Vec4(1,1,1,0.5)
+      case MouseOut => backGroundColor := Vec4(1,1,1,0.25)
+      case MouseDrag(oldPos, newPos) =>
+        val dist = newPos.x - oldPos.x
+        val oldX = position.x
+
+        position.x += dist
+        if(position.x > maxX) position.x = maxX
+        if(position.x < minX) position.x = minX
+
+        if( oldX != position.x ){
+          setPosition(position,0)
+          publish( SliderChanged(slider) )
+        }
+    }
+  }
+
+  children += slideable
+}
+
 abstract class TextureWidget(val texture:Texture2D, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
 
 // a panel a gui element that has children
@@ -261,6 +302,37 @@ class BoolSettingsWidget(val position:Vec2i, config:AnyRef) extends Panel {
         y += child.size.y
         maxWidth = maxWidth max child.size.x
         children += child
+      }
+    }
+    Vec2i(maxWidth, y-position.y)
+  }
+}
+
+class DoubleSettingsWidget(val position:Vec2i, config:AnyRef) extends Panel { widget =>
+
+  val size = {
+    var y = position.y
+    var maxWidth = 0
+    for( field <- config.getClass.getDeclaredFields ) {
+      field.setAccessible(true)
+      if( field.get(config).isInstanceOf[Double] ) {
+        val initialValue = field.getDouble(config)
+        val slider = new Slider( Vec2i(position.x,y) )
+        widget.listenTo(slider.slideable)
+
+        val name = new Label( Vec2i(position.x, y), field.getName )
+        val valueLabel = new Label( Vec2i(position.x+slider.size.x/2, y), initialValue.toString )
+
+        widget.addReaction {
+          case SliderChanged(slider) =>
+            val newValue = pow(10, slider.value * 2 - 1) * initialValue
+            field.setDouble(config, newValue)
+            valueLabel.text = "%4.2f" format newValue
+        }
+
+        y += slider.size.y
+        maxWidth = maxWidth max slider.size.x
+        children ++= Seq( slider, name, valueLabel )
       }
     }
     Vec2i(maxWidth, y-position.y)

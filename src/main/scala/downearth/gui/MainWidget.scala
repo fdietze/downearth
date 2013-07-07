@@ -47,14 +47,23 @@ object MainWidget extends Panel {
   val inventoryButton = new Button(    Vec2i(20,60), "inventory")
   val keySettingsButton = new Button(  Vec2i(20,80), "key settings" ){
     override  def onClick() {
-      boolSettingsWidget.visible =  false
       keySettingWidget.visible = !keySettingWidget.visible
+      boolSettingsWidget.visible =  false
+      doubleSettingsWidget.visible = false
     }
   }
   val boolSettingsButton = new Button( Vec2i(20,100), "bool settings" ){
     override  def onClick() {
       keySettingWidget.visible = false
       boolSettingsWidget.visible = !boolSettingsWidget.visible
+      doubleSettingsWidget.visible = false
+    }
+  }
+  val doubleSettingsButton = new Button( Vec2i(20,120), "double settings"){
+    override def onClick() {
+      keySettingWidget.visible = false
+      boolSettingsWidget.visible = false
+      doubleSettingsWidget.visible = !doubleSettingsWidget.visible
     }
   }
 
@@ -100,10 +109,12 @@ object MainWidget extends Panel {
     arrangeChildren()
   }
 
-  val keySettingWidget = new KeySettingsWidget( Vec2i(20,120), Config )
+  val keySettingWidget = new KeySettingsWidget( Vec2i(20,140), Config )
   keySettingWidget.visible = false
-  val boolSettingsWidget = new BoolSettingsWidget( Vec2i(20,120), Config )
+  val boolSettingsWidget = new BoolSettingsWidget( Vec2i(20,140), Config )
   boolSettingsWidget.visible = false
+  val doubleSettingsWidget = new DoubleSettingsWidget( Vec2i(20,140), Config )
+  doubleSettingsWidget.visible = false
 
   publish( WidgetResized(this) )
 
@@ -115,7 +126,9 @@ object MainWidget extends Panel {
     keySettingWidget,
     keySettingsButton,
     boolSettingsWidget,
-    boolSettingsButton
+    boolSettingsButton,
+    doubleSettingsButton,
+    doubleSettingsWidget
   )
 
 }
