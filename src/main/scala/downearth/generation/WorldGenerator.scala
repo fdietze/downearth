@@ -34,58 +34,43 @@ object WorldGenerator {
 		octree
 	}
 
-  def sample(area:CuboidLike, worldFunction:WorldFunction) = {
-    // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
-    // Marching-Cubes für n Cubes: n+1 Datenpunkte
-    // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val data = new Array3D[Double](Vec3i(area.vsize+3))
-    data.fill(v =>	worldFunction.density(Vec3(area.pos+v-1)))
-    data
-  }
-
-  def samplePredicted(area:Cuboid, worldFunction:WorldFunction) = {
-    // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
-    // Marching-Cubes für n Cubes: n+1 Datenpunkte
-    // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val data = new Array3D[Double](area.vsize+3)
-    //data.fillBorder(v =>	worldFunction.density(Vec3(nodeInfo.pos+v-1)))
-    val sampleArea = area.copy(area.pos-1, area.vsize+3)
-
-    val (toSample, positives, negatives) = findNodesToSample(sampleArea, worldFunction, 1)
-    // fill without border (offset + 1)
-    //worldFunction.density(Vec3(nodeInfo.pos+v-1))
-    data.fill(v => worldFunction.density(Vec3(area.pos+v-1)), toSample.map(_.withBorder(1)).map(_.intersection(sampleArea)), offset = -area.pos + 1)
-    //data.fill(v => 1, positives, offset = -area.pos + 1)
-    //data.fill(v => -1, negatives, offset = -area.pos + 1)
-    data
-  }
-
   def genWorldAt(area:PowerOfTwoCube,
                  worldFunction:WorldFunction = WorldDefinition,
                  deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()},
-                 prediction:Boolean = true):NodeOverMesh = {
+                 prediction:Boolean = false):NodeOverMesh = {
     val PowerOfTwoCube(nodepos, nodesize) = area
     import HexaederMC._
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
-    val originalNoiseData = if(prediction)
-        samplePredicted(area.toCuboid, worldFunction)
+    val sampleArea = Cuboid(area.pos-1, area.vsize+3)
+    val originalNoiseData = new Array3D[Double](sampleArea.vsize)
+    val (toSample:Seq[Cuboid], _, _) = if(prediction)
+        findNodesToSample(sampleArea, worldFunction)
       else
-        sample(area.toCuboid, worldFunction)
+        (Seq(sampleArea), null, null)
+
+    originalNoiseData.fill(v => worldFunction.density(Vec3(area.pos+v-1)), toSample.map(_.withBorder(1)).map(_.intersection(sampleArea)), offset = -area.pos + 1)
+
+    val marchingArea = Cuboid(area.pos, area.vsize+2)
+    val toSampleClamped = toSample.map(_.intersection(marchingArea))
+    val cubesToMarch = toSampleClamped.flatMap(_.coordinates)
+
+
     val exactCaseData = new Array3D[Short](Vec3i(nodesize+2))
 
-
     // Fall für jeden Cube ermitteln und abspeichern
-    for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
+    for( pos <- cubesToMarch ) {
+      val coord = pos - marchingArea.pos
       val exactCase = dataToCase(originalNoiseData.extract(coord))
       exactCaseData(coord) = exactCase.toShort
     }
 
     val modifiedNoiseData = originalNoiseData.clone
     // für jeden Cube:
-    for( coord <- Vec3i(0) until Vec3i(nodesize+2) ) {
+    for( pos <- cubesToMarch ) {
+      val coord = pos - marchingArea.pos
       // Datenpunkte extrahieren
       val originalData = originalNoiseData.extract(coord)
       val modifiedData = modifiedNoiseData.extract(coord)
@@ -124,22 +109,22 @@ object WorldGenerator {
 
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
     // Berücksichtigt auch gespeicherte User-Änderungen vom Server
-    def fillfun(v:Vec3i) = {
-    val arraypos = v + 1 - nodepos
-    val h = data2hexaeder( modifiedNoiseData.extract(arraypos), exactCaseData(arraypos) )
+    def fillfun(v: Vec3i) = {
+      val arraypos = v + 1 - nodepos
+      val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
 
-    val delta = deltaMap.get(v)
-    if( delta.isDefined ) {
-      Hexaeder.fromMessage(delta.get.shape)
-    } else
-      if( h.noVolume )
-      EmptyHexaeder
+      val delta = deltaMap.get(v)
+      if (delta.isDefined) {
+        Hexaeder.fromMessage(delta.get.shape)
+      } else
+      if (h.noVolume)
+        EmptyHexaeder
       else
-      h
+        h
     }
 
     // Octree mit Hexaedern füllen
-    // TODO use prediction here
+    // TODO: use prediction here
     val root = EmptyLeaf.fill( area, pos => Leaf(fillfun(pos)) )
 
     root.genMesh( area, minMeshNodeSize, x => {

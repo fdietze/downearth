@@ -7,5 +7,6 @@ object Main extends App {
   
   Octree.nodeInfoTraversal()
   
+  Generation.data3DExtract()
   Generation.FullGeneration()
 }

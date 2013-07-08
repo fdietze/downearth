@@ -126,28 +126,17 @@ trait CuboidLike {
     all(lessThanEqual(this.upperPos, that.upperPos))
   }
 
-  // Listet alle die Koordinaten auf, die innerhalb von beiden Bereichen sind.
-  def intersection(that:Cuboid) = {
+  def intersection(that:CuboidLike) = {
     val newPos = max(this.pos, that.pos)
     val newSize = min(this.upperPos, that.upperPos) - newPos
-    try {
-      Cuboid(newPos, newSize)
-    } catch {
-      case e:Throwable =>
-        println()
-        println(this)
-        println(that)
-        println(newPos)
-        println(newSize)
-      e.printStackTrace()
-        null
-    }
+    Cuboid(newPos, newSize)
   }
 
-  def intersectionCoordinates(that:PowerOfTwoCube):Iterable[Vec3i] = {
-    val pos1 = max(pos,that.pos)
-    val pos2 = min(upperPos,that.upperPos)
-    pos1 until pos2
+  // Listet alle die Koordinaten auf, die innerhalb von beiden Bereichen sind.
+  def intersectionCoordinates(that:CuboidLike) = {
+    val low = max(pos,that.pos)
+    val high = min(upperPos,that.upperPos)
+    low until high
   }
 
   // front to back Traversal order seen from point p

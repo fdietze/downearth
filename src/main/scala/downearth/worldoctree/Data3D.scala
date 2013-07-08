@@ -88,7 +88,7 @@ extends Data3D[A] with Iterable[A] {
 	def extract(pos:Vec3i) = {
 		vectorIndices map ( v ⇒ apply(v+pos) )
 	}
-	
+
 	import collection.Iterator
 	
 	def iterator = data.iterator

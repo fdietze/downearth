@@ -3,12 +3,27 @@ package downearth.benchmark
 import downearth.util.Timer
 import simplex3d.math._
 import simplex3d.math.double._
-import downearth.worldoctree.PowerOfTwoCube
+import downearth.worldoctree.{Array3D, PowerOfTwoCube}
 import downearth.generation.WorldFunction
 import downearth.generation.WorldGenerator.genWorldAt
 import downearth.util._
 
 object Generation {
+
+  def data3DExtract() {
+    println("Data 3D Extract")
+    val timer = new Timer
+    val n = 10000000
+
+    val data = new Array3D[Double](Vec3i(32))
+
+    val pos = Vec3i(10,7,3)
+    timer.benchmark(n) {
+      data.extract(pos)
+    }
+    println(s"extract: ${timer.read}s")
+  }
+
 
   def dummyOpenGLContext() {
     import org.lwjgl.opengl._
@@ -53,6 +68,5 @@ object Generation {
       timer.stop()
       println(s"Size $size: ${timer.read/(positions.size)}s/node (prediction)")
     }
-
   }
 }
