@@ -2,7 +2,7 @@ package downearth.worldoctree
 
 import downearth._
 import downearth.util._
-import downearth.generation.WorldDefinition
+import downearth.generation.{WorldFunction, WorldDefinition}
 import downearth.world.World
 
 import simplex3d.math.{Vec2i, Vec3i}
@@ -59,7 +59,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
   // erzeugt aus Zwei aneinender grenzenden Hexaedern die Polygone, die nicht verdeckt werden.
   // performance kritischer bereich, weil es für jedes benachberte Hexaederpaar aufgerufen wird
-  def addSurface(from:Polyeder, to:Polyeder, pos:Vec3i, dir:Int ,meshBuilder:TextureMeshBuilder) = {
+  def addSurface(from:Polyeder, to:Polyeder, pos:Vec3i, dir:Int ,meshBuilder:TextureMeshBuilder, worldFunction: WorldFunction = WorldDefinition) = {
     if(to != UndefHexaeder) {
       assert(from != EmptyHexaeder)
 
@@ -78,7 +78,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
       val occluderVertices = to.planetriangles(axis,1-direction)
       val occludingCoords = new collection.mutable.ArrayBuffer[Vec2](6) // es sind nie mehr als 6 Vertices
 
-      for(ov ← occluderVertices){
+      for(ov <- occluderVertices){
         if( ov(axis) == 1-direction )
           occludingCoords += Vec2(ov(axisa),ov(axisb))
       }
@@ -88,7 +88,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
       }
 
       @inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
-        val matid = if( material >= 0 ) material else WorldDefinition.materialAtBlock(pos).id
+        val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).id
         val matCount = MaterialManager.materialCount.toDouble
 
         vertexBuilder += (Vec3(pos) + v0)
@@ -241,20 +241,19 @@ object Leaf {
 }
 
 case object EmptyLeaf extends Leaf(EmptyHexaeder) {
-  def fill(info:PowerOfTwoCube, func: (Vec3i) => Leaf ) : NodeUnderMesh = {
-    if(info.size >= 2){
-
+  def fill(cube:PowerOfTwoCube, fill: (Vec3i) => Leaf ) : NodeUnderMesh = {
+    if(cube.size == 1){
+      fill(cube.pos)
+    }
+    else {
       val array = new Array[NodeUnderMesh](8)
 
       var i = 0
       while( i < 8 ) {
-        array(i) = EmptyLeaf.fill(info(i),func)
+        array(i) = EmptyLeaf.fill(cube(i),fill)
         i += 1
       }
       new InnerNode(array).merge
-    }
-    else {
-      func(info.pos)
     }
   }
 }

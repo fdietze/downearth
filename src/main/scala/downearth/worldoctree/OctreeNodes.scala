@@ -183,7 +183,7 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 	val vvertcount = new Array[Int](8)
 	
 	// ist nur dann wahr, wenn alle Kindknoten das selbe Blatt sind.
-	def merge_? = {
+	def hasEqualChildren = {
 		val first = data(0)
 		( data(1) == first ) && ( data(2) == first ) &&
 		( data(3) == first ) && ( data(4) == first ) &&
@@ -193,7 +193,7 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 	
 	// wenn alle kinder das selbe Blatt sind, dann werden sie hier zu einem.
 	def merge = {
-		if( merge_? )
+		if( hasEqualChildren )
 			data(0)
 		else
 			this
@@ -228,7 +228,7 @@ class InnerNode(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 		
 		vvertcount(index) += patch.data.size - patch.size
 
-		if(merge_?){
+		if(hasEqualChildren){
 			val mb = new TextureMeshBuilder
 			// replace with newLeaf
 			newLeaf.genPolygons(info,mb, v => World.octree(v).h )
