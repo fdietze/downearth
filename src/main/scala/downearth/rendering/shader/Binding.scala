@@ -1,7 +1,6 @@
 package downearth.rendering.shader
 
 import simplex3d.math.double._
-import downearth.rendering.{TextureCube, Texture2D}
 import downearth.util.AddString
 import scala.collection.mutable
 import simplex3d.math.floatx._

@@ -107,9 +107,6 @@ object Renderer extends Logger {
 
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-
-
-
 //    if(false) {
 //      val VertexCount = 23
 //      import org.lwjgl.opengl.GL30._
@@ -205,9 +202,6 @@ object Renderer extends Logger {
       glViewport(0, 0, w, h)
       render( Player.camera )
     }
-
-
-
 
     glViewport(0, 0, w, h)
     MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"

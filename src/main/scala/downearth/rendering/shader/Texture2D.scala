@@ -1,4 +1,4 @@
-package downearth.rendering
+package downearth.rendering.shader
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL20._
 import org.lwjgl.opengl.GL20._
 
 import java.nio.ByteBuffer
+import org.lwjgl.opengl.GL30
 
 /**
  * User: arne
@@ -56,7 +57,6 @@ class TextureCube(val width:Int,
   glBindTexture(target, id)
   glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
   glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-  glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE)
   glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
   glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
   glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
@@ -67,6 +67,8 @@ class TextureCube(val width:Int,
   glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, width, width, 0, GL_BGRA, GL_UNSIGNED_BYTE, negativeY)
   glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, width, width, 0, GL_BGRA, GL_UNSIGNED_BYTE, positiveZ)
   glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, width, width, 0, GL_BGRA, GL_UNSIGNED_BYTE, negativeZ)
+
+  GL30.glGenerateMipmap(target)
 
   glBindTexture(target, 0)
 }
@@ -82,6 +84,7 @@ class Texture2D(val width:Int, val height:Int, pixels:ByteBuffer) extends Textur
   glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
   glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE)
   glTexImage2D(target, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels)
+  GL30.glGenerateMipmap(target)
 
   glBindTexture(target, 0)
 

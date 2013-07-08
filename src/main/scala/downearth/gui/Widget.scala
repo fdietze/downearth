@@ -5,11 +5,12 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import downearth.util._
-import downearth.rendering.{ConsoleFont, Texture2D}
+import downearth.rendering.{ConsoleFont}
 import downearth.gui.Border._
 import downearth.gui.Background._
 import System.{currentTimeMillis => time}
 import org.lwjgl.input.Keyboard
+import downearth.rendering.shader.Texture2D
 
 abstract class Widget extends Listener with Publisher {
   val position:Vec2i

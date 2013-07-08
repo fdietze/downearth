@@ -11,4 +11,11 @@ trait GlObject {
   var id:Int
   def create():this.type
   def delete()
+
+  def bind[T](block: => T):T
+
+  override def finalize() {
+    if(id != 0)
+      delete()
+  }
 }

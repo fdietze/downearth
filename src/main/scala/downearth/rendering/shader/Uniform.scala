@@ -10,7 +10,6 @@ import org.lwjgl.BufferUtils
 
 import simplex3d.math.floatx._
 
-import downearth.rendering.{TextureCube, Texture2D}
 import downearth.util._
 
 class UniformConfig(

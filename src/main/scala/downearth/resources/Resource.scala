@@ -1,12 +1,12 @@
 package downearth.resources
 
 import collection.mutable
-import downearth.rendering.Texture2D
 import simplex3d.math.double._
-import downearth.rendering.{Texture2D, TextureManager}
+import downearth.rendering.{TextureManager}
 import java.io.{File, FileInputStream}
 import downearth.message.implicits._
 import downearth.message
+import downearth.rendering.shader.Texture2D
 
 
 abstract class Resource

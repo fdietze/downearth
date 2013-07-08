@@ -1,5 +1,7 @@
 package downearth.rendering
 
+import downearth.rendering.shader.TextureLoader
+
 object TextureManager {
   private val loader = new TextureLoader
   import loader._

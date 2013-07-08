@@ -331,5 +331,4 @@ class GameLoop extends Publisher with Logger { gameLoop =>
     Player.move(factor*(delta/max(1,length(delta)))*timeStep)
     Player.rotate(2.0*delta_angle)
   }
-
 }
