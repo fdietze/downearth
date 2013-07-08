@@ -32,12 +32,12 @@ class Generation extends FunSuite {
     }
   }
 
-  test("linearize prediction hierarchy"){
+  /*test("linearize prediction hierarchy"){
     for( size <- sizes; pos <- positions ) {
       val area = Cuboid(pos, size)
       val (toSample, positive, negative) = findNodesToSample(area, TestingWorldDefinition, 1)
       val hierarchy = predictionHierarchy(area, TestingWorldDefinition, 1)
       assert( linearizeHierarchy(hierarchy).toSet == toSample.toSet )
     }
-  }
+  }*/
 }

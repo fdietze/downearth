@@ -25,6 +25,7 @@ trait ChildAccess[T] {
   def splitZ:Array[T]   = ???
   def splitLongest:Array[T] = ???
   def splitOct:Array[T] = ???
+  def fullTree:(T,Any) = ???
 }
 
 case class Cuboid(pos:Vec3i, vsize:Vec3i) extends CuboidLike with ChildAccess[Cuboid] {
@@ -105,6 +106,11 @@ case class PowerOfTwoCube(pos:Vec3i, size:Int) extends PowerOfTwoCubeLike with C
   }
 
   override def splitOct = Array.tabulate(8)(apply)
+
+  override def fullTree = if( longestEdgeLength == 1 )
+      (this, 0)
+    else
+      (this,splitOct.map(_.fullTree))
 }
 
 trait CuboidLike {
@@ -194,6 +200,8 @@ trait CubeLike extends CuboidLike {
 
   override def longestEdgeAxis = 0
   override def shortestEdgeAxis = 0
+  override def longestEdgeLength = size
+  override def shortestEdgeLength = size
 }
 
 trait PowerOfTwoCubeLike extends CubeLike{

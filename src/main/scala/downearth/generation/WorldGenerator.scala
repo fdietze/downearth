@@ -46,7 +46,7 @@ object WorldGenerator {
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
     val sampleArea = Cuboid(area.pos-1, area.vsize+3)
     val originalNoiseData = new Array3D[Double](sampleArea.vsize)
-    val (toSample:Seq[Cuboid], _, _) = if(prediction)
+    val (toSample:Seq[Cuboid], positives, negatives) = if(prediction)
         findNodesToSample(sampleArea, worldFunction)
       else
         (Seq(sampleArea), null, null)
@@ -100,32 +100,27 @@ object WorldGenerator {
     }
 
     // wait for world d from server to overwrite generated blocks
-    val deltaSet = Await.result(deltaSetFuture, Timeout(5 seconds).duration).asInstanceOf[message.DeltaSet]
+    val deltaSet = Await.result(deltaSetFuture, Timeout(5 seconds).duration)
     val deltaMap = (deltaSet.set map {
       case message.Delta(pos, block) => messageToSimplexVec3i(pos) -> block
     }).toMap
 
-
-
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
     // Berücksichtigt auch gespeicherte User-Änderungen vom Server
     def fillfun(v: Vec3i) = {
-      val arraypos = v + 1 - nodepos
-      val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
-
       val delta = deltaMap.get(v)
-      if (delta.isDefined) {
+      if (delta.isDefined)
         Hexaeder.fromMessage(delta.get.shape)
-      } else
-      if (h.noVolume)
-        EmptyHexaeder
-      else
-        h
+      else {
+        val arraypos = v + 1 - nodepos
+        val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
+        if (h.noVolume) EmptyHexaeder else h
+      }
     }
 
     // Octree mit Hexaedern füllen
     // TODO: use prediction here
-    val root = EmptyLeaf.fill( area, pos => Leaf(fillfun(pos)) )
+    val root = EmptyLeaf.fill( predictionHierarchy(area, worldFunction), pos => Leaf(fillfun(pos)) )
 
     root.genMesh( area, minMeshNodeSize, x => {
       if (area.indexInRange(x)) root(area, x).h else fillfun(x)
@@ -167,9 +162,9 @@ object WorldGenerator {
     (toSample, positives, negatives)
   }
 
-  def predictionHierarchy(area: Cuboid,
+  def predictionHierarchy(area: PowerOfTwoCube,
                           worldFunction:WorldFunction = WorldDefinition,
-                          minPredictionSize: Int = Config.minPredictionSize):(Cuboid,Any) = {
+                          minPredictionSize: Int = Config.minPredictionSize):(PowerOfTwoCube,Any) = {
     val range = worldFunction.range(area.toInterval3)
     val surfaceInArea = range(0) // interval contains zero
     if (surfaceInArea) {

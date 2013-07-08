@@ -241,19 +241,36 @@ object Leaf {
 }
 
 case object EmptyLeaf extends Leaf(EmptyHexaeder) {
-  def fill(cube:PowerOfTwoCube, fill: (Vec3i) => Leaf ) : NodeUnderMesh = {
-    if(cube.size == 1){
-      fill(cube.pos)
-    }
-    else {
-      val array = new Array[NodeUnderMesh](8)
 
-      var i = 0
-      while( i < 8 ) {
-        array(i) = EmptyLeaf.fill(cube(i),fill)
-        i += 1
-      }
-      new InnerNode(array).merge
+  def fill(area:(PowerOfTwoCube,Any), fill: (Vec3i) => Leaf ) : NodeUnderMesh = {
+    area match {
+      case (cube,1) =>
+        FullLeaf
+
+      case (cube,-1) =>
+        EmptyLeaf
+
+      case (cube,0) =>
+        if(cube.size == 1)
+          fill(cube.pos)
+        else
+          EmptyLeaf.fill(cube.fullTree,fill)
+
+      case (cube,h:Any) =>
+        val hierarchy = h.asInstanceOf[Array[(PowerOfTwoCube,Any)]]
+        if(cube.size == 1)
+          fill(cube.pos)
+        else {
+          val array = new Array[NodeUnderMesh](8)
+
+          var i = 0
+          while( i < 8 ) {
+            array(i) = EmptyLeaf.fill(hierarchy(i),fill)
+            i += 1
+          }
+
+          new InnerNode(array).merge
+        }
     }
   }
 }
