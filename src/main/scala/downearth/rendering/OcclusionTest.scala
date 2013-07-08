@@ -13,6 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 import downearth.worldoctree.NodeInfo
 import java.nio.IntBuffer
 import downearth.world.World
+import simplex3d.backend.lwjgl.ArbEquivalents
 
 /**
  * User: arne
@@ -94,7 +95,7 @@ object OcclusionTest {
 
           occTest_binding.writeChangedUniforms()
 
-          GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
+          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
         }
 
         for( (queryId, info) <- queries ) {
@@ -106,7 +107,7 @@ object OcclusionTest {
 
           occTest_binding.writeChangedUniforms()
 
-          GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
+          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
 
           glEndQuery(GL_SAMPLES_PASSED)
         }

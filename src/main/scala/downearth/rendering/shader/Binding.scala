@@ -71,7 +71,7 @@ abstract class Binding( val program:Program ) extends AddString {
     sb
   }
 
-  def transformFeedbackVec4f(name:String) = transformFeedback.collect{ case at:AttributeVec4f => at }.head
+  //def transformFeedbackVec4f(name:String) = transformFeedback.collect{ case at:AttributeVec4f => at }.head
 
   def attributeInt(name:String)   = attributes.collect{ case at:AttributeInt   if at.name == name => at }.headOption.getOrElse(new AttributeFake[Int](program, this, name))
   def attributeFloat(name:String) = attributes.collect{ case at:AttributeFloat if at.name == name => at }.headOption.getOrElse(new AttributeFake[Float](program, this, name))

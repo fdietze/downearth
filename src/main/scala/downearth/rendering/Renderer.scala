@@ -63,7 +63,7 @@ object Renderer extends Logger {
   val tfb_instance_scale = tfb_binding.attributeFloat("a_instance_scale")
   val tfb_a_position =  tfb_binding.attributeVec3f("tfb_a_position")
   val tfb_u_mvp =  tfb_binding.uniformMat4f("u_mvp")
-  val tfb_gl_Position = tfb_binding.transformFeedbackVec4f("gl_Position")
+  //val tfb_gl_Position = tfb_binding.transformFeedbackVec4f("gl_Position")
 
   val tfb_vao = VertexArrayObject.create
 

@@ -138,4 +138,8 @@ object ArbEquivalents {
     val GL_LOWER_LEFT = org.lwjgl.opengl.GL20.GL_LOWER_LEFT
   }
 
+  object GL31 {
+    import ARBDrawInstanced._
+    @inline def glDrawArraysInstanced(mode:Int, first:Int, count:Int, primcount:Int) = glDrawArraysInstancedARB(mode, first, count, primcount)
+  }
 }

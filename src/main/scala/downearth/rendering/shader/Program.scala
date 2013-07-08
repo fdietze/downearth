@@ -42,10 +42,12 @@ object Program {
       program attach shader
     }
 
+    /*
     if( fragmentShaders.isEmpty ){
       val attributes = Array[CharSequence]("gl_Position")
       program.transformFeedbackVaryings( attributes )
     }
+    */
 
     program.link()
 
@@ -211,10 +213,12 @@ class Program(val name:String) { program =>
 
   override def toString = name
 
+  /*
   def transformFeedbackVaryings(names: Array[CharSequence], interleaved:Boolean = false) {
     val mode =  if(interleaved) GL30.GL_INTERLEAVED_ATTRIBS else GL30.GL_SEPARATE_ATTRIBS
     GL30.glTransformFeedbackVaryings(id, names, mode)
   }
+  */
 
   def getBinding = {
     val numUniforms   = glGetProgrami(id, GL_ACTIVE_UNIFORMS)

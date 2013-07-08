@@ -30,7 +30,7 @@ object Main extends Logger {
 
     log.println( "started" )
 
-    val ca = new ContextAttribs(3,2).withProfileCompatibility(true)
+    val ca = new ContextAttribs(3,1)//.withProfileCompatibility(true)
     val alpha = 8
     val depth = 16
     val stencil = 0

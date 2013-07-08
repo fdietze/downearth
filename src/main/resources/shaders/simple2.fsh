@@ -1,4 +1,4 @@
-#version 150
+#version 130
 
 uniform vec4 u_tint;
 
