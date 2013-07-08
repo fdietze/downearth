@@ -42,7 +42,7 @@ object OcclusionTest {
   }
 
   def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest) = {
-    TextureManager.box.bind()
+    // TextureManager.box.bind()
 
     val nodeInfoBufferGenerating  = ArrayBuffer[PowerOfTwoCube]()
     val nodeInfoBufferUngenerated = ArrayBuffer[PowerOfTwoCube]()

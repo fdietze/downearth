@@ -146,7 +146,7 @@ class TextureLoader {
     d5.asIntBuffer().put( posZ.data )
     d6.asIntBuffer().put( negZ.data )
 
-    new TextureCube(size,d1,d2,d3,d4,d5,d6)
+    Texture.createCube(size,d1,d2,d3,d4,d5,d6)
   }
 
   def loadAsTexture(filename:String):Texture2D = {
@@ -155,7 +155,7 @@ class TextureLoader {
       val raster = readImageRaster(filename:String)
       val buffer = BufferUtils.createByteBuffer(raster.width*raster.height*4)
       buffer.asIntBuffer.put(raster.data)
-      new Texture2D(raster.width, raster.height, buffer)
+      Texture.create2D(raster.width, raster.height, buffer)
     }
   }
 }

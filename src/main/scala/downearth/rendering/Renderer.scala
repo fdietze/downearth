@@ -351,56 +351,56 @@ object Renderer extends Logger {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
-    MaterialManager.textureAtlas.bind()
+    MaterialManager.textureAtlas.bind {
+      glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
 
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
+      glEnableClientState(GL_VERTEX_ARRAY)
+      glEnableClientState(GL_NORMAL_ARRAY)
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-    glEnableClientState(GL_VERTEX_ARRAY)
-    glEnableClientState(GL_NORMAL_ARRAY)
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+      val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
-    val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
+      octree.queryRegion( test, camera ) {
+        case (info, node:MeshNode) =>
+          drawTextureMesh(node.mesh)
+          objMeshes ++= node.objMeshes
+          false
+        case _ => true
+      }
 
-    octree.queryRegion( test, camera ) {
-      case (info, node:MeshNode) =>
-        drawTextureMesh(node.mesh)
-        objMeshes ++= node.objMeshes
-        false
-      case _ => true
+      for((info,mesh) <- objMeshes) {
+        glPushMatrix()
+        glTranslated( info.pos.x, info.pos.y, info.pos.z )
+        glScale1d( info.size )
+        drawObjMesh( mesh )
+        glPopMatrix()
+      }
+
+      glPopClientAttrib()
     }
-
-    for((info,mesh) <- objMeshes) {
-      glPushMatrix()
-      glTranslated( info.pos.x, info.pos.y, info.pos.z )
-      glScale1d( info.size )
-      drawObjMesh( mesh )
-      glPopMatrix()
-    }
-
-    glPopClientAttrib()
   }
 
   def drawObjMesh(mesh:ObjMesh) {
-    TextureManager.box.bind()
+    TextureManager.box.bind {
+      drawCalls += 1
+      mesh.bind()
 
-    drawCalls += 1
-    mesh.bind()
+      glEnableClientState(GL_VERTEX_ARRAY)
+      glEnableClientState(GL_NORMAL_ARRAY)
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-    glEnableClientState(GL_VERTEX_ARRAY)
-    glEnableClientState(GL_NORMAL_ARRAY)
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+      glVertexPointer(mesh.posComponents, GL_FLOAT, mesh.stride, mesh.posOffset)
+      glTexCoordPointer(mesh.texCoordComponents, GL_FLOAT, mesh.stride, mesh.normalOffset)
+      glNormalPointer(GL_FLOAT, mesh.stride, mesh.normalOffset)
 
-    glVertexPointer(mesh.posComponents, GL_FLOAT, mesh.stride, mesh.posOffset)
-    glTexCoordPointer(mesh.texCoordComponents, GL_FLOAT, mesh.stride, mesh.normalOffset)
-    glNormalPointer(GL_FLOAT, mesh.stride, mesh.normalOffset)
+      glDrawElements(GL_TRIANGLES, mesh.size, GL_UNSIGNED_INT, 0)
 
-    glDrawElements(GL_TRIANGLES, mesh.size, GL_UNSIGNED_INT, 0)
+      glDisableClientState(GL_VERTEX_ARRAY)
+      glDisableClientState(GL_NORMAL_ARRAY)
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
-    glDisableClientState(GL_VERTEX_ARRAY)
-    glDisableClientState(GL_NORMAL_ARRAY)
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-
-    mesh.unbind()
+      mesh.unbind()
+    }
   }
 
   def drawTextureMesh(mesh:TextureMesh) {

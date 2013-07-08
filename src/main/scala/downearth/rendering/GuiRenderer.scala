@@ -92,21 +92,22 @@ object GuiRenderer {
 
         glColor4f(1,1,1,1)
 
-        texture.bind()
-        glEnable(GL_TEXTURE_2D)
-        glBegin(GL_QUADS)
+        texture.bind{
+          glEnable(GL_TEXTURE_2D)
+          glBegin(GL_QUADS)
 
-        glTexCoord2d(tw.texPosition.x, texPosition.y)
-        glVertex2i(position.x         , position.y          )
-        glTexCoord2d(tw.texPosition.x, texPosition.y + texSize.y)
-        glVertex2i(position.x         , position.y + size.y )
-        glTexCoord2d(tw.texPosition.x + texSize.x, texPosition.y + texSize.y)
-        glVertex2i(position.x + size.x, position.y + size.y )
-        glTexCoord2d(tw.texPosition.x + texSize.x, texPosition.y)
-        glVertex2i(position.x + size.x, position.y          )
+          glTexCoord2d(tw.texPosition.x, texPosition.y)
+          glVertex2i(position.x         , position.y          )
+          glTexCoord2d(tw.texPosition.x, texPosition.y + texSize.y)
+          glVertex2i(position.x         , position.y + size.y )
+          glTexCoord2d(tw.texPosition.x + texSize.x, texPosition.y + texSize.y)
+          glVertex2i(position.x + size.x, position.y + size.y )
+          glTexCoord2d(tw.texPosition.x + texSize.x, texPosition.y)
+          glVertex2i(position.x + size.x, position.y          )
 
-        glEnd()
-        glDisable(GL_TEXTURE_2D)
+          glEnd()
+          glDisable(GL_TEXTURE_2D)
+        }
       }
       if( widget.isInstanceOf[MaterialWidget] ) {
         val text = floor(Player.inventory.materials(widget.asInstanceOf[MaterialWidget].matId)).toInt
