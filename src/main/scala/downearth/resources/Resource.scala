@@ -103,12 +103,11 @@ object Resources {
   }
 }
 
-
-
 object MaterialManager {
   val inset = 1 // material separation texture atlas border for texture coordinates
   val textureAtlas = TextureManager.materials
-  val materialCount = textureAtlas.width / textureAtlas.height
+  // TODO this is wrong
+  val materialCount = 4
   val materials = Array.tabulate(materialCount){ id =>
     Material(id,
       texture = textureAtlas,

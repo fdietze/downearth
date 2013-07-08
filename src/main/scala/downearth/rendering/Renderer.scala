@@ -284,6 +284,20 @@ object Renderer extends Logger {
       case entity:Entity => ()
     }
 
+    import Config._
+
+    glDisable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
+
+    render3dCursor()
+
+    if( (debugDraw & DebugDrawOctreeBit) != 0 )
+      drawDebugOctree(World.octree, camera.position, frustumTest)
+    if( (debugDraw & DebugDrawPhysicsBit) != 0 )
+      BulletPhysics.debugDrawWorld()
+    if( (debugDraw & DebugDrawSampledNodesBit) != 0 )
+      GlDraw.drawSampledNodes()
+
     if( Config.occlusionTest ) {
       OcclusionTest.doIt(camera, frustumTest)
     } else { // perform frustum test only
@@ -299,20 +313,6 @@ object Renderer extends Logger {
           true
       }
     }
-
-    import Config._
-
-    glDisable(GL_LIGHTING)
-    glDisable(GL_TEXTURE_2D)
-
-    render3dCursor()
-
-    if( (debugDraw & DebugDrawOctreeBit) != 0 )
-      drawDebugOctree(World.octree, camera.position, frustumTest)
-    if( (debugDraw & DebugDrawPhysicsBit) != 0 )
-      BulletPhysics.debugDrawWorld()
-    if( (debugDraw & DebugDrawSampledNodesBit) != 0 )
-      GlDraw.drawSampledNodes()
   }
 
   def render3dCursor() {

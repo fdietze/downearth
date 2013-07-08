@@ -38,7 +38,7 @@ abstract class AbstractFrameBuffer extends GlObject {
   def target : Int
   def binding : Int
 
-  def texture( texture:Texture, colorAttachment:Int = 0 ) {
+  def textureColor( texture:Texture, colorAttachment:Int = 0 ) {
     require( 0 < colorAttachment && colorAttachment < FrameBuffer.MaxColorAttachments )
     glFramebufferTexture( target, GL_COLOR_ATTACHMENT0 + colorAttachment, texture.id, 0 )
   }
