@@ -139,7 +139,7 @@ object WorldGenerator {
     (LocalServer.server ? message.NodeInfo(nodeInfo.pos, nodeInfo.size)).asInstanceOf[Future[message.DeltaSet]]
   }
 
-  // Find areas inside Node to be sampled (using range prediction)
+  // Find areas inside Area to be sampled (using range prediction)
   def findNodesToSample(area: Cuboid,
                         worldFunction:WorldFunction = WorldDefinition,
                         minPredictionSize: Int = Config.minPredictionSize
@@ -165,6 +165,31 @@ object WorldGenerator {
         negatives += current
     }
     (toSample, positives, negatives)
+  }
+
+  def predictionHierarchy(area: Cuboid,
+                          worldFunction:WorldFunction = WorldDefinition,
+                          minPredictionSize: Int = Config.minPredictionSize):(Cuboid,Any) = {
+    val range = worldFunction.range(area.toInterval3)
+    val surfaceInArea = range(0) // interval contains zero
+    if (surfaceInArea) {
+      if (area.shortestEdgeLength > minPredictionSize)
+        (area,area.splitOct map (predictionHierarchy(_, worldFunction, minPredictionSize)))
+      else
+        (area,0)
+    } else if( range.isPositive )
+      (area,1)
+    else // range.isNegative
+      (area,-1)
+  }
+
+  def linearizeHierarchy(hierarchy:(Cuboid,Any)):List[Cuboid] = {
+    hierarchy match {
+      case (area,1) => Nil
+      case (area,-1) => Nil
+      case (area,0) => area :: Nil
+      case (area,hierarchy:Any) => hierarchy.asInstanceOf[Array[(Cuboid,Any)]].toList.flatMap(linearizeHierarchy)
+    }
   }
 }
 
