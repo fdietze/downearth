@@ -126,27 +126,7 @@ class TextureLoader {
     val negY = readImageRaster(filename+"_negativeY." + fileEnding)
     val posZ = readImageRaster(filename+"_positiveZ." + fileEnding)
     val negZ = readImageRaster(filename+"_negativeZ." + fileEnding)
-
-    require( posX.width == posX.height )
-
-    val size = posX.width
-    require( List(negX,posY,negY,posZ,negZ).find( surface => size != surface.width || size != surface.height ) == None )
-
-    val d1 = BufferUtils.createByteBuffer(size*size*4)
-    val d2 = BufferUtils.createByteBuffer(size*size*4)
-    val d3 = BufferUtils.createByteBuffer(size*size*4)
-    val d4 = BufferUtils.createByteBuffer(size*size*4)
-    val d5 = BufferUtils.createByteBuffer(size*size*4)
-    val d6 = BufferUtils.createByteBuffer(size*size*4)
-
-    d1.asIntBuffer().put( posX.data )
-    d2.asIntBuffer().put( negX.data )
-    d3.asIntBuffer().put( posY.data )
-    d4.asIntBuffer().put( negY.data )
-    d5.asIntBuffer().put( posZ.data )
-    d6.asIntBuffer().put( negZ.data )
-
-    Texture.createCube(size,d1,d2,d3,d4,d5,d6)
+    Texture.createCube(posX,negX,posY,negY,posZ,negZ)
   }
 
   def loadAsTexture(filename:String):Texture2D = {
