@@ -22,13 +22,12 @@ import downearth.worldoctree._
 import downearth.world.World
 import downearth.entity.{Entity, SimpleEntity}
 import downearth.resources.MaterialManager
-import downearth.rendering.shader._
-
 
 import simplex3d.math.double._
 
 import scala.collection.mutable.ArrayBuffer
 import downearth.worldoctree.PowerOfTwoCube
+import glwrapper.{VertexShader, Shader, VertexArrayObject, Program}
 
 object Renderer extends Logger {
 

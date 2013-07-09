@@ -2,20 +2,18 @@ package downearth.rendering
 
 import simplex3d.math._
 import simplex3d.math.double._
-import simplex3d.math.double.functions._
 
 import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.Display
+import org.lwjgl.BufferUtils
 import org.newdawn.slick.Color
 
 import java.nio.FloatBuffer
 import downearth.worldoctree.{CuboidLike, Cuboid, PowerOfTwoCube, Polyeder}
 import downearth.DisplayEvent
 import downearth.util._
-import org.lwjgl.BufferUtils
 import simplex3d.math.floatx.{Vec4f, Vec2f, Vec3f}
-import downearth.rendering.shader.ArrayBuffer
+import glwrapper.ArrayBuffer
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont

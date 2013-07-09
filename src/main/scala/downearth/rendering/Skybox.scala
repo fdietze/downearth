@@ -6,7 +6,7 @@ import GL11._
 import simplex3d.math.floatx._
 
 import downearth.Camera
-import downearth.rendering.shader._
+import glwrapper.{VertexArrayObject, Program}
 
 object Skybox {
   val skybox_program = Program.auto("skybox")

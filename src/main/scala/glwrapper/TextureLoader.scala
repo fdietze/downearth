@@ -1,4 +1,4 @@
-package downearth.rendering.shader
+package glwrapper
 
 import javax.imageio.ImageIO
 import java.awt.image.DataBufferByte

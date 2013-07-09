@@ -1,4 +1,4 @@
-package downearth.rendering.shader
+package glwrapper
 
 /**
  * User: arne

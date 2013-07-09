@@ -1,4 +1,4 @@
-package downearth.rendering.shader
+package glwrapper
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._

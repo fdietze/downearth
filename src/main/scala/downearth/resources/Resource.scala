@@ -6,7 +6,7 @@ import downearth.rendering.{TextureManager}
 import java.io.{File, FileInputStream}
 import downearth.message.implicits._
 import downearth.message
-import downearth.rendering.shader.Texture2D
+import glwrapper.Texture2D
 
 
 abstract class Resource

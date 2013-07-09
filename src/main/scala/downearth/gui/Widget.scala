@@ -10,7 +10,7 @@ import downearth.gui.Border._
 import downearth.gui.Background._
 import System.{currentTimeMillis => time}
 import org.lwjgl.input.Keyboard
-import downearth.rendering.shader.Texture2D
+import glwrapper.Texture2D
 
 abstract class Widget extends Listener with Publisher {
   val position:Vec2i

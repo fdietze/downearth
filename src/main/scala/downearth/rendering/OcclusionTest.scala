@@ -1,16 +1,20 @@
 package downearth.rendering
 
-import downearth.rendering.shader.{VertexArrayObject, Program}
+import glwrapper.{VertexArrayObject, Program}
+
 import downearth.{FrustumTest, Camera, Config}
-import org.lwjgl.opengl.GL11._
-import simplex3d.math.floatx.{Mat4f, Vec4f}
 import downearth.worldoctree._
+import downearth.world.World
+
+import simplex3d.math.floatx.{Mat4f, Vec4f}
+import simplex3d.backend.lwjgl.ArbEquivalents
+
+import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
 import org.lwjgl.BufferUtils
+
 import scala.collection.mutable.ArrayBuffer
 import java.nio.IntBuffer
-import downearth.world.World
-import simplex3d.backend.lwjgl.ArbEquivalents
 
 /**
  * User: arne

@@ -1,4 +1,4 @@
-package downearth.rendering.shader
+package glwrapper
 
 //import org.lwjgl.opengl.GL20._
 import simplex3d.backend.lwjgl.ArbEquivalents.GL20._

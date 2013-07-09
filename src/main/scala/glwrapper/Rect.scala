@@ -1,4 +1,4 @@
-package downearth.rendering.shader
+package glwrapper
 
 import simplex3d.math.{ConstVec2i, ReadVec2i}
 
