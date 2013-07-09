@@ -5,7 +5,7 @@ import simplex3d.math._
 import simplex3d.math.double._
 import downearth.worldoctree.{Array3D, PowerOfTwoCube}
 import downearth.generation.WorldFunction
-import downearth.generation.WorldGenerator.genWorldAt
+import downearth.generation.WorldGenerator.generateNode
 import downearth.util._
 
 object Generation {
@@ -45,14 +45,14 @@ object Generation {
     
     //warmup:
     dummyOpenGLContext()
-    genWorldAt(PowerOfTwoCube(pos=Vec3i(0),size=8),
+    generateNode(PowerOfTwoCube(pos=Vec3i(0),size=8),
                worldFunction = TestingWorldDefinition)
 
     val positions = Vec3i(0) until Vec3i(3)
     for( size <- Seq(1,2,4,8,16) ) {
       timer.restart()
       for( pos <- positions ) {
-        genWorldAt(PowerOfTwoCube(pos*size,size),
+        generateNode(PowerOfTwoCube(pos*size,size),
           worldFunction = TestingWorldDefinition,
           prediction = false)
       }
@@ -61,7 +61,7 @@ object Generation {
 
       timer.restart()
       for( pos <- positions ) {
-        genWorldAt(PowerOfTwoCube(pos*size,size),
+        generateNode(PowerOfTwoCube(pos*size,size),
           worldFunction = TestingWorldDefinition,
           prediction = true)
       }

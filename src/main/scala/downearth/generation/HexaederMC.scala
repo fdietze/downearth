@@ -99,8 +99,10 @@ object HexaederMC {
 	// wandelt die Noise-Daten in einen der 256 MC-Fälle um
 	def dataToCase(data: IndexedSeq[Double]) = {
 		var result = 0
-		for( i <- 0 until data.size){
+    var i = 0
+		while( i < 8){
 			result |= (if(data(i) > 0) (1 << i) else 0)
+      i += 1
 		}
 		result
 	}

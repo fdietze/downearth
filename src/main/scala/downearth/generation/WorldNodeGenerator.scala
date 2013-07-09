@@ -98,7 +98,7 @@ class Worker (id:Int) extends Actor {
     case info:PowerOfTwoCube =>
       // Prediction:
       // Hier wird bis zur minMeshnodeSize geteilt
-      // in genWorldAt wird dann mithilfe der Prediction schlauer gesampled
+      // in generateNode wird dann mithilfe der Prediction schlauer gesampled
 
       val interval = WorldDefinition.range(info.toInterval3)
       val surfaceNotInArea = !interval(0)
@@ -118,7 +118,7 @@ class Worker (id:Int) extends Actor {
         sender ! Tuple2(info, node)
       }
       else { // sonst samplen
-        val meshnode = WorldGenerator genWorldAt info
+        val meshnode = WorldGenerator generateNode info
         sender ! Tuple2(info, meshnode)  // Master
       }
   }

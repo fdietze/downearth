@@ -55,9 +55,13 @@ trait Data3D[A]{
   }
 }
 
-class Array3D[@specialized(Byte,Short,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])
+object Array3D {
+  def apply[A:ClassTag](vsize:Vec3i, default:A) = new Array3D[A](vsize, Array.fill[A](vsize.x * vsize.y * vsize.z)(default) )
+}
+
+class Array3D[@specialized(Byte,Short,Int,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])
 extends Data3D[A] with Iterable[A] {
-	def this(vsize:Vec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
+  def this(vsize:Vec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
 
 	import vsize.{x ⇒ sx,y ⇒ sy, z ⇒ sz}
 	val volume = sx*sy*sz
@@ -65,7 +69,7 @@ extends Data3D[A] with Iterable[A] {
 	def index(pos:Vec3i) = pos.x + sx*(pos.y + sy*pos.z)
 	
 	def apply(v:Vec3i):A = {
-		assert( indexInRange(v) )
+		assert( indexInRange(v), s"$v not in $vsize" )
 		data( index(v) )
 	}
 
