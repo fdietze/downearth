@@ -37,9 +37,11 @@ object WorldGenerator {
   def genWorldAt(area:PowerOfTwoCube,
                  worldFunction:WorldFunction = WorldDefinition,
                  deltaSetFuture:Future[message.DeltaSet] = Future{message.DeltaSet()},
-                 prediction:Boolean = false):NodeOverMesh = {
+                 prediction:Boolean = true):NodeOverMesh = {
     val PowerOfTwoCube(nodepos, nodesize) = area
     import HexaederMC._
+
+    println(area)
 
     // Braucht eine zusätzliche größe um 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
@@ -85,7 +87,7 @@ object WorldGenerator {
         val (newData, newCase) = transformToStable(originalData, exactCase)
 
         // Stabilisierung auf die schon modifizierten Datan anwenden
-        val merge = 
+        val merge =
         for( i <- 0 until 8 ) yield {
           if( newData(i) == 0 )
             0
@@ -99,29 +101,30 @@ object WorldGenerator {
       }
     }
 
-    // wait for world d from server to overwrite generated blocks
-    val deltaSet = Await.result(deltaSetFuture, Timeout(5 seconds).duration)
-    val deltaMap = (deltaSet.set map {
-      case message.Delta(pos, block) => messageToSimplexVec3i(pos) -> block
-    }).toMap
-
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
-    // Berücksichtigt auch gespeicherte User-Änderungen vom Server
-    def fillfun(v: Vec3i) = {
-      val delta = deltaMap.get(v)
-      if (delta.isDefined)
-        Hexaeder.fromMessage(delta.get.shape)
-      else {
-        val arraypos = v + 1 - nodepos
-        val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
-        if (h.noVolume) EmptyHexaeder else h
-      }
+    def fillfun(pos: Vec3i) = {
+      val arraypos = pos + 1 - nodepos
+      val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
+      if (h.noVolume) EmptyHexaeder else h
     }
 
-    // Octree mit Hexaedern füllen
-    // TODO: use prediction here
-    val root = EmptyLeaf.fill( predictionHierarchy(area, worldFunction), pos => Leaf(fillfun(pos)) )
+    // Fill Octree with hexeaders
+    var root = EmptyLeaf.fill(
+      predictionHierarchy(area, worldFunction),
+      pos => Leaf(fillfun(pos))
+    )
 
+
+    // wait for world delta from server to overwrite generated blocks
+    val deltaSetMessage = Await.result(deltaSetFuture, Timeout(5 seconds).duration)
+    val deltaSet = deltaSetMessage.set map {
+      case message.Delta(pos, block) => messageToSimplexVec3i(pos) -> block
+    }
+    for( (pos, block) <- deltaSet )
+      root = root.updated(area, pos, Leaf(Hexaeder.fromMessage(block.shape)))
+
+
+    // generate Mesh
     root.genMesh( area, minMeshNodeSize, x => {
       if (area.indexInRange(x)) root(area, x).h else fillfun(x)
     } )

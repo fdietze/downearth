@@ -245,13 +245,15 @@ case object EmptyLeaf extends Leaf(EmptyHexaeder) {
   def fill(area:(PowerOfTwoCube,Any), fill: (Vec3i) => Leaf ) : NodeUnderMesh = {
     area match {
       case (cube,1) =>
-        FullLeaf
+        Leaf(FullHexaeder)
 
       case (cube,-1) =>
-        EmptyLeaf
+        Leaf(EmptyHexaeder)
 
       case (cube,0) =>
         if(cube.size == 1)
+          //FullLeaf
+          //Leaf(BrokenHexaeder)
           fill(cube.pos)
         else
           EmptyLeaf.fill(cube.fullTree,fill)
