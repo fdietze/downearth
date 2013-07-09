@@ -5,7 +5,8 @@ import org.lwjgl.opengl._
 import GL11._
 import GL13._
 import GL20._
-import ARBInstancedArrays._
+import GL30._
+import GL31._
 import org.lwjgl.BufferUtils
 
 import simplex3d.math.floatx._
@@ -39,7 +40,10 @@ object Uniform {
       )
 
       ttype match {
+        case GL_SAMPLER_2D_RECT => new UniformSampler2DRect(nextSampler(), config)
+        case GL_SAMPLER_1D => new UniformSampler1D(nextSampler(), config)
         case GL_SAMPLER_2D => new UniformSampler2D(nextSampler(), config)
+        case GL_SAMPLER_2D_ARRAY => new UniformSampler2DArray(nextSampler(), config)
         case GL_SAMPLER_CUBE => new UniformSamplerCube(nextSampler(), config)
         case GL_FLOAT => new UniformFloat(config)
         case GL_FLOAT_VEC2 => new UniformVec2f(config)
@@ -165,39 +169,31 @@ class UniformFloat(config:UniformConfig) extends Uniform[Float](config) {
   }
 }
 
-class UniformSampler2D(val position:Int, config:UniformConfig) extends Uniform[Texture2D](config) {
-  private[this] var texture: Texture2D = null
+abstract class UniformSampler[T <: Texture](config:UniformConfig) extends Uniform[T](config) {
+  def position:Int
+  protected var texture:T = _
 
-  def :=(v:Texture2D) {
+  def := (v:T) {
     texture = v
     binding.changedUniforms.enqueue(this)
   }
-
-  def get = ???
 
   def writeData() {
     glUniform1i(location, position)
     glActiveTexture(GL_TEXTURE0 + position)
     texture.bind()
   }
-}
-
-class UniformSamplerCube(val position:Int, config:UniformConfig) extends Uniform[TextureCube](config) {
-  private[this] var texture: TextureCube = null
-
-  def :=(v:TextureCube) {
-    texture = v
-    binding.changedUniforms.enqueue(this)
-  }
 
   def get = ???
 
-  def writeData() {
-    glUniform1i(location, position)
-    glActiveTexture(GL_TEXTURE0 + position)
-    texture.bind()
-  }
 }
+
+class UniformSampler1D(val position:Int, config:UniformConfig) extends UniformSampler[Texture1D](config)
+class UniformSampler2DArray(val position:Int, config:UniformConfig) extends UniformSampler[Texture2DArray](config)
+class UniformSampler2D(val position:Int, config:UniformConfig) extends UniformSampler[Texture2D](config)
+class UniformSampler3D(val position:Int, config:UniformConfig) extends UniformSampler[Texture3D](config)
+class UniformSamplerCube(val position:Int, config:UniformConfig) extends UniformSampler[TextureCube](config)
+class UniformSampler2DRect(val position:Int, config:UniformConfig) extends UniformSampler[TextureRectangle](config)
 
 class UniformMat4f(config:UniformConfig) extends Uniform[ReadMat4f](config) {
   val buffer = BufferUtils.createFloatBuffer(16)
