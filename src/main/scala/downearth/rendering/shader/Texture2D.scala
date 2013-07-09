@@ -23,6 +23,28 @@ object Texture {
     texture.parameter(GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR)
   }
 
+  def create1DArray(surfaces:Array[Surface]):Texture1DArray = {
+    require( surfaces(0).width == 1 || surfaces(0).height == 1 )
+    val vertical = surfaces(0).width == 1
+
+    val width = if(vertical) surfaces(0).height else surfaces(0).width
+    val data = downearth.util.sharedByteBuffer(width*4*surfaces.length)
+    (data.asIntBuffer /: surfaces)( _ put _.data )
+    create1DArray(width, surfaces.length, data)
+  }
+
+  def create1DArray(width:Int, levelCount:Int, pixels:ByteBuffer):Texture1DArray = {
+    require( ((width - 1) & width) == 0 )
+
+    val texture = (new Texture1DArray).create()
+
+    texture.bind {
+      defaultParameters(texture)
+      glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, InternalFormat, width, levelCount, 0, Format, DataType, pixels)
+      texture.generateMipmap()
+    }
+  }
+
   def create1D(surface:Surface):Texture1D = {
     require( surface.width == 1 || surface.height == 1 )
     val width = surface.width max surface.height
@@ -57,10 +79,7 @@ object Texture {
     }
 
     val data = downearth.util.sharedByteBuffer(width*height*4*surfaces.length)
-    val intData = data.asIntBuffer()
-    for( s <- surfaces ){
-      intData.put( s.data )
-    }
+    (data.asIntBuffer /: surfaces)( _ put _.data )
 
     create2DArray(width, height, surfaces.length, data)
   }
@@ -197,19 +216,25 @@ abstract class Texture extends GlObject {
   }
 }
 
-class Texture2DArray extends Texture {
-  def target = GL_TEXTURE_2D_ARRAY
-  def binding = GL_TEXTURE_BINDING_2D_ARRAY
-}
 
 class Texture1D extends Texture {
   def target = GL_TEXTURE_1D
   def binding = GL_TEXTURE_BINDING_1D
 }
 
+class Texture1DArray extends Texture {
+  def target = GL_TEXTURE_1D_ARRAY
+  def binding = GL_TEXTURE_BINDING_1D_ARRAY
+}
+
 class Texture2D extends Texture {
-	def target   = GL_TEXTURE_2D
+  def target   = GL_TEXTURE_2D
   def binding  = GL_TEXTURE_BINDING_2D
+}
+
+class Texture2DArray extends Texture {
+  def target = GL_TEXTURE_2D_ARRAY
+  def binding = GL_TEXTURE_BINDING_2D_ARRAY
 }
 
 class Texture3D extends Texture {

@@ -42,6 +42,7 @@ object Uniform {
       ttype match {
         case GL_SAMPLER_2D_RECT => new UniformSampler2DRect(nextSampler(), config)
         case GL_SAMPLER_1D => new UniformSampler1D(nextSampler(), config)
+        case GL_SAMPLER_1D_ARRAY => new UniformSampler1DArray(nextSampler(), config)
         case GL_SAMPLER_2D => new UniformSampler2D(nextSampler(), config)
         case GL_SAMPLER_2D_ARRAY => new UniformSampler2DArray(nextSampler(), config)
         case GL_SAMPLER_CUBE => new UniformSamplerCube(nextSampler(), config)
@@ -189,8 +190,9 @@ abstract class UniformSampler[T <: Texture](config:UniformConfig) extends Unifor
 }
 
 class UniformSampler1D(val position:Int, config:UniformConfig) extends UniformSampler[Texture1D](config)
-class UniformSampler2DArray(val position:Int, config:UniformConfig) extends UniformSampler[Texture2DArray](config)
+class UniformSampler1DArray(val position:Int, config:UniformConfig) extends UniformSampler[Texture1DArray](config)
 class UniformSampler2D(val position:Int, config:UniformConfig) extends UniformSampler[Texture2D](config)
+class UniformSampler2DArray(val position:Int, config:UniformConfig) extends UniformSampler[Texture2DArray](config)
 class UniformSampler3D(val position:Int, config:UniformConfig) extends UniformSampler[Texture3D](config)
 class UniformSamplerCube(val position:Int, config:UniformConfig) extends UniformSampler[TextureCube](config)
 class UniformSampler2DRect(val position:Int, config:UniformConfig) extends UniformSampler[TextureRectangle](config)
