@@ -262,7 +262,7 @@ object Renderer extends Logger {
 
     val frustumTest:FrustumTest =
       if( Config.frustumCulling )
-        new FrustumTestImpl(camera.projection, camera.view)
+        new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
       else {
         new FrustumTest {
           def testNode( info:PowerOfTwoCube ) = true

@@ -5,7 +5,7 @@ package downearth.generation
 //import akka.dispatch.Future
 
 import akka.pattern.ask
-import simplex3d.math.double.{Vec2, Vec3, Vec4}
+import simplex3d.math.double.{Vec2, Vec3, Mat4}
 
 import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
 import akka.actor._
@@ -62,7 +62,7 @@ class Master extends Actor {
       else {
         // if there is a job left assign it.
         val job = if(Config.prioritizeGenerationInFrustum) {
-          val test = new FrustumTestImpl(Player.camera.projection, Player.camera.view)
+          val test = new FrustumTestImpl(Mat4(Player.camera.projection), Mat4(Player.camera.view))
           jobqueue.dequeueFirst(c => test(c)) getOrElse jobqueue.dequeue()
         }
         else

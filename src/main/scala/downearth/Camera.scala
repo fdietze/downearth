@@ -12,6 +12,7 @@ import downearth.worldoctree.PowerOfTwoCube
 import org.lwjgl.opengl.Display
 import org.lwjgl.BufferUtils
 import simplex3d.math.floatx.{Mat4f, ReadMat4f}
+import glwrapper.util.putMat4f
 import java.nio.FloatBuffer
 
 abstract class Camera {
@@ -20,9 +21,9 @@ abstract class Camera {
 
   def direction:Vec3 = directionQuat.rotateVector( -Vec3.UnitZ )
 
-  def projection:Mat4
-  def view:Mat4
-  def noTranslate:Mat4
+  def projection:Mat4f
+  def view:Mat4f
+  def noTranslate:Mat4f
 
 //  protected val m_viewBuffer = DataBuffer[Mat4,RFloat](1)
 //  protected val m_projectionBuffer = DataBuffer[Mat4,RFloat](1)
@@ -30,36 +31,14 @@ abstract class Camera {
   val m_viewBuffer = BufferUtils.createFloatBuffer(16)
   val m_projectionBuffer = BufferUtils.createFloatBuffer(16)
 
-  def putMat(buffer:FloatBuffer, m:Mat4) {
-    buffer.put(m.m00.toFloat)
-    buffer.put(m.m01.toFloat)
-    buffer.put(m.m02.toFloat)
-    buffer.put(m.m03.toFloat)
-
-    buffer.put(m.m10.toFloat)
-    buffer.put(m.m11.toFloat)
-    buffer.put(m.m12.toFloat)
-    buffer.put(m.m13.toFloat)
-
-    buffer.put(m.m20.toFloat)
-    buffer.put(m.m21.toFloat)
-    buffer.put(m.m22.toFloat)
-    buffer.put(m.m23.toFloat)
-
-    buffer.put(m.m30.toFloat)
-    buffer.put(m.m31.toFloat)
-    buffer.put(m.m32.toFloat)
-    buffer.put(m.m33.toFloat)
-  }
-
   def viewBuffer = {
-    putMat(m_viewBuffer, view)
+    putMat4f(m_viewBuffer, view)
     m_viewBuffer.flip()
     m_viewBuffer
   }
 
   def projectionBuffer = {
-    putMat(m_projectionBuffer, projection)
+    putMat4f(m_projectionBuffer, projection)
     m_projectionBuffer.flip()
     assert(m_projectionBuffer.position() == 0 && m_projectionBuffer.limit() == 16, m_projectionBuffer)
     m_projectionBuffer
@@ -114,27 +93,27 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
     eyeState = State.LeftEye
   }
 
-	override def projection:Mat4 = {
+	override def projection:Mat4f = {
     // TODO implement viewport
 
     // aspect Ratio
-    val v = Display.getWidth.toDouble / Display.getHeight.toDouble
+    val v = Display.getWidth.toFloat / Display.getHeight.toFloat
 
-    import Config.test
+    val f = Config.test.toFloat
 
     eyeState match {
       case State.RightEye =>
-        downearth.util.projection(l = -v - test, r = v - test, b = -1, t = 1, n = 1, f = 1000)
+        glwrapper.util.projectionF(l = -v - f, r = v - f, b = -1, t = 1, n = 1, f = 1000)
       case State.LeftEye  =>
-        downearth.util.projection(l = -v + test, r = v + test, b = -1, t = 1, n = 1, f = 1000)
+        glwrapper.util.projectionF(l = -v + f, r = v + f, b = -1, t = 1, n = 1, f = 1000)
       case State.Center   =>
-        downearth.util.projection(l = -v,       r = v,       b = -1, t = 1, n = 1, f = 1000)
+        glwrapper.util.projectionF(l = -v,     r = v,     b = -1, t = 1, n = 1, f = 1000)
     }
 
 	}
 
-	override def view:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat) translate(position)))
-  override def noTranslate:Mat4 = Mat4(inverse(Mat4x3 rotate(directionQuat)))
+	override def view:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat) translate(position)))
+  override def noTranslate:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat)))
 }
 
 trait FrustumTest extends Function1[PowerOfTwoCube,Boolean] {

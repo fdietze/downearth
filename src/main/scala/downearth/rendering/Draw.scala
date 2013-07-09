@@ -12,6 +12,7 @@ import java.nio.FloatBuffer
 import downearth.worldoctree.{CuboidLike, Cuboid, PowerOfTwoCube, Polyeder}
 import downearth.DisplayEvent
 import downearth.util._
+import glwrapper.util._
 import simplex3d.math.floatx.{Vec4f, Vec2f, Vec3f}
 import glwrapper.ArrayBuffer
 
