@@ -321,7 +321,7 @@ object Renderer extends Logger {
   }
 
   def renderWorld(camera:Camera) {
-    glEnable(GL_CULL_FACE)
+    if(Config.backFaceCulling) glEnable(GL_CULL_FACE) else glDisable(GL_CULL_FACE)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_TEXTURE_2D)
     glEnable(GL_DEPTH_TEST)

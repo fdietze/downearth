@@ -89,6 +89,7 @@ object Config extends Listener {
   val DebugDrawSampledNodesBit = 0x04
 
   var debugDraw = 0
+  var backFaceCulling = true
   var wireframe = false
   var streamWorld = false
   var frustumCulling = true
