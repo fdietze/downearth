@@ -375,8 +375,8 @@ object Renderer extends Logger {
       OcclusionTest.doIt(camera, frustumTest)
     } else { // perform frustum test only
       World.octree.queryRegion( frustumTest, camera.position) {
-        case (info, UngeneratedInnerNode) =>
-          World.octree.generateNode(info)
+        case (info, UngeneratedNode) =>
+          World.octree.generateArea(info)
           false
         case (info, GeneratingNode) =>
           false

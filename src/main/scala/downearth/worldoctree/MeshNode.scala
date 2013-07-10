@@ -2,7 +2,6 @@ package downearth.worldoctree
 
 import downearth.{Config}
 import simplex3d.math.Vec3i
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
 import downearth.rendering.{MutableTextureMesh, TextureMeshBuilder, ObjMesh}
 
@@ -17,7 +16,7 @@ object MeshNode {
 
     // joining mesh Nodes, maybe better as method of MeshNode
     val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
-    val node = new InnerNode( meshNodes.map(_.node) )
+    val node = new InnerNodeUnderMesh( meshNodes.map(_.node) )
 
     for(i <- 0 until 8) {
       node.vvertcount(i) = meshNodes(i).mesh.size
@@ -33,7 +32,11 @@ object MeshNode {
 }
 
 //decorator pattern
-class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
+class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
+  var mesh:MutableTextureMesh = null
+
+  val objMeshes = new mutable.ArrayBuffer[(PowerOfTwoCube,ObjMesh)]
+
   // Nodes unter dem MeshNode müssen gesetzt sein.
   def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
 
@@ -41,15 +44,27 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 
   override def getChild(i:Int) = node.getChild(i)
 
-  override def insertNode(info: PowerOfTwoCube, insertinfo: PowerOfTwoCube, insertnode: NodeOverMesh) = {
-    throw new Exception("nodes can't be inserted into MeshNodes" + info)
+  override def insertNode(info: PowerOfTwoCube, insertInfo: PowerOfTwoCube, insertNode: NodeOverMesh) = {
+    insertNode match {
+      case n:MeshNode =>
+        if(info == insertInfo) {
+          mesh.freevbo()
+          n
+        } else {
+          objMeshes ++= n.objMeshes
+          val updateInfo = node.patchWorld(info, insertInfo, n.node, n.mesh.size, 0, mesh.size)
+          node = updateInfo.node
+
+          // TODO vertices ins mesh einfügen
+          this
+        }
+    }
+
+
+    //node = node.insertNode(area, insertArea, insertNode)
   }
 
   def apply(info: PowerOfTwoCube, p: Vec3i) = node(info,p)
-
-  var mesh:MutableTextureMesh = null
-
-  val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
   // der einzige NodeOverMesh, der genMesh implementiert
   def genMesh(info:PowerOfTwoCube , destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
@@ -131,10 +146,10 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 
   def split(info:PowerOfTwoCube) = {
     node match {
-      case innernode:InnerNode =>
+      case innernode:InnerNodeUnderMesh =>
         val newdata = new Array[NodeOverMesh](8)
         val childmeshes = mesh.split(innernode.vvertcount)
-        for(i ← 0 until 8) {
+        for(i <- 0 until 8) {
           val childInfo = info(i)
           val meshnode = new MeshNode(innernode.data(i))
           meshnode.objMeshes ++= objMeshes.filter {
@@ -145,10 +160,19 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
         }
         mesh.freevbo()
         new InnerNodeOverMesh(newdata)
+
       case leaf:Leaf =>
         // kommt nur ganz selten vor, denn Blätter haben
         // meist nicht viele Polygone
         throw new Exception("Blatt kann nicht geteilt werden")
+
+      case UngeneratedNode =>
+        val newdata = new Array[NodeOverMesh](8)
+        for(i <- 0 until 8) {
+          newdata(i) = new MeshNode(UngeneratedNode)
+        }
+        mesh.freevbo()
+        new InnerNodeOverMesh(newdata)
     }
   }
 

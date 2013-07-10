@@ -22,6 +22,8 @@ import downearth.resources.MaterialManager
 class Leaf(val h:Polyeder) extends NodeUnderMesh {
   override def hasChildren = false
 
+  override def finishedGeneration = true
+
   override def getChild(i:Int) = throw new NoSuchElementException("a leaf in a tree doesn't have children")
   // kann kein deadNode sein
   def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
@@ -37,7 +39,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
       // wenn das Blatt einen größeren Bereich abdeckt der voll,
       // bzw leer ist:
       if(info.size >= 2) {
-        val replacement = new InnerNode(this)
+        val replacement = new InnerNodeUnderMesh(this)
         replacement.updated(info, p, newLeaf)
       }
       else {
@@ -187,6 +189,15 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     val update = Update(vertpos,vertcount,builder.result)
     (replacement,update)
   }
+  //TODO: NodeUnderMesh soll die eigene Größe (Vertices) kennen, und nicht die der Kinder
+  override def patchWorld(info:PowerOfTwoCube, insertInfo:PowerOfTwoCube, newNode:NodeUnderMesh, insertVertexCount:Int, currentOffset:Int, currentVertexCount:Int) : UpdateInfo = {
+    if(info == insertInfo)
+      UpdateInfo(newNode, currentOffset, currentVertexCount, insertVertexCount )
+    else {
+      val replacement = new InnerNodeUnderMesh(this)
+      replacement.patchWorld(info, insertInfo, newNode, insertVertexCount, currentOffset, currentVertexCount)
+    }
+  }
 
   override def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
     val builder = new TextureMeshBuilder
@@ -254,7 +265,7 @@ case object EmptyLeaf extends Leaf(EmptyHexaeder) {
         array(i) = EmptyLeaf.fill(cube(i),fill)
         i += 1
       }
-      new InnerNode(array).merge
+      new InnerNodeUnderMesh(array).merge
     }
   }
 

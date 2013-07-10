@@ -1,9 +1,5 @@
 package downearth.generation
 
-//import akka.actor.Actor
-//import Actor._
-//import akka.dispatch.Future
-
 import akka.pattern.ask
 import simplex3d.math.double.{Vec2, Vec3, Mat4}
 
@@ -24,13 +20,17 @@ import scala.concurrent.Await
 object WorldNodeGenerator {
   val actorSystem = ActorSystem.create("worldNodeGenerator")
   val master = actorSystem.actorOf( Props[Master] )
+  object Messages {
+    case object GetFinishedJobs
+    case object ActiveJobsEmpty
+    case object AllJobsEmpty
+    case class FinishedJob(job:PowerOfTwoCube, node:NodeOverMesh)
+  }
 }
 
-case object GetFinishedJobs
-case object ActiveJobsEmpty
-case object AllJobsEmpty
-
 class Master extends Actor {
+  import WorldNodeGenerator.Messages._
+
   val jobqueue = new Queue[PowerOfTwoCube]
   val done  = new Queue[(PowerOfTwoCube, NodeOverMesh)] //TODO: im worldoctree speichern
   val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(classOf[Worker],i) ))
@@ -42,19 +42,21 @@ class Master extends Actor {
       val result = done.dequeueAll( _ => true)
       sender ! result
 
+
     case AllJobsEmpty =>
       sender ! (jobqueue.isEmpty && done.isEmpty)
 
+
     // Master erhält neuen Job und verteilt ihn.
     case area:PowerOfTwoCube =>
-
       if( idleWorkers.isEmpty )
         jobqueue enqueue area //Warteschlange
       else
         idleWorkers.dequeue ! area //Verteilen
 
+
     // Worker has finished Job
-    case ( oldjob:PowerOfTwoCube, node:NodeOverMesh ) =>
+    case FinishedJob( oldjob:PowerOfTwoCube, node:NodeOverMesh ) =>
       done enqueue Tuple2(oldjob,node)
 
       if( jobqueue.isEmpty )
@@ -71,9 +73,11 @@ class Master extends Actor {
         sender ! job
       }
 
+
     case PoisonPill =>
       for( worker <- workers )
         worker ! PoisonPill
+
 
     case irgendwas =>
       println("Master: konnte " + irgendwas + " nicht erkennen")
@@ -83,8 +87,7 @@ class Master extends Actor {
 }
 
 class Worker (id:Int) extends Actor {
-  var alive = true
-  var isActive = false
+  import WorldNodeGenerator.Messages._
 
   val emptyTextureMeshData = {
     val vertexArray = new Array[Vec3](0)
@@ -95,31 +98,31 @@ class Worker (id:Int) extends Actor {
   }
 
   def receive = {
-    case info:PowerOfTwoCube =>
+    case area:PowerOfTwoCube =>
       // Prediction:
       // Hier wird bis zur minMeshnodeSize geteilt
-      // in generateNode wird dann mithilfe der Prediction schlauer gesampled
 
-      val interval = WorldDefinition.range(info.toInterval3)
+      val interval = WorldDefinition.range(area.toInterval3)
       val surfaceNotInArea = !interval(0)
 
       if( surfaceNotInArea ) {
-        GlDraw addPredictedCuboid info  // Für DebugDraw
+        GlDraw addPredictedCuboid area  // Für DebugDraw
         val meshnode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
         meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
-        sender ! Tuple2(info, meshnode)
+        sender ! Tuple2(area, meshnode)
       }
-      else if( info.size/2 >= Config.minMeshNodeSize ) {
-        // if the area is too big, it will be splitted
-        val data = Array.fill[NodeOverMesh](8)(UngeneratedInnerNode)
-        val node = new InnerNodeOverMesh(data)
-        sender ! Tuple2(info, node)
+      // if the area is too big, it will be splitted
+      else if( area.size/2 >= Config.minMeshNodeSize ) {
+        val data = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
+        val node = new InnerNodeUnderMesh(data)
+        sender ! Tuple2(area, node)
       }
-      else { // sonst samplen
-        val meshnode = WorldGenerator generateNode info
-        sender ! Tuple2(info, meshnode)  // Master
+      // sample the whole area
+      else {
+        val meshnode = WorldGenerator generateNode area
+        sender ! FinishedJob(area, meshnode)  // Master
       }
   }
 }

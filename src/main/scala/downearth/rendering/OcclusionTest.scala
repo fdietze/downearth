@@ -52,7 +52,7 @@ object OcclusionTest {
     val nodeInfoBufferUngenerated = ArrayBuffer[PowerOfTwoCube]()
 
     octree.queryRegion( test, camera.position) {
-      case (info, UngeneratedInnerNode) =>
+      case (info, UngeneratedNode) =>
         nodeInfoBufferUngenerated += info
         false
       case (info, GeneratingNode) =>
@@ -153,7 +153,7 @@ object OcclusionTest {
   def doIt(camera:Camera, frustumTest:FrustumTest) {
     if( query != null )
       for( result <- evalQueries(query).visible )
-        World.octree.generateNode(result)
+        World.octree.generateArea(result)
     query = findUngeneratedNodes(camera, World.octree, frustumTest)
   }
 

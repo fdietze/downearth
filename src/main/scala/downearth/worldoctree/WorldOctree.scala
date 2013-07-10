@@ -12,14 +12,15 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import downearth.util._
-import downearth.generation.{GetFinishedJobs, WorldNodeGenerator}
+import downearth.generation.WorldNodeGenerator
+import WorldNodeGenerator.Messages.GetFinishedJobs
 import downearth.{BulletPhysics, Config, util}
 import downearth.Config._
 import downearth.message
 import collection.mutable
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = UngeneratedInnerNode) extends Data3D[Leaf] {
+class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new MeshNode) extends Data3D[Leaf] {
   def rootNodePos = rootNodeInfo.pos
   def rootNodeSize = rootNodeInfo.size
 
@@ -49,7 +50,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = Ungen
 
   // traverse the octree in a front to back order from view of point camera
   // filter the nodes by predicate (for example frustum test)
-  // and apply action to every found node, stop if action returns false
+  // and apply action to every found node, skip subtree if action returns false
   def queryRegion(predicate:(PowerOfTwoCube) => Boolean, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
 
     val infoQueue = mutable.Queue[PowerOfTwoCube](rootNodeInfo)
@@ -83,17 +84,23 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = Ungen
 
   override def toString = "Octree("+root.toString+")"
 
-  def generateNode(info:PowerOfTwoCube) {
+
+  // mark area as ungenerated and ask
+  // Worldgenerator to generate it
+  def generateArea(area:PowerOfTwoCube) {
     // require(!isSet(info)) // TODO this fails sometimes
-    while(!(rootNodeInfo indexInRange info)){
+
+    // if area is outside the current Octree,
+    // increase the size until it is inside
+    while(!(rootNodeInfo indexInRange area)) {
       incDepth()
     }
 
+    // get all ungenerated inner nodes inside the area
     var list = List[PowerOfTwoCube]()
-
-    queryRegion(_ indexInRange info) {
+    queryRegion(_ indexInRange area) {
       case (nodeInfo, node) =>
-        if( node == UngeneratedInnerNode ) {
+        if( node == UngeneratedNode ) {
           list ::= nodeInfo
           false
         }
@@ -102,7 +109,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = Ungen
     }
 
     for( nodeInfo <- list ) {
-      insert( nodeInfo, GeneratingNode )
+      insert( nodeInfo, new MeshNode )
       WorldNodeGenerator.master ! nodeInfo
     }
   }
@@ -127,7 +134,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = Ungen
 		
 		for(vi <- Vec3i(0) until slicesize) {
 			val nodeinfo = PowerOfTwoCube(slicepos + vi*minMeshNodeSize,minMeshNodeSize)
-			generateNode(nodeinfo)
+			generateArea(nodeinfo)
 		}
 	}
 	
@@ -155,20 +162,37 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = Ungen
 			move( Vec3i(0,0,1) )
 	}
 
+  // increase Octree size
+  // the root becomes
   def incDepth() {
     // TODO add test for correct subdivision of the area. Depending on where the root is, it should be extended differently.
 
-    var newRoot:NodeOverMesh = new InnerNodeOverMesh(Array.fill[NodeOverMesh](8)(UngeneratedInnerNode))
+
+    // +---+---+---+---+            ^
+    // |   |   |   |   |            |
+    // +---+---+---+---+   ^        |
+    // |   |###|###|   |   |        |
+    // +---+---+---+---+  root   new root
+    // |   |###|###|   |   |        |
+    // +---+---+---+---+   v        |
+    // |   |   |   |   |            |
+    // +---+---+---+---+            v
+
+    // create the new root
+    var newRoot:NodeOverMesh = new InnerNodeOverMesh(Array.fill[NodeOverMesh](8)(new MeshNode))
     val newRootNodeInfo = PowerOfTwoCube(rootNodePos - rootNodeSize/2, rootNodeSize*2)
 
-    if( root.isInstanceOf[MeshNode] )
-      root = root.asInstanceOf[MeshNode].split(rootNodeInfo)
-
-    if( root != UngeneratedInnerNode ) {
-    	for(i <- 0 until 8) {
-	      newRoot = newRoot.insertNode(newRootNodeInfo, rootNodeInfo(i), root.getChild(i).asInstanceOf[NodeOverMesh] )
-	    }
-  	}
+    newRoot = new InnerNodeOverMesh(
+          (for(i <- 0 until 8) yield {
+            val children = Array.fill[NodeOverMesh](8)(new MeshNode(UngeneratedNode))
+            val n = root match {
+              case n:InnerNodeOverMesh => n
+              case n:MeshNode => n.split(rootNodeInfo)
+            }
+            children(~i & 7) = n.getChild(i)
+            (new InnerNodeOverMesh(children)).joinChildren
+          }).toArray
+        )
 
     root = newRoot
     rootNodeInfo = newRootNodeInfo

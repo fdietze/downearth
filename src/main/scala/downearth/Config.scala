@@ -2,7 +2,7 @@ package downearth
 
 import simplex3d.math.double.Vec3
 import org.lwjgl.opengl.Display
-import downearth.worldoctree.{FullHexaeder, Leaf}
+import downearth.worldoctree.{FullLeaf, FullHexaeder, Leaf}
 import gui.Listener
 import util.isPowerOfTwo
 
@@ -29,7 +29,7 @@ object Config extends Listener {
   var b = 3.5
   var c = 0.15
 	
-	lazy val ungeneratedDefault = Leaf(FullHexaeder,-1)
+	lazy val ungeneratedDefault = FullLeaf
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
 	
 	val fpsLimit = loadInt("fpsLimit", 60)

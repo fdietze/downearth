@@ -113,6 +113,8 @@ case class Update(pos:Int,size:Int,data:TextureMeshData) {
 	def sizedifference = data.size - size
 }
 
+object EmptyUpdate
+
 object MutableTextureMesh {
 	
 	def apply(data:TextureMeshData) = {
