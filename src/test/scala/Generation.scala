@@ -32,35 +32,6 @@ class Generation extends FunSuite {
     }
   }
 
-  test("PowerOfTwoCube: child creation by index") {
-    val sizes = Seq(2,4,8,16,32)
-    for( size <- sizes; pos <- positions ) {
-      val area = PowerOfTwoCube(pos, size)
-      val hexaedersFullSampled = hexaederMC(area, TestingWorldDefinition, prediction = false)
-      val hexaedersPredicted = hexaederMC(area, TestingWorldDefinition, prediction = true)
-      val (_,dataFullSampled) = sampleArea(area, TestingWorldDefinition, prediction = false)
-      val (toSample,dataPredicted) = sampleArea(area, TestingWorldDefinition, prediction = true)
-
-      //println(area)
-      //println(dataFullSampled.toStringRounded(1))
-      //println(toSample)
-      //println(dataPredicted.toStringRounded(1))
-
-      //val hierarchy = linearizeHierarchy(predictionHierarchy(area, TestingWorldDefinition))
-      //val coordinates = hierarchy.flatMap(_.coordinates)
-
-      val marchingArea = Cuboid(area.pos, area.vsize + 2)
-      val toSampleClamped = toSample.map(_.intersection(marchingArea))
-      val coordinates = toSampleClamped.flatMap(_.coordinates)
-
-      //println(hierarchy)
-      //println(coordinates)
-
-      assert( coordinates.map(hexaedersFullSampled) === coordinates.map(hexaedersPredicted) )
-    }
-  }
-
-
   /*test("linearize prediction hierarchy"){
     for( size <- sizes; pos <- positions ) {
       val area = Cuboid(pos, size)

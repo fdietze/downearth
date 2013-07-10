@@ -53,20 +53,10 @@ object Generation {
       timer.restart()
       for( pos <- positions ) {
         generateNode(PowerOfTwoCube(pos*size,size),
-          worldFunction = TestingWorldDefinition,
-          prediction = false)
+          worldFunction = TestingWorldDefinition)
       }
       timer.stop()
       println(s"Size $size: ${timer.read/(positions.size)}s/node")
-
-      timer.restart()
-      for( pos <- positions ) {
-        generateNode(PowerOfTwoCube(pos*size,size),
-          worldFunction = TestingWorldDefinition,
-          prediction = true)
-      }
-      timer.stop()
-      println(s"Size $size: ${timer.read/(positions.size)}s/node (prediction)")
     }
   }
 }

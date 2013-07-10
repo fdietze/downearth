@@ -36,16 +36,12 @@ object WorldGenerator {
 
 
   def generateNode(area:PowerOfTwoCube,
-                 worldFunction:WorldFunction = WorldDefinition,
-                 prediction:Boolean = true):NodeOverMesh = {
+                   worldFunction:WorldFunction = WorldDefinition):NodeOverMesh = {
 
-    val hexaeders = hexaederMC(area, worldFunction, prediction)
+    val hexaeders = hexaederMC(area, worldFunction)
 
     // Fill Octree with hexeaders
-    val root = EmptyLeaf.fill(
-      predictionHierarchy(area, worldFunction),
-      pos => Leaf(hexaeders(pos))
-    )
+    val root = EmptyLeaf.fill( area, pos => Leaf(hexaeders(pos)) )
 
     // generate Mesh
     root.genMesh( area, minMeshNodeSize, x => {
@@ -55,53 +51,38 @@ object WorldGenerator {
   }
 
 
-  def sampleArea(area: PowerOfTwoCube, worldFunction: WorldFunction, prediction: Boolean) = {
+  def sampleArea(area: PowerOfTwoCube, worldFunction: WorldFunction) = {
     // Braucht eine zusätzliche größe von 2 damit die Nachbarn besser angrenzen können
     // Marching-Cubes für n Cubes: n+1 Datenpunkte
     // Für Umrandungen: n+2 Cubes mit n+3 Datenpunkten
     val sampleArea = Cuboid(area.pos - 1, area.vsize + 3)
     val originalNoiseData = new Array3D[Double](sampleArea.vsize)
-    val (toSample: Seq[Cuboid], positives, negatives) = if (prediction)
-      findNodesToSample(sampleArea, worldFunction)
-    else
-      (Seq(sampleArea), null, null)
 
-    originalNoiseData.fill(
-      v => worldFunction.density(Vec3(area.pos + v - 1)),
-      toSample.map(_.withBorder(1)).map(_.intersection(sampleArea)),
-      offset = -area.pos + 1)
+    originalNoiseData.fill( v => worldFunction.density(Vec3(sampleArea.pos + v)) )
 
-    (toSample, originalNoiseData)
+    originalNoiseData
   }
 
 
-  def hexaederMC(area: PowerOfTwoCube, worldFunction:WorldFunction, prediction:Boolean) = {
+  def hexaederMC(area: PowerOfTwoCube, worldFunction:WorldFunction) = {
     import HexaederMC._
 
-    val (toSample, originalNoiseData) = sampleArea(area, worldFunction, prediction)
+    val originalNoiseData = sampleArea(area, worldFunction)
 
     val marchingArea = Cuboid(area.pos, area.vsize + 2)
-    val toSampleClamped = toSample.map(_.intersection(marchingArea))
-    val cubesToMarch = toSampleClamped.flatMap(_.coordinates)
-    println("March cubes: " + toSampleClamped)
-
-    val exactCaseData = Array3D[Short](Vec3i(area.vsize + 2), -1.toShort)
+    val exactCaseData = new Array3D[Short](marchingArea.vsize)
+    val cubesToMarch = Vec3i(0) until marchingArea.vsize
 
     // Fall für jeden Cube ermitteln und abspeichern
-    for (pos <- cubesToMarch) {
-      val coord = pos - marchingArea.pos
+    for (coord <- cubesToMarch) {
       val exactCase = dataToCase(originalNoiseData.extract(coord))
-      //println("originalNoiseData.extract(coord):\n" + originalNoiseData.extract(coord).map("%.1f" format _).mkString(","))
       exactCaseData(coord) = exactCase.toShort
     }
 
-    println("originalNoiseData:\n" + originalNoiseData.toStringRounded(1))
-    println("exactCaseData:\n" + exactCaseData)
-
     val modifiedNoiseData = originalNoiseData.clone
+
     // für jeden Cube:
-    for (pos <- cubesToMarch) {
-      val coord = pos - marchingArea.pos
+    for (coord <- cubesToMarch) {
       // Datenpunkte extrahieren
       val originalData = originalNoiseData.extract(coord)
       val modifiedData = modifiedNoiseData.extract(coord)
@@ -115,13 +96,10 @@ object WorldGenerator {
         // In einen darstellbaren Fall transformieren
         val (newData, newCase) = transformToStable(originalData, exactCase)
 
-        // Stabilisierung auf die schon modifizierten Datan anwenden
-        val merge =
-          for (i <- 0 until 8) yield {
-            if (newData(i) == 0)
-              0
-            else
-              modifiedData(i)
+        // Stabilisierung auf die schon modifizierten Daten anwenden
+        val merge = Array.tabulate(8) { i =>
+            if (newData(i) == 0) 0
+            else modifiedData(i)
           }
 
         // Transformierten Cube abspeichern
@@ -130,13 +108,10 @@ object WorldGenerator {
       }
     }
 
-    //println("modified:\n" + modifiedNoiseData.toStringRounded(1))
-
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
     val hexaeders = { (pos:Vec3i) =>
       val arraypos = pos + 1 - area.pos
       val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
-      //println(modifiedNoiseData.extract(arraypos).map("%.1f" format _).mkString(","),caseTypeLookup(exactCaseData(arraypos)))
       if (h.noVolume) EmptyHexaeder else h
     }
 
