@@ -420,7 +420,6 @@ package object util {
 	
 	def screenShot(name:String) {
 		counter += 1
-		glReadBuffer(GL_FRONT)
 		val bpp = 4
 		val buffer = BufferUtils.createByteBuffer( Display.getWidth * Display.getHeight * bpp )
 		glReadPixels(0, 0, Display.getWidth, Display.getHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer )

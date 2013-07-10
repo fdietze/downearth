@@ -101,7 +101,6 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     val caps = GLContext.getCapabilities
 
-
     if ( caps.GL_ARB_debug_output ) {
       println("GL_ARB_debug_output")
       glDebugMessageCallbackARB(new ARBDebugOutputCallback())
@@ -109,6 +108,9 @@ class GameLoop extends Publisher with Logger { gameLoop =>
     else if ( caps.GL_AMD_debug_output ) {
       println("GL_AMD_debug_output")
       glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
+    }
+    else {
+      println("no debuge output")
     }
 
     if ( caps.GL_ARB_draw_instanced ) {

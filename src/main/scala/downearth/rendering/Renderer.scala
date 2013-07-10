@@ -7,6 +7,16 @@
 package downearth.rendering
 
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL12._
+import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL14._
+import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.GL20._
+import org.lwjgl.opengl.GL21._
+import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL31._
+import org.lwjgl.opengl.GL32._
+import org.lwjgl.opengl.ARBFramebufferObject
 import simplex3d.math.floatx.Vec4f
 
 import org.lwjgl.BufferUtils
@@ -27,7 +37,8 @@ import simplex3d.math.double._
 
 import scala.collection.mutable.ArrayBuffer
 import downearth.worldoctree.PowerOfTwoCube
-import glwrapper.{VertexShader, Shader, VertexArrayObject, Program}
+import glwrapper._
+import java.nio.ByteBuffer
 
 object Renderer extends Logger {
 
@@ -104,6 +115,33 @@ object Renderer extends Logger {
 
   val test2_matrix = test2Binding.uniformMat4f("matrix")
 
+  val framebuffer = {
+    val colorbuffer = (new TextureRectangle).create()
+    colorbuffer.bind {
+      glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, Display.getWidth, Display.getHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null.asInstanceOf[ByteBuffer])
+    }
+
+    val renderbuffer = (new TextureRectangle).create()
+    renderbuffer.bind{
+      glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT24, Display.getWidth, Display.getHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null.asInstanceOf[ByteBuffer])
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 4)
+    }
+
+    val fb = (new FrameBuffer).create()
+
+    fb.bind{
+
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorbuffer.target, colorbuffer.id, 0)
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, renderbuffer.target, renderbuffer.id, 0)
+
+      assert( fb.checkStatus == "complete" )
+    }
+
+    fb
+  }
+
+  var tmp = true
+
   def draw() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 //    if(false) {
@@ -135,12 +173,45 @@ object Renderer extends Logger {
 //      glDisable(GL_RASTERIZER_DISCARD)
 //    }
 
-//    test_vao.bind {
-//      test_program.use {
-//        test_binding.writeAllUniforms()
-//        glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
-//      }
-//    }
+    if(tmp){
+      framebuffer.bind {
+        val color = glwrapper.util.sharedFloatBuffer(4)
+        glwrapper.util.putVec4f(color, 1.0f,0.5f,0.0f,1.0f)
+        color.flip
+
+        org.lwjgl.opengl.Util.checkGLError()
+        glClearBuffer(GL_COLOR, 0, color)
+        org.lwjgl.opengl.Util.checkGLError()
+        glClearBuffer(GL_DEPTH, 0, color)
+        org.lwjgl.opengl.Util.checkGLError()
+
+        test_vao.bind {
+          test_program.use {
+            test_binding.writeChangedUniforms()
+            glDrawArraysInstanced(GL_QUADS, 0, 4, 2)
+          }
+        }
+
+        org.lwjgl.opengl.Util.checkGLError()
+        downearth.util.screenShot("framebuffer-test")
+        org.lwjgl.opengl.Util.checkGLError()
+
+        //      val w = Display.getWidth
+        //      val h = Display.getHeight
+
+        //      val data = glwrapper.util.sharedByteBuffer(4*w*h)
+        //      glReadPixels(0,  0,  w,  h,  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,  data)
+        //      val intPixels = new Array[Int](w*h)
+        //      data.asIntBuffer().get(intPixels)
+
+        // val sunew Surface(w,h,data)
+
+      }
+
+      tmp = false
+    }
+
+
 
 //    val projection = Mat4f(Player.camera.projection)
 //    val view = Mat4f(Player.camera.view)
@@ -168,7 +239,6 @@ object Renderer extends Logger {
 //        glDrawArrays(GL_QUADS, 0, 6*4)
 //      }
 //    }
-
 
     val w = Display.getWidth
     val h = Display.getHeight
