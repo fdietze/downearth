@@ -74,8 +74,6 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
   // insert Node "that" at position and size of nodeinfo
   def insert( nodeInfo:PowerOfTwoCube, that:NodeOverMesh ) {
-    val PowerOfTwoCube(nodepos,nodesize) = nodeInfo
-
     if( !(nodeInfo inside rootNodeInfo) )
       incDepth()
 
@@ -97,7 +95,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
     }
 
     // get all ungenerated inner nodes inside the area
-    var list = List[PowerOfTwoCube]()
+    /*var list = List[PowerOfTwoCube]()
     queryRegion(_ indexInRange area) {
       case (nodeInfo, node) =>
         if( node == UngeneratedNode ) {
@@ -106,12 +104,12 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
         }
         else
           true
-    }
+    }*/
 
-    for( nodeInfo <- list ) {
-      insert( nodeInfo, new MeshNode )
-      WorldNodeGenerator.master ! nodeInfo
-    }
+    //for( nodeInfo <- list ) {
+      //insert( area, new MeshNode(UngeneratedNode).genMesh(area,-1,null) )
+      WorldNodeGenerator.master ! area
+    //}
   }
 
   def makeUpdates() {
@@ -166,7 +164,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
   // the root becomes
   def incDepth() {
     // TODO add test for correct subdivision of the area. Depending on where the root is, it should be extended differently.
-
+    assert( rootNodeInfo.center == Vec3i.Zero )
 
     // +---+---+---+---+            ^
     // |   |   |   |   |            |
@@ -184,7 +182,12 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
     newRoot = new InnerNodeOverMesh(
           (for(i <- 0 until 8) yield {
-            val children = Array.fill[NodeOverMesh](8)(new MeshNode(UngeneratedNode))
+            // 8 meshnodes with Ungenerated nodes, calls genmesh
+            val children = Array.tabulate[NodeOverMesh](8){ j =>
+              new MeshNode(UngeneratedNode).genMesh(newRootNodeInfo(i)(j),-1,null)
+            }
+
+            // n:InnerNodeOverMesh containing MeshNodes
             val n = root match {
               case n:InnerNodeOverMesh => n
               case n:MeshNode => n.split(rootNodeInfo)

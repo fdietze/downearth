@@ -3,7 +3,7 @@ package downearth.worldoctree
 import downearth.{Config}
 import simplex3d.math.Vec3i
 import scala.collection.mutable
-import downearth.rendering.{MutableTextureMesh, TextureMeshBuilder, ObjMesh}
+import downearth.rendering.{Update, MutableTextureMesh, TextureMeshBuilder, ObjMesh}
 
 /**
  * User: arne
@@ -56,6 +56,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
           node = updateInfo.node
 
           // TODO vertices ins mesh einfügen
+          mesh.applyUpdates(Seq(Update(updateInfo.oldOffset,updateInfo.newVertCount, n.mesh.vertices.bindingBuffer())))
           this
         }
     }
@@ -120,14 +121,14 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     var patches = patch :: Nil
 
     // Nachbarn die noch innerhalb des Octanten liegen patchen
-    var newsize = mesh.size+patch.sizedifference
+    var newsize = mesh.size+patch.sizeDifference
     for(i <- 0 until 6) {
       val npos = p.clone
       npos(i >> 1) += ((i&1) << 1)-1
       if( info.indexInRange(npos) ) {
         val newpatch = node.repolyWorld(info, npos, 0, newsize)
         patches ::=  newpatch
-        newsize += newpatch.sizedifference
+        newsize += newpatch.sizeDifference
       }
     }
 

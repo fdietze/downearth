@@ -181,7 +181,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 }
 
 class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
-  override var finishedGeneration = (true /: data)(_ && _.finishedGeneration)
+  var finishedGeneration = (true /: data)(_ && _.finishedGeneration)
 
   override def hasChildren = true
 
@@ -236,7 +236,7 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 
 		data(index) = newNode
 		
-		vvertcount(index) += patch.data.size - patch.size
+		vvertcount(index) += patch.vertexCount - patch.oldSize
 
 		if(hasEqualChildren){
 			val mb = new TextureMeshBuilder
@@ -272,7 +272,7 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 
 		val patch = data(index).repolyWorld(childinfo, p, newvertpos, newvertcount)
 		//vertexzahl hat sich geändert, und braucht ein update
-		vvertcount(index) += patch.data.size - patch.size
+		vvertcount(index) += patch.vertexCount - patch.oldSize
 
 		patch
 	}
@@ -309,9 +309,19 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
   def genMesh(info: PowerOfTwoCube,dstnodesize: Int,worldaccess: Vec3i => Polyeder): NodeOverMesh = new MeshNode(this)
   def genPolygons(info: PowerOfTwoCube,meshBuilder: TextureMeshBuilder,worldaccess: Vec3i => Polyeder): Int = 0
   def getPolygons(info: PowerOfTwoCube,pos: Vec3i,from: Int,to: Int): (Int, Int) = (from,to)
-  override def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
-    (this,Update(vertpos,vertcount,(new TextureMeshBuilder).result))
+  def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
+    (this, Update(vertpos,vertcount,(new TextureMeshBuilder).result))
   }
+
+  def patchWorld(info: PowerOfTwoCube, insertInfo: PowerOfTwoCube, newNode: NodeUnderMesh, insertVertexCount: Int, currentOffset: Int, currentVertexCount: Int): UpdateInfo = {
+    if(info == insertInfo)
+      UpdateInfo(newNode, currentOffset, currentVertexCount, insertVertexCount )
+    else {
+      val children = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
+      new InnerNodeUnderMesh(children).patchWorld(info, insertInfo, newNode, insertVertexCount, currentOffset, currentVertexCount)
+    }
+  }
+
   def repolyWorld(info: PowerOfTwoCube,p: Vec3i,vertpos: Int,vertcount: Int): Update = {
     Update(vertpos,vertcount,(new TextureMeshBuilder).result)
   }

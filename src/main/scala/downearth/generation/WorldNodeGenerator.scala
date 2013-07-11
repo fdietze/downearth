@@ -24,7 +24,7 @@ object WorldNodeGenerator {
     case object GetFinishedJobs
     case object ActiveJobsEmpty
     case object AllJobsEmpty
-    case class FinishedJob(job:PowerOfTwoCube, node:NodeOverMesh)
+    case class FinishedJob(job:PowerOfTwoCube, node:Node)
   }
 }
 
@@ -79,8 +79,8 @@ class Master extends Actor {
         worker ! PoisonPill
 
 
-    case irgendwas =>
-      println("Master: konnte " + irgendwas + " nicht erkennen")
+    case unknown =>
+      println("Master: unknown message: " + unknown)
   }
 
   override def toString = "Master"
@@ -111,13 +111,13 @@ class Worker (id:Int) extends Actor {
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
         meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
-        sender ! Tuple2(area, meshnode)
+        sender ! FinishedJob(area, meshnode)
       }
       // if the area is too big, it will be splitted
       else if( area.size/2 >= Config.minMeshNodeSize ) {
         val data = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
         val node = new InnerNodeUnderMesh(data)
-        sender ! Tuple2(area, node)
+        sender ! FinishedJob(area, node)
       }
       // sample the whole area
       else {

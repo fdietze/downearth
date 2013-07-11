@@ -21,7 +21,6 @@ object Config extends Listener {
 	var worldWindowSize = loadInt("worldWindowSize", 64)
 
 	val vertexMaterials = true
-	val smoothShading = false
 	val hexaederResolution = 8
 	val skybox =false
 

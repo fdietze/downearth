@@ -59,7 +59,9 @@ object OcclusionTest {
         nodeInfoBufferGenerating += info
         false
       case (info, node:MeshNode) =>
-        false
+        true
+      case (info, node:NodeUnderMesh) =>
+        !node.finishedGeneration
       case _ =>
         true
     }

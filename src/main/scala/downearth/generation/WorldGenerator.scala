@@ -27,9 +27,9 @@ object WorldGenerator {
 		// val rootNodeInfo = Cube(Vec3i(-cubesize/2), cubesize)
 		val initArea = PowerOfTwoCube( pos = Vec3i(-worldWindowSize/4), size = worldWindowSize/2 )
 		val octree = new WorldOctree(initArea, generateNode(initArea))
-		//octree.incDepth()
+		octree.incDepth()
 
-//    octree( Vec3i(1,2,3) ) = new ObjLeaf(ObjManager.testMesh)
+    // octree( Vec3i(1,2,3) ) = new ObjLeaf(ObjManager.testMesh)
 
 		octree
 	}
