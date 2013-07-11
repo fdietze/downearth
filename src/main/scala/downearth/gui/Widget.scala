@@ -319,14 +319,16 @@ class DoubleSettingsWidget(val position:Vec2i, config:AnyRef) extends Panel { wi
       if( field.get(config).isInstanceOf[Double] ) {
         val initialValue = field.getDouble(config)
         val slider = new Slider( Vec2i(position.x,y) )
-        widget.listenTo(slider.slideable)
+        slider.listenTo(slider.slideable)
 
         val name = new Label( Vec2i(position.x, y), field.getName )
         val valueLabel = new Label( Vec2i(position.x+slider.size.x/2, y), initialValue.toString )
 
-        widget.addReaction {
+        slider.addReaction {
           case SliderChanged(slider) =>
             val newValue = pow(10, slider.value * 2 - 1) * initialValue
+            val oldValue = field.getDouble(config)
+            println(oldValue,newValue)
             field.setDouble(config, newValue)
             valueLabel.text = "%4.2f" format newValue
         }

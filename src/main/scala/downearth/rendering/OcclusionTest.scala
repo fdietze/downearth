@@ -23,7 +23,7 @@ import java.nio.IntBuffer
  */
 object OcclusionTest {
 
-  lazy val occTest_program = Program.auto("simple")
+  val occTest_program = Program.auto("simple")
 
   val occTest_binding = occTest_program.getBinding
 

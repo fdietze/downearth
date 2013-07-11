@@ -5,6 +5,7 @@ import Keys._
 object build extends Build {
 
   lazy val glWrapper = RootProject(uri("git://github.com/krux02/scalagl.git#master"))
+  // git@github.com:krux02/scalagl.git
 
   lazy val root = Project(
     "main",

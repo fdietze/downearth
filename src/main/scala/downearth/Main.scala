@@ -7,7 +7,7 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import downearth.rendering.{ObjManager, TextureManager, Renderer}
+import downearth.rendering.{Postprocess, ObjManager, TextureManager, Renderer}
 import downearth.generation.WorldNodeGenerator
 import downearth.Config._
 import org.lwjgl.opengl.GL11._
@@ -301,6 +301,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
       if( Display.wasResized ) {
         MainWidget.resize(Vec2i(Display.getWidth, Display.getHeight))
+        Postprocess.setFrameBufferSize()
       }
 
       // Mouse events
