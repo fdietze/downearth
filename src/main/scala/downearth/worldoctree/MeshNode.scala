@@ -3,7 +3,7 @@ package downearth.worldoctree
 import downearth.{Config}
 import simplex3d.math.Vec3i
 import scala.collection.mutable
-import downearth.rendering.{Update, MutableTextureMesh, TextureMeshBuilder, ObjMesh}
+import downearth.rendering.{Update, TextureMesh, TextureMeshBuilder, ObjMesh}
 
 /**
  * User: arne
@@ -15,12 +15,12 @@ object MeshNode {
   def join(meshNodes:Array[MeshNode]) = {
 
     // joining mesh Nodes, maybe better as method of MeshNode
-    val mesh = MutableTextureMesh( meshNodes.map(_.mesh) )
+    val mesh = TextureMesh( meshNodes.map(_.mesh) )
     val node = new InnerNodeUnderMesh( meshNodes.map(_.node) )
 
     for(i <- 0 until 8) {
       node.vvertcount(i) = meshNodes(i).mesh.size
-      meshNodes(i).mesh.freevbo
+      meshNodes(i).mesh.freevbo()
     }
 
     val meshNode = new MeshNode(node.merge)
@@ -33,7 +33,7 @@ object MeshNode {
 
 //decorator pattern
 class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
-  var mesh:MutableTextureMesh = null
+  var mesh:TextureMesh = null
 
   val objMeshes = new mutable.ArrayBuffer[(PowerOfTwoCube,ObjMesh)]
 
@@ -74,7 +74,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
 
     // TODO warum wird result nicht verwendet?
     val result = node.genPolygons(info, meshBuilder, worldaccess)
-    mesh = MutableTextureMesh(meshBuilder.result)
+    mesh = TextureMesh(meshBuilder.result)
 
     // genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in
     // anderen Threads als dem render Thread aufgerufen wird. Um die

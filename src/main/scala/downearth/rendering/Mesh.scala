@@ -81,7 +81,7 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	}
 }
 
-case class TextureMeshData(
+@deprecated("a","b") case class TextureMeshData(
 			vertexArray:Array[Vec3],
 			normalArray:Array[Vec3],
 			texcoordsArray:Array[Vec2]
@@ -91,14 +91,15 @@ case class TextureMeshData(
   def stride = 32
 
   def toByteBuffer = {
-    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.length * stride)
+    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.size * stride)
     val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
     val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
     val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
 
-    for(i <- 0 until vertexArray.length){
+    for(i <- 0 until vertexArray.size){
       vertices(i) = vertexArray(i)
-      normals(i) = normalArray(i)
+      normals(i) =
+        normalArray(i)
       texcoords(i) = texcoordsArray(i)
     }
     byteBuffer
@@ -193,12 +194,9 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
   // Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den
   // Hexaeder einzufügen.
   def applyUpdates(updates:Iterable[Update]): TextureMesh = {
-    val oldvertices = vertices
-    /*val oldnormals = normals
-    val oldcoords = texcoords*/
 
     // First patch inserts all the old data
-    var patches:List[ByteBuffer] = List(oldvertices.bindingBuffer())
+    var patches:List[ByteBuffer] = List(data)
 
     implicit class RichViewSplit(viewlist:List[ByteBuffer]) {
       def viewsplit(pos:Int) = {

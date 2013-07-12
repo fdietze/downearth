@@ -8,7 +8,7 @@ import akka.actor._
 import scala.Tuple2
 import downearth.worldoctree._
 import downearth.{Player, FrustumTestImpl, Config}
-import downearth.rendering.{MutableTextureMesh, TextureMeshData, GlDraw, Draw}
+import downearth.rendering.{TextureMesh, TextureMeshData, GlDraw, Draw}
 import downearth.worldoctree.PowerOfTwoCube
 import downearth.worldoctree.Cuboid
 import scala.Tuple2
@@ -110,7 +110,7 @@ class Worker (id:Int) extends Actor {
         val meshnode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
-        meshnode.mesh = MutableTextureMesh( emptyTextureMeshData )
+        meshnode.mesh = TextureMesh( emptyTextureMeshData )
         sender ! FinishedJob(area, meshnode)
       }
       // if the area is too big, it will be splitted
