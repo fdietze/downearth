@@ -107,7 +107,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
     }*/
 
     //for( nodeInfo <- list ) {
-      //insert( area, new MeshNode(UngeneratedNode).genMesh(area,-1,null) )
+      insert( area, new MeshNode(GeneratingNode).genMesh(area,-1,null) )
       WorldNodeGenerator.master ! area
     //}
   }
