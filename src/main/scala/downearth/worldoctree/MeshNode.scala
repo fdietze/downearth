@@ -56,7 +56,10 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
           node = updateInfo.node
 
           // TODO vertices ins mesh einfügen
-          mesh.applyUpdates(Seq(Update(updateInfo.oldOffset,updateInfo.newVertCount, n.mesh.vertices.bindingBuffer())))
+          mesh.applyUpdates(Seq(
+            Update(updateInfo.oldOffset,updateInfo.newVertCount,
+                   n.mesh.vertices.bindingBuffer())
+          ))
           this
         }
     }
@@ -72,6 +75,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     assert(mesh == null)
     val meshBuilder = new TextureMeshBuilder
 
+    println(node)
     // TODO warum wird result nicht verwendet?
     val result = node.genPolygons(info, meshBuilder, worldaccess)
     mesh = TextureMesh(meshBuilder.result)

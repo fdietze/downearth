@@ -98,8 +98,7 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 
     for(i <- 0 until vertexArray.size){
       vertices(i) = vertexArray(i)
-      normals(i) =
-        normalArray(i)
+      normals(i) = normalArray(i)
       texcoords(i) = texcoordsArray(i)
     }
     byteBuffer

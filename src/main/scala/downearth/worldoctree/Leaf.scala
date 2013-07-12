@@ -104,7 +104,10 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
         vertexCounter += 3
 
-        normalBuilder += normalize(cross(v2-v1,v0-v1))
+        val normal = normalize(cross(v2-v1,v0-v1))
+        normalBuilder += normal
+        normalBuilder += normal
+        normalBuilder += normal
       }
 
       val t = from.planetriangles(axis, direction)
