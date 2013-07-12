@@ -12,6 +12,8 @@ import org.lwjgl.opengl.Display
 import java.nio.ByteBuffer
 import org.lwjgl.opengl.GL14._
 import downearth.Config
+import downearth.gui.{Listener, WidgetResized, MainWidget}
+import simplex3d.math.Vec2i
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,14 +24,21 @@ import downearth.Config
  */
 
 
-object RiftDistort {
-  val program = Program.auto("RiftDistortSideBySide")
+object RiftDistort extends Listener {
+  listenTo(MainWidget)
+  addReaction {
+    case WidgetResized(widget) => setFrameBufferSize(widget.size)
+  }
+
+  val program = Program("rift")("RiftDistort.vsh")("RiftDistortSideBySide.fsh")
 
   val binding = program.getBinding
 
   println(binding)
 
   val uSamplerColor = binding.uniformSampler2D("uSamplerColor")
+  val uDistort      = binding.uniformBool("uDistort");
+  val uCorrectChromaticAberation = binding.uniformBool("uCorrectChromaticAberation");
 
   val vao = VertexArrayObject.create
 
@@ -44,10 +53,14 @@ object RiftDistort {
   val colorbuffer = (new Texture2D).create()
   val renderbuffer = (new Texture2D).create()
 
+  new RenderBuffer
+
   uSamplerColor := colorbuffer
 
   val framebuffer = {
-    setFrameBufferSize()
+
+    setFrameBufferSize( Vec2i(Display.getWidth, Display.getHeight) )
+
     val fb = (new FrameBuffer).create()
     fb.bind{
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorbuffer.target, colorbuffer.id, 0)
@@ -59,23 +72,23 @@ object RiftDistort {
     fb
   }
 
-  def setFrameBufferSize() {
+  def setFrameBufferSize(size:Vec2i) {
     colorbuffer.bind {
-      glTexImage2D(colorbuffer.target, 0, GL_RGBA8, Display.getWidth, Display.getHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null.asInstanceOf[ByteBuffer])
+      glTexImage2D(colorbuffer.target, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, null.asInstanceOf[ByteBuffer])
       colorbuffer.parameter( GL_TEXTURE_BASE_LEVEL, 0)
     }
 
     renderbuffer.bind {
-      glTexImage2D(renderbuffer.target, 0, GL_DEPTH_COMPONENT24, Display.getWidth, Display.getHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null.asInstanceOf[ByteBuffer])
+      glTexImage2D(renderbuffer.target, 0, GL_DEPTH_COMPONENT24, size.x, size.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null.asInstanceOf[ByteBuffer])
       glPixelStorei(GL_UNPACK_ALIGNMENT, 4)
       renderbuffer.parameter( GL_TEXTURE_BASE_LEVEL, 0)
     }
   }
 
-  val startTime = System.currentTimeMillis()
-  def timeFloat = (System.currentTimeMillis()-startTime) / 1000f
-
   def draw() {
+    uDistort := Config.uDistort
+    uCorrectChromaticAberation := Config.uCorrectChromaticAberation
+
     program.use {
       vao.bind {
         binding.writeChangedUniforms()

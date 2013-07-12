@@ -10,6 +10,8 @@ import org.lwjgl.opengl.GL31._
 import java.nio.ByteBuffer
 import org.lwjgl.opengl.GL14._
 import downearth.Config
+import downearth.gui.{WidgetResized, MainWidget, Listener, Widget}
+import simplex3d.math.Vec2i
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,7 +22,12 @@ import downearth.Config
  */
 
 
-object Postprocess {
+object Postprocess extends Listener {
+  listenTo(MainWidget)
+  addReaction {
+    case WidgetResized(widget) => setFrameBufferSize(widget.size)
+  }
+
   val program = Program.auto("postprocess")
 
   val binding = program.getBinding
@@ -47,7 +54,7 @@ object Postprocess {
   image := colorbuffer
 
   val framebuffer = {
-    setFrameBufferSize()
+    setFrameBufferSize( Vec2i(Display.getWidth, Display.getHeight) )
     val fb = (new FrameBuffer).create()
     fb.bind{
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorbuffer.target, colorbuffer.id, 0)
@@ -59,13 +66,13 @@ object Postprocess {
     fb
   }
 
-  def setFrameBufferSize() {
+  def setFrameBufferSize(size:Vec2i) {
     colorbuffer.bind {
-      glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, Display.getWidth, Display.getHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null.asInstanceOf[ByteBuffer])
+      glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, null.asInstanceOf[ByteBuffer])
     }
 
     renderbuffer.bind {
-      glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT24, Display.getWidth, Display.getHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null.asInstanceOf[ByteBuffer])
+      glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT24, size.x, size.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null.asInstanceOf[ByteBuffer])
       glPixelStorei(GL_UNPACK_ALIGNMENT, 4)
     }
   }
@@ -83,7 +90,6 @@ object Postprocess {
     program.use {
       vao.bind {
         binding.writeChangedUniforms()
-
         glDrawArrays(GL_TRIANGLES,0,3)
       }
     }

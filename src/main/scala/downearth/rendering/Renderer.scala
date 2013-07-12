@@ -51,7 +51,7 @@ object Renderer extends Logger {
 
   lazy val transformFeedbackTest = {
     val vertShader = Shader[VertexShader]( getClass.getClassLoader.getResourceAsStream("shaders/simple.vsh") )
-    val program = Program("transformFeedbackTest")(vertShader)()
+    val program = Program.create("transformFeedbackTest", Seq(vertShader), Nil)
     vertShader.delete()
     program
   }
@@ -243,16 +243,17 @@ object Renderer extends Logger {
         glViewport(0, 0, w, h)
         render( Player.camera )
       }
+
+      if(tmp) {
+        downearth.util.screenShot("framebuffer-test")
+        tmp = false
+      }
     }
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+    glViewport(0, 0, w, h)
 
     RiftDistort.draw()
-
-    if(tmp) {
-      downearth.util.screenShot("framebuffer-test")
-      tmp = false
-    }
 
     glViewport(0, 0, w, h)
     MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"

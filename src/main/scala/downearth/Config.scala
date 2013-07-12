@@ -7,7 +7,10 @@ import gui.Listener
 import util.isPowerOfTwo
 
 object Config extends Listener {
-	val loader = new ConfigLoader(this)
+  val uCorrectChromaticAberation = true
+  val uDistort = false
+
+  val loader = new ConfigLoader(this)
 
   import loader.preferences.{
     getInt => loadInt
