@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
 import org.lwjgl.opengl.GL13._
 import org.lwjgl.opengl.GL14._
+import org.lwjgl.opengl.GL20._
 import org.lwjgl.opengl.GL31._
 import org.lwjgl.opengl.Display
 import java.nio.ByteBuffer
@@ -14,6 +15,7 @@ import org.lwjgl.opengl.GL14._
 import downearth.Config
 import downearth.gui.{Listener, WidgetResized, MainWidget}
 import simplex3d.math.Vec2i
+import org.lwjgl.opengl.Util
 
 /**
  * Created with IntelliJ IDEA.
@@ -52,6 +54,14 @@ object RiftDistort extends Listener {
 
   val colorbuffer = (new Texture2D).create()
   val renderbuffer = (new Texture2D).create()
+
+  glActiveTexture( GL_TEXTURE17 )
+  colorbuffer.bind()
+  colorbuffer.parameter( GL_TEXTURE_BASE_LEVEL, 0 )
+  colorbuffer.parameter( GL_TEXTURE_MAX_LEVEL, 0 )
+  colorbuffer.parameter( GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+  colorbuffer.parameter( GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+  glActiveTexture( GL_TEXTURE0 )
 
   new RenderBuffer
 
@@ -92,7 +102,11 @@ object RiftDistort extends Listener {
     program.use {
       vao.bind {
         binding.writeChangedUniforms()
+        Util.checkGLError()
+        glUniform1i( uSamplerColor.location, 17 )
+        Util.checkGLError()
         glDrawArrays(GL_TRIANGLES,0,3)
+        Util.checkGLError()
       }
     }
   }
