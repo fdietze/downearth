@@ -117,6 +117,8 @@ object Renderer extends Logger {
 
   var tmp = true
 
+  RiftDistort
+
   def draw() {
 
 //    if(false) {
@@ -207,26 +209,49 @@ object Renderer extends Logger {
     val w = Display.getWidth
     val h = Display.getHeight
 
-    RiftDistort.framebuffer.bind {
+    def render(camera:Camera) {
+      if( Config.skybox ) {
+        Skybox.render( camera )
+      }
+      renderWorld( camera )
+    }
+
+    def clear() {
       val color = glwrapper.util.sharedFloatBuffer(4)
       glwrapper.util.putVec4f(color, 1.0f,0.5f,0.0f,1.0f)
       color.flip
 
       glClearBuffer(GL_COLOR, 0, color)
       glClearBuffer(GL_DEPTH, 0, color)
+    }
 
-      def render(camera:Camera) {
-        if( Config.skybox ) {
-          Skybox.render( camera )
-        }
-        renderWorld( camera )
+    val camera = Player.camera
+    val eyeDist = 0.06f
+
+    if( Config.stereoRender ) {
+
+      if( Config.anaglyph ) {
+        clear()
+
+        glViewport(0, 0, w, h)
+        glColorMask(true,false,false,false)
+        glClear(GL_DEPTH_BUFFER_BIT)
+        camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = true)
+        camera.move( Vec3(-eyeDist/2,0,0) )
+        render( camera )
+        glColorMask(false,true,true,false)
+        glClear(GL_DEPTH_BUFFER_BIT)
+        camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = false)
+        camera.move( Vec3(eyeDist,0,0) )
+        render( camera )
+        camera.move( Vec3(-eyeDist/2,0,0) )
       }
+      else {
+        // do the rendering for occulus rift here.
+        // TODO still need correct frustum for rift
 
-      val camera = Player.camera
-      val eyeDist = 0.06f
-
-      if( Config.stereoRender ) {
-        if( ! Config.anaglyph ) {
+        RiftDistort.framebuffer.bind {
+          clear()
           camera.projection := glwrapper.util.simpleProjectionF(v = w * 0.5f / h )
           glViewport(0, 0, w/2, h)
           camera.move( Vec3(-eyeDist/2,0,0) )
@@ -236,32 +261,19 @@ object Renderer extends Logger {
           render( camera )
           camera.move( Vec3(-eyeDist/2,0,0) )
         }
-        else {
-          glViewport(0, 0, w, h)
-          glColorMask(true,false,false,false)
-          glClear(GL_DEPTH_BUFFER_BIT)
-          camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = true)
-          camera.move( Vec3(-eyeDist/2,0,0) )
-          render( camera )
-          glColorMask(false,true,true,false)
-          glClear(GL_DEPTH_BUFFER_BIT)
-          camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = false)
-          camera.move( Vec3(eyeDist,0,0) )
-          render( camera )
-          camera.move( Vec3(-eyeDist/2,0,0) )
-        }
-      }
-      else {
+
+        clear()
         glViewport(0, 0, w, h)
-        camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat )
-        render( Player.camera )
+        RiftDistort.draw()
       }
     }
+    else {
+      clear()
+      glViewport(0, 0, w, h)
+      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat )
+      render( Player.camera )
+    }
 
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-    glViewport(0, 0, w, h)
-
-    RiftDistort.draw()
 
     glViewport(0, 0, w, h)
     MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"

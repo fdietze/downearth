@@ -103,11 +103,8 @@ object RiftDistort extends Listener {
     program.use {
       vao.bind {
         binding.writeChangedUniforms()
-        Util.checkGLError()
         glUniform1i( uSamplerColor.location, 17 )
-        Util.checkGLError()
         glDrawArrays(GL_TRIANGLES,0,3)
-        Util.checkGLError()
       }
     }
   }

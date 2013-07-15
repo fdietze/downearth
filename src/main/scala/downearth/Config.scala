@@ -53,8 +53,8 @@ object Config extends Listener {
 	// Vollbild-Modus mit höchster Auflösung
 	def fullscreenDisplayMode = Display.getDesktopDisplayMode
 	
-	val windowResolutionWidth  = loadInt("windowResolutionWidth", 640)
-	val windowResolutionHeight = loadInt("windowResolutionHeight", 480)
+	val windowResolutionWidth  = loadInt("windowResolutionWidth", 1280)
+	val windowResolutionHeight = loadInt("windowResolutionHeight", 800)
 
 	val worldUpVector = Vec3.UnitZ
 	

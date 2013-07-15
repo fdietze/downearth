@@ -24,16 +24,16 @@ object Player extends Ray {
   private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
 
   def camera = {
-    if( !isGhost )
-      m_camera.position := pos
+    m_camera.position := pos
     m_camera
   }
   
-  val (body, ghostObject) = BulletPhysics.addCharacter(startpos)//BulletPhysics.addShape(1,startpos.clone,new CapsuleShape(0.3f,1.2f) )  
+  val (body, ghostObject) = BulletPhysics.addCharacter(startpos)
+  val positionAsGhost = Vec3(startpos)
   
   def pos:ReadVec3 = {
     if( isGhost )
-      m_camera.position
+      positionAsGhost
     else {
       ghostObject.getWorldTransform(new Transform).origin + camDistFromCenter
     }
@@ -41,10 +41,11 @@ object Player extends Ray {
 
   def pos_= (newPos: ReadVec3) {
     if( isGhost )
-      m_camera.position := newPos
+      positionAsGhost := newPos
     else {
-      val tmp = new Vector3f(newPos.x.toFloat, newPos.y.toFloat, newPos.z.toFloat)
-      body.warp(tmp)
+      val tmp = newPos - camDistFromCenter
+      val param = new Vector3f(tmp.x.toFloat, tmp.y.toFloat, tmp.z.toFloat)
+      body.warp(param)
     }
   }
 
@@ -63,7 +64,7 @@ object Player extends Ray {
     camera.directionQuat.rotateVector( normalize(Vec3(rx,ry,-1)) )
   }
 
-  def resetPos {
+  def resetPos() {
     DisplayEventManager.showEventText("reset")
     pos = startpos
   }
@@ -71,15 +72,14 @@ object Player extends Ray {
   //body setAngularFactor 0
   
   def move(dir:Vec3) {
-    if( isGhost )
-      m_camera move dir*4
+    if( isGhost ) {
+      positionAsGhost += m_camera rotateVector dir*4
+    }
     else {
       val flatdir = m_camera rotateVector dir
       flatdir *= 2
       flatdir.z = 0
-      //body.applyCentralImpulse( flatdir )*/
       body.setWalkDirection(flatdir)
-      //body.playerStep(BulletPhysics.dynamicsWorld, 1/30f)
     }
   }
   
@@ -107,14 +107,15 @@ object Player extends Ray {
   def toggleGhost() {
     if( isGhost ) {
       // BulletPhysics.addBody(body)
+      val p = pos
       isGhost = false
-      pos = m_camera.position - camDistFromCenter
+      pos = p
     }
     else {
-      // BulletPhysics.removeBody(body)
+      val p = pos
       isGhost = true
+      pos = p
     }
-
   }
 
   //////////////////////////////////
