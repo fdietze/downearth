@@ -57,10 +57,10 @@ object RiftDistort extends Listener {
 
   glActiveTexture( GL_TEXTURE17 )
   colorbuffer.bind()
-  colorbuffer.parameter( GL_TEXTURE_BASE_LEVEL, 0 )
-  colorbuffer.parameter( GL_TEXTURE_MAX_LEVEL, 0 )
-  colorbuffer.parameter( GL_TEXTURE_MIN_FILTER, GL_LINEAR )
-  colorbuffer.parameter( GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+  colorbuffer.parameter.baseLevel(0)
+  colorbuffer.parameter.maxLevel(0)
+  colorbuffer.parameter.minFilter.linear()
+  colorbuffer.parameter.magFilter.linear()
   glActiveTexture( GL_TEXTURE0 )
 
   new RenderBuffer
@@ -85,13 +85,14 @@ object RiftDistort extends Listener {
   def setFrameBufferSize(size:Vec2i) {
     colorbuffer.bind {
       glTexImage2D(colorbuffer.target, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, null.asInstanceOf[ByteBuffer])
-      colorbuffer.parameter( GL_TEXTURE_BASE_LEVEL, 0)
+      colorbuffer.parameter.baseLevel(0)
     }
 
     renderbuffer.bind {
       glTexImage2D(renderbuffer.target, 0, GL_DEPTH_COMPONENT24, size.x, size.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null.asInstanceOf[ByteBuffer])
       glPixelStorei(GL_UNPACK_ALIGNMENT, 4)
-      renderbuffer.parameter( GL_TEXTURE_BASE_LEVEL, 0)
+      renderbuffer.parameter.baseLevel(0)
+      colorbuffer.parameter.wrapR
     }
   }
 
