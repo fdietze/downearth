@@ -243,11 +243,6 @@ object Renderer extends Logger {
         glViewport(0, 0, w, h)
         render( Player.camera )
       }
-
-      if(tmp) {
-        downearth.util.screenShot("framebuffer-test")
-        tmp = false
-      }
     }
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
