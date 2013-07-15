@@ -82,8 +82,6 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	}
 }
 
-
-
 case class TextureMeshData(
 			vertexArray:Array[Vec3],
 			normalArray:Array[Vec3],

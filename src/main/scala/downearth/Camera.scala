@@ -93,24 +93,7 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
     eyeState = State.LeftEye
   }
 
-	override def projection:Mat4f = {
-    // TODO implement viewport
-
-    // aspect Ratio
-    val v = Display.getWidth.toFloat / Display.getHeight.toFloat
-
-    val f = Config.test.toFloat
-
-    eyeState match {
-      case State.RightEye =>
-        glwrapper.util.projectionF(l = -v - f, r = v - f, b = -1, t = 1, n = 1, f = 1000)
-      case State.LeftEye  =>
-        glwrapper.util.projectionF(l = -v + f, r = v + f, b = -1, t = 1, n = 1, f = 1000)
-      case State.Center   =>
-        glwrapper.util.projectionF(l = -v,     r = v,     b = -1, t = 1, n = 1, f = 1000)
-    }
-
-	}
+	override val projection :Mat4f = glwrapper.util.simpleProjectionF()
 
 	override def view:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat) translate(position)))
   override def noTranslate:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat)))

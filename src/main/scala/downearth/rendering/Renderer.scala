@@ -222,25 +222,38 @@ object Renderer extends Logger {
         renderWorld( camera )
       }
 
+      val camera = Player.camera
+      val eyeDist = 0.06f
+
       if( Config.stereoRender ) {
         if( ! Config.anaglyph ) {
+          camera.projection := glwrapper.util.simpleProjectionF(v = w * 0.5f / h )
           glViewport(0, 0, w/2, h)
-          render( Player.leftEye )
+          camera.move( Vec3(-eyeDist/2,0,0) )
+          render( camera )
           glViewport(w/2, 0, w/2, h)
-          render( Player.rightEye )
+          camera.move( Vec3(eyeDist,0,0) )
+          render( camera )
+          camera.move( Vec3(-eyeDist/2,0,0) )
         }
-        else  {
+        else {
           glViewport(0, 0, w, h)
           glColorMask(true,false,false,false)
           glClear(GL_DEPTH_BUFFER_BIT)
-          render( Player.leftEye )
+          camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = true)
+          camera.move( Vec3(-eyeDist/2,0,0) )
+          render( camera )
           glColorMask(false,true,true,false)
           glClear(GL_DEPTH_BUFFER_BIT)
-          render( Player.rightEye )
+          camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = false)
+          camera.move( Vec3(eyeDist,0,0) )
+          render( camera )
+          camera.move( Vec3(-eyeDist/2,0,0) )
         }
       }
       else {
         glViewport(0, 0, w, h)
+        camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat )
         render( Player.camera )
       }
     }
