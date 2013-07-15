@@ -18,7 +18,7 @@ object Config extends Listener {
 
 	var minMeshNodeSize = loadInt("minMeshNodeSize", 16)
 	var minPredictionSize = loadInt("minPredictionSize", 4)
-	var worldWindowSize = loadInt("worldWindowSize", 64)
+	var worldWindowSize = loadInt("worldWindowSize", 32)
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
@@ -38,7 +38,7 @@ object Config extends Listener {
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
-	val maxMeshVertexCount = 30000
+	val maxMeshByteSize = 30000 * 32 //TODO: get stride from global mesh config
   val maxDebugDrawQubes = 200
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2

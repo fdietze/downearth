@@ -13,6 +13,7 @@ import org.lwjgl.BufferUtils
 import java.nio._
 
 import downearth.util._
+import downearth.worldoctree.NodeUnderMesh
 
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
@@ -24,13 +25,23 @@ trait Mesh {
 	def freevbo()
 
   def hasVbo:Boolean
-	def size:Int
+	def byteSize:Int
+
+  def isEmpty = byteSize == 0
+  def nonEmpty = byteSize > 0
+
+  override def finalize() {
+    if(hasVbo) println("Mesh Warning: forgot to free Vbo")
+  }
 }
 
 class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	var vbo = 0
   var vibo = 0
 	def size = indices.limit
+
+  def byteSize: Int = ???
+
   def hasVbo = (vbo > 0 && vibo > 0)
 
   require(size > 0)
@@ -123,23 +134,47 @@ case class TextureMeshBuilder(
 
 // A <: B <: MeshData => Patch[A] <: Patch[B]
 object Update {
-  val byteStride = 32
-  def apply(offset:Int, oldSize:Int, data:TextureMeshData) = new Update(offset * byteStride, oldSize * byteStride, data.toByteBuffer)
+  val byteStride = 32 //TODO sizeOf
+  def apply(offset:Int, oldSize:Int, data:TextureMeshData) = {
+    require(offset >= 0)
+    require(oldSize >= 0)
+    new Update(offset * byteStride, oldSize * byteStride, data.toByteBuffer)
+  }
 }
+
 case class Update(byteOffset:Int, byteOldSize:Int, data:ByteBuffer) {
-  def byteSizeDifference = data.width - byteOldSize
-  @deprecated("a","b") def vertexCount = data.width / Update.byteStride
-  @deprecated("a","b") def oldSize     = byteOldSize / Update.byteStride
-  @deprecated("a","b") def sizeDifference = byteSizeDifference / Update.byteStride
+  //TODO require( effect != 'NOTHING )
+  require( byteOffset >= 0, toString)
+  require( byteOldSize >= 0, toString)
 
+  def byteSize = data.width
+  def byteSizeDifference = byteSize - byteOldSize
+  def effect = if(byteOldSize == 0)
+    if(byteSize == 0)
+      'NOTHING
+    else
+      'INSERT
+  else // byteOldSize > 0
+    if(byteSize == 0)
+      'DELETE
+    else
+      'REPLACE
+
+  override def toString = s"Update(offset=$byteOffset, oldSize=$byteOldSize, dataWidth=$byteSize ${effect.name})"
 }
 
-
+case class UpdateInfo(node:NodeUnderMesh, oldByteOffset:Int, oldByteSize:Int, newByteSize:Int) {
+  require( oldByteOffset >= 0 )
+  require( oldByteSize >= 0 )
+  require( newByteSize >= 0 )
+}
 
 // Diese Klasse wird verwendet, um den Octree darzustellen. Er repräsentiert ein
 // Mesh und stellt Methoden zur Verfügung, die es erlauben das Mesh über Updates
 // zu verändern.
 object TextureMesh {
+  //TODO: global byteStride and Attributes definition
+  val byteStride = 32 //TODO sizeOf
 
   def apply(data:TextureMeshData) = new TextureMesh(data.toByteBuffer)
 	
@@ -156,6 +191,8 @@ object TextureMesh {
 // Festplatte gespeichert werden.
 class TextureMesh(val data:ByteBuffer) extends Mesh {
 
+  require(data.position == 0)
+
   @deprecated("a","b") def vertices  = DataView[Vec3,RFloat](data, 0, 8)
   @deprecated("a","b") def normals   = DataView[Vec3,RFloat](data, 3, 8)
   @deprecated("a","b") def texcoords = DataView[Vec2,RFloat](data, 6, 8)
@@ -169,12 +206,14 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
   }
 
-	def size = msize
+  //@deprecated("a","b") def size = msize
+  def byteSize = data.width
+  def vertexCount = byteSize / TextureMesh.byteStride
 	
 	def genvbo() {
 		freevbo()
 		// vbo with size of 0 can't be initialized
-		if( size > 0 ) {
+		if( nonEmpty ) {
 			vbo = glGenBuffersARB()
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
 			glBufferDataARB(GL_ARRAY_BUFFER_ARB, data, GL_STATIC_DRAW_ARB)
@@ -183,7 +222,7 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
 	}
 	
 	def freevbo() {
-		if( vbo > 0 ) {
+		if( hasVbo ) {
 			glDeleteBuffersARB(vbo)
 			vbo = 0
 		}
@@ -194,42 +233,46 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
   // Hexaeder einzufügen.
   def applyUpdates(updates:Iterable[Update]): TextureMesh = {
 
+    println(updates.mkString("\n"))
     // First patch inserts all the old data
-    var patches:List[ByteBuffer] = List(data)
+    require(data.position == 0)
+    var newDataParts:List[ByteBuffer] = List(data)
 
-    implicit class RichViewSplit(viewlist:List[ByteBuffer]) {
-      def viewsplit(pos:Int) = {
-        var destoffset = 0
-        val (pre,other) = viewlist.span {
+    implicit class RichViewSplit(viewList:List[ByteBuffer]) {
+      def viewsplit(splitPos:Int) = {
+        var destOffset = 0
+        val (pre,other) = viewList.span {
           buffer =>
-            if( destoffset + buffer.width <= pos ) {
-              destoffset += buffer.width
+            if( destOffset + buffer.width <= splitPos ) {
+              destOffset += buffer.width
               true
             }
             else
               false
         }
 
-        if( destoffset < pos ) {
-          val (left,right) = other.head.split(pos-destoffset)
-          (pre :+ left ,right :: other.tail)
+        if( destOffset < splitPos ) {
+          println(destOffset,splitPos)
+          val (left,right) = other.head.split(splitPos-destOffset) //DODO pass absolute splitpos
+          (pre :+ left, right :: other.tail)
         }
         else
           (pre, other)
       }
     }
 
-    // perpare updates to be applied sequentially
-    for(update <- updates) {
-      val (pre, other) = patches.viewsplit(update.byteOffset)
-      val post = other.viewsplit(update.byteOldSize)._2
-      patches = pre ::: update.data :: post
+    // apply patches sequentially
+    for(update <- updates if(update.effect != 'NOTHING)) {
+      val (pre, other) = newDataParts.viewsplit(update.byteOffset)
+      val post = other.viewsplit(update.byteOffset + update.byteOldSize)._2
+      newDataParts = pre ::: update.data :: post
+      println("patches: " + newDataParts.mkString("\n"))
     }
 
-
-    val newSize = (0 /: patches)(_ + _.width)
+    // merge parts of data to one buffer
+    val newSize = (0 /: newDataParts)(_ + _.width)
     val newBuffer = BufferUtils.createByteBuffer(newSize)
-    (newBuffer /: patches)(_ put _).flip()
+    (newBuffer /: newDataParts)(_ put _).flip()
 
 
 

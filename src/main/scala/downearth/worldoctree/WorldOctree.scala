@@ -107,7 +107,10 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
     }*/
 
     //for( nodeInfo <- list ) {
-      insert( area, new MeshNode(GeneratingNode).genMesh(area,-1,null) )
+      val meshNode = new MeshNode(GeneratingNode).genMesh(area,-1,null)
+      println(meshNode.mesh.byteSize)
+      println("\ninsert ungenerated:")
+      insert( area, meshNode )
       WorldNodeGenerator.master ! area
     //}
   }
@@ -118,6 +121,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
     val s = Await.result(future, 1000 seconds)
 
     for( (nodeinfo, node) <- s ) {
+      println("\ninsert generated:")
       insert( nodeinfo, node )
       BulletPhysics.worldChange(nodeinfo)
     }

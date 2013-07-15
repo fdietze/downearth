@@ -10,7 +10,7 @@ import downearth.util._
 import downearth.worldoctree.PowerOfTwoCube
 import downearth.rendering.ObjManager
 import akka.util.Timeout
-import downearth.server.LocalServer
+//import downearth.server.LocalServer
 import scala.concurrent.{ExecutionContext, Future, Await}
 import akka.pattern.ask
 import downearth.message.implicits._
@@ -25,9 +25,14 @@ object WorldGenerator {
 	
 	def genWorld:WorldOctree = {
 		// val rootNodeInfo = Cube(Vec3i(-cubesize/2), cubesize)
-		val initArea = PowerOfTwoCube( pos = Vec3i(-worldWindowSize/4), size = worldWindowSize/2 )
-		val octree = new WorldOctree(initArea, generateNode(initArea))
-		octree.incDepth()
+		val initArea = PowerOfTwoCube( pos = Vec3i(-worldWindowSize/2), size = worldWindowSize )
+    println("generating initial area...")
+    val initNode = generateNode(initArea)
+    println("done.")
+		val octree = new WorldOctree(initArea, initNode)
+		//octree.incDepth()
+
+    //octree.generateArea(PowerOfTwoCube( pos = Vec3i(-worldWindowSize-worldWindowSize/2), size = worldWindowSize/2 ))
 
     // octree( Vec3i(1,2,3) ) = new ObjLeaf(ObjManager.testMesh)
 
@@ -119,7 +124,7 @@ object WorldGenerator {
   }
 
   // Ask server for World delta asynchronly
-  def askServerForDeltas(nodeInfo: PowerOfTwoCube): Future[message.DeltaSet] = {
+  /*def askServerForDeltas(nodeInfo: PowerOfTwoCube): Future[message.DeltaSet] = {
     implicit val timeout = Timeout(5 seconds)
     (LocalServer.server ? message.NodeInfo(nodeInfo.pos, nodeInfo.size)).asInstanceOf[Future[message.DeltaSet]]
 
@@ -132,7 +137,7 @@ object WorldGenerator {
     for( (pos, block) <- deltaSet )
       root = root.updated(area, pos, Leaf(Hexaeder.fromMessage(block.shape)))
     */
-  }
+  }*/
 
   // Find areas inside Area to be sampled (using range prediction)
   def findNodesToSample(area: Cuboid,

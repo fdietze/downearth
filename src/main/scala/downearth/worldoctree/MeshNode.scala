@@ -19,7 +19,7 @@ object MeshNode {
     val node = new InnerNodeUnderMesh( meshNodes.map(_.node) )
 
     for(i <- 0 until 8) {
-      node.vvertcount(i) = meshNodes(i).mesh.size
+      node.geometryByteCount(i) = meshNodes(i).mesh.byteSize
       meshNodes(i).mesh.freevbo()
     }
 
@@ -46,20 +46,21 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
 
   override def insertNode(info: PowerOfTwoCube, insertInfo: PowerOfTwoCube, insertNode: NodeOverMesh) = {
     insertNode match {
-      case n:MeshNode =>
+      case newNode:MeshNode =>
         if(info == insertInfo) {
           mesh.freevbo()
-          n
+          newNode
         } else {
-          objMeshes ++= n.objMeshes
-          val updateInfo = node.patchWorld(info, insertInfo, n.node, n.mesh.size, 0, mesh.size)
+          objMeshes ++= newNode.objMeshes
+          println("meshnode.patchworld: ",info, insertInfo, newNode.node, newNode.mesh.byteSize, 0, mesh.byteSize)
+          val updateInfo = node.patchWorld(info, insertInfo, newNode.node, newNode.mesh.byteSize, 0, mesh.byteSize)
           node = updateInfo.node
 
           // TODO vertices ins mesh einfügen
           mesh.freevbo()
           mesh = mesh.applyUpdates(Seq(
-            Update(updateInfo.oldOffset,updateInfo.newVertCount,
-                   n.mesh.data)
+            Update(updateInfo.oldByteOffset,updateInfo.newByteSize,
+                   newNode.mesh.data)
           ))
           this
         }
@@ -103,9 +104,9 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     this
   }
 
-  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
+  override def updated(info:PowerOfTwoCube, pos:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
 
-    val leafInfo = PowerOfTwoCube(p,1)
+    val leafInfo = PowerOfTwoCube(pos,1)
 
     objMeshes.find {
       case (info, mesh) => info == leafInfo
@@ -117,22 +118,22 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
 
     if( newLeaf.isInstanceOf[ObjLeaf] ) {
       println("inserting objMesh at " + info)
-      objMeshes += Tuple2( PowerOfTwoCube(p,1), newLeaf.asInstanceOf[ObjLeaf].mesh)
+      objMeshes += Tuple2( PowerOfTwoCube(pos,1), newLeaf.asInstanceOf[ObjLeaf].mesh)
     }
 
-    val (replacement,patch) = node.patchWorld(info, p, newLeaf, 0, mesh.size)
+    val (replacement,patch) = node.patchWorld(info, pos, newLeaf, 0, mesh.byteSize)
     node = replacement
     var patches = patch :: Nil
 
     // Nachbarn die noch innerhalb des Octanten liegen patchen
-    var newsize = mesh.size+patch.sizeDifference
+    var newsize = mesh.byteSize + patch.byteSizeDifference
     for(i <- 0 until 6) {
-      val npos = p.clone
+      val npos = pos.clone
       npos(i >> 1) += ((i&1) << 1)-1
       if( info.indexInRange(npos) ) {
         val newpatch = node.repolyWorld(info, npos, 0, newsize)
         patches ::=  newpatch
-        newsize += newpatch.sizeDifference
+        newsize += newpatch.byteSizeDifference
       }
     }
 
@@ -142,7 +143,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     mesh applyUpdates patches.reverse
 
     // falls das mesh an dieser Stelle die Maximalgröße Überschreitet, wird es aufgeteilt
-    if( mesh.size > Config.maxMeshVertexCount ) {
+    if( mesh.byteSize > Config.maxMeshByteSize ) {
       split(info)
     }
     else
@@ -153,7 +154,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     node match {
       case innernode:InnerNodeUnderMesh =>
         val newdata = new Array[NodeOverMesh](8)
-        val childmeshes = mesh.split(innernode.vvertcount)
+        val childmeshes = mesh.split(innernode.geometryByteCount)
         for(i <- 0 until 8) {
           val childInfo = info(i)
           val meshnode = new MeshNode(innernode.data(i))
@@ -183,11 +184,11 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
 
   override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) = {
     // vertpos und vertcount wird von node.repolyWorld gesetzt
-    mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.size))
+    mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.byteSize))
   }
 
   override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {
-    val (from,to) = node.getPolygons( info, pos, 0, mesh.size )
+    val (from,to) = node.getPolygons( info, pos, 0, mesh.byteSize )
     (from until to) map mesh.vertices
   }
 }

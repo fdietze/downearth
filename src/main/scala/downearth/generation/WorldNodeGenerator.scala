@@ -12,7 +12,6 @@ import downearth.rendering.{TextureMesh, TextureMeshData, GlDraw, Draw}
 import downearth.worldoctree.PowerOfTwoCube
 import downearth.worldoctree.Cuboid
 import scala.Tuple2
-import downearth.server.LocalServer
 import akka.util.Timeout
 import scala.concurrent.Await
 

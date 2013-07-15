@@ -77,7 +77,7 @@ trait Polyeder {
 	// all Dreiecke unabhängig davon, ob sie verdeckt werden oder nicht
 	def allTriangles:Seq[Vec3]
 	def rotateZ:Polyeder
-  def toMessage:downearth.message.Hexaeder
+  //def toMessage:downearth.message.Hexaeder
 }
 
 abstract class APolyeder extends Polyeder {
@@ -224,7 +224,7 @@ case object EmptyHexaeder extends Polyeder {
 	def innerTriangles = Nil
 	def allTriangles = Nil
 	override def toString = "[ ]"
-  def toMessage = message.Hexaeder(fill=message.Hexaeder.Fill.EMPTY)
+  //def toMessage = message.Hexaeder(fill=message.Hexaeder.Fill.EMPTY)
 }
 
 // Platzhalter für Hexaeder, die in der Generierung noch fehler Haben. Solle 
@@ -250,7 +250,7 @@ case object UndefHexaeder extends Polyeder {
 }
 
 object Hexaeder {
-  import message.Hexaeder.Fill._
+  /*import message.Hexaeder.Fill._
   def fromMessage(m:message.Hexaeder) = m.fill match {
     case EMPTY => EmptyHexaeder
     case FULL  => FullHexaeder
@@ -259,7 +259,7 @@ object Hexaeder {
       import data._
       new Hexaeder(x, y, z)
     case f => sys.error("unknown fill type for hexaeder: " + f)
-  }
+  }*/
 }
 
 class Hexaeder(
@@ -275,10 +275,10 @@ class Hexaeder(
 	//   |x|x|x|x|x|x|x|x|y|y|y|y|y|y|y|y|z|z|z|z|z|z|z|z|
 	//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-  def toMessage = message.Hexaeder(
+  /*def toMessage = message.Hexaeder(
     fill=message.Hexaeder.Fill.DATA, //TODO: default enum values in scalabuff not working?
     data=Some(message.Hexaeder.Data(X,Y,Z))
-  )
+  )*/
 
 	def numVerts = 8
 	

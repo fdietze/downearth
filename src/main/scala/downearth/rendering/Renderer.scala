@@ -480,7 +480,7 @@ object Renderer extends Logger {
     if( !mesh.hasVbo )
       mesh.genvbo()
 
-    if( mesh.size > 0 ) {
+    if( mesh.nonEmpty ) {
       drawCalls += 1
       mesh.bind()
       glVertexPointer(mesh.vertices.components, mesh.vertices.rawEnum, mesh.vertices.byteStride, mesh.vertices.byteOffset)

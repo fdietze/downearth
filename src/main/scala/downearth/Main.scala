@@ -16,17 +16,7 @@ import org.lwjgl.opengl.AMDDebugOutput._
 import downearth.world.World
 import downearth.util._
 import downearth.gui._
-import downearth.gui.KeyPress
-import downearth.gui.KeyRelease
-import downearth.gui.MouseDown
-import downearth.gui.MouseUp
-import downearth.util.Logger
-import downearth.server.LocalServer
-import downearth.gui.KeyPress
-import downearth.gui.KeyRelease
-import downearth.gui.MouseDown
-import downearth.gui.MouseMove
-import downearth.gui.MouseUp
+//import downearth.server.LocalServer
 
 
 object Main extends Logger {
@@ -134,13 +124,13 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     World
 
-    Mouse setGrabbed true
+    //Mouse setGrabbed true
 	}
 
   def destroy() {
 
     WorldNodeGenerator.actorSystem.shutdown()
-    LocalServer.actorSystem.shutdown()
+    //LocalServer.actorSystem.shutdown()
 
     TextureManager.delete()
     ObjManager.delete()

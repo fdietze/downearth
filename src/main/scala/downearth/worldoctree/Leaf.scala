@@ -8,7 +8,7 @@ import downearth.world.World
 import simplex3d.math.{Vec2i, Vec3i}
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
-import downearth.rendering.{Update, TextureMeshBuilder, ObjMesh}
+import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder, ObjMesh}
 import downearth.resources.MaterialManager
 
 
@@ -181,7 +181,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
         }
       }
     }
-    vertexCounter
+    vertexCounter * 32 //TODO global stride size
   }
 
   override def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
@@ -189,7 +189,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
     val builder = new TextureMeshBuilder
     replacement.genPolygons(info,builder, v => World.octree(v).h )
-    val update = Update(vertpos,vertcount,builder.result)
+    val update = Update(vertpos,vertcount,builder.result.toByteBuffer)
     (replacement,update)
   }
   //TODO: NodeUnderMesh soll die eigene Größe (Vertices) kennen, und nicht die der Kinder
@@ -203,9 +203,11 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
   }
 
   override def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
+    require(vertpos >= 0)
+    require(vertcount >= 0)
     val builder = new TextureMeshBuilder
     genPolygons(info, builder, v => World.octree(v).h )
-    Update(vertpos,vertcount,builder.result)
+    Update(vertpos,vertcount,builder.result.toByteBuffer)
   }
 
   override def genMesh(info:PowerOfTwoCube, dstnodesize: Int, worldaccess:(Vec3i => Polyeder) ):NodeOverMesh = {

@@ -13,7 +13,7 @@ import downearth.{BulletPhysics, util}
 
 
 import java.io._
-import downearth.server.LocalServer
+//import downearth.server.LocalServer
 
 object World {
 	val octree = WorldGenerator.genWorld
@@ -22,18 +22,18 @@ object World {
 		octree(pos) = l
 		BulletPhysics.worldChange(pos)
 
-    import downearth.message._
-    import downearth.message.implicits._
-    LocalServer.server ! Delta(
+    //import downearth.message._
+    //import downearth.message.implicits._
+    /*LocalSver.server ! Delta(
       pos,
       Block(
         l.h.toMessage,
         l.material
       )
-    )
-	}
+    )*/
+  }
 
-  def apply(pos:Vec3i) = octree(pos)
+def apply(pos:Vec3i) = octree(pos)
 
-	val dynamicWorld = DynamicWorld.testScene
+val dynamicWorld = DynamicWorld.testScene
 }

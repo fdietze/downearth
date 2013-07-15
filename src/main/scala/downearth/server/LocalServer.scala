@@ -7,7 +7,7 @@ import downearth.util._
 import java.io.{FileInputStream, File, FileOutputStream}
 import downearth.message._
 import downearth.message.implicits._
-
+/*
 object LocalServer {
   val actorSystem = ActorSystem.create("network")
   val server = actorSystem.actorOf( Props[LocalServer] )
@@ -84,3 +84,4 @@ class LocalServer extends Actor {
     }
   }
 }
+*/
