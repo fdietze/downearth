@@ -192,6 +192,7 @@ object TextureMesh {
 class TextureMesh(val data:ByteBuffer) extends Mesh {
 
   require(data.position == 0)
+  require(data.limit == data.capacity)
 
   @deprecated("a","b") def vertices  = DataView[Vec3,RFloat](data, 0, 8)
   @deprecated("a","b") def normals   = DataView[Vec3,RFloat](data, 3, 8)
@@ -236,56 +237,19 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
     println(updates.mkString("\n"))
     // First patch inserts all the old data
     require(data.position == 0)
-    var newDataParts:List[ByteBuffer] = List(data)
 
-    implicit class RichViewSplit(viewList:List[ByteBuffer]) {
-      def viewsplit(splitPos:Int) = {
-        var destOffset = 0
-        val (pre,other) = viewList.span {
-          buffer =>
-            if( destOffset + buffer.width <= splitPos ) {
-              destOffset += buffer.width
-              true
-            }
-            else
-              false
-        }
-
-        if( destOffset < splitPos ) {
-          println(destOffset,splitPos)
-          val (left,right) = other.head.split(splitPos-destOffset) //DODO pass absolute splitpos
-          (pre :+ left, right :: other.tail)
-        }
-        else
-          (pre, other)
-      }
-    }
-
-    // apply patches sequentially
-    for(update <- updates if(update.effect != 'NOTHING)) {
-      val (pre, other) = newDataParts.viewsplit(update.byteOffset)
-      val post = other.viewsplit(update.byteOffset + update.byteOldSize)._2
-      newDataParts = pre ::: update.data :: post
-      println("patches: " + newDataParts.mkString("\n"))
-    }
-
-    // merge parts of data to one buffer
-    val newSize = (0 /: newDataParts)(_ + _.width)
-    val newBuffer = BufferUtils.createByteBuffer(newSize)
-    (newBuffer /: newDataParts)(_ put _).flip()
-
-
+    val newBuffer = data.applyUpdates(updates)
 
     val mesh = new TextureMesh(newBuffer)
     mesh.genvbo()
+
     mesh
   }
 
-  // TODO chunksize in Bytes
-  def split(chunksizes:Array[Int]) = {
+  def split(chunkByteSizes:Array[Int]) = {
+    assert(chunkByteSizes.sum == data.width)
     var index = 0
-    for(chunksize ← chunksizes) yield {
-      val byteWidth = chunksize * 8 * 4
+    for(byteWidth <- chunkByteSizes) yield {
       val byteBuffer = BufferUtils.createByteBuffer(byteWidth)
 
       val chunk = data.duplicate()
@@ -293,7 +257,10 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
       chunk.limit(index+byteWidth)
       byteBuffer.put(chunk).flip()
 
-      index += chunksize * 8 * 4
+      assert(data.position == 0)
+      assert(data.limit == data.capacity)
+
+      index += byteWidth
       new TextureMesh(byteBuffer)
     }
   }

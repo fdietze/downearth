@@ -25,7 +25,7 @@ import javax.vecmath.{Vector3f,Quat4f}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import downearth.rendering.GlDraw
+import downearth.rendering.{Update, GlDraw}
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
 import simplex3d.math.floatx._
