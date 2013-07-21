@@ -140,6 +140,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     // mehrer patches die hintereinander abgearbeitet werden können,
     // können hier auch in einem schritt ausgeführt werden
     // da die liste von links aufgebaut wurde muss sie zuerst umgekehrt werden
+    mesh.freevbo()
     mesh = mesh applyUpdates patches.reverse
 
     // falls das mesh an dieser Stelle die Maximalgröße Überschreitet, wird es aufgeteilt
@@ -182,9 +183,9 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     }
   }
 
-  override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) = {
+  override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) {
     // vertpos und vertcount wird von node.repolyWorld gesetzt
-    mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.byteSize))
+    mesh = mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.byteSize))
   }
 
   override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {

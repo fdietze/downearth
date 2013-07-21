@@ -140,27 +140,9 @@ object Update {
     require(oldSize >= 0)
     new Update(offset * byteStride, oldSize * byteStride, data.toByteBuffer)
   }
-
-  // make independent ubpates depend on each other
-  def makeDependent(updates:Seq[Update]) = {
-    def sorted(l:Seq[Update]) = l.view.zip(l.tail).forall(u => u._1 before u._2)
-
-    //TODO: require( sorted(updates), "updates not in order" )
-    //TODO: require( updates forall (_.effect != 'NOTHING), "update without effect" )
-
-    val sortedCleanedUpdates = updates.filter(_.effect != 'NOTHING).sortBy(_.byteOffset)
-
-    var shift = 0
-    sortedCleanedUpdates map { u =>
-      val newU = u.copy(byteOffset = u.byteOffset + shift)
-      shift += u.byteSizeDifference
-      newU
-    }
-  }
 }
 
 case class Update(byteOffset:Int, byteOldSize:Int, data:ByteBuffer) {
-  //TODO require( effect != 'NOTHING )
   require( byteOffset >= 0, toString)
   require( byteOldSize >= 0, toString)
 
@@ -180,7 +162,6 @@ case class Update(byteOffset:Int, byteOldSize:Int, data:ByteBuffer) {
 
   def before(that:Update) = this.byteOffset + this.byteOldSize <= that.byteOffset
 
-  if( effect == 'NOTHING ) println("warning: created Update with no effect")
   override def toString = s"Update(offset=$byteOffset, oldSize=$byteOldSize, dataWidth=$byteSize ${effect.name})"
 }
 
@@ -254,7 +235,6 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
   // Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den
   // Hexaeder einzufügen.
   def applyUpdates(updates:Seq[Update]): TextureMesh = {
-    try{sys.error("trace")} catch { case e:Throwable => e.printStackTrace}
     require(data.position == 0)
 
     val newBuffer = data.applyUpdates(updates)

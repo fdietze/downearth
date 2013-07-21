@@ -78,22 +78,6 @@ class Mesh extends FunSuite {
     }
   }
 
-  test("make updates dependent") {
-    val u1 = Update(5, 5, BufferUtils.createByteBuffer(0)) //DELETE
-    val u2d = BufferUtils.createByteBuffer(10)
-    u2d.put(Array[Byte](0,1,2,3,4,5,6,7,8,9))
-    u2d.flip()
-    val u2 = Update(10, 5, u2d) //REPLACE
-    val u3 = Update(20, 0, u2d) //INSERT
-
-    val updates = List(u1,u2,u3)
-    val dep = Update.makeDependent(updates)
-
-    assert( dep(0) === updates(0) )
-    assert( dep(1) === updates(1).copy(byteOffset = 5) )
-    assert( dep(2) === updates(2) )
-  }
-
   test("apply updates (simple replace)"){
     val data = BufferUtils.createByteBuffer(15)
     data.put(Array[Byte](0,1,2,3,4,5,6,7,8,9,10,11,12,13,14))
@@ -122,7 +106,7 @@ class Mesh extends FunSuite {
     val u2d = BufferUtils.createByteBuffer(10)
     u2d.put(Array[Byte](0,1,2,3,4,5,6,7,8,9))
     u2d.flip()
-    val u2 = Update(10, 5, u2d) //REPLACE
+    val u2 = Update(5, 5, u2d) //REPLACE
 
     val newData = data.applyUpdates(List(u1, u2))
 
