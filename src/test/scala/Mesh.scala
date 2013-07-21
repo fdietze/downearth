@@ -12,7 +12,7 @@ class Mesh extends FunSuite {
     a.position(5)
     a.limit(10)
 
-    val (b,c) = a.split(7)
+    val (b,c) = a.split(2)
 
     assert(b.position === 5)
     assert(b.limit === 7)
@@ -30,7 +30,7 @@ class Mesh extends FunSuite {
     assert(a.limit === 15)
     val l:List[ByteBuffer] = List(a)
 
-    val (left,right) = l.split(10,a)
+    val (left,right) = l.split(10)
 
     assert(left.head.position === 0)
     assert(left.head.limit === 10)
@@ -50,7 +50,7 @@ class Mesh extends FunSuite {
     b.position(10); b.limit(20)
     val l:List[ByteBuffer] = List(a,b)
 
-    val (left,right) = l.split(15,data)
+    val (left,right) = l.split(10)
 
     assert(left.size === 2)
     assert(right.size === 1)
@@ -76,6 +76,22 @@ class Mesh extends FunSuite {
       buffer.get(a)
       a
     }
+  }
+
+  test("make updates dependent") {
+    val u1 = Update(5, 5, BufferUtils.createByteBuffer(0)) //DELETE
+    val u2d = BufferUtils.createByteBuffer(10)
+    u2d.put(Array[Byte](0,1,2,3,4,5,6,7,8,9))
+    u2d.flip()
+    val u2 = Update(10, 5, u2d) //REPLACE
+    val u3 = Update(20, 0, u2d) //INSERT
+
+    val updates = List(u1,u2,u3)
+    val dep = Update.makeDependent(updates)
+
+    assert( dep(0) === updates(0) )
+    assert( dep(1) === updates(1).copy(byteOffset = 5) )
+    assert( dep(2) === updates(2) )
   }
 
   test("apply updates (simple replace)"){
@@ -106,7 +122,7 @@ class Mesh extends FunSuite {
     val u2d = BufferUtils.createByteBuffer(10)
     u2d.put(Array[Byte](0,1,2,3,4,5,6,7,8,9))
     u2d.flip()
-    val u2 = Update(5, 5, u2d) //REPLACE
+    val u2 = Update(10, 5, u2d) //REPLACE
 
     val newData = data.applyUpdates(List(u1, u2))
 
@@ -114,9 +130,5 @@ class Mesh extends FunSuite {
       newData.toArray.toList.map(_.toInt) ===
         List(0,1,2,3,4,  0,1,2,3,4,5,6,7,8,9)
     )
-  }
-
-  test("buffer: same source") {
-    assert(false)
   }
 }
