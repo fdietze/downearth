@@ -26,7 +26,7 @@ object WorldGenerator {
 	def genWorld:WorldOctree = {
 		// val rootNodeInfo = Cube(Vec3i(-cubesize/2), cubesize)
 		val initArea = PowerOfTwoCube( pos = Vec3i(-worldWindowSize/2), size = worldWindowSize )
-    println("generating initial area...")
+    print("generating initial area...")
     val initNode = generateNode(initArea)
     println("done.")
 		val octree = new WorldOctree(initArea, initNode)

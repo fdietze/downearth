@@ -18,6 +18,7 @@ import downearth.{BulletPhysics, Config, util}
 import downearth.Config._
 import downearth.message
 import collection.mutable
+import downearth.world.World
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new MeshNode) extends Data3D[Leaf] {
@@ -51,7 +52,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
   // traverse the octree in a front to back order from view of point camera
   // filter the nodes by predicate (for example frustum test)
   // and apply action to every found node, skip subtree if action returns false
-  def queryRegion(predicate:(PowerOfTwoCube) => Boolean, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
+  def queryRegion(predicate:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
 
     val infoQueue = mutable.Queue[PowerOfTwoCube](rootNodeInfo)
     val nodeQueue = mutable.Queue[Node](root)
@@ -82,6 +83,17 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
   override def toString = "Octree("+root.toString+")"
 
+  def getNextUngenerated:Option[PowerOfTwoCube] = {
+    var node:Option[PowerOfTwoCube] = None
+    queryRegion(){
+      case (area, UngeneratedNode) =>
+        node = Some(area)
+        false
+      case _ =>
+        !node.isDefined
+    }
+    node
+  }
 
   // mark area as ungenerated and ask
   // Worldgenerator to generate it
@@ -94,34 +106,19 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
       incDepth()
     }
 
-    // get all ungenerated inner nodes inside the area
-    /*var list = List[PowerOfTwoCube]()
-    queryRegion(_ indexInRange area) {
-      case (nodeInfo, node) =>
-        if( node == UngeneratedNode ) {
-          list ::= nodeInfo
-          false
-        }
-        else
-          true
-    }*/
-
-    //for( nodeInfo <- list ) {
-      val meshNode = new MeshNode(GeneratingNode).genMesh(area,-1,null)
-      println(meshNode.mesh.byteSize)
-      println("\ninsert ungenerated:")
-      insert( area, meshNode )
-      WorldNodeGenerator.master ! area
-    //}
+    val meshNode = new MeshNode(GeneratingNode).genMesh(area,-1,null)
+    println(meshNode.mesh.byteSize)
+    insert( area, meshNode )
+    WorldNodeGenerator.master ! area
   }
 
+  // ask WorldNodeGenerator for generated nodes and insert them into the octree
   def makeUpdates() {
     implicit val timeout = Timeout(1000 seconds)
     val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(PowerOfTwoCube, NodeOverMesh)]]
     val s = Await.result(future, 1000 seconds)
 
     for( (nodeinfo, node) <- s ) {
-      println("\ninsert generated:")
       insert( nodeinfo, node )
       BulletPhysics.worldChange(nodeinfo)
     }

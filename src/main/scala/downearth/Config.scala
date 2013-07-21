@@ -72,6 +72,7 @@ object Config extends Listener {
 	val keyPausePhysics      = KEY_P
 	val keyToggleGhostPlayer = KEY_TAB
   val keyIncOctreeDepth    = KEY_X
+  val keyGenerateNextUngenerated = KEY_N
   val keyToggleInventory   = KEY_Q
 
 	val keyDebugDraw      = KEY_F1

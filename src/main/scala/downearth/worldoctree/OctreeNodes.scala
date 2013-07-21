@@ -181,6 +181,8 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
   var finishedGeneration = (true /: data)(_ && _.finishedGeneration)
 
+  override def toString = s"InnerNodeUnderMesh(finished=$finishedGeneration, geometry=${geometryByteCount.mkString("(",",","")}, sum=${geometryByteCount.sum}))"
+
   override def hasChildren = true
 
   override def getChild(i:Int) = data(i)
@@ -236,7 +238,7 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 
 		data(index) = newNode
 
-    assert(geometryByteCount(index) + patch.byteSizeDifference >= 0, geometryByteCount(index) + " " + patch)
+    assert(geometryByteCount(index) + patch.byteSizeDifference >= 0, "geometryByteCount < 0")
     geometryByteCount(index) += patch.byteSizeDifference
 
 		if(hasEqualChildren){
@@ -257,15 +259,15 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
       val (index,nodeinfo) = info(insertInfo.pos)
       val currentChild = data(index)
 
-      val offset = geometryByteCount.take(index).sum + currentByteOffset
-      val update = currentChild.patchWorld(nodeinfo, insertInfo, newNode, insertByteSize, offset, geometryByteCount(index) )
-      data(index)       = update.node
-      geometryByteCount(index) = update.newByteSize
+      val offset = currentByteOffset + geometryByteCount.take(index).sum
+      val updateInfo = currentChild.patchWorld(nodeinfo, insertInfo, newNode, insertByteSize, offset, geometryByteCount(index) )
+      data(index)       = updateInfo.node
+      geometryByteCount(index) = updateInfo.newByteSize
       assert(geometryByteCount(index) >= 0)
 
       //TODO: set finishedGeneration
 
-      update.copy( node = this, oldByteSize = geometryByteCount.sum )
+      updateInfo.copy( node = this, newByteSize = geometryByteCount.sum )
     }
   }
 
@@ -324,7 +326,6 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
 
   def patchWorld(info: PowerOfTwoCube, insertInfo: PowerOfTwoCube, newNode: NodeUnderMesh, insertByteSize: Int, currentByteOffset: Int, currentByteSize: Int): UpdateInfo = {
     if(info == insertInfo) {
-      println("UngeneratedNode.patchWorld")
       UpdateInfo(newNode, currentByteOffset, currentByteSize, insertByteSize )
     }
     else {
@@ -344,5 +345,10 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
   }
 }
 
-object UngeneratedNode extends AbstractUngeneratedNode
-object GeneratingNode extends AbstractUngeneratedNode
+object UngeneratedNode extends AbstractUngeneratedNode {
+  override def toString = "UngeneratedNode"
+}
+object GeneratingNode extends AbstractUngeneratedNode {
+  override def toString = "GeneratingNode"
+}
+

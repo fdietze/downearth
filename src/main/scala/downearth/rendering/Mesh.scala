@@ -169,6 +169,8 @@ case class UpdateInfo(node:NodeUnderMesh, oldByteOffset:Int, oldByteSize:Int, ne
   require( oldByteOffset >= 0 )
   require( oldByteSize >= 0 )
   require( newByteSize >= 0 )
+
+  override def toString = s"UpdateInfo(oldOffset=$oldByteOffset, newSize=$newByteSize, node=$node)"
 }
 
 // Diese Klasse wird verwendet, um den Octree darzustellen. Er repräsentiert ein
@@ -201,6 +203,8 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
   @deprecated("a","b") def texcoords = DataView[Vec2,RFloat](data, 6, 8)
 	@deprecated("a","b") private var msize = vertices.size
 
+  override def toString = s"TextureMesh(dataWidth=${data.width})"
+
   var vbo = 0
 
   def hasVbo = vbo > 0
@@ -231,13 +235,15 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
 		}
 	}
 
+  def applyUpdate(update:Update) = applyUpdates(List(update))
+
   // fügt mehrere Updates in den Hexaeder ein. Hier ist es Sinnvoll alle
   // Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den
   // Hexaeder einzufügen.
-  def applyUpdates(updates:Seq[Update]): TextureMesh = {
+  def applyUpdates(dependentUpdates:Seq[Update]): TextureMesh = {
     require(data.position == 0)
 
-    val newBuffer = data.applyUpdates(updates)
+    val newBuffer = data.applyUpdates(dependentUpdates)
 
     val mesh = new TextureMesh(newBuffer)
     mesh.genvbo()
@@ -246,7 +252,7 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
   }
 
   def split(chunkByteSizes:Array[Int]) = {
-    assert(chunkByteSizes.sum == data.width)
+    assert(chunkByteSizes.sum == data.width, s"chunkSizes do not sum up to meshSize:\nmesh: ${data.width}\nchunks: $chunkByteSizes")
     var index = 0
     for(byteWidth <- chunkByteSizes) yield {
       val byteBuffer = BufferUtils.createByteBuffer(byteWidth)

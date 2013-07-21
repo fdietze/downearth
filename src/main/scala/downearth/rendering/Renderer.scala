@@ -381,8 +381,8 @@ object Renderer extends Logger {
         case (info, GeneratingNode) =>
           false
         case (info, node:MeshNode) =>
-          false
-        case _ =>
+          true
+        case _ => //TODO stop traversal earlier
           true
       }
     }

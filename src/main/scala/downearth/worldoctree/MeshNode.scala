@@ -37,6 +37,8 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
 
   val objMeshes = new mutable.ArrayBuffer[(PowerOfTwoCube,ObjMesh)]
 
+  override def toString = s"MeshNode(node=$node, mesh=$mesh)"
+
   // Nodes unter dem MeshNode müssen gesetzt sein.
   def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
 
@@ -52,22 +54,16 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
           newNode
         } else {
           objMeshes ++= newNode.objMeshes
-          println("meshnode.patchworld: ",info, insertInfo, newNode.node, newNode.mesh.byteSize, 0, mesh.byteSize)
           val updateInfo = node.patchWorld(info, insertInfo, newNode.node, newNode.mesh.byteSize, 0, mesh.byteSize)
-          node = updateInfo.node
+          val update = Update(updateInfo.oldByteOffset, updateInfo.oldByteSize, newNode.mesh.data)
 
-          // TODO vertices ins mesh einfügen
+          node = updateInfo.node
           mesh.freevbo()
-          mesh = mesh.applyUpdates(Seq(
-            Update(updateInfo.oldByteOffset,updateInfo.newByteSize,
-                   newNode.mesh.data)
-          ))
+          mesh = mesh applyUpdate update
+
           this
         }
     }
-
-
-    //node = node.insertNode(area, insertArea, insertNode)
   }
 
   def apply(info: PowerOfTwoCube, p: Vec3i) = node(info,p)

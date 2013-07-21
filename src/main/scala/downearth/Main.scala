@@ -205,6 +205,11 @@ class GameLoop extends Publisher with Logger { gameLoop =>
         Player.jump()
       case `keyIncOctreeDepth` =>
         World.octree.incDepth()
+      case `keyGenerateNextUngenerated` =>
+        val next = World.octree.getNextUngenerated
+        println("next Ungenerated:" + next)
+        for( area <- next )
+          World.octree.generateArea(area)
       case `keyToggleFullScreen` =>
         if( Display.isFullscreen ) {
           Display.setDisplayModeAndFullscreen(windowMode)
