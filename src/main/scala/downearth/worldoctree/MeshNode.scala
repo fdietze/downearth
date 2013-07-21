@@ -140,7 +140,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
     // mehrer patches die hintereinander abgearbeitet werden können,
     // können hier auch in einem schritt ausgeführt werden
     // da die liste von links aufgebaut wurde muss sie zuerst umgekehrt werden
-    mesh applyUpdates patches.reverse
+    mesh = mesh applyUpdates patches.reverse
 
     // falls das mesh an dieser Stelle die Maximalgröße Überschreitet, wird es aufgeteilt
     if( mesh.byteSize > Config.maxMeshByteSize ) {

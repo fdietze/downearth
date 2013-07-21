@@ -145,10 +145,13 @@ object Update {
   def makeDependent(updates:Seq[Update]) = {
     def sorted(l:Seq[Update]) = l.view.zip(l.tail).forall(u => u._1 before u._2)
 
-    require( sorted(updates) )
+    //TODO: require( sorted(updates), "updates not in order" )
+    //TODO: require( updates forall (_.effect != 'NOTHING), "update without effect" )
+
+    val sortedCleanedUpdates = updates.filter(_.effect != 'NOTHING).sortBy(_.byteOffset)
 
     var shift = 0
-    updates map { u =>
+    sortedCleanedUpdates map { u =>
       val newU = u.copy(byteOffset = u.byteOffset + shift)
       shift += u.byteSizeDifference
       newU
@@ -251,9 +254,7 @@ class TextureMesh(val data:ByteBuffer) extends Mesh {
   // Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den
   // Hexaeder einzufügen.
   def applyUpdates(updates:Seq[Update]): TextureMesh = {
-
-    println(updates.mkString("\n"))
-    // First patch inserts all the old data
+    try{sys.error("trace")} catch { case e:Throwable => e.printStackTrace}
     require(data.position == 0)
 
     val newBuffer = data.applyUpdates(updates)

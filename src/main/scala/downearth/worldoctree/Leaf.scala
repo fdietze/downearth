@@ -192,7 +192,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     val update = Update(vertpos,vertcount,builder.result.toByteBuffer)
     (replacement,update)
   }
-  //TODO: NodeUnderMesh soll die eigene Größe (Vertices) kennen, und nicht die der Kinder
+  //TODO: (?) NodeUnderMesh soll die eigene Größe (Vertices) kennen, und nicht die der Kinder
   override def patchWorld(info:PowerOfTwoCube, insertInfo:PowerOfTwoCube, newNode:NodeUnderMesh, insertVertexCount:Int, currentOffset:Int, currentVertexCount:Int) : UpdateInfo = {
     if(info == insertInfo)
       UpdateInfo(newNode, currentOffset, currentVertexCount, insertVertexCount )
