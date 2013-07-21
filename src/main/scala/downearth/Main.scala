@@ -313,7 +313,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
             val x  =  Mouse.getEventX
             val y  = Display.getHeight - Mouse.getEventY
             val dW = Mouse.getDWheel
-            assert( (dx != 0 || dy != 0) ^ (dW != 0) )
+            //TODO assert( (dx != 0 || dy != 0) ^ (dW != 0) )
             if( dx != 0 || dy != 0 ) {
               publish( MouseMove(Vec2i(x-dx,y-dy),Vec2i(x,y)) )
             }
