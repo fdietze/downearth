@@ -23,7 +23,7 @@ object WorldNodeGenerator {
     case object GetFinishedJobs
     case object ActiveJobsEmpty
     case object AllJobsEmpty
-    case class FinishedJob(job:PowerOfTwoCube, node:Node)
+    case class FinishedJob(job:PowerOfTwoCube, node:MeshNode)
   }
 }
 
@@ -55,7 +55,7 @@ class Master extends Actor {
 
 
     // Worker has finished Job
-    case FinishedJob( oldjob:PowerOfTwoCube, node:NodeOverMesh ) =>
+    case FinishedJob( oldjob:PowerOfTwoCube, node:MeshNode ) =>
       done enqueue Tuple2(oldjob,node)
 
       if( jobqueue.isEmpty )
@@ -88,40 +88,32 @@ class Master extends Actor {
 class Worker (id:Int) extends Actor {
   import WorldNodeGenerator.Messages._
 
-  val emptyTextureMeshData = {
-    val vertexArray = new Array[Vec3](0)
-    val normalArray = new Array[Vec3](0)
-    val texCoordArray = new Array[Vec2](0)
-    //		val colorArray  = new Array[Vec4](0)
-    TextureMeshData(vertexArray,normalArray,texCoordArray)
-  }
-
   def receive = {
     case area:PowerOfTwoCube =>
       // Prediction:
-      // Hier wird bis zur minMeshnodeSize geteilt
-
       val interval = WorldDefinition.range(area.toInterval3)
       val surfaceNotInArea = !interval(0)
 
       if( surfaceNotInArea ) {
         GlDraw addPredictedCuboid area  // Für DebugDraw
-        val meshnode = new MeshNode(Leaf(
+        val meshNode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
-        meshnode.mesh = TextureMesh( emptyTextureMeshData )
-        sender ! FinishedJob(area, meshnode)
+        meshNode.mesh = TextureMesh.empty
+        sender ! FinishedJob(area, meshNode)
       }
       // if the area is too big, it will be splitted
-      else if( area.size/2 >= Config.minMeshNodeSize ) {
+      else if( area.size/2 >= Config.minPredictionSize ) {
         val data = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
         val node = new InnerNodeUnderMesh(data)
-        sender ! FinishedJob(area, node)
+        val meshNode = new MeshNode(node)
+        meshNode.mesh = TextureMesh.empty
+        sender ! FinishedJob(area, meshNode)
       }
       // sample the whole area
       else {
-        val meshnode = WorldGenerator generateNode area
-        sender ! FinishedJob(area, meshnode)  // Master
+        val meshNode = WorldGenerator generateNode area
+        sender ! FinishedJob(area, meshNode)  // Master
       }
   }
 }

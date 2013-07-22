@@ -41,7 +41,7 @@ object WorldGenerator {
 
 
   def generateNode(area:PowerOfTwoCube,
-                   worldFunction:WorldFunction = WorldDefinition):NodeOverMesh = {
+                   worldFunction:WorldFunction = WorldDefinition):MeshNode = {
 
     val hexaeders = hexaederMC(area, worldFunction)
 
@@ -49,10 +49,9 @@ object WorldGenerator {
     val root = EmptyLeaf.fill( area, pos => Leaf(hexaeders(pos)) )
 
     // generate Mesh
-    root.genMesh( area, minMeshNodeSize, x => {
+    root.genMesh( area, area.size, x => {
       if (area.indexInRange(x)) root(area, x).h else hexaeders(x)
-    } )
-
+    } ).asInstanceOf[MeshNode]
   }
 
 

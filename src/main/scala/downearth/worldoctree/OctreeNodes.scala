@@ -142,7 +142,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		data(index).repolyWorld(childinfo,p)
 	}
 	
-	override def toString = data.mkString("(",",",")")
+	override def toString = data.mkString("InnerNodeOverMesh(",",",")")
 	
 	override def insertNode(info:PowerOfTwoCube, insertinfo:PowerOfTwoCube, insertnode:NodeOverMesh) = {
 		if(info == insertinfo)

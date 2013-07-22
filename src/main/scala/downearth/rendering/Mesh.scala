@@ -183,24 +183,28 @@ object TextureMesh {
   def apply(data:TextureMeshData) = new TextureMesh(data.toByteBuffer)
 	
 	def apply(meshes:Array[TextureMesh]) = {
-		val byteSize = (0 /: meshes)(_ + _.data.width)
+		val byteSize = (0 /: meshes)(_ + _.byteSize)
     val byteBuffer = BufferUtils.createByteBuffer(byteSize)
     // TODO we need to call put2 everywhere
     (byteBuffer /: meshes)( _ put2 _.data).flip
 		new TextureMesh(byteBuffer)
 	}
+
+  val empty = new TextureMesh(BufferUtils.createByteBuffer(0))
 }
 
 // die Basisklasse TextureMesh kann serialisiert werden, und somit auch auf der
 // Festplatte gespeichert werden.
-class TextureMesh(val data:ByteBuffer) extends Mesh {
+class TextureMesh(_data:ByteBuffer) extends Mesh {
+  val data = _data.asReadOnlyBuffer()
 
   require(data.position == 0)
   require(data.limit == data.capacity)
 
-  @deprecated("a","b") def vertices  = DataView[Vec3,RFloat](data, 0, 8)
-  @deprecated("a","b") def normals   = DataView[Vec3,RFloat](data, 3, 8)
-  @deprecated("a","b") def texcoords = DataView[Vec2,RFloat](data, 6, 8)
+
+  @deprecated("a","b") def vertices  = DataView[Vec3,RFloat](_data, 0, 8)
+  @deprecated("a","b") def normals   = DataView[Vec3,RFloat](_data, 3, 8)
+  @deprecated("a","b") def texcoords = DataView[Vec2,RFloat](_data, 6, 8)
 	@deprecated("a","b") private var msize = vertices.size
 
   override def toString = s"TextureMesh(dataWidth=${data.width})"
