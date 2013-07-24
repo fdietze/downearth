@@ -12,27 +12,40 @@ import downearth.rendering.{Update, TextureMesh, TextureMeshBuilder, ObjMesh}
  */
 
 object MeshNode {
-  def join(meshNodes:Array[MeshNode]) = {
+  implicit class MeshNodeArray(meshNodes:Array[MeshNode]) {
+    def join = {
+      val mesh = TextureMesh( meshNodes.map(_.mesh) )
+        val node = new InnerNodeUnderMesh( meshNodes.map(_.node) )
 
-    // joining mesh Nodes, maybe better as method of MeshNode
-    val mesh = TextureMesh( meshNodes.map(_.mesh) )
-    val node = new InnerNodeUnderMesh( meshNodes.map(_.node) )
+        for(i <- 0 until 8) {
+          node.geometryByteCount(i) = meshNodes(i).mesh.byteSize
+          meshNodes(i).mesh.freevbo()
+        }
 
-    for(i <- 0 until 8) {
-      node.geometryByteCount(i) = meshNodes(i).mesh.byteSize
-      meshNodes(i).mesh.freevbo()
-    }
+        val meshNode = new MeshNode(node.merge)
+        meshNodes.foreach( meshNode.objMeshes ++= _.objMeshes )
 
-    val meshNode = new MeshNode(node.merge)
-    meshNodes.foreach( meshNode.objMeshes ++= _.objMeshes )
+        meshNode.mesh = mesh
+        meshNode
+      }
+  }
 
-    meshNode.mesh = mesh
+  def ungenerated = {
+    val meshNode = new MeshNode(UngeneratedNode)
+    meshNode.mesh = TextureMesh.empty
+    meshNode
+  }
+
+  def generating = {
+    val meshNode = new MeshNode(GeneratingNode)
+    meshNode.mesh = TextureMesh.empty
     meshNode
   }
 }
 
 //decorator pattern
-class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
+class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
+//  assert(!node.isInstanceOf[Leaf])
   var mesh:TextureMesh = null
 
   val objMeshes = new mutable.ArrayBuffer[(PowerOfTwoCube,ObjMesh)]
@@ -57,8 +70,12 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
           val updateInfo = node.patchWorld(info, insertInfo, newNode.node, newNode.mesh.byteSize, 0, mesh.byteSize)
           val update = Update(updateInfo.oldByteOffset, updateInfo.oldByteSize, newNode.mesh.data)
 
-          node = updateInfo.node
+          node = updateInfo.node match {
+            case n:InnerNodeUnderMesh => n.merge
+            case n => n
+          }
           node.refreshFinishedState()
+
           mesh.freevbo()
           mesh = mesh applyUpdate update
 

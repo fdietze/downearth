@@ -90,6 +90,7 @@ trait NodeUnderMesh extends Node {
 
   def patchWorld(info:PowerOfTwoCube, insertInfo:PowerOfTwoCube, newNode:NodeUnderMesh, insertByteSize:Int, currentByteOffset:Int, currentByteSize:Int) : UpdateInfo
 
+  // TODO: finishedState in all nodes
   // true: No generating or ungenerated nodes as children
   def finishedGeneration:Boolean
   def refreshFinishedState() = {}
@@ -134,7 +135,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 			val index = info.flat(nv)
 			data(index).repolyWorld(PowerOfTwoCube(nodepos+nv*hsize,hsize),n)
 		}
-		
+
 		joinChildren
 	}
 
@@ -160,10 +161,10 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		data(index).getPolygons( nodeinfo,pos )
 	}
 	
-	// falls alle Kindknoten MeshNodes sind, und zusammen weniger Vertices Haben, 
+	// falls alle Kindknoten MeshNodes sind, und zusammen weniger Vertices Haben,
 	// als Vorgeschrieben, so werden sie hier zu einem einzigen Mesh zusammengefügt
   //TODO: automatic join of small meshes?
-	def joinChildren:NodeOverMesh = {
+  def joinChildren:NodeOverMesh = {
 		def allChildrenAreMeshNodes = data.forall( _.isInstanceOf[MeshNode] )
     if( allChildrenAreMeshNodes ) {
 			// println("starting Join.")
@@ -171,7 +172,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 			val sum = (0 /: meshNodes) ( _ + _.mesh.byteSize )
 
 			if(sum < Config.maxMeshByteSize)
-        MeshNode.join(meshNodes)
+        meshNodes.join
 			else
 				this
 		}
@@ -180,6 +181,7 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 	}
 }
 
+//TODO: merge even if prediction fails
 class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
   def allChildrenFinished = (true /: data)(_ && _.finishedGeneration)
   var finishedGeneration = allChildrenFinished
@@ -268,11 +270,12 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 
       val offset = currentByteOffset + geometryByteCount.take(index).sum
       val updateInfo = currentChild.patchWorld(nodeinfo, insertInfo, newNode, insertByteSize, offset, geometryByteCount(index) )
-      data(index)       = updateInfo.node
+      data(index) = updateInfo.node
+      data(index).refreshFinishedState()
+
+
       geometryByteCount(index) = updateInfo.newByteSize
       assert(geometryByteCount(index) >= 0)
-
-      //TODO: set finishedGeneration
 
       updateInfo.copy( node = this, newByteSize = geometryByteCount.sum )
     }

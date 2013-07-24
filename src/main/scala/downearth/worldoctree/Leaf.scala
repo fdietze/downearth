@@ -36,8 +36,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     if(h == newLeaf.h)
       this
     else{
-      // wenn das Blatt einen größeren Bereich abdeckt der voll,
-      // bzw leer ist:
+      // wenn das Blatt einen größeren Bereich abdeckt der voll bzw leer ist:
       if(info.size >= 2) {
         val replacement = new InnerNodeUnderMesh(this)
         replacement.updated(info, p, newLeaf)
@@ -48,7 +47,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     }
   }
 
-  override def toString = h.toString
+  override def toString = s"Leaf(${h.toString})"
 
   override def equals(that:Any) = {
     that match {

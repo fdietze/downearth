@@ -289,34 +289,48 @@ object Renderer extends Logger {
   var emptyDrawCalls = 0
 
   def drawDebugOctree(octree:WorldOctree, camera:ReadVec3, test:FrustumTest) {
-
-    glPushMatrix()
-    val pos2 = octree.worldWindowPos + 0.05
-    glTranslated(pos2.x, pos2.y, pos2.z)
-    glColor3f(0,1,0)
-    GlDraw.renderCube(octree.worldWindowSize - 0.1)
-    glPopMatrix()
+//    glPushMatrix()
+//    val pos2 = octree.worldWindowPos + 0.05
+//    glTranslated(pos2.x, pos2.y, pos2.z)
+//    glColor3f(0,1,0)
+//    GlDraw.renderCube(octree.worldWindowSize - 0.1)
+//    glPopMatrix()
 
     var maximumDrawCalls = Config.maxDebugDrawQubes
+    val maxDepth = log2(octree.rootArea.size)
 
     octree.query(test,camera) {
-    case (info,octant) =>
-      if(! octant.hasChildren) {
+      case (info,octant) =>
         glPushMatrix()
-        val p = info.pos
-        glTranslatef(p.x, p.y, p.z)
+        val depth = maxDepth - log2(info.size)
+        val padding = depth*0.05f
 
-        if(octant.isInstanceOf[MeshNode])
-          glColor3f(1,0,0)
-        else
-          glColor3f(0,0,1)
+        val p = info.pos + padding
+        glTranslatef(p.x.toFloat, p.y.toFloat, p.z.toFloat)
 
-        GlDraw.renderCube(info.size)
+        octant match {
+          case n:InnerNodeOverMesh =>
+            glColor3f(0, 0.5f, 0)
+
+          case n:MeshNode =>
+            glColor3f(0,1,0)
+
+          case n:InnerNodeUnderMesh =>
+            glColor3f(0, 0, 0.5f)
+
+          case n:Leaf =>
+            glColor3f(1, 1, 1)
+
+          case _ =>
+            glColor3f(0.5f, 0.5f, 0.5f)
+        }
+
+        GlDraw.renderCube(info.size - padding*2)
         glPopMatrix()
 
         maximumDrawCalls -= 1
-      }
-      maximumDrawCalls > 0
+
+        maximumDrawCalls > 0
     }
   }
 

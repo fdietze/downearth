@@ -22,31 +22,28 @@ import downearth.world.World
 import downearth.rendering.TextureMesh
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new MeshNode) extends Data3D[Leaf] {
-  def rootNodePos = rootNodeInfo.pos
-  def rootNodeSize = rootNodeInfo.size
-
-  var worldWindowPos:Vec3i = rootNodePos.clone
-  val worldWindowSize:Int = rootNodeSize
+class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated) extends Data3D[Leaf] {
+  var worldWindowPos:Vec3i = rootArea.pos.clone
+  val worldWindowSize:Int = rootArea.size
   def worldWindowCenter = worldWindowPos + worldWindowSize/2
 
   // for Data3D interface
   val vsize = Vec3i(worldWindowSize)
-  override def indexInRange(pos:Vec3i) = util.indexInRange(pos,rootNodePos,rootNodeSize)
+  override def indexInRange(pos:Vec3i) = util.indexInRange(pos, rootArea.pos, rootArea.size)
 
   def apply(p:Vec3i) = {
-    if( rootNodeInfo.indexInRange(p) )
-      root(rootNodeInfo,p)
+    if( rootArea.indexInRange(p) )
+      root(rootArea,p)
     else
       Config.ungeneratedDefault
   }
 
   def update(p:Vec3i,l:Leaf) {
-    if(rootNodeInfo.indexInRange(p)) {
-      root = root.updated(rootNodeInfo, p, l)
+    if(rootArea.indexInRange(p)) {
+      root = root.updated(rootArea, p, l)
     }
     else{
-      printf(s"update out of area at $p, $rootNodeInfo\n")
+      printf(s"update out of area at $p, $rootArea\n")
     }
   }
 
@@ -56,7 +53,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
   // recurse deeper if action returns true
   def query(predicate:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
 
-    val infoQueue = mutable.Queue[PowerOfTwoCube](rootNodeInfo)
+    val infoQueue = mutable.Queue[PowerOfTwoCube](rootArea)
     val nodeQueue = mutable.Queue[Node](root)
     val dummyOrder = if(camera == null) Array.range(0,8) else null
 
@@ -77,10 +74,10 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
   // insert Node "that" at position and size of nodeinfo
   def insert( nodeInfo:PowerOfTwoCube, that:NodeOverMesh ) {
-    if( !(nodeInfo inside rootNodeInfo) )
+    if( !(nodeInfo inside rootArea) )
       incDepth()
 
-    root = root.insertNode(rootNodeInfo, nodeInfo, that)
+    root = root.insertNode(rootArea, nodeInfo, that)
   }
 
   override def toString = "Octree("+root.toString+")"
@@ -104,7 +101,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
     // if area is outside the current Octree,
     // increase the size until it is inside
-    while(!(rootNodeInfo indexInRange area)) {
+    while(!(area indexInRange area)) {
       incDepth()
     }
 
@@ -167,7 +164,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
   // the root becomes
   def incDepth() {
     // TODO add test for correct subdivision of the area. Depending on where the root is, it should be extended differently.
-    assert( rootNodeInfo.center == Vec3i.Zero )
+    assert( rootArea.center == Vec3i.Zero )
 
     // +---+---+---+---+            ^
     // |   |   |   |   |            |
@@ -180,48 +177,42 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
     // +---+---+---+---+            v
 
     // create the new root
-    var newRoot:NodeOverMesh = new InnerNodeOverMesh(Array.fill[NodeOverMesh](8)(new MeshNode))
-    val newRootNodeInfo = PowerOfTwoCube(rootNodePos - rootNodeSize/2, rootNodeSize*2)
-
-    newRoot = new InnerNodeOverMesh(
+    val newRootNodeInfo = PowerOfTwoCube(rootArea.pos - rootArea.size/2, rootArea.size*2)
+    val newRoot = new InnerNodeOverMesh(
       (for(i <- 0 until 8) yield {
         // 8 meshnodes with Ungenerated nodes, calls genmesh
-        val children = Array.tabulate[NodeOverMesh](8){ j =>
-          val meshNode = new MeshNode(UngeneratedNode)
-          meshNode.mesh = TextureMesh.empty
-          meshNode
-        }
+        val children = Array.fill[NodeOverMesh](8)(MeshNode.ungenerated)
 
         // n:InnerNodeOverMesh containing MeshNodes
         val n = root match {
           case n:InnerNodeOverMesh => n
-          case n:MeshNode => n.split(rootNodeInfo)
+          case n:MeshNode => n.split(rootArea)
         }
         children(~i & 7) = n.getChild(i)
         (new InnerNodeOverMesh(children)).joinChildren
       }).toArray
     )
 
+    rootArea = newRootNodeInfo
     root = newRoot
-    rootNodeInfo = newRootNodeInfo
   }
 
 	override def fill( foo: Vec3i => Leaf ) {
-		for( v <- rootNodePos until rootNodePos + rootNodeSize ) {
+		for( v <- rootArea.pos until rootArea.pos + rootArea.size ) {
 			this(v) = foo(v)
 		}
 	}
 
 	def isSet(info:PowerOfTwoCube):Boolean = {
-		if(rootNodeInfo indexInRange info)
-			return root.isSet(rootNodeInfo,info)
+		if(rootArea indexInRange info)
+			return root.isSet(rootArea,info)
 		else
 			return false
 	}
 	
 	def getPolygons(pos:Vec3i) = {
-		if(rootNodeInfo indexInRange pos)
-			root.getPolygons(rootNodeInfo,pos)
+		if(rootArea indexInRange pos)
+			root.getPolygons(rootArea,pos)
 		else
 			Nil
 	}

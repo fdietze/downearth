@@ -58,8 +58,16 @@ object OcclusionTest {
       case (info, GeneratingNode) =>
         nodeInfoBufferGenerating += info
         false
-      case (info, node:MeshNode) =>
-        true
+      case (info, node:MeshNode) => //TODO: put MeshNode traversal into query
+        node.node match {
+          case UngeneratedNode =>
+            nodeInfoBufferUngenerated += info
+            false
+          case GeneratingNode =>
+            nodeInfoBufferGenerating += info
+            false
+          case node => !node.finishedGeneration
+        }
       case (info, node:NodeUnderMesh) =>
         !node.finishedGeneration
       case _ =>

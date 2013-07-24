@@ -277,7 +277,7 @@ object GlDraw extends Draw {
 	def drawSampledNodes() {
 		for( cuboid <- predictedCuboids ) {
 			if( cuboid.isCube )
-				glColor3f(0,0,1)
+				glColor3f(0,1,0.5f)
 			else
 				glColor3f(1,0,1)
 			drawCuboid(cuboid)
