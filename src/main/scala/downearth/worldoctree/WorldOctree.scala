@@ -181,21 +181,21 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
     val newRootNodeInfo = PowerOfTwoCube(rootNodePos - rootNodeSize/2, rootNodeSize*2)
 
     newRoot = new InnerNodeOverMesh(
-          (for(i <- 0 until 8) yield {
-            // 8 meshnodes with Ungenerated nodes, calls genmesh
-            val children = Array.tabulate[NodeOverMesh](8){ j =>
-              new MeshNode(UngeneratedNode).genMesh(newRootNodeInfo(i)(j), null)
-            }
+      (for(i <- 0 until 8) yield {
+        // 8 meshnodes with Ungenerated nodes, calls genmesh
+        val children = Array.tabulate[NodeOverMesh](8){ j =>
+          new MeshNode(UngeneratedNode).genMesh(newRootNodeInfo(i)(j), null)
+        }
 
-            // n:InnerNodeOverMesh containing MeshNodes
-            val n = root match {
-              case n:InnerNodeOverMesh => n
-              case n:MeshNode => n.split(rootNodeInfo)
-            }
-            children(~i & 7) = n.getChild(i)
-            (new InnerNodeOverMesh(children)).joinChildren
-          }).toArray
-        )
+        // n:InnerNodeOverMesh containing MeshNodes
+        val n = root match {
+          case n:InnerNodeOverMesh => n
+          case n:MeshNode => n.split(rootNodeInfo)
+        }
+        children(~i & 7) = n.getChild(i)
+        (new InnerNodeOverMesh(children)).joinChildren
+      }).toArray
+    )
 
     root = newRoot
     rootNodeInfo = newRootNodeInfo

@@ -61,7 +61,10 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
           mesh.freevbo()
           mesh = mesh applyUpdate update
 
-          this
+          if(mesh.byteSize > Config.maxMeshByteSize)
+            this.split(info)
+          else
+            this
         }
     }
   }

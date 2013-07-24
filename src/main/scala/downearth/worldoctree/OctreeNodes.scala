@@ -161,11 +161,12 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 	
 	// falls alle Kindknoten MeshNodes sind, und zusammen weniger Vertices Haben, 
 	// als Vorgeschrieben, so werden sie hier zu einem einzigen Mesh zusammengefügt
+  //TODO: automatic join of small meshes?
 	def joinChildren:NodeOverMesh = {
-		if( ( true /: data ) ( _ && _.isInstanceOf[MeshNode] ) ) {
+		def allChildrenAreMeshNodes = data.forall( _.isInstanceOf[MeshNode] )
+    if( allChildrenAreMeshNodes ) {
 			// println("starting Join.")
 			val meshNodes = data map (_.asInstanceOf[MeshNode])
-			// println("step 0")
 			val sum = (0 /: meshNodes) ( _ + _.mesh.byteSize )
 
 			if(sum < Config.maxMeshByteSize)
