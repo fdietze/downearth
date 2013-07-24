@@ -31,7 +31,7 @@ class Master extends Actor {
   import WorldNodeGenerator.Messages._
 
   val jobqueue = new Queue[PowerOfTwoCube]
-  val done  = new Queue[(PowerOfTwoCube, NodeOverMesh)] //TODO: im worldoctree speichern
+  val done  = new Queue[(PowerOfTwoCube, MeshNode)] //TODO: im worldoctree speichern
   val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(classOf[Worker],i) ))
 
   val idleWorkers = Queue(workers:_*)
