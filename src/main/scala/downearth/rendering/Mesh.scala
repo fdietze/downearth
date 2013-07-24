@@ -1,7 +1,6 @@
 package downearth.rendering
 
-import org.lwjgl.opengl.ARBBufferObject._
-import org.lwjgl.opengl.ARBVertexBufferObject._
+import org.lwjgl.opengl.GL15._
 
 import simplex3d.math.double.{Vec2,Vec3,Vec4}
 import simplex3d.data._
@@ -56,36 +55,36 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 
 	def bind() {
 		assert(vbo != 0 && vibo != 0)
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vibo)
+		glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vibo)
 	}
 
   def unbind() {
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0) 
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
   }
 
 	def genvbo() {
 		freevbo
 		// vbo with size of 0 can't be initialized
 		
-		vbo = glGenBuffersARB()
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
-		glBufferDataARB(GL_ARRAY_BUFFER_ARB, data, GL_STATIC_DRAW_ARB)
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+		vbo = glGenBuffers()
+		glBindBuffer(GL_ARRAY_BUFFER, vbo)
+		glBufferData(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW)
+		glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-    vibo = glGenBuffersARB()
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vibo);
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indices, GL_STATIC_DRAW_ARB);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0)
+    vibo = glGenBuffers()
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 		
     assert( hasVbo )
 	}
 	
 	def freevbo() {
 		if( vbo > 0 ) {
-			glDeleteBuffersARB( vbo )
-      glDeleteBuffersARB( vibo )
+			glDeleteBuffers( vbo )
+      glDeleteBuffers( vibo )
 			vbo = 0
       vibo = 0
 		}
@@ -214,7 +213,7 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
   def hasVbo = vbo > 0
 
   def bind() {
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
   }
 
   def byteSize = data.width
@@ -224,16 +223,16 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
 		freevbo()
 		// vbo with size of 0 can't be initialized
 		if( nonEmpty ) {
-			vbo = glGenBuffersARB()
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
-			glBufferDataARB(GL_ARRAY_BUFFER_ARB, data, GL_STATIC_DRAW_ARB)
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+			vbo = glGenBuffers()
+			glBindBuffer(GL_ARRAY_BUFFER, vbo)
+			glBufferData(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW)
+			glBindBuffer(GL_ARRAY_BUFFER, 0)
 		}
 	}
 	
 	def freevbo() {
 		if( hasVbo ) {
-			glDeleteBuffersARB(vbo)
+			glDeleteBuffers(vbo)
 			vbo = 0
 		}
 	}
