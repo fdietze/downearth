@@ -24,6 +24,7 @@ object Main extends Logger {
 
   def main(args: Array[String]) {
 
+    log.println( "Assertions " + (if( assertionsActivated ) "active" else "inactive" ))
     log.println( "started" )
 
     val ca = new ContextAttribs(3,1).withDebug(true)

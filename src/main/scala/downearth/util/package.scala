@@ -32,6 +32,13 @@ import simplex3d.math.floatx._
 
 
 package object util {
+  def assertionsActivated = try {
+    Predef.assert(false)
+    false
+  } catch {
+    case e: AssertionError => true
+  }
+
 	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
 	implicit def q2qf(in:Quat4) = new Quat4f(in.a.toFloat,in.b.toFloat,in.c.toFloat,in.d.toFloat)
