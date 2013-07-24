@@ -94,6 +94,9 @@ class GameLoop extends Publisher with Logger { gameLoop =>
   def init() {
     val caps = GLContext.getCapabilities
 
+    // TODO: Remove all ARB calls from code
+    // grep ARB src/main/scala/downearth -r
+
     if ( caps.GL_ARB_debug_output ) {
       println("GL_ARB_debug_output")
       glDebugMessageCallbackARB(new ARBDebugOutputCallback())
