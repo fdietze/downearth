@@ -69,7 +69,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
   def apply(info: PowerOfTwoCube, p: Vec3i) = node(info,p)
 
   // der einzige NodeOverMesh, der genMesh implementiert
-  def genMesh(info:PowerOfTwoCube , destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
+  def genMesh(info:PowerOfTwoCube, worldaccess:(Vec3i => Polyeder)) = {
     assert(mesh == null)
     val meshBuilder = new TextureMeshBuilder
 

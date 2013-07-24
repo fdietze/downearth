@@ -106,8 +106,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
       incDepth()
     }
 
-    val meshNode = new MeshNode(GeneratingNode).genMesh(area,-1,null)
-    println(meshNode.mesh.byteSize)
+    val meshNode = new MeshNode(GeneratingNode).genMesh(area, null)
     insert( area, meshNode )
     WorldNodeGenerator.master ! area
   }
@@ -185,7 +184,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
           (for(i <- 0 until 8) yield {
             // 8 meshnodes with Ungenerated nodes, calls genmesh
             val children = Array.tabulate[NodeOverMesh](8){ j =>
-              new MeshNode(UngeneratedNode).genMesh(newRootNodeInfo(i)(j),-1,null)
+              new MeshNode(UngeneratedNode).genMesh(newRootNodeInfo(i)(j), null)
             }
 
             // n:InnerNodeOverMesh containing MeshNodes

@@ -49,7 +49,7 @@ object WorldGenerator {
     val root = EmptyLeaf.fill( area, pos => Leaf(hexaeders(pos)) )
 
     // generate Mesh
-    root.genMesh( area, area.size, x => {
+    root.genMesh( area, x => {
       if (area.indexInRange(x)) root(area, x).h else hexaeders(x)
     } )
   }

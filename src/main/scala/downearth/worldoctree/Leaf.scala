@@ -210,8 +210,8 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     Update(vertpos,vertcount,builder.result.toByteBuffer)
   }
 
-  override def genMesh(info:PowerOfTwoCube, dstnodesize: Int, worldaccess:(Vec3i => Polyeder) ):NodeOverMesh = {
-    (new MeshNode(this)).genMesh(info,dstnodesize,worldaccess)
+  override def genMesh(info:PowerOfTwoCube, worldaccess:(Vec3i => Polyeder) ) = {
+    (new MeshNode(this)).genMesh(info, worldaccess)
   }
 
   def draw(info:PowerOfTwoCube,test:FrustumTest){}

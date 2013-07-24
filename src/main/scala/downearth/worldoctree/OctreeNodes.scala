@@ -288,18 +288,9 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
     patch
 	}
 
-	override def genMesh(info:PowerOfTwoCube, destnodesize:Int, worldaccess:(Vec3i => Polyeder)) = {
-		if(info.size <= destnodesize){
-			val replacement = new MeshNode(this)
-			replacement.genMesh(info,destnodesize,worldaccess)
-		}
-		/*else{
-			val newdata = new Array[NodeOverMesh](8)
-			for(i <- 0 until  8)
-				newdata(i) = data(i).genMesh(info(i), destnodesize, worldaccess)
-			val replacement = new InnerNodeOverMesh(newdata)
-			replacement
-		}*/
+	//TODO: rename nodeInto/info to PowerOftwoCube/area
+  override def genMesh(info:PowerOfTwoCube, worldaccess:(Vec3i => Polyeder)) = {
+    new MeshNode(this).genMesh(info, worldaccess)
 	}
 	
 	override def getPolygons( info:PowerOfTwoCube, pos:Vec3i, from:Int, to:Int):(Int,Int) = {
@@ -317,7 +308,7 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
   def hasChildren: Boolean = false
   def apply(info:PowerOfTwoCube, p:Vec3i): Leaf = Config.ungeneratedDefault
 
-  def genMesh(info: PowerOfTwoCube,dstnodesize: Int,worldaccess: Vec3i => Polyeder): NodeOverMesh = new MeshNode(this)
+  def genMesh(info: PowerOfTwoCube, worldaccess: Vec3i => Polyeder) = new MeshNode(this)
   def genPolygons(info: PowerOfTwoCube,meshBuilder: TextureMeshBuilder,worldaccess: Vec3i => Polyeder): Int = 0
   def getPolygons(info: PowerOfTwoCube,pos: Vec3i,from: Int,to: Int): (Int, Int) = (from,to)
   def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {

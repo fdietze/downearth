@@ -217,7 +217,6 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo)
   }
 
-  //@deprecated("a","b") def size = msize
   def byteSize = data.width
   def vertexCount = byteSize / TextureMesh.byteStride
 	
