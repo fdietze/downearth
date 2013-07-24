@@ -67,7 +67,7 @@ trait NodeUnderMesh extends Node {
 	// aktiviert die Polygongenerierung. Der Baum mit InnerNodes (erbt von 
 	// NodeUnderMesh) initialisiert, und anschließend werden im genMesh
 	// Schritt die Knoten ersetzt, die tatsächlich höher liegen.
-	def genMesh(info:PowerOfTwoCube, dstnodesize: Int, worldaccess:(Vec3i => Polyeder)): NodeOverMesh
+	def genMesh(info:PowerOfTwoCube, worldaccess:(Vec3i => Polyeder)): MeshNode
 	// Generiert die Polygone des gesamten Knotens, und fügt sie zum meshBuilder 
 	// hinzu, worldaccess wird für den Verdeckungstest mit den Nachbarn gebraucht.
 	def genPolygons(info:PowerOfTwoCube, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int
@@ -293,13 +293,13 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 			val replacement = new MeshNode(this)
 			replacement.genMesh(info,destnodesize,worldaccess)
 		}
-		else{
+		/*else{
 			val newdata = new Array[NodeOverMesh](8)
 			for(i <- 0 until  8)
 				newdata(i) = data(i).genMesh(info(i), destnodesize, worldaccess)
 			val replacement = new InnerNodeOverMesh(newdata)
 			replacement
-		}
+		}*/
 	}
 	
 	override def getPolygons( info:PowerOfTwoCube, pos:Vec3i, from:Int, to:Int):(Int,Int) = {

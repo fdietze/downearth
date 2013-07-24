@@ -51,7 +51,7 @@ object WorldGenerator {
     // generate Mesh
     root.genMesh( area, area.size, x => {
       if (area.indexInRange(x)) root(area, x).h else hexaeders(x)
-    } ).asInstanceOf[MeshNode]
+    } )
   }
 
 
