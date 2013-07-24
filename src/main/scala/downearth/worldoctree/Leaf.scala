@@ -126,7 +126,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
             val v0 = Vec2( t0(axisa), t0(axisb) )
             val v1 = Vec2( t1(axisa), t1(axisb) )
             val v2 = Vec2( t2(axisa), t2(axisb) )
-            val flatTriangle = Vector(v0,v1,v2)
+            val flatTriangle = Array(v0,v1,v2)
             if( !occludes2d(occludee=flatTriangle,occluder=occludingCoords) ) {
               addVertices(t0, t1, t2)
             }

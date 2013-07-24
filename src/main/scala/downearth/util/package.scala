@@ -381,11 +381,11 @@ package object util {
 		return false
 	}
 	
-	def occludes2d(occluder:Seq[Vec2], occludee:Seq[Vec2]):Boolean = {
+	def occludes2d(occluder:IndexedSeq[Vec2], occludee:IndexedSeq[Vec2]):Boolean = {
 		if( occluder == occludee )
 			true
 		else {
-			val vertices = Vector.concat(occluder,occludee)
+			val vertices = occluder ++ occludee
 			val convexHull = ChainHull2D(vertices)
 			if( convexHull.toSet == occluder.toSet ) // complete occlusion
 				true
