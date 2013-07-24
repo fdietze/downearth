@@ -19,6 +19,7 @@ import downearth.Config._
 import downearth.message
 import collection.mutable
 import downearth.world.World
+import downearth.rendering.TextureMesh
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new MeshNode) extends Data3D[Leaf] {
@@ -106,8 +107,9 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
       incDepth()
     }
 
-    val meshNode = new MeshNode(GeneratingNode).genMesh(area, null)
-    insert( area, meshNode )
+    val generatingMeshNode = new MeshNode(GeneratingNode)
+    generatingMeshNode.mesh = TextureMesh.empty
+    insert( area, generatingMeshNode )
     WorldNodeGenerator.master ! area
   }
 
@@ -184,7 +186,9 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
       (for(i <- 0 until 8) yield {
         // 8 meshnodes with Ungenerated nodes, calls genmesh
         val children = Array.tabulate[NodeOverMesh](8){ j =>
-          new MeshNode(UngeneratedNode).genMesh(newRootNodeInfo(i)(j), null)
+          val meshNode = new MeshNode(UngeneratedNode)
+          meshNode.mesh = TextureMesh.empty
+          meshNode
         }
 
         // n:InnerNodeOverMesh containing MeshNodes
