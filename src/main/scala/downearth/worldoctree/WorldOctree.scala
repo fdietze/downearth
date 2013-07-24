@@ -51,22 +51,33 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   // filter the nodes by predicate (for example frustum test)
   // and apply action to every found node
   // recurse deeper if action returns true
-  def query(predicate:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
-
-    val infoQueue = mutable.Queue[PowerOfTwoCube](rootArea)
+  val queryDummyOrder = Array.range(0,8)
+  def query(areaFilter:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
+    val areaQueue = mutable.Queue[PowerOfTwoCube](rootArea)
     val nodeQueue = mutable.Queue[Node](root)
-    val dummyOrder = if(camera == null) Array.range(0,8) else null
 
     while( nodeQueue.nonEmpty ) {
-      val currentInfo = infoQueue.dequeue()
+      val currentArea = areaQueue.dequeue()
       val currentNode = nodeQueue.dequeue()
-      if( predicate(currentInfo) && action(currentInfo, currentNode) && currentNode.hasChildren ) {
-        val order = if(camera != null) currentInfo.traversalOrder(camera) else dummyOrder
-        var i = 0
-        while(i < 8) {
-          nodeQueue += currentNode.getChild(order(i))
-          infoQueue += currentInfo(order(i))
-          i += 1
+
+      if( areaFilter(currentArea) &&
+          action(currentArea, currentNode) ) {
+        currentNode match {
+          // treat MeshNode as if it had one child
+          case n:MeshNode =>
+            nodeQueue += n.node
+            areaQueue += currentArea
+
+          case n if n.hasChildren =>
+            val order = if(camera != null) currentArea.traversalOrder(camera) else queryDummyOrder
+            var i = 0
+            while(i < 8) {
+              nodeQueue += currentNode.getChild(order(i))
+              areaQueue += currentArea(order(i))
+              i += 1
+            }
+
+          case _ =>
         }
       }
     }
