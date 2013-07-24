@@ -299,7 +299,7 @@ object Renderer extends Logger {
 
     var maximumDrawCalls = Config.maxDebugDrawQubes
 
-    octree.queryRegion(test,camera) {
+    octree.query(test,camera) {
     case (info,octant) =>
       if(! octant.hasChildren) {
         glPushMatrix()
@@ -374,7 +374,7 @@ object Renderer extends Logger {
     if( Config.occlusionTest ) {
       OcclusionTest.doIt(camera, frustumTest)
     } else { // perform frustum test only
-      World.octree.queryRegion( frustumTest, camera.position) {
+      World.octree.query( frustumTest, camera.position) {
         case (info, UngeneratedNode) =>
           World.octree.generateArea(info)
           false
@@ -382,7 +382,9 @@ object Renderer extends Logger {
           false
         case (info, node:MeshNode) =>
           true
-        case _ => //TODO stop traversal earlier
+        case (info, node:NodeUnderMesh) =>
+          !node.finishedGeneration
+        case _ =>
           true
       }
     }
@@ -433,7 +435,7 @@ object Renderer extends Logger {
 
       val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
-      octree.queryRegion( test, camera ) {
+      octree.query( test, camera ) {
         case (info, node:MeshNode) =>
           drawTextureMesh(node.mesh)
           objMeshes ++= node.objMeshes

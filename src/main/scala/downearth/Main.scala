@@ -17,6 +17,7 @@ import downearth.world.World
 import downearth.util._
 import downearth.gui._
 //import downearth.server.LocalServer
+import downearth.worldoctree.InnerNodeUnderMesh
 
 
 object Main extends Logger {
@@ -213,6 +214,16 @@ class GameLoop extends Publisher with Logger { gameLoop =>
         println("next Ungenerated:" + next)
         for( area <- next )
           World.octree.generateArea(area)
+        println("not finished:")
+        World.octree.query(){
+          case (area, n:InnerNodeUnderMesh) =>
+            if( !n.finishedGeneration ) {
+              println(n)
+              true
+            } else false
+          case _ =>
+            true
+        }
       case `keyToggleFullScreen` =>
         if( Display.isFullscreen ) {
           Display.setDisplayModeAndFullscreen(windowMode)

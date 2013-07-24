@@ -52,8 +52,9 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
   // traverse the octree in a front to back order from view of point camera
   // filter the nodes by predicate (for example frustum test)
-  // and apply action to every found node, skip subtree if action returns false
-  def queryRegion(predicate:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
+  // and apply action to every found node
+  // recurse deeper if action returns true
+  def query(predicate:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
 
     val infoQueue = mutable.Queue[PowerOfTwoCube](rootNodeInfo)
     val nodeQueue = mutable.Queue[Node](root)
@@ -86,7 +87,7 @@ class WorldOctree(var rootNodeInfo:PowerOfTwoCube, var root:NodeOverMesh = new M
 
   def getNextUngenerated:Option[PowerOfTwoCube] = {
     var node:Option[PowerOfTwoCube] = None
-    queryRegion(){
+    query(){
       case (area, UngeneratedNode) =>
         node = Some(area)
         false

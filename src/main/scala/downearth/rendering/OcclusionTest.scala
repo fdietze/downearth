@@ -51,7 +51,7 @@ object OcclusionTest {
     val nodeInfoBufferGenerating  = ArrayBuffer[PowerOfTwoCube]()
     val nodeInfoBufferUngenerated = ArrayBuffer[PowerOfTwoCube]()
 
-    octree.queryRegion( test, camera.position) {
+    octree.query( test, camera.position) {
       case (info, UngeneratedNode) =>
         nodeInfoBufferUngenerated += info
         false

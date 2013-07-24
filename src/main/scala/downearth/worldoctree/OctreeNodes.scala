@@ -92,6 +92,7 @@ trait NodeUnderMesh extends Node {
 
   // true: No generating or ungenerated nodes as children
   def finishedGeneration:Boolean
+  def refreshFinishedState() = {}
 }
 
 class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
@@ -180,7 +181,12 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 }
 
 class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
-  var finishedGeneration = (true /: data)(_ && _.finishedGeneration)
+  def allChildrenFinished = (true /: data)(_ && _.finishedGeneration)
+  var finishedGeneration = allChildrenFinished
+  override def refreshFinishedState() {
+    data.foreach{ _.refreshFinishedState() } //TODO: smarter way than recursion?
+    finishedGeneration = allChildrenFinished
+  }
 
   override def toString = s"InnerNodeUnderMesh(finished=$finishedGeneration, geometry=${geometryByteCount.mkString("(",",","")}, sum=${geometryByteCount.sum}))"
 

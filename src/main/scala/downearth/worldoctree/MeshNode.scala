@@ -58,6 +58,7 @@ class MeshNode(var node:NodeUnderMesh = UngeneratedNode) extends NodeOverMesh {
           val update = Update(updateInfo.oldByteOffset, updateInfo.oldByteSize, newNode.mesh.data)
 
           node = updateInfo.node
+          node.refreshFinishedState()
           mesh.freevbo()
           mesh = mesh applyUpdate update
 
