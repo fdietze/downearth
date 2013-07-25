@@ -7,9 +7,7 @@ import simplex3d.math.double.functions._
 import downearth._
 import downearth.util._
 import downearth.world.World
-import downearth.generation.WorldDefinition
-import scala.collection.mutable.{ArrayBuffer, Queue}
-import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder, TextureMeshData}
+import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder}
 
 sealed trait Node {
 	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
@@ -254,7 +252,7 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 			val mb = new TextureMeshBuilder
 			// replace with newLeaf
 			newLeaf.genPolygons(info,mb, v => World.octree(v).h )
-			( newLeaf, Update(bytePos,byteCount,mb.result.toByteBuffer) )
+			( newLeaf, Update(bytePos,byteCount,mb.result) )
 		}
 		else
 			(this,patch)
@@ -322,7 +320,7 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
   def genPolygons(info: PowerOfTwoCube,meshBuilder: TextureMeshBuilder,worldaccess: Vec3i => Polyeder): Int = 0
   def getPolygons(info: PowerOfTwoCube,pos: Vec3i,from: Int,to: Int): (Int, Int) = (from,to)
   def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
-    (this, Update(vertpos,vertcount,(new TextureMeshBuilder).result.toByteBuffer))
+    (this, Update(vertpos,vertcount,(new TextureMeshBuilder).result))
   }
 
   def patchWorld(info: PowerOfTwoCube, insertInfo: PowerOfTwoCube, newNode: NodeUnderMesh, insertByteSize: Int, currentByteOffset: Int, currentByteSize: Int): UpdateInfo = {
@@ -336,7 +334,7 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
   }
 
   def repolyWorld(info: PowerOfTwoCube,p: Vec3i,vertpos: Int,vertcount: Int): Update = {
-    Update(vertpos,vertcount,(new TextureMeshBuilder).result.toByteBuffer)
+    Update(vertpos,vertcount,(new TextureMeshBuilder).result)
   }
 
   //similar to updated, but this function also generates patches to update the mesh

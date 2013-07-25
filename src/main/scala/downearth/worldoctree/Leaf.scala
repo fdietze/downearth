@@ -10,6 +10,7 @@ import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
 import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder, ObjMesh}
 import downearth.resources.MaterialManager
+import simplex3d.math.floatx.{Vec2f, Vec3f}
 
 
 /**
@@ -92,18 +93,18 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
         val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).id
         val matCount = MaterialManager.materialCount.toDouble
 
-        vertexBuilder += (Vec3(pos) + v0)
-        texCoordBuilder += Vec2( v0(axisa)/matCount + matid/matCount , v0(axisb) )
+        vertexBuilder += Vec3f(pos) + Vec3f(v0)
+        texCoordBuilder += Vec2f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat )
 
-        vertexBuilder += (Vec3(pos) + v1)
-        texCoordBuilder += Vec2( v1(axisa)/matCount + matid/matCount , v1(axisb) )
+        vertexBuilder += Vec3f(pos) + Vec3f(v1)
+        texCoordBuilder += Vec2f( (v1(axisa)/matCount + matid/matCount).toFloat , v1(axisb).toFloat )
 
-        vertexBuilder += (Vec3(pos) + v2)
-        texCoordBuilder += Vec2( v2(axisa)/matCount + matid/matCount , v2(axisb) )
+        vertexBuilder += Vec3f(pos) + Vec3f(v2)
+        texCoordBuilder += Vec2f( (v2(axisa)/matCount + matid/matCount).toFloat , v2(axisb).toFloat )
 
         vertexCounter += 3
 
-        val normal = normalize(cross(v2-v1,v0-v1))
+        val normal = Vec3f(normalize(cross(v2-v1,v0-v1)))
         normalBuilder += normal
         normalBuilder += normal
         normalBuilder += normal
@@ -188,7 +189,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
     val builder = new TextureMeshBuilder
     replacement.genPolygons(info,builder, v => World.octree(v).h )
-    val update = Update(vertpos,vertcount,builder.result.toByteBuffer)
+    val update = Update(vertpos,vertcount,builder.result)
     (replacement,update)
   }
   //TODO: (?) NodeUnderMesh soll die eigene Größe (Vertices) kennen, und nicht die der Kinder
@@ -206,7 +207,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     require(vertcount >= 0)
     val builder = new TextureMeshBuilder
     genPolygons(info, builder, v => World.octree(v).h )
-    Update(vertpos,vertcount,builder.result.toByteBuffer)
+    Update(vertpos,vertcount,builder.result)
   }
 
   override def genMesh(info:PowerOfTwoCube, worldaccess:(Vec3i => Polyeder) ) = {

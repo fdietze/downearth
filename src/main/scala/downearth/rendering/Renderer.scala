@@ -38,7 +38,6 @@ import simplex3d.math.double._
 import scala.collection.mutable.ArrayBuffer
 import downearth.worldoctree.PowerOfTwoCube
 import glwrapper._
-import java.nio.ByteBuffer
 
 object Renderer extends Logger {
 
@@ -499,11 +498,11 @@ object Renderer extends Logger {
     if( mesh.nonEmpty ) {
       drawCalls += 1
       mesh.bind()
-      glVertexPointer(mesh.vertices.components, mesh.vertices.rawEnum, mesh.vertices.byteStride, mesh.vertices.byteOffset)
-      glNormalPointer(mesh.normals.rawEnum, mesh.normals.byteStride, mesh.normals.byteOffset)
-      glTexCoordPointer(mesh.texcoords.components, mesh.texcoords.rawEnum, mesh.texcoords.byteStride, mesh.texcoords.byteOffset)
-      glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size)
-
+      import TextureMesh._
+      glVertexPointer(  3,  vertexType, byteStride,  vertexOffset)
+      glNormalPointer(      normalType, byteStride,  normalOffset)
+      glTexCoordPointer(2,  texCoordType, byteStride,   texCoordOffset)
+      glDrawArrays(GL_TRIANGLES, 0, mesh.vertexCount)
       glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
     }
 

@@ -2,8 +2,10 @@ package downearth.worldoctree
 
 import downearth.{Config}
 import simplex3d.math.Vec3i
+import simplex3d.math.double.ConstVec3
 import scala.collection.mutable
 import downearth.rendering.{Update, TextureMesh, TextureMeshBuilder, ObjMesh}
+import simplex3d.math.floatx.Vec3f
 
 /**
  * User: arne
@@ -96,7 +98,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 
     // TODO warum wird result nicht verwendet?
     val result = node.genPolygons(info, meshBuilder, worldaccess)
-    mesh = TextureMesh(meshBuilder.result)
+    mesh = TextureMesh(meshBuilder)
 
     // genvbo darf hier noch nicht aufgerufen werden, weil genMesh auch in
     // anderen Threads als dem render Thread aufgerufen wird. Um die
@@ -207,6 +209,11 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 
   override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {
     val (from,to) = node.getPolygons( info, pos, 0, mesh.byteSize )
-    (from until to) map mesh.vertices
+
+    val reader = mesh.data.duplicate()
+    for(i <- from until to) yield {
+      reader.position(TextureMesh.byteStride*i+TextureMesh.vertexOffset)
+      ConstVec3( glwrapper.util.getVec3f(reader, Vec3f(0)) )
+    }
   }
 }

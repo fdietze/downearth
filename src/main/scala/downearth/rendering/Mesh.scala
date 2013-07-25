@@ -3,8 +3,6 @@ package downearth.rendering
 import org.lwjgl.opengl.GL15._
 
 import simplex3d.math.double.{Vec2,Vec3,Vec4}
-import simplex3d.data._
-import simplex3d.data.double._
 import simplex3d.math.integration.RFloat
 
 import org.lwjgl.BufferUtils
@@ -13,6 +11,8 @@ import java.nio._
 
 import downearth.util._
 import downearth.worldoctree.NodeUnderMesh
+import org.lwjgl.opengl.GL11
+import simplex3d.math.floatx.{Vec3f, Vec2f}
 
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
@@ -91,55 +91,31 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	}
 }
 
-@deprecated("a","b") case class TextureMeshData(
-			vertexArray:Array[Vec3],
-			normalArray:Array[Vec3],
-			texcoordsArray:Array[Vec2]
-//			colorArray:Array[Vec4]
-		) {
-	def size = vertexArray.size
-  def stride = 32
-
-  def toByteBuffer = {
-    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.size * stride)
-    val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
-    val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
-    val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
-
-    for(i <- 0 until vertexArray.size){
-      vertices(i) = vertexArray(i)
-      normals(i) = normalArray(i)
-      texcoords(i) = texcoordsArray(i)
-    }
-    byteBuffer
-  }
-}
+//@deprecated("a","b") case class TextureMeshData(
+//			vertexArray:Array[Vec3],
+//			normalArray:Array[Vec3],
+//			texcoordsArray:Array[Vec2]
+////			colorArray:Array[Vec4]
+//		) {
+//	def size = vertexArray.size
+//  def stride = 32
+//
+//  def toByteBuffer = {
+//    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.size * stride)
+//    val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
+//    val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
+//    val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
+//
+//    for(i <- 0 until vertexArray.size){
+//      vertices(i) = vertexArray(i)
+//      normals(i) = normalArray(i)
+//      texcoords(i) = texcoordsArray(i)
+//    }
+//    byteBuffer
+//  }
+//}
 
 import scala.collection.mutable.ArrayBuilder
-
-case class TextureMeshBuilder(
-			vertexBuilder:ArrayBuilder[Vec3] = ArrayBuilder.make[Vec3],
-			normalBuilder:ArrayBuilder[Vec3] = ArrayBuilder.make[Vec3],
-			texCoordBuilder:ArrayBuilder[Vec2] = ArrayBuilder.make[Vec2]
-//			colorBuilder:ArrayBuilder[Vec4] = ArrayBuilder.make[Vec4]
-			) {
-	def result = TextureMeshData(
-					vertexBuilder.result,
-					normalBuilder.result,
-					texCoordBuilder.result
-//					colorBuilder.result
-					)
-}
-
-// A <: B <: MeshData => Patch[A] <: Patch[B]
-object Update {
-  val byteStride = 32 //TODO sizeOf
-  def apply(offset:Int, oldSize:Int, data:TextureMeshData) = {
-    require(offset >= 0)
-    require(oldSize >= 0)
-    new Update(offset * byteStride, oldSize * byteStride, data.toByteBuffer)
-  }
-}
 
 case class Update(byteOffset:Int, byteOldSize:Int, data:ByteBuffer) {
   require( byteOffset >= 0, toString)
@@ -172,14 +148,44 @@ case class UpdateInfo(node:NodeUnderMesh, oldByteOffset:Int, oldByteSize:Int, ne
   override def toString = s"UpdateInfo(oldOffset=$oldByteOffset, newSize=$newByteSize, node=$node)"
 }
 
+case class TextureMeshBuilder(
+  vertexBuilder:ArrayBuilder[Vec3f] = ArrayBuilder.make[Vec3f],
+  normalBuilder:ArrayBuilder[Vec3f] = ArrayBuilder.make[Vec3f],
+  texCoordBuilder:ArrayBuilder[Vec2f] = ArrayBuilder.make[Vec2f]
+) {
+  def result = {
+    val verts = vertexBuilder.result()
+    val normals = normalBuilder.result()
+    val texCoords = texCoordBuilder.result()
+    require( verts.length == normals.length && normals.length == texCoords.length )
+
+    val numVerts = verts.length
+    val buffer = BufferUtils.createByteBuffer(numVerts * TextureMesh.byteStride)
+
+    for(i <- 0 until numVerts){
+      glwrapper.util.putVec3f( buffer, verts(i) )
+      glwrapper.util.putVec3f( buffer, normals(i) )
+      glwrapper.util.putVec2f( buffer, texCoords(i) )
+    }
+
+    buffer.flip()
+    buffer
+  }
+}
+
 // Diese Klasse wird verwendet, um den Octree darzustellen. Er repräsentiert ein
 // Mesh und stellt Methoden zur Verfügung, die es erlauben das Mesh über Updates
 // zu verändern.
 object TextureMesh {
-  //TODO: global byteStride and Attributes definition
-  val byteStride = 32 //TODO sizeOf
+  @inline def vertexOffset   = 0
+  @inline def vertexType     = GL11.GL_FLOAT
+  @inline def normalOffset   = 12
+  @inline def normalType     = GL11.GL_FLOAT
+  @inline def texCoordOffset = 24
+  @inline def texCoordType   = GL11.GL_FLOAT
+  @inline def byteStride     = 32
 
-  def apply(data:TextureMeshData) = new TextureMesh(data.toByteBuffer)
+  def apply(data:TextureMeshBuilder) = new TextureMesh(data.result)
 	
 	def apply(meshes:Array[TextureMesh]) = {
 		val byteSize = (0 /: meshes)(_ + _.byteSize)
@@ -199,12 +205,6 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
 
   require(data.position == 0)
   require(data.limit == data.capacity)
-
-
-  @deprecated("a","b") def vertices  = DataView[Vec3,RFloat](_data, 0, 8)
-  @deprecated("a","b") def normals   = DataView[Vec3,RFloat](_data, 3, 8)
-  @deprecated("a","b") def texcoords = DataView[Vec2,RFloat](_data, 6, 8)
-	@deprecated("a","b") private var msize = vertices.size
 
   override def toString = s"TextureMesh(dataWidth=${data.width})"
 

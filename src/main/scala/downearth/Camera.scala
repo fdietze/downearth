@@ -4,9 +4,6 @@ import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
-import simplex3d.data._
-import simplex3d.data.double._
-
 import Config._
 import downearth.worldoctree.PowerOfTwoCube
 import org.lwjgl.opengl.Display

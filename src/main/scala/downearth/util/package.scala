@@ -1,11 +1,8 @@
 package downearth
 
-import simplex3d.math._
-import simplex3d.math.double._
 import simplex3d.math.double.functions._
-import simplex3d.math.doublex._
-import simplex3d.data._
-import simplex3d.data.double._
+import simplex3d.math.double._
+import simplex3d.math._
 
 import com.bulletphysics.dynamics.RigidBody
 import com.bulletphysics.linearmath.Transform
@@ -29,6 +26,7 @@ import downearth.rendering.{Update, GlDraw}
 import downearth.worldoctree.{UndefHexaeder, EmptyHexaeder, Polyeder, Hexaeder}
 import downearth.generation.ChainHull2D
 import simplex3d.math.floatx._
+import simplex3d.math.{Vec2i, Vec3i}
 
 
 package object util {
@@ -49,23 +47,23 @@ package object util {
     }
   }
 
-	implicit def mat2buffer(in:Mat4):FloatBuffer = {
-		val data = DataBuffer[Mat4,RFloat](1)
-		data(0) = in
-		data.buffer
-	}
-
-	implicit def vec3_2buffer(in:Vec3):FloatBuffer = {
-		val data = DataBuffer[Vec3,RFloat](1)
-		data(0) = in
-		data.buffer
-	}
-
-	implicit def vec4_2buffer(in:Vec4):FloatBuffer = {
-		val data = DataBuffer[Vec4,RFloat](1)
-		data(0) = in
-		data.buffer
-	}
+//	implicit def mat2buffer(in:Mat4):FloatBuffer = {
+//		val data = DataBuffer[Mat4,RFloat](1)
+//		data(0) = in
+//		data.buffer
+//	}
+//
+//	implicit def vec3_2buffer(in:Vec3):FloatBuffer = {
+//		val data = DataBuffer[Vec3,RFloat](1)
+//		data(0) = in
+//		data.buffer
+//	}
+//
+//	implicit def vec4_2buffer(in:Vec4):FloatBuffer = {
+//		val data = DataBuffer[Vec4,RFloat](1)
+//		data(0) = in
+//		data.buffer
+//	}
 	
 	implicit def sequence2FloatBuffer(s:Seq[Float]):FloatBuffer = {
 		val buffer = BufferUtils.createFloatBuffer(s.size)
