@@ -3,26 +3,21 @@ package downearth.generation
 import akka.pattern.ask
 import simplex3d.math.double.{Vec2, Vec3, Mat4}
 
-import collection.mutable.{Queue, SynchronizedQueue, SynchronizedSet, HashSet}
+import collection.mutable.Queue
 import akka.actor._
-import scala.Tuple2
 import downearth.worldoctree._
-import downearth.{Player, FrustumTestImpl, Config}
-import downearth.rendering.{TextureMesh, TextureMeshData, GlDraw, Draw}
+import downearth.Config
+import downearth.rendering.{TextureMesh, GlDraw}
 import downearth.worldoctree.PowerOfTwoCube
-import downearth.worldoctree.Cuboid
-import scala.Tuple2
-import akka.util.Timeout
-import scala.concurrent.Await
+import akka.routing.SmallestMailboxRouter
 
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 object WorldNodeGenerator {
   val actorSystem = ActorSystem.create("worldNodeGenerator")
   val master = actorSystem.actorOf( Props[Master] )
+
   object Messages {
     case object GetFinishedJobs
-    case object ActiveJobsEmpty
-    case object AllJobsEmpty
     case class FinishedJob(job:PowerOfTwoCube, node:MeshNode)
   }
 }
@@ -30,53 +25,26 @@ object WorldNodeGenerator {
 class Master extends Actor {
   import WorldNodeGenerator.Messages._
 
-  val jobqueue = new Queue[PowerOfTwoCube]
-  val done  = new Queue[(PowerOfTwoCube, MeshNode)] //TODO: im worldoctree speichern
-  val workers = (1 to Config.numWorkingThreads) map ( i => context.actorOf( Props(classOf[Worker],i) ))
+  val workers = context.actorOf(Props[Worker].
+    withRouter(SmallestMailboxRouter(Config.numWorkingThreads)), "router")
 
-  val idleWorkers = Queue(workers:_*)
+  val done  = new Queue[FinishedJob] //TODO: im worldoctree speichern (warum?)
 
   def receive = {
     case GetFinishedJobs =>
-      val result = done.dequeueAll( _ => true)
-      sender ! result
-
-
-    case AllJobsEmpty =>
-      sender ! (jobqueue.isEmpty && done.isEmpty)
-
+      sender ! done.dequeueAll( _ => true)
 
     // Master erhält neuen Job und verteilt ihn.
     case area:PowerOfTwoCube =>
-      if( idleWorkers.isEmpty )
-        jobqueue enqueue area //Warteschlange
-      else
-        idleWorkers.dequeue ! area //Verteilen
-
+      workers ! area
+    // TODO: Config.prioritizeGenerationInFrustum
 
     // Worker has finished Job
-    case FinishedJob( oldjob:PowerOfTwoCube, node:MeshNode ) =>
-      done enqueue Tuple2(oldjob,node)
-
-      if( jobqueue.isEmpty )
-        idleWorkers enqueue sender
-      else {
-        // if there is a job left assign it.
-        val job = if(Config.prioritizeGenerationInFrustum) {
-          val test = new FrustumTestImpl(Mat4(Player.camera.projection), Mat4(Player.camera.view))
-          jobqueue.dequeueFirst(c => test(c)) getOrElse jobqueue.dequeue()
-        }
-        else
-          jobqueue.dequeue()
-
-        sender ! job
-      }
-
+    case job:FinishedJob =>
+      done enqueue job
 
     case PoisonPill =>
-      for( worker <- workers )
-        worker ! PoisonPill
-
+        workers ! PoisonPill
 
     case unknown =>
       println("Master: unknown message: " + unknown)
@@ -85,7 +53,7 @@ class Master extends Actor {
   override def toString = "Master"
 }
 
-class Worker (id:Int) extends Actor {
+class Worker extends Actor {
   import WorldNodeGenerator.Messages._
 
   def receive = {
@@ -95,7 +63,7 @@ class Worker (id:Int) extends Actor {
       val surfaceNotInArea = !interval(0)
 
       if( surfaceNotInArea ) {
-        GlDraw addPredictedCuboid area  // Für DebugDraw
+        //GlDraw addPredictedCuboid area  // Für DebugDraw
         val meshNode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
@@ -105,15 +73,14 @@ class Worker (id:Int) extends Actor {
       // if the area is too big, it will be splitted
       else if( area.size/2 >= Config.minPredictionSize ) {
         val data = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
-        val node = new InnerNodeUnderMesh(data)
-        val meshNode = new MeshNode(node)
+        val meshNode = new MeshNode(new InnerNodeUnderMesh(data))
         meshNode.mesh = TextureMesh.empty
         sender ! FinishedJob(area, meshNode)
       }
       // sample the whole area
       else {
         val meshNode = WorldGenerator generateNode area
-        sender ! FinishedJob(area, meshNode)  // Master
+        sender ! FinishedJob(area, meshNode)
       }
   }
 }

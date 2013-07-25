@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 
 import downearth.util._
 import downearth.generation.WorldNodeGenerator
-import WorldNodeGenerator.Messages.GetFinishedJobs
+import downearth.generation.WorldNodeGenerator.Messages.{FinishedJob, GetFinishedJobs}
 import downearth.{BulletPhysics, Config, util}
 import downearth.Config._
 import downearth.message
@@ -125,10 +125,10 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   // ask WorldNodeGenerator for generated nodes and insert them into the octree
   def makeUpdates() {
     implicit val timeout = Timeout(1000 seconds)
-    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[(PowerOfTwoCube, NodeOverMesh)]]
+    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[FinishedJob]]
     val s = Await.result(future, 1000 seconds)
 
-    for( (nodeinfo, node) <- s ) {
+    for( FinishedJob(nodeinfo, node) <- s ) {
       insert( nodeinfo, node )
       BulletPhysics.worldChange(nodeinfo)
     }
