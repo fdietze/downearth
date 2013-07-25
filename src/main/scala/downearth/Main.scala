@@ -8,7 +8,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import downearth.rendering._
-import downearth.generation.WorldNodeGenerator
+import downearth.rendering.{GlDraw, ObjManager, TextureManager, Renderer}
 import downearth.Config._
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.ARBDebugOutput._
@@ -17,45 +17,94 @@ import downearth.world.World
 import downearth.util._
 import downearth.gui._
 //import downearth.server.LocalServer
-import downearth.worldoctree.InnerNodeUnderMesh
+import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
+import akka.actor._
+import downearth.generation.Master
+import AkkaMessages._
 
 
 object Main extends Logger {
+  var actorSystem:ActorSystem = null
+  var game:ActorRef = null
 
   def main(args: Array[String]) {
-
-    log.println( "Assertions " + (if( assertionsActivated ) "active" else "inactive" ))
     log.println( "started" )
+    log.println( "Assertions " + (if( assertionsActivated ) "active" else "inactive" ))
 
+    log.println( "Creating Actor System" )
+
+    actorSystem = ActorSystem.create("gamecontext")
+    game = actorSystem.actorOf( Props[Game].withDispatcher("akka.actor.single-thread-dispatcher"), "game" )
+
+    game ! Run
+  }
+
+}
+
+object AkkaMessages {
+  case object Run
+  case object GetFinishedJobs
+  case class FinishedJob(area:PowerOfTwoCube, node:MeshNode)
+  case class Predicted(area:PowerOfTwoCube)
+}
+
+
+class DebugLog extends Actor {
+  def receive = {
+    case Predicted(area) =>
+      GlDraw addPredictedCuboid area
+  }
+}
+
+class Game extends Actor with Publisher with Logger { gameLoop =>
+  val master = context.actorOf( Props[Master], "master" )
+  val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
+
+  val world = new World
+  val physics = new BulletPhysics(world)
+
+  override def preStart() {
+    createOpenGLContext()
+    createWidgetSystem()
+    init()
+  }
+
+  def receive = {
+    case Run =>
+      step()
+      self ! Run
+
+    case unknown =>
+      println("Game: unknown message: " + unknown)
+  }
+
+  override def postStop() {
+    Config.loader.save()
+    TextureManager.delete()
+    ObjManager.delete()
+    context.system.shutdown()
+  }
+
+  def createWidgetSystem() {
+    val wed = new WidgetEventDispatcher(MainWidget)
+    wed.listenTo(gameLoop)
+  }
+
+  def createOpenGLContext() {
     val ca = new ContextAttribs(3,0).withDebug(true)
     val alpha = 8
     val depth = 16
     val stencil = 0
     val pf = new PixelFormat(alpha, depth, stencil)
-
     Display.setDisplayMode( new DisplayMode(Config.windowResolutionWidth,Config.windowResolutionHeight) )
     Display.setResizable(true)
     Display.create(pf, ca)
-
     log.println( "display created" )
-
-    val wed = new WidgetEventDispatcher(MainWidget)
-
-    val gameLoop = new GameLoop
-    wed.listenTo(gameLoop)
-
-    gameLoop.run()
-
-    Config.loader.save()
   }
-}
 
-class GameLoop extends Publisher with Logger { gameLoop =>
 
   var snapshotRequest = 0L
   var snapshotCurrent = -1L
-
-  var finished = false
 
   def time = System.currentTimeMillis
   val starttime = time
@@ -66,34 +115,26 @@ class GameLoop extends Publisher with Logger { gameLoop =>
   var timestamp = starttime
   var frameCounter = 0
 
+  def step() {
+    physics.update()
 
-  def run() {
-    init()
+    handleInput()
 
-    while(!finished) {
+    world.octree.makeUpdates()
 
-      BulletPhysics.update()
-      // input()
-
-      handleInput()
-
-      World.octree.makeUpdates()
-
-      if( Config.streamWorld ) {
-        World.octree stream Player.pos
-      }
-
-      Renderer.draw()
-      frame()
-
-      Display.update()
-      Display.sync(fpsLimit)
+    if( Config.streamWorld ) {
+      world.octree stream Player.pos
     }
 
-    destroy()
+    Renderer.draw()
+    frame()
+
+    Display.update()
+    Display.sync(fpsLimit)
   }
 
-  def init() {
+
+  def init() { //TODO split init
     val caps = GLContext.getCapabilities
 
     // TODO: Remove all ARB calls from code
@@ -127,22 +168,9 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     glClearColor(0.4f, 0.6f, 0.9f, 1f)
 
-    World
-
     //Mouse setGrabbed true
 	}
 
-  def destroy() {
-
-    WorldNodeGenerator.actorSystem.shutdown()
-    //LocalServer.actorSystem.shutdown()
-
-    TextureManager.delete()
-    ObjManager.delete()
-
-    println("all destroyed")
-	}
-	
 	// Berechnet die Aktuelle Framerate
 	def frame() {
 		if(time - timestamp > 1000){
@@ -159,12 +187,16 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
   var windowMode:DisplayMode = null
 
+  def quit() {
+    self ! PoisonPill
+  }
+
   def handleInput() {
     import Mouse._
     import Keyboard._
 
     if( Display.isCloseRequested )
-      finished = true
+      quit()
 
     val mouseDelta = Vec2i(getDX, getDY)
     // Move and rotate player
@@ -182,7 +214,7 @@ class GameLoop extends Publisher with Logger { gameLoop =>
 
     val mouseGrabIndependant: Int => Unit = {
       case `keyQuit` =>
-        finished = true
+        quit()
       case `keyScreenshot` =>
         screenShot( "screenshot" )
       case `keyMouseGrab` =>
@@ -209,14 +241,14 @@ class GameLoop extends Publisher with Logger { gameLoop =>
       case `keyJump` =>
         Player.jump()
       case `keyIncOctreeDepth` =>
-        World.octree.incDepth()
+        world.octree.incDepth()
       case `keyGenerateNextUngenerated` =>
-        val next = World.octree.getNextUngenerated
+        val next = world.octree.getNextUngenerated
         println("next Ungenerated:" + next)
         for( area <- next )
-          World.octree.generateArea(area)
+          world.octree.generateArea(area)
         println("not finished:")
-        World.octree.query(){
+        world.octree.query(){
           case (area, n:InnerNodeUnderMesh) =>
             if( !n.finishedGeneration ) {
               println(n)

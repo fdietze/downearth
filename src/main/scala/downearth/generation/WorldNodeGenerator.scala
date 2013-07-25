@@ -3,36 +3,29 @@ package downearth.generation
 import akka.pattern.ask
 import simplex3d.math.double.{Vec2, Vec3, Mat4}
 
-import collection.mutable.Queue
+import collection.mutable
 import akka.actor._
 import downearth.worldoctree._
 import downearth.Config
 import downearth.rendering.{TextureMesh, GlDraw}
 import downearth.worldoctree.PowerOfTwoCube
 import akka.routing.SmallestMailboxRouter
+import downearth.AkkaMessages._
 
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
-object WorldNodeGenerator {
-  val actorSystem = ActorSystem.create("worldNodeGenerator")
-  val master = actorSystem.actorOf( Props[Master] )
-
-  object Messages {
-    case object GetFinishedJobs
-    case class FinishedJob(job:PowerOfTwoCube, node:MeshNode)
-  }
-}
-
 class Master extends Actor {
-  import WorldNodeGenerator.Messages._
+  val workers = context.actorOf(Props[Worker]
+    .withRouter(SmallestMailboxRouter(Config.numWorkingThreads))
+    .withDispatcher("akka.actor.worker-dispatcher")
+    , "worker-router")
 
-  val workers = context.actorOf(Props[Worker].
-    withRouter(SmallestMailboxRouter(Config.numWorkingThreads)), "router")
-
-  val done  = new Queue[FinishedJob] //TODO: im worldoctree speichern (warum?)
+  val done  = new mutable.Queue[FinishedJob] //TODO: im worldoctree speichern (warum?)
 
   def receive = {
     case GetFinishedJobs =>
-      sender ! done.dequeueAll( _ => true)
+      println("master: " + sender)
+      sender ! 'lulu
+      //sender ! done.dequeueAll( _ => true)
 
     // Master erhält neuen Job und verteilt ihn.
     case area:PowerOfTwoCube =>
@@ -43,9 +36,6 @@ class Master extends Actor {
     case job:FinishedJob =>
       done enqueue job
 
-    case PoisonPill =>
-        workers ! PoisonPill
-
     case unknown =>
       println("Master: unknown message: " + unknown)
   }
@@ -54,8 +44,6 @@ class Master extends Actor {
 }
 
 class Worker extends Actor {
-  import WorldNodeGenerator.Messages._
-
   def receive = {
     case area:PowerOfTwoCube =>
       // Prediction:
@@ -63,7 +51,7 @@ class Worker extends Actor {
       val surfaceNotInArea = !interval(0)
 
       if( surfaceNotInArea ) {
-        //GlDraw addPredictedCuboid area  // Für DebugDraw
+        //debugLog ! Predicted(area)
         val meshNode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))

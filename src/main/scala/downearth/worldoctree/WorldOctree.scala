@@ -12,17 +12,20 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import downearth.util._
-import downearth.generation.WorldNodeGenerator
-import downearth.generation.WorldNodeGenerator.Messages.{FinishedJob, GetFinishedJobs}
 import downearth.{BulletPhysics, Config, util}
 import downearth.Config._
 import downearth.message
 import collection.mutable
 import downearth.world.World
 import downearth.rendering.TextureMesh
+import downearth.AkkaMessages._
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated) extends Data3D[Leaf] {
+
+  val master = downearth.Main.actorSystem.actorSelection("akka://gamecontext/user/game/master")
+
+
   var worldWindowPos:Vec3i = rootArea.pos.clone
   val worldWindowSize:Int = rootArea.size
   def worldWindowCenter = worldWindowPos + worldWindowSize/2
@@ -117,18 +120,23 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     }
 
     insert( area, MeshNode.generating )
-    WorldNodeGenerator.master ! area
+    master ! area
   }
 
   // ask WorldNodeGenerator for generated nodes and insert them into the octree
-  def makeUpdates() {
-    implicit val timeout = Timeout(1000 seconds)
-    val future = (WorldNodeGenerator.master ? GetFinishedJobs).mapTo[Seq[FinishedJob]]
-    val s = Await.result(future, 1000 seconds)
+  def makeUpdates() { //TODO: maybe calling once per frame is too much?
+    implicit val timeout = Timeout(1 seconds)
+    try {
+      val future = (master ? GetFinishedJobs).mapTo[Seq[FinishedJob]]
+      val s = Await.result(future, timeout.duration)
 
-    for( FinishedJob(nodeinfo, node) <- s ) {
-      insert( nodeinfo, node )
-      BulletPhysics.worldChange(nodeinfo)
+      for( FinishedJob(nodeinfo, node) <- s ) {
+        insert( nodeinfo, node )
+        BulletPhysics.worldChange(nodeinfo)
+      }
+    } catch {
+      case e:Throwable =>
+        println("Warning (makeUpdates): " + e.getMessage)
     }
 	}
 

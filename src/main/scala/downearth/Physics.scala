@@ -29,7 +29,7 @@ import downearth.world.World
 
 // Verbindung der Engine zur jBullet-Implementierung
 
-object BulletPhysics {
+class BulletPhysics(world:World) {
 	
 	val broadPhase = new DbvtBroadphase
 	val collisionConfig = new DefaultCollisionConfiguration()
@@ -231,7 +231,7 @@ object BulletPhysics {
 		
 		def fillfunc(v:Vec3i) = {
 			
-			val vertexdata = World.octree(pos+v).h.vertices.distinct
+			val vertexdata = world.octree(pos+v).h.vertices.distinct
 			
 			if(!vertexdata.isEmpty){
 				val center = (vertexdata.reduce(_+_))/vertexdata.size
@@ -259,7 +259,7 @@ object BulletPhysics {
 		def fillfunc(v:Vec3i) = {
 			val builder = collection.mutable.ArrayBuilder.make[RigidBody]
 			
-			val polygondata = World.octree.getPolygons(pos+v)
+			val polygondata = world.octree.getPolygons(pos+v)
 			
 			
 			val polygonIterator =

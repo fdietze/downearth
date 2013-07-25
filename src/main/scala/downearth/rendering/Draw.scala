@@ -15,6 +15,7 @@ import downearth.util._
 import glwrapper.util._
 import simplex3d.math.floatx.{Vec4f, Vec2f, Vec3f}
 import glwrapper.ArrayBuffer
+import collection.mutable
 
 object ConsoleFont {
 	import org.newdawn.slick.UnicodeFont
@@ -270,9 +271,9 @@ object GlDraw extends Draw {
 
 	// Für den Debugdraw: alle Bereiche, die gesampled werden
 //	var sampledNodes:List[Cube] = Nil
-	var predictedCuboids:List[CuboidLike] = Nil
+	var predictedCuboids = new mutable.ArrayBuffer[CuboidLike] with mutable.SynchronizedBuffer[CuboidLike]
 //	def addSampledNode(toNodeinfo:Cube) { sampledNodes ::= toNodeinfo }
-	def addPredictedCuboid(cuboid:CuboidLike) { predictedCuboids ::= cuboid }
+	def addPredictedCuboid(cuboid:CuboidLike) { predictedCuboids += cuboid }
 
 	def drawSampledNodes() {
 		for( cuboid <- predictedCuboids ) {

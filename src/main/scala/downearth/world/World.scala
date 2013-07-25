@@ -15,7 +15,7 @@ import downearth.{BulletPhysics, util}
 import java.io._
 //import downearth.server.LocalServer
 
-object World {
+class World {
 	val octree = WorldGenerator.genWorld
 
 	def update(pos:Vec3i, l:Leaf) {
