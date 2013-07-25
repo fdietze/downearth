@@ -16,7 +16,7 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
   "com.typesafe.akka" %% "akka-actor" % "2.2.0",
-  "org.scala-lang" % "scala-reflect" % "2.10.1",
+  //"org.scala-lang" % "scala-reflect" % "2.10.1",
   "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
   "org.simplex3d" %% "simplex3d-data-double" % "2.4.7",
   "org.simplex3d" %% "simplex3d-math-float" % "2.4.7",
