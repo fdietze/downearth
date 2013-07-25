@@ -216,7 +216,7 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
 		}
 	}
 
-  def applyUpdate(update:Update) = applyUpdates(List(update))
+  def applyUpdate(update:Update) = if(update.effect != 'NOTHING) applyUpdates(List(update)) else this
 
   // fügt mehrere Updates in den Hexaeder ein. Hier ist es Sinnvoll alle
   // Updates erst zusammenzuführen, um sie dann alle in einem Schritt in den

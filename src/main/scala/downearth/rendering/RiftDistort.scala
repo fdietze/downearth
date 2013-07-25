@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL31._
 import org.lwjgl.opengl.Display
 import java.nio.ByteBuffer
 import org.lwjgl.opengl.GL14._
-import downearth.Config
+import downearth.{GameState, Config}
 import downearth.gui.{Listener, WidgetResized, MainWidget}
 import simplex3d.math.Vec2i
 import org.lwjgl.opengl.Util
@@ -26,8 +26,8 @@ import org.lwjgl.opengl.Util
  */
 
 
-object RiftDistort extends Listener {
-  listenTo(MainWidget)
+class RiftDistort(gameState:GameState) extends Listener {
+  listenTo(gameState.mainWidget)
   addReaction {
     case WidgetResized(widget) => setFrameBufferSize(widget.size)
   }

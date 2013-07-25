@@ -9,13 +9,13 @@ import downearth.worldoctree._
 import downearth.Config
 import downearth.rendering.{TextureMesh, GlDraw}
 import downearth.worldoctree.PowerOfTwoCube
-import akka.routing.SmallestMailboxRouter
+import akka.routing.{RoundRobinRouter, SmallestMailboxRouter}
 import downearth.AkkaMessages._
 
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 class Master extends Actor {
   val workers = context.actorOf(Props[Worker]
-    .withRouter(SmallestMailboxRouter(Config.numWorkingThreads))
+    .withRouter(RoundRobinRouter(Config.numWorkingThreads))
     .withDispatcher("akka.actor.worker-dispatcher")
     , "worker-router")
 
@@ -23,8 +23,8 @@ class Master extends Actor {
 
   def receive = {
     case GetFinishedJobs =>
-      println("master: " + sender)
-      sender ! 'lulu
+      var i = 0
+      sender ! done.dequeueAll( _ => {i+=1;i <= 10*Config.b})
       //sender ! done.dequeueAll( _ => true)
 
     // Master erhält neuen Job und verteilt ihn.

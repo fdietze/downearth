@@ -29,7 +29,6 @@ import downearth.gui._
 import downearth.util._
 import downearth.tools._
 import downearth.worldoctree._
-import downearth.world.World
 import downearth.entity.{Entity, SimpleEntity}
 import downearth.resources.MaterialManager
 
@@ -38,8 +37,15 @@ import simplex3d.math.double._
 import scala.collection.mutable.ArrayBuffer
 import downearth.worldoctree.PowerOfTwoCube
 import glwrapper._
+import java.nio.ByteBuffer
+import downearth.world.DynamicWorld
 
-object Renderer extends Logger {
+class Renderer(gameState:GameState) extends Logger {
+  import gameState._
+
+  val occlusionTest = new OcclusionTest(this, gameState)
+  val guiRenderer = new GuiRenderer(gameState)
+  val riftDistort = new RiftDistort(gameState)
 
   val lightPos = BufferUtils.createFloatBuffer(4)
   val ambientLight = BufferUtils.createFloatBuffer(4)
@@ -115,8 +121,6 @@ object Renderer extends Logger {
   val test2_matrix = test2Binding.uniformMat4f("matrix")
 
   var tmp = true
-
-  RiftDistort
 
   def draw() {
 
@@ -224,7 +228,7 @@ object Renderer extends Logger {
       glClearBuffer(GL_DEPTH, 0, color)
     }
 
-    val camera = Player.camera
+    val camera = player.camera
     val eyeDist = 0.06f
 
     if( Config.stereoRender ) {
@@ -249,7 +253,7 @@ object Renderer extends Logger {
         // do the rendering for occulus rift here.
         // TODO still need correct frustum for rift
 
-        RiftDistort.framebuffer.bind {
+        riftDistort.framebuffer.bind {
           clear()
           camera.projection := glwrapper.util.simpleProjectionF(v = w * 0.5f / h )
           glViewport(0, 0, w/2, h)
@@ -263,22 +267,22 @@ object Renderer extends Logger {
 
         clear()
         glViewport(0, 0, w, h)
-        RiftDistort.draw()
+        riftDistort.draw()
       }
     }
     else {
       clear()
       glViewport(0, 0, w, h)
       camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat )
-      render( Player.camera )
+      render( player.camera )
     }
 
 
     glViewport(0, 0, w, h)
-    MainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
-    MainWidget.playerPositionLabel.text = "Player Position: " + round10(Player.pos)
+    mainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
+    mainWidget.playerPositionLabel.text = "Player Position: " + round10(player.pos)
 
-    GuiRenderer.renderGui()
+    guiRenderer.renderGui()
 
     frameCount += 1
   }
@@ -359,9 +363,9 @@ object Renderer extends Logger {
     drawCalls = 0
     emptyDrawCalls = 0
 
-    drawOctree(World.octree, frustumTest, camera.position)
+    drawOctree(octree, frustumTest, camera.position)
 
-    World.dynamicWorld.entities foreach {
+    dynamicWorld.entities foreach {
       case simple:SimpleEntity => ()
         glPushMatrix()
         glTranslated( simple.pos.x, simple.pos.y, simple.pos.z )
@@ -370,26 +374,24 @@ object Renderer extends Logger {
       case entity:Entity => ()
     }
 
-    import Config._
-
     glDisable(GL_LIGHTING)
     glDisable(GL_TEXTURE_2D)
 
     render3dCursor()
 
-    if( (debugDraw & DebugDrawOctreeBit) != 0 )
-      drawDebugOctree(World.octree, camera.position, frustumTest)
-    if( (debugDraw & DebugDrawPhysicsBit) != 0 )
-      BulletPhysics.debugDrawWorld()
-    if( (debugDraw & DebugDrawSampledNodesBit) != 0 )
+    if( (Config.debugDraw & Config.DebugDrawOctreeBit) != 0 )
+      drawDebugOctree(octree, camera.position, frustumTest)
+    if( (Config.debugDraw & Config.DebugDrawPhysicsBit) != 0 )
+      physics.debugDrawWorld()
+    if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
       GlDraw.drawSampledNodes()
 
     if( Config.occlusionTest ) {
-      OcclusionTest.doIt(camera, frustumTest)
+      occlusionTest.doIt(camera, frustumTest)
     } else { // perform frustum test only
-      World.octree.query( frustumTest, camera.position) {
+      octree.query( frustumTest, camera.position) {
         case (info, UngeneratedNode) =>
-          World.octree.generateArea(info)
+          octree.generateArea(info)
           false
         case (info, GeneratingNode) =>
           false
@@ -404,7 +406,7 @@ object Renderer extends Logger {
   }
 
   def render3dCursor() {
-    Player.activeTool match {
+    player.activeTool match {
       case tool:EnvironmentTool =>
         tool.renderPreview(GlDraw)
     }
@@ -439,7 +441,7 @@ object Renderer extends Logger {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
-    MaterialManager.textureAtlas.bind {
+    materialManager.textureAtlas.bind {
       glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
 
       glEnableClientState(GL_VERTEX_ARRAY)

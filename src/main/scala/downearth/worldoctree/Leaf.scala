@@ -3,7 +3,6 @@ package downearth.worldoctree
 import downearth._
 import downearth.util._
 import downearth.generation.{WorldFunction, WorldDefinition}
-import downearth.world.World
 
 import simplex3d.math.{Vec2i, Vec3i}
 import simplex3d.math.double._
@@ -33,14 +32,14 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
   override def apply(info:PowerOfTwoCube, p:Vec3i) = this
 
-  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) = {
+  override def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf) = {
     if(h == newLeaf.h)
       this
     else{
       // wenn das Blatt einen größeren Bereich abdeckt der voll bzw leer ist:
       if(info.size >= 2) {
         val replacement = new InnerNodeUnderMesh(this)
-        replacement.updated(info, p, newLeaf)
+        replacement.updated(info, octree, p, newLeaf)
       }
       else {
         newLeaf
@@ -91,7 +90,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
       @inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
         val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).id
-        val matCount = MaterialManager.materialCount.toDouble
+        val matCount = 4//MaterialManager.materialCount.toDouble
 
         vertexBuilder += Vec3f(pos) + Vec3f(v0)
         texCoordBuilder += Vec2f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat )
@@ -184,11 +183,11 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     vertexCounter * 32 //TODO global stride size
   }
 
-  override def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
-    val replacement = updated(info, p, newLeaf)
+  override def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
+    val replacement = updated(info, octree, p, newLeaf)
 
     val builder = new TextureMeshBuilder
-    replacement.genPolygons(info,builder, v => World.octree(v).h )
+    replacement.genPolygons(info,builder, v => octree(v).h )
     val update = Update(vertpos,vertcount,builder.result)
     (replacement,update)
   }
@@ -202,11 +201,11 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     }
   }
 
-  override def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
+  override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
     require(vertpos >= 0)
     require(vertcount >= 0)
     val builder = new TextureMeshBuilder
-    genPolygons(info, builder, v => World.octree(v).h )
+    genPolygons(info, builder, v => octree(v).h )
     Update(vertpos,vertcount,builder.result)
   }
 

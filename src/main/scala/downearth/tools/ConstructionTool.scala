@@ -2,9 +2,9 @@ package downearth.tools
 
 import downearth.worldoctree._
 import downearth.{DisplayEventManager, Player}
-import downearth.world.World
 import downearth.generation.WorldDefinition
 import downearth.rendering.Draw
+import downearth.GameState
 
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
@@ -18,13 +18,15 @@ import simplex3d.math.Vec3i
  * To change this template use File | Settings | File Templates.
  */
 
-object ConstructionTool extends EnvironmentTool {
+class ConstructionTool(val gameState:GameState) extends EnvironmentTool {
+  import gameState._
+
   val texturePos = Vec2(0)
   val textureSize = Vec2(0.5)
 
   // adds a block
   override def top = true
-  override def ray = Player
+  override def ray = player
 
   val full = FullHexaeder
   val half = new Hexaeder(Z = 0x44440000)
@@ -56,13 +58,13 @@ object ConstructionTool extends EnvironmentTool {
   var selectedMaterial = 3
 
   override def action(pos:Vec3i) = {
-    if( Player.inventory.materials(selectedMaterial) >= current.volume ) {
-      val block = World.octree(pos)
+    if( player.inventory.materials(selectedMaterial) >= current.volume ) {
+      val block = octree(pos)
       //TODO: the evaluation of the materialfunction should be in the Leaf itself
       val material = if( block.material == -1 ) WorldDefinition.materialAtBlock(pos).id else block.material
-      Player.inventory.materials(material) += block.h.volume
-      Player.inventory.materials(selectedMaterial) -= current.volume
-      World(pos) = Leaf(current, selectedMaterial)
+      player.inventory.materials(material) += block.h.volume
+      player.inventory.materials(selectedMaterial) -= current.volume
+      octree(pos) = Leaf(current, selectedMaterial)
     }
     else {
       DisplayEventManager.showEventText("Not enough ColorMaterial " + selectedMaterial + ".")

@@ -123,7 +123,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     this
   }
 
-  override def updated(info:PowerOfTwoCube, pos:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
+  override def updated(info:PowerOfTwoCube, octree:WorldOctree, pos:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
 
     val leafInfo = PowerOfTwoCube(pos,1)
 
@@ -140,7 +140,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
       objMeshes += Tuple2( PowerOfTwoCube(pos,1), newLeaf.asInstanceOf[ObjLeaf].mesh)
     }
 
-    val (replacement,patch) = node.patchWorld(info, pos, newLeaf, 0, mesh.byteSize)
+    val (replacement,patch) = node.patchWorld(info, octree, pos, newLeaf, 0, mesh.byteSize)
     node = replacement
     var patches = patch :: Nil
 
@@ -150,7 +150,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
       val npos = pos.clone
       npos(i >> 1) += ((i&1) << 1)-1
       if( info.indexInRange(npos) ) {
-        val newpatch = node.repolyWorld(info, npos, 0, newsize)
+        val newpatch = node.repolyWorld(info, octree, npos, 0, newsize)
         patches ::=  newpatch
         newsize += newpatch.byteSizeDifference
       }
@@ -202,9 +202,9 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     }
   }
 
-  override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) {
+  override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i) {
     // vertpos und vertcount wird von node.repolyWorld gesetzt
-    mesh = mesh applyUpdates List(node.repolyWorld(info,p,0,mesh.byteSize))
+    mesh = mesh applyUpdates List(node.repolyWorld(info, octree, p,0,mesh.byteSize))
   }
 
   override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {

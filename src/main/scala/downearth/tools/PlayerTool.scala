@@ -3,12 +3,12 @@ package downearth.tools
 import simplex3d.math.Vec3i
 import simplex3d.math.double.{Vec2, Vec3}
 
-import downearth.worldoctree.Polyeder
+import downearth.worldoctree.{WorldOctree, Polyeder}
 import downearth.gui.MainWidget
-import downearth.world.World
 import downearth.Player
 import downearth.util.Ray
 import downearth.rendering.Draw
+import downearth.GameState
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,6 +29,8 @@ trait PlayerTool {
 trait EnvironmentTool extends PlayerTool {
   def action( pos:Vec3i )
 
+  def gameState:GameState
+
   override def action() {
     val selected = selectPos
     if( selected.isDefined )
@@ -46,8 +48,8 @@ trait EnvironmentTool extends PlayerTool {
   def top:Boolean
   def range = 10
   def selectPos = {
-    if( MainWidget.mouseOver )
-      World.octree.raytracer(ray, top, range)
+    if( gameState.mainWidget.mouseOver )
+      gameState.octree.raytracer(ray, top, range)
     else
       None
   }

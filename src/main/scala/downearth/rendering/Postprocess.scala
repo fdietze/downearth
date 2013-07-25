@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL30._
 import org.lwjgl.opengl.GL31._
 import java.nio.ByteBuffer
 import org.lwjgl.opengl.GL14._
-import downearth.Config
+import downearth.{GameState, Config}
 import downearth.gui.{WidgetResized, MainWidget, Listener, Widget}
 import simplex3d.math.Vec2i
 
@@ -22,8 +22,10 @@ import simplex3d.math.Vec2i
  */
 
 
-object Postprocess extends Listener {
-  listenTo(MainWidget)
+class Postprocess(gameState:GameState) extends Listener {
+  import gameState._
+
+  listenTo(mainWidget)
   addReaction {
     case WidgetResized(widget) => setFrameBufferSize(widget.size)
   }

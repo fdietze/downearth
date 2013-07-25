@@ -56,7 +56,7 @@ abstract class Widget extends Listener with Publisher {
     }
   }
 
-	var parent:Panel = MainWidget
+	var parent:Panel = Panel.empty
 	var border:Border = LineBorder
   val lineBorderColor = Vec4(0)
   var background = ColorBackGround
@@ -154,6 +154,13 @@ class Slider(val position:Vec2i) extends Panel { slider =>
 }
 
 abstract class TextureWidget(val texture:Texture2D, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
+
+object Panel {
+  val empty = new Panel {
+    val position = Vec2i(0)
+    val size = Vec2i(0)
+  }
+}
 
 // a panel a gui element that has children
 abstract class Panel extends Widget { thispanel =>

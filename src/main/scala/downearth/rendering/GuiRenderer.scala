@@ -22,7 +22,8 @@ import downearth.tools.ConstructionTool
  * Time: 5:39 PM
  * To change this template use File | Settings | File Templates.
  */
-object GuiRenderer {
+class GuiRenderer(gameState:GameState) {
+  import gameState._
 
   def renderGui() {
 
@@ -51,7 +52,7 @@ object GuiRenderer {
       if( Mouse.isGrabbed )
         GlDraw.crossHair()
 
-      drawWidget(MainWidget)
+      drawWidget(mainWidget)
 
       glDisable(GL_BLEND)
     }
@@ -110,7 +111,7 @@ object GuiRenderer {
         }
       }
       if( widget.isInstanceOf[MaterialWidget] ) {
-        val text = floor(Player.inventory.materials(widget.asInstanceOf[MaterialWidget].matId)).toInt
+        val text = floor(player.inventory.materials(widget.asInstanceOf[MaterialWidget].matId)).toInt
         val textSize = Vec2i(ConsoleFont.font.getWidth(text.toString) + 2, ConsoleFont.height)
         val textPos = widget.position + widget.size - textSize
         import org.newdawn.slick.Color.white
@@ -140,7 +141,7 @@ object GuiRenderer {
         glRotated(widget.preferredAngle,0,0,1)
 
       glTranslatef(-0.5f,-0.5f,-0.5f)
-      GlDraw.renderPolyeder(ConstructionTool.all(widget.shapeId)(0))
+      GlDraw.renderPolyeder(gameState.tools.constructionTool.all(widget.shapeId)(0))
       glPopMatrix()
     }
 

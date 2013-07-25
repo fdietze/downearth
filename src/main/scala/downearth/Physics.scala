@@ -21,16 +21,16 @@ import simplex3d.math.double._
 import simplex3d.math._
 
 import downearth.rendering.{GlDraw, DirectDrawer}
-import downearth.worldoctree.{Array3D, PowerOfTwoCube}
+import downearth.worldoctree.{WorldOctree, Array3D, PowerOfTwoCube}
 import downearth.util._
 
 import org.lwjgl.opengl.GL11._
-import downearth.world.World
 
 // Verbindung der Engine zur jBullet-Implementierung
 
-class BulletPhysics(world:World) {
-	
+class BulletPhysics(gameState:GameState) {
+	import gameState._
+
 	val broadPhase = new DbvtBroadphase
 	val collisionConfig = new DefaultCollisionConfiguration()
 	val dispatcher = new  CollisionDispatcher(collisionConfig)
@@ -231,7 +231,7 @@ class BulletPhysics(world:World) {
 		
 		def fillfunc(v:Vec3i) = {
 			
-			val vertexdata = world.octree(pos+v).h.vertices.distinct
+			val vertexdata = octree(pos+v).h.vertices.distinct
 			
 			if(!vertexdata.isEmpty){
 				val center = (vertexdata.reduce(_+_))/vertexdata.size
@@ -259,7 +259,7 @@ class BulletPhysics(world:World) {
 		def fillfunc(v:Vec3i) = {
 			val builder = collection.mutable.ArrayBuilder.make[RigidBody]
 			
-			val polygondata = world.octree.getPolygons(pos+v)
+			val polygondata = octree.getPolygons(pos+v)
 			
 			
 			val polygonIterator =

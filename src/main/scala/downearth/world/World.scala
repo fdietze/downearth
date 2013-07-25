@@ -1,5 +1,5 @@
 package downearth.world
-
+/*
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
@@ -16,11 +16,10 @@ import java.io._
 //import downearth.server.LocalServer
 
 class World {
-	val octree = WorldGenerator.genWorld
 
 	def update(pos:Vec3i, l:Leaf) {
 		octree(pos) = l
-		BulletPhysics.worldChange(pos)
+    physics.worldChange(pos)
 
     //import downearth.message._
     //import downearth.message.implicits._
@@ -33,7 +32,5 @@ class World {
     )*/
   }
 
-def apply(pos:Vec3i) = octree(pos)
-
-val dynamicWorld = DynamicWorld.testScene
 }
+*/

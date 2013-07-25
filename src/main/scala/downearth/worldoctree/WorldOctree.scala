@@ -12,19 +12,16 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import downearth.util._
-import downearth.{BulletPhysics, Config, util}
+import downearth.{GameState, BulletPhysics, Config, util}
 import downearth.Config._
-import downearth.message
 import collection.mutable
-import downearth.world.World
 import downearth.rendering.TextureMesh
 import downearth.AkkaMessages._
+import akka.actor.ActorRef
 
 // Kapselung für die OctreeNodes
-class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated) extends Data3D[Leaf] {
-
-  val master = downearth.Main.actorSystem.actorSelection("akka://gamecontext/user/game/master")
-
+class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated, gameState:GameState) extends Data3D[Leaf] {
+  import gameState._
 
   var worldWindowPos:Vec3i = rootArea.pos.clone
   val worldWindowSize:Int = rootArea.size
@@ -42,12 +39,12 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   }
 
   def update(p:Vec3i,l:Leaf) {
-    if(rootArea.indexInRange(p)) {
-      root = root.updated(rootArea, p, l)
-    }
-    else{
-      printf(s"update out of area at $p, $rootArea\n")
-    }
+    physics.worldChange(p)
+
+    if(rootArea.indexInRange(p))
+      root = root.updated(rootArea, this, p, l)
+    else
+      println(s"update at $p out of range: $rootArea")
   }
 
   // traverse the octree in a front to back order from view of point camera
@@ -129,10 +126,17 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     try {
       val future = (master ? GetFinishedJobs).mapTo[Seq[FinishedJob]]
       val s = Await.result(future, timeout.duration)
-
+      println(s.size)
       for( FinishedJob(nodeinfo, node) <- s ) {
         insert( nodeinfo, node )
-        BulletPhysics.worldChange(nodeinfo)
+/*        if( node.node.hasChildren && node.node.getChild(0) == UngeneratedNode ) {
+          insert( nodeinfo, node )
+        } else {
+          val m = new MeshNode(EmptyLeaf)
+          m.mesh = TextureMesh.empty
+          insert( nodeinfo, m )
+        }
+        //physics.worldChange(nodeinfo)*/
       }
     } catch {
       case e:Throwable =>

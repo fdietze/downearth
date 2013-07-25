@@ -14,7 +14,8 @@ import javax.vecmath.Vector3f
 import org.lwjgl.opengl.Display
 
 
-object Player extends Ray {
+class Player(gameState:GameState) extends Ray { //TODO: why extend and not contain ray?
+  import gameState._
   /////////////////////////////////
   // Physics, rotation and position  
   /////////////////////////////////
@@ -28,7 +29,7 @@ object Player extends Ray {
     m_camera
   }
   
-  val (body, ghostObject) = BulletPhysics.addCharacter(startpos)
+  val (body, ghostObject) = physics.addCharacter(startpos)
   val positionAsGhost = Vec3(startpos)
   
   def pos:ReadVec3 = {
@@ -122,15 +123,14 @@ object Player extends Ray {
   // Tools, Inventory, Menu Controls
   //////////////////////////////////
 
-  class Foo {
+  val inventory = new {
+    import gameState.tools._
     val materials = new collection.mutable.HashMap[Int,Double] {
       override def default(key:Int) = 0.0
     }
 
-    val tools:Seq[PlayerTool] = Seq(Shovel, ConstructionTool, TestBuildTool)
+    val tools:IndexedSeq[PlayerTool] = Array(shovel, constructionTool, testBuildTool)
   }
-
-  val inventory = new Foo
 
   var activeTool:PlayerTool = inventory.tools(0)
   def selectTool(tool:Int) = activeTool = inventory.tools(tool)

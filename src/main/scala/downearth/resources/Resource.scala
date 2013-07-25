@@ -107,7 +107,7 @@ val materials = new mutable.HashMap[Int, Material] {
 }*/
 }
 
-object MaterialManager {
+class MaterialManager {
   val inset = 1 // material separation texture atlas border for texture coordinates
   val textureAtlas = TextureManager.materials
   val materialCount = 4//textureAtlas.width / textureAtlas.height

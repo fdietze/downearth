@@ -10,33 +10,33 @@ import downearth.util.Logger
 import downearth.tools.{ConstructionTool, PlayerTool}
 import downearth.resources.Material
 
-class MaterialWidget(val material:Material, val position:Vec2i)
+class MaterialWidget(val material:Material, val position:Vec2i, val player:Player, val constructionTool:ConstructionTool)
 	extends TextureWidget(material.texture, material.texPos, material.texSize )
 	with InventoryItem {
   val matId = material.id
 
-	override def selected = ConstructionTool.selectedMaterial == matId
+	override def selected = constructionTool.selectedMaterial == matId
 
   override def select() {
-    Player.selectTool(ConstructionTool)
-    ConstructionTool.selectedMaterial = matId
+    player.selectTool(constructionTool)
+    constructionTool.selectedMaterial = matId
     DisplayEventManager.showEventText("ColorMaterial " + matId)
   }
 }
 
-class ToolWidget(val tool:PlayerTool, val position:Vec2i)
+class ToolWidget(val tool:PlayerTool, val position:Vec2i, val player:Player)
 	extends TextureWidget(TextureManager.tools, tool.texturePos, tool.textureSize)
 	with InventoryItem with Logger {
 
   override def select() {
-    Player.selectTool(tool)
+    player.selectTool(tool)
     log.println("Tool " + tool)
   }
 
-	override def selected = Player.activeTool eq tool
+	override def selected = player.activeTool eq tool
 }
 
-class ShapeWidget(val shapeId:Int, val position:Vec2i) extends Widget with InventoryItem {
+class ShapeWidget(val shapeId:Int, val position:Vec2i, val player:Player, val tool:ConstructionTool) extends Widget with InventoryItem {
 	val preferredAngle = 30.0
 	val degPerSec = 180.0
 	var inOffset = 0.0
@@ -55,8 +55,8 @@ class ShapeWidget(val shapeId:Int, val position:Vec2i) extends Widget with Inven
   }
 
   override def select() {
-    Player.selectTool(ConstructionTool)
-    ConstructionTool.id = shapeId
+    player.selectTool(tool)
+    tool.id = shapeId
     DisplayEventManager.showEventText("Shape " + shapeId)
   }
 }

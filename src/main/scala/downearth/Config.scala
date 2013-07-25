@@ -24,9 +24,9 @@ object Config extends Listener {
 	val hexaederResolution = 8
 	val skybox =false
 
-  var a = 15.0
-  var b = 3.5
-  var c = 0.15
+  var a = 1.0
+  var b = 1.0
+  var c = 1.0
 	
 	lazy val ungeneratedDefault = FullLeaf
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position

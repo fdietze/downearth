@@ -1,8 +1,7 @@
 package downearth.tools
 
 import downearth.worldoctree._
-import downearth.Player
-import downearth.world.World
+import downearth.{GameState, Player}
 import downearth.generation.WorldDefinition
 import downearth.rendering.Draw
 
@@ -16,27 +15,29 @@ import simplex3d.math.Vec3i
  * Time: 4:59 PM
  * To change this template use File | Settings | File Templates.
  */
-object Shovel extends EnvironmentTool {
+class Shovel(val gameState:GameState) extends EnvironmentTool {
+  import gameState._
+
   // removes a block
   val texturePos = Vec2(0.5, 0)
   val textureSize = Vec2(0.5)
 
   val drawTransparent = true
 
-  def ray = Player
+  def ray = player
   def top = false
 
   override def renderPreview(pos:Vec3i, di:Draw) {
-    val leaf = World.octree(pos)
+    val leaf = octree(pos)
     di.renderPolyeder( leaf.h , pos, Vec4(1) )
   }
 
   override def action(pos:Vec3i) {
-    val block = World.octree(pos)
+    val block = octree(pos)
     // TODO: the evaluation of the materialfunction should be in the Leaf itself
     val material = if( block.material == -1 ) WorldDefinition.materialAtBlock(pos).id else block.material
-    Player.inventory.materials(material) += block.h.volume
-    World(pos) = EmptyLeaf
+    player.inventory.materials(material) += block.h.volume
+    octree(pos) = EmptyLeaf
   }
 
   override def toString = getClass.getName.split('.').last

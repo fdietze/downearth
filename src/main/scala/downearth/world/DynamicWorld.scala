@@ -9,8 +9,8 @@ import java.io._
 // this object should contain all objects of the scene that are not part of the static environment
 object DynamicWorld {
 	def testScene:DynamicWorld = {
-		val mesh = ObjManager.testMesh
-		mesh.genvbo()
+		//val mesh = ObjManager.testMesh
+		//mesh.genvbo()
 
 		val world = new DynamicWorld
 

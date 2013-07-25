@@ -4,7 +4,7 @@ import glwrapper.{VertexArrayObject, Program}
 
 import downearth.{FrustumTest, Camera, Config}
 import downearth.worldoctree._
-import downearth.world.World
+import downearth.GameState
 
 import simplex3d.math.floatx.{Mat4f, Vec4f}
 import simplex3d.backend.lwjgl.ArbEquivalents
@@ -21,7 +21,8 @@ import java.nio.IntBuffer
  * Date: 05.07.13
  * Time: 18:54
  */
-object OcclusionTest {
+class OcclusionTest(renderer:Renderer, gameState:GameState) {
+  import gameState._
 
   val occTest_program = Program.auto("simple")
 
@@ -69,8 +70,8 @@ object OcclusionTest {
     val view = Mat4f(camera.view)
     val projection = Mat4f(camera.projection)
 
-    val magicNr = 8
-    val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == Renderer.frameCount % magicNr)
+    val magicNr = (8 * Config.a).toInt
+    val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == renderer.frameCount % magicNr)
 
     val renderNodeInfos1 = nodeInfoBufferGenerating
     val renderNodeInfos2 = noTest map nodeInfoBufferUngenerated
@@ -154,9 +155,9 @@ object OcclusionTest {
 
   def doIt(camera:Camera, frustumTest:FrustumTest) {
     if( query != null )
-      for( result <- evalQueries(query).visible )
-        World.octree.generateArea(result)
-    query = findUngeneratedNodes(camera, World.octree, frustumTest)
+      for( result <- evalQueries(query).visible.take(20) )
+        octree.generateArea(result)
+    query = findUngeneratedNodes(camera, octree, frustumTest)
   }
 
 }

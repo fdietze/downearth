@@ -10,7 +10,9 @@ import simplex3d.math.double._
 import downearth.tools._
 import downearth.resources.MaterialManager
 
-object MainWidget extends Panel {
+class MainWidget(gameState:GameState) extends Panel {
+  import gameState._
+
   val position = Vec2i(0)
   val size = Vec2i(Display.getWidth,Display.getHeight)
 
@@ -24,10 +26,10 @@ object MainWidget extends Panel {
 
   addReaction {
     case MouseClicked(pos) =>
-      Player.primaryAction
+      player.primaryAction
     case DragStart(firstPos:Vec2i) =>
       dragStartPos := firstPos
-      startDir := Player.dir
+      startDir := player.dir
     case MouseDrag(mousePos0, mousePos1) =>
 
       val mouseDelta = Vec2(mousePos1 - mousePos0)
@@ -35,7 +37,7 @@ object MainWidget extends Panel {
 
       val deltaAngle = Vec3(mouseDelta.yx, 0)
 
-      Player.rotate(deltaAngle)
+      player.rotate(deltaAngle)
   }
 
   override def safePosition(newPos:Vec2i) = {
@@ -68,38 +70,39 @@ object MainWidget extends Panel {
   }
 
   val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
+
     backGroundColor := Vec4(0.1,0.1,0.1,0.7)
     border = LineBorder
 
-    val shovel = new ToolWidget( Shovel, position+Vec2i(40, 0) )
-    val hammer = new ToolWidget( ConstructionTool, position+Vec2i(0 , 0) )
+    val shovel = new ToolWidget( tools.shovel, position+Vec2i(40, 0), player )
+    val hammer = new ToolWidget( tools.constructionTool, position+Vec2i(0 , 0), player )
 
     children += hammer
     children += shovel
     assert(hammer.parent == this)
     assert(shovel.parent == this)
 
-    children ++= MaterialManager.materials.zipWithIndex.map{
-      case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40) )
+    children ++= materialManager.materials.zipWithIndex.map{
+      case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40), player, tools.constructionTool )
     }
 
-    children ++= Range(0, ConstructionTool.all.size).map(
-      i => new ShapeWidget(i, position + Vec2i(i * 40, 80))
+    children ++= Range(0, tools.constructionTool.all.size).map(
+      i => new ShapeWidget(i, position + Vec2i(i * 40, 80), player, tools.constructionTool)
     )
 
-    val superTool = new ToolWidget( TestBuildTool, position+Vec2i(80,0) )
+    val superTool = new ToolWidget( tools.testBuildTool, position+Vec2i(80,0), player )
 
     children += superTool
 
     selected = shovel
 
-    listenTo(MainWidget)
+    listenTo(this)
     listenTo(inventoryButton)
 
     addReaction {
-    case WidgetResized(MainWidget) =>
+    case WidgetResized(w) if w eq this =>
       val newPos = Vec2i(0)
-      newPos.x = MainWidget.size.x - size.x - 20
+      newPos.x = w.size.x - size.x - 20
       newPos.y = 20
       setPosition(newPos,0)
     case ButtonClicked(`inventoryButton`) =>

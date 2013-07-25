@@ -6,7 +6,8 @@ import simplex3d.math.double.functions._
 
 import downearth._
 import downearth.util._
-import downearth.world.World
+import downearth.generation.WorldDefinition
+import scala.collection.mutable.{ArrayBuffer, Queue}
 import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder}
 
 sealed trait Node {
@@ -17,7 +18,7 @@ sealed trait Node {
 	// Greift mit absoluten Koordinaten auf den Oktant zu
 	def apply(info:PowerOfTwoCube, p:Vec3i) : Leaf
 
-  def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):Node
+  def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf):Node
 
   def hasChildren:Boolean
 
@@ -43,12 +44,12 @@ trait NodeOverMesh extends Node {
 	def isSet(info:PowerOfTwoCube, pos:PowerOfTwoCube):Boolean
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):NodeOverMesh
+	def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf):NodeOverMesh
 	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
 	// Polygonverdeckungstest aufzufrischen.
-	def repolyWorld(area:PowerOfTwoCube, p:Vec3i):Unit
+	def repolyWorld(area:PowerOfTwoCube, octree:WorldOctree, p:Vec3i):Unit
 	
 	// extrahiert alle Polygone an einer Position, extrahiert sie also aus dem 
 	// Mesh heraus
@@ -71,12 +72,12 @@ trait NodeUnderMesh extends Node {
 	def genPolygons(info:PowerOfTwoCube, meshBuilder:TextureMeshBuilder, worldaccess:(Vec3i => Polyeder)):Int
 	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
-	def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):NodeUnderMesh
+	def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf):NodeUnderMesh
 	
 	// Diese Methode ist ähnlich wie patchWorld, nur ohne einen Hexaeder 
 	// einzufügen, wird verwendet, um bei patchWorld an den Nachbarn den 
 	// Polygonverdeckungstest aufzufrischen.
-	def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) : Update
+	def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, vertpos:Int, vertcount:Int) : Update
 	
 	// extrahiert alle Polygone an einer Position in form des Bereichs von 
 	// Polygonen aus dem Mesh
@@ -84,7 +85,7 @@ trait NodeUnderMesh extends Node {
 
   // Ähnlich zu updated, aber diese Funktion generiert auch Updates für das
   // Mesh, welches sich verändert.
-  def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update)
+  def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update)
 
   def patchWorld(info:PowerOfTwoCube, insertInfo:PowerOfTwoCube, newNode:NodeUnderMesh, insertByteSize:Int, currentByteOffset:Int, currentByteSize:Int) : UpdateInfo
 
@@ -114,9 +115,9 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		data(index)(nodeinfo,p)
 	}
 	
-	override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf):NodeOverMesh = {
+	override def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf):NodeOverMesh = {
 		val (index,childinfo) = info(p)
-		data(index) = data(index).updated(childinfo,p, newLeaf)
+		data(index) = data(index).updated(childinfo, octree, p, newLeaf)
 		
 		// TODO refactor diesen teil so weit es geht nach Cube auslagern
 		import info.{pos => nodepos, size => nodesize}
@@ -131,15 +132,15 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
 		val hsize = info.size >> 1
 		for( (n,nv) <- neigbours if(nv != v) ){
 			val index = info.flat(nv)
-			data(index).repolyWorld(PowerOfTwoCube(nodepos+nv*hsize,hsize),n)
+			data(index).repolyWorld(PowerOfTwoCube(nodepos+nv*hsize,hsize), octree, n)
 		}
 
 		joinChildren
 	}
 
-	override def repolyWorld(info:PowerOfTwoCube, p:Vec3i) = {
+	override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i) = {
 		val (index,childinfo) = info(p)
-		data(index).repolyWorld(childinfo,p)
+		data(index).repolyWorld(childinfo, octree, p)
 	}
 	
 	override def toString = data.mkString("InnerNodeOverMesh(",",",")")
@@ -221,9 +222,9 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 		data(index)(nodeinfo,p)
 	}
 	
-	def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) = {
+	def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf) = {
 		val (index,childinfo) = info(p)
-		data(index) = data(index).updated(childinfo,p,newLeaf)
+		data(index) = data(index).updated(childinfo, octree, p,newLeaf)
 		merge
 	}
 	
@@ -235,13 +236,13 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
     geometryByteCount.sum
 	}
 	
-	override def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, bytePos:Int, byteCount:Int) = {
+	override def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf, bytePos:Int, byteCount:Int) = {
     val (index,childinfo) = info(p)
 		
 		val newvertpos = bytePos + geometryByteCount.view(0,index).sum
 		val newvertcount = geometryByteCount(index)
 
-		val (newNode,patch) = data(index).patchWorld(childinfo,p,newLeaf,newvertpos,newvertcount)
+		val (newNode,patch) = data(index).patchWorld(childinfo, octree, p,newLeaf,newvertpos,newvertcount)
 
 		data(index) = newNode
 
@@ -251,8 +252,8 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 		if(hasEqualChildren){
 			val mb = new TextureMeshBuilder
 			// replace with newLeaf
-			newLeaf.genPolygons(info,mb, v => World.octree(v).h )
-			( newLeaf, Update(bytePos,byteCount,mb.result) )
+      newLeaf.genPolygons(info,mb, v => octree(v).h )
+      ( newLeaf, Update(bytePos,byteCount,mb.result) )
 		}
 		else
 			(this,patch)
@@ -279,7 +280,7 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
     }
   }
 
-	override def repolyWorld(info:PowerOfTwoCube, p:Vec3i, vertpos:Int, vertcount:Int) = {
+	override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, vertpos:Int, vertcount:Int) = {
     require(vertpos >= 0)
     require(vertcount >= 0)
 
@@ -287,7 +288,7 @@ class InnerNodeUnderMesh(val data:Array[NodeUnderMesh]) extends NodeUnderMesh {
 		val newvertpos = vertpos + geometryByteCount.view(0,index).sum
 		val newvertcount = geometryByteCount(index)
 
-		val patch = data(index).repolyWorld(childinfo, p, newvertpos, newvertcount)
+		val patch = data(index).repolyWorld(childinfo, octree, p, newvertpos, newvertcount)
 		//vertexzahl hat sich geändert, und braucht ein update
 		geometryByteCount(index) += patch.byteSize - patch.byteOldSize
     assert(geometryByteCount(index) >= 0)
@@ -319,7 +320,7 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
   def genMesh(info: PowerOfTwoCube, worldaccess: Vec3i => Polyeder) = new MeshNode(this)
   def genPolygons(info: PowerOfTwoCube,meshBuilder: TextureMeshBuilder,worldaccess: Vec3i => Polyeder): Int = 0
   def getPolygons(info: PowerOfTwoCube,pos: Vec3i,from: Int,to: Int): (Int, Int) = (from,to)
-  def patchWorld(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
+  def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
     (this, Update(vertpos,vertcount,(new TextureMeshBuilder).result))
   }
 
@@ -333,12 +334,12 @@ abstract class AbstractUngeneratedNode extends NodeUnderMesh {
     }
   }
 
-  def repolyWorld(info: PowerOfTwoCube,p: Vec3i,vertpos: Int,vertcount: Int): Update = {
+  def repolyWorld(info: PowerOfTwoCube, octree:WorldOctree, p: Vec3i,vertpos: Int,vertcount: Int): Update = {
     Update(vertpos,vertcount,(new TextureMeshBuilder).result)
   }
 
   //similar to updated, but this function also generates patches to update the mesh
-  override def updated(info:PowerOfTwoCube, p:Vec3i, newLeaf:Leaf) : NodeUnderMesh = {
+  override def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf) : NodeUnderMesh = {
     println("ungenerated nodes can't have updates" + info)
     this
   }

@@ -6,20 +6,25 @@ import org.lwjgl.input._
 import simplex3d.math._
 import simplex3d.math.double._
 import simplex3d.math.double.functions._
-
+import akka.pattern.ask
 import downearth.rendering._
 import downearth.rendering.{GlDraw, ObjManager, TextureManager, Renderer}
 import downearth.Config._
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.ARBDebugOutput._
 import org.lwjgl.opengl.AMDDebugOutput._
-import downearth.world.World
 import downearth.util._
 import downearth.gui._
+import downearth.world.DynamicWorld
+import downearth.tools.{TestBuildTool, Shovel, ConstructionTool}
+import downearth.resources.MaterialManager
+import akka.util.Timeout
+import scala.concurrent.Await
+
 //import downearth.server.LocalServer
 import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
 import akka.actor._
-import downearth.generation.Master
+import downearth.generation.{WorldGenerator, Master}
 import AkkaMessages._
 
 
@@ -56,17 +61,45 @@ class DebugLog extends Actor {
   }
 }
 
+class GameState(val master:ActorRef) { gameState =>
+  val octree = WorldGenerator.genWorld(gameState)
+  val physics = new BulletPhysics(gameState)
+  val dynamicWorld = DynamicWorld.testScene
+  lazy val renderer = new Renderer(gameState)
+
+  lazy val mainWidget = new MainWidget(gameState)
+
+  lazy val materialManager = new MaterialManager
+
+  val tools = new {
+    val constructionTool = new ConstructionTool(gameState)
+    val shovel           = new Shovel(gameState)
+    val testBuildTool    = new TestBuildTool(gameState)
+  }
+
+  val player = new Player(gameState)
+
+  def openGLinit() {
+    renderer
+    mainWidget
+    materialManager
+  }
+}
+
+//TODO on exception, shutdown actorsystem
 class Game extends Actor with Publisher with Logger { gameLoop =>
   val master = context.actorOf( Props[Master], "master" )
   val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
 
-  val world = new World
-  val physics = new BulletPhysics(world)
+  val gameState = new GameState(master)
+  import gameState._
+
 
   override def preStart() {
     createOpenGLContext()
+    checkOpenGLCapabilities()
+    gameState.openGLinit()
     createWidgetSystem()
-    init()
   }
 
   def receive = {
@@ -86,7 +119,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   }
 
   def createWidgetSystem() {
-    val wed = new WidgetEventDispatcher(MainWidget)
+    val wed = new WidgetEventDispatcher(gameState.mainWidget)
     wed.listenTo(gameLoop)
   }
 
@@ -116,17 +149,17 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   var frameCounter = 0
 
   def step() {
-    physics.update()
+    gameState.physics.update()
 
     handleInput()
 
-    world.octree.makeUpdates()
+    octree.makeUpdates()
 
     if( Config.streamWorld ) {
-      world.octree stream Player.pos
+      octree stream player.pos
     }
 
-    Renderer.draw()
+    renderer.draw()
     frame()
 
     Display.update()
@@ -134,7 +167,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   }
 
 
-  def init() { //TODO split init
+  def checkOpenGLCapabilities() { //TODO split checkOpenGLCapabilities
     val caps = GLContext.getCapabilities
 
     // TODO: Remove all ARB calls from code
@@ -220,7 +253,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
       case `keyMouseGrab` =>
         Mouse setGrabbed !Mouse.isGrabbed
       case `keyPlayerReset` =>
-        Player.resetPos
+        player.resetPos
       case `keyStreaming` =>
         streamWorld = !streamWorld
       case `keyWireframe` =>
@@ -231,24 +264,24 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
         turbo = ! turbo
         log.println(s"Turbo is ${if(turbo) "on" else "off"}." )
       case `keyPausePhysics` =>
-        BulletPhysics.pause = !BulletPhysics.pause
+        physics.pause = !physics.pause
       case `keyDebugDraw` =>
         debugDraw += 1
       case `keyToggleGhostPlayer` =>
-        Player.toggleGhost()
+        player.toggleGhost()
       case `keyToggleInventory` =>
-        MainWidget.inventory.visible = !MainWidget.inventory.visible
+        mainWidget.inventory.visible = !mainWidget.inventory.visible
       case `keyJump` =>
-        Player.jump()
+        player.jump()
       case `keyIncOctreeDepth` =>
-        world.octree.incDepth()
+        octree.incDepth()
       case `keyGenerateNextUngenerated` =>
-        val next = world.octree.getNextUngenerated
+        val next = octree.getNextUngenerated
         println("next Ungenerated:" + next)
         for( area <- next )
-          world.octree.generateArea(area)
+          octree.generateArea(area)
         println("not finished:")
-        world.octree.query(){
+        octree.query(){
           case (area, n:InnerNodeUnderMesh) =>
             if( !n.finishedGeneration ) {
               println(n)
@@ -260,14 +293,14 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
       case `keyToggleFullScreen` =>
         if( Display.isFullscreen ) {
           Display.setDisplayModeAndFullscreen(windowMode)
-          MainWidget.resize( Vec2i(windowMode.getWidth, windowMode.getHeight) )
+          mainWidget.resize( Vec2i(windowMode.getWidth, windowMode.getHeight) )
         }
         else {
           windowMode = Display.getDisplayMode
           val mode = Display.getDesktopDisplayMode
           assert(mode.isFullscreenCapable)
           Display.setDisplayModeAndFullscreen(mode)
-          MainWidget.resize( Vec2i(mode.getWidth, mode.getHeight) )
+          mainWidget.resize( Vec2i(mode.getWidth, mode.getHeight) )
         }
       case _ =>
     }
@@ -280,7 +313,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 
       // Turbo mode
       if( turbo && Mouse.isButtonDown(0) )
-        Player.primaryAction()
+        player.primaryAction()
 
       // Keyboard Events
       while ( Keyboard.next ) {
@@ -295,7 +328,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
         ( getEventButton, getEventButtonState ) match {
           case (0 , true) => // left down
           case (0 , false) => // left up
-            Player.primaryAction()
+            player.primaryAction()
           case (1 , true) => // right down
           case (1 , false) => // right up
             //Player.secondarybutton
@@ -345,7 +378,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
       }
 
       if( Display.wasResized ) {
-        MainWidget.resize(Vec2i(Display.getWidth, Display.getHeight))
+        mainWidget.resize(Vec2i(Display.getWidth, Display.getHeight))
       }
 
       // Mouse events
@@ -375,7 +408,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     }
 
     val factor = if(turbo) cameraTurboSpeed else cameraSpeed
-    Player.move(factor*(delta/max(1,length(delta)))*timeStep)
-    Player.rotate(2.0*delta_angle)
+    player.move(factor*(delta/max(1,length(delta)))*timeStep)
+    player.rotate(2.0*delta_angle)
   }
 }

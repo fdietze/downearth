@@ -1,8 +1,8 @@
 package downearth.tools
 
 import downearth.worldoctree._
-import downearth.world.World
 import downearth.Player
+import downearth.GameState
 
 import simplex3d.math.double._
 import simplex3d.math.Vec3i
@@ -15,11 +15,13 @@ import downearth.rendering._
  * Time: 4:59 PM
  * To change this template use File | Settings | File Templates.
  */
-object TestBuildTool extends EnvironmentTool {
+class TestBuildTool(val gameState:GameState) extends EnvironmentTool {
+  import gameState._
+
   val texturePos = Vec2(0,0.5)
   val textureSize = Vec2(0.5)
 
-  def ray = Player
+  def ray = player
 
   val drawTransparent = true
 
@@ -37,12 +39,12 @@ object TestBuildTool extends EnvironmentTool {
   }
 
   def testPosition(pos:Vec3i) = {
-    World(pos) == EmptyLeaf &&
-    World(pos - Vec3i.UnitZ) == FullLeaf
+    octree(pos) == EmptyLeaf &&
+    octree(pos - Vec3i.UnitZ) == FullLeaf
   }
 
   override def action(pos:Vec3i) {
     if( testPosition(pos) )
-      World(pos) = testThing
+      octree(pos) = testThing
   }
 }
