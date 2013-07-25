@@ -474,5 +474,77 @@ package object util {
 			}
 		}
 	}
+
+  implicit class RichByteBuffer(buffer:ByteBuffer) {
+    def width:Int = buffer.limit - buffer.position
+
+    def split(relativeSplitPos:Int) = {
+      val oldPosition = buffer.position
+      require( 0 <= relativeSplitPos && relativeSplitPos < buffer.limit - buffer.position,
+        s"splitpos not in range.\nSplitPos: $relativeSplitPos\n$buffer")
+
+      val data1:ByteBuffer = buffer.duplicate
+      val data2:ByteBuffer = buffer.duplicate
+      data1.position(buffer.position).limit(buffer.position + relativeSplitPos)
+      data2.position(buffer.position + relativeSplitPos).limit(buffer.limit)
+
+      assert(buffer.position == oldPosition)
+      (data1,data2)
+    }
+
+    def put2(data:ByteBuffer) = {
+      val oldPosition = data.position
+      buffer.put(data)
+      data.position(oldPosition)
+      buffer
+    }
+
+    def applyUpdates(dependentUpdates:Seq[Update]) = {
+      var resultList = List(buffer)
+      for(update <- dependentUpdates) {
+        val (pre, _) = resultList.split(update.byteOffset)
+        val (_  , post ) = resultList.split(update.byteOffset + update.byteOldSize)
+        if( update.data.width == 0 )
+          resultList = pre ::: post
+        else
+          resultList = pre ::: update.data :: post
+      }
+      resultList.merge
+    }
+  }
+
+  implicit class ByteBufferList(bufferList:List[ByteBuffer]) {
+    def split(absoluteSplitPos:Int) = {
+      var offset = 0
+      val (pre,other) = bufferList.span{ b =>
+        if(offset + b.width <= absoluteSplitPos) {
+          offset += b.width
+          true
+        } else false
+      }
+      assert(offset <= absoluteSplitPos)
+
+      // bufferList: [....][...][........]
+      // splitpos:           |
+      // pre:        [....]
+      // other:            [...][........]
+      // offset-           |
+      if( other.isEmpty || offset == absoluteSplitPos )
+        (pre, other) // split exactly between buffers
+      else {
+        val (left,right) = other.head.split(absoluteSplitPos - offset)
+        (pre :+ left, right :: other.tail)
+      }
+    }
+
+    def merge = {
+      // merge parts of data to one buffer
+      val newSize = (0 /: bufferList)(_ + _.width)
+      val newBuffer = BufferUtils.createByteBuffer(newSize)
+      (newBuffer /: bufferList)(_ put2 _).flip()
+
+      newBuffer
+    }
+  }
 }
 
