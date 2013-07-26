@@ -27,7 +27,7 @@ object Main extends Logger {
     log.println( "Assertions " + (if( assertionsActivated ) "active" else "inactive" ))
     log.println( "started" )
 
-    val ca = new ContextAttribs(3,1).withDebug(true)
+    val ca = new ContextAttribs(3,0).withDebug(true)
     val alpha = 8
     val depth = 16
     val stencil = 0
