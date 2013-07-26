@@ -15,18 +15,11 @@ import downearth.AkkaMessages._
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 class Master extends Actor {
   val workers = context.actorOf(Props[Worker]
-    .withRouter(RoundRobinRouter(Config.numWorkingThreads))
+    .withRouter(RoundRobinRouter(Config.numWorkingThreads*2))
     .withDispatcher("akka.actor.worker-dispatcher")
     , "worker-router")
 
-  val done  = new mutable.Queue[FinishedJob] //TODO: im worldoctree speichern (warum?)
-
   def receive = {
-    case GetFinishedJobs =>
-      var i = 0
-      sender ! done.dequeueAll( _ => {i+=1;i <= 10*Config.b})
-      //sender ! done.dequeueAll( _ => true)
-
     // Master erhält neuen Job und verteilt ihn.
     case area:PowerOfTwoCube =>
       workers ! area
@@ -34,7 +27,7 @@ class Master extends Actor {
 
     // Worker has finished Job
     case job:FinishedJob =>
-      done enqueue job
+      context.parent ! job
 
     case unknown =>
       println("Master: unknown message: " + unknown)

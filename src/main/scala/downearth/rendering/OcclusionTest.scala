@@ -155,7 +155,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
   def doIt(camera:Camera, frustumTest:FrustumTest) {
     if( query != null )
-      for( result <- evalQueries(query).visible.take(20) )
+      for( result <- evalQueries(query).visible )
         octree.generateArea(result)
     query = findUngeneratedNodes(camera, octree, frustumTest)
   }

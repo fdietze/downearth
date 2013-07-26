@@ -108,16 +108,10 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   // mark area as ungenerated and ask
   // Worldgenerator to generate it
   def generateArea(area:PowerOfTwoCube) {
+    master ! area
     // require(!isSet(info)) // TODO this fails sometimes
 
-    // if area is outside the current Octree,
-    // increase the size until it is inside
-    while(!(area indexInRange area)) {
-      incDepth()
-    }
-
     insert( area, MeshNode.generating )
-    master ! area
   }
 
   // ask WorldNodeGenerator for generated nodes and insert them into the octree

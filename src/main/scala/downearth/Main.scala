@@ -19,7 +19,11 @@ import downearth.world.DynamicWorld
 import downearth.tools.{TestBuildTool, Shovel, ConstructionTool}
 import downearth.resources.MaterialManager
 import akka.util.Timeout
-import scala.concurrent.Await
+import scala.concurrent.{ExecutionContext, Await}
+import scala.concurrent.duration._
+import com.typesafe.config.Config
+import downearth.Config
+import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 
 //import downearth.server.LocalServer
 import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
@@ -40,8 +44,6 @@ object Main extends Logger {
 
     actorSystem = ActorSystem.create("gamecontext")
     game = actorSystem.actorOf( Props[Game].withDispatcher("akka.actor.single-thread-dispatcher"), "game" )
-
-    game ! Run
   }
 
 }
@@ -86,6 +88,17 @@ class GameState(val master:ActorRef) { gameState =>
   }
 }
 
+class GameMailbox(settings: ActorSystem.Settings, config: Config)
+  extends UnboundedPriorityMailbox(
+    // Create a new PriorityGenerator, lower prio means more important
+    PriorityGenerator {
+      case PoisonPill    ⇒ 0
+      case Run ⇒ 2
+      case job:FinishedJob ⇒ 2
+
+      case otherwise     ⇒ 1
+    })
+
 //TODO on exception, shutdown actorsystem
 class Game extends Actor with Publisher with Logger { gameLoop =>
   val master = context.actorOf( Props[Master], "master" )
@@ -100,12 +113,25 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     checkOpenGLCapabilities()
     gameState.openGLinit()
     createWidgetSystem()
+
+    import ExecutionContext.Implicits.global
+    context.system.scheduler.schedule(0 milliseconds,
+      16.6666 milliseconds,
+      self,
+      Run)
   }
 
   def receive = {
     case Run =>
-      step()
-      self ! Run
+      //if( frameCounter < fpsLimit )
+        step()
+      //else
+        //println(s"SKIP ($frameCounter)")
+      //println()
+
+    case FinishedJob(nodeinfo, node) =>
+      octree.insert( nodeinfo, node )
+      //print("#")
 
     case unknown =>
       println("Game: unknown message: " + unknown)
@@ -149,11 +175,11 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   var frameCounter = 0
 
   def step() {
-    gameState.physics.update()
+    physics.update()
 
     handleInput()
 
-    octree.makeUpdates()
+    //octree.makeUpdates()
 
     if( Config.streamWorld ) {
       octree stream player.pos
@@ -163,7 +189,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     frame()
 
     Display.update()
-    Display.sync(fpsLimit)
+    //Display.sync(fpsLimit)
   }
 
 
