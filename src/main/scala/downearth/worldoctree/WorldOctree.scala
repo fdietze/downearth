@@ -114,30 +114,6 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     insert( area, MeshNode.generating )
   }
 
-  // ask WorldNodeGenerator for generated nodes and insert them into the octree
-  def makeUpdates() { //TODO: maybe calling once per frame is too much?
-    implicit val timeout = Timeout(1 seconds)
-    try {
-      val future = (master ? GetFinishedJobs).mapTo[Seq[FinishedJob]]
-      val s = Await.result(future, timeout.duration)
-      println(s.size)
-      for( FinishedJob(nodeinfo, node) <- s ) {
-        insert( nodeinfo, node )
-/*        if( node.node.hasChildren && node.node.getChild(0) == UngeneratedNode ) {
-          insert( nodeinfo, node )
-        } else {
-          val m = new MeshNode(EmptyLeaf)
-          m.mesh = TextureMesh.empty
-          insert( nodeinfo, m )
-        }
-        //physics.worldChange(nodeinfo)*/
-      }
-    } catch {
-      case e:Throwable =>
-        println("Warning (makeUpdates): " + e.getMessage)
-    }
-	}
-
 	def move(dir:Vec3i) {
 		// checkrange
 		worldWindowPos += dir * minMeshNodeSize

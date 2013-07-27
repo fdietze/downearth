@@ -17,6 +17,6 @@ object Octree {
       nodeInfo.traversalOrder(camera)
     }
     
-    println(s"${timer.read}s")
+    println(s"${timer.readSeconds}s")
   }
 }

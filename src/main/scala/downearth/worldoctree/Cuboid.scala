@@ -98,7 +98,7 @@ case class PowerOfTwoCube(pos:Vec3i, size:Int) extends PowerOfTwoCubeLike with C
 
   // Erzeugung des Cube vom Kindknoten, aus einem Vektor-Index
   override def apply(p:Vec3i):(Int,PowerOfTwoCube) = {
-    require( indexInRange(p) )
+    require( indexInRange(p), s"Index not in Range: $p not in $this" )
     val v = indexVec(p,pos,size)
     val index = flat(v)
     val hsize = size >> 1

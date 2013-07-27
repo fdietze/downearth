@@ -21,7 +21,7 @@ object Generation {
     timer.benchmark(n) {
       data.extract(pos)
     }
-    println(s"extract: ${timer.read}s")
+    println(s"extract: ${timer.readSeconds}s")
   }
 
 
@@ -56,7 +56,7 @@ object Generation {
           worldFunction = TestingWorldDefinition)
       }
       timer.stop()
-      println(s"Size $size: ${timer.read/(positions.size)}s/node")
+      println(s"Size $size: ${timer.readSeconds/(positions.size)}s/node")
     }
   }
 }

@@ -29,7 +29,7 @@ object Noise {
       predictiontimer.measure { bezierImproved(volume) }
       noisetimer.measure{ perlin.improved(x0,y0,z0) }
     }
-    println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
+    println("noise: " + noisetimer.readSeconds/n + "s, prediction: " + predictiontimer.readSeconds/n + "s, ratio: " + predictiontimer.readSeconds/noisetimer.readSeconds)
   }
 
 
@@ -56,6 +56,6 @@ object Noise {
       predictiontimer.measure { bezierSimple(volume) }
       noisetimer.measure{ perlin.simple(x0,y0,z0) }
     }
-    println("noise: " + noisetimer.read/n + "s, prediction: " + predictiontimer.read/n + "s, ratio: " + predictiontimer.read/noisetimer.read)
+    println("noise: " + noisetimer.readSeconds/n + "s, prediction: " + predictiontimer.readSeconds/n + "s, ratio: " + predictiontimer.readSeconds/noisetimer.readSeconds)
   }
 }

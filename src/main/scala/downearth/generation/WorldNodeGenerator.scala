@@ -15,7 +15,7 @@ import downearth.AkkaMessages._
 // Verwaltung, um die Erzeugung der MeshNodes auf alle Prozesse aufzuteilen
 class Master extends Actor {
   val workers = context.actorOf(Props[Worker]
-    .withRouter(RoundRobinRouter(Config.numWorkingThreads*2))
+    .withRouter(RoundRobinRouter(Config.numWorkingThreads))
     .withDispatcher("akka.actor.worker-dispatcher")
     , "worker-router")
 

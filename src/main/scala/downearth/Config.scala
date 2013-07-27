@@ -31,7 +31,7 @@ object Config extends Listener {
 	lazy val ungeneratedDefault = FullLeaf
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
 	
-	val fpsLimit = loadInt("fpsLimit", 60)
+	val fpsLimit = loadInt("fpsLimit", 40)
   def timeStep = 1.0 / fpsLimit
 
   var test = 0.29

@@ -44,13 +44,15 @@ object Main extends Logger {
 
     actorSystem = ActorSystem.create("gamecontext")
     game = actorSystem.actorOf( Props[Game].withDispatcher("akka.actor.single-thread-dispatcher"), "game" )
+
+    game ! NextFrame
   }
 
 }
 
 object AkkaMessages {
-  case object Run
-  case object GetFinishedJobs
+  case object NextFrame
+  case class LastFrame(timeStamp:Long)
   case class FinishedJob(area:PowerOfTwoCube, node:MeshNode)
   case class Predicted(area:PowerOfTwoCube)
 }
@@ -88,21 +90,37 @@ class GameState(val master:ActorRef) { gameState =>
   }
 }
 
+class FrameFactory extends Actor {
+  def now = System.nanoTime
+  val timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
+
+  def receive = {
+    case LastFrame(lastFrame) =>
+      val timeSinceLastFrame = now - lastFrame
+      if(timeSinceLastFrame < timeBetweenFrames ) {
+        val timeToWait = timeBetweenFrames - timeSinceLastFrame
+        Thread.sleep(timeToWait/1000000)
+      }
+      sender ! NextFrame
+  }
+}
+
 class GameMailbox(settings: ActorSystem.Settings, config: Config)
   extends UnboundedPriorityMailbox(
     // Create a new PriorityGenerator, lower prio means more important
     PriorityGenerator {
-      case PoisonPill    ⇒ 0
-      case Run ⇒ 2
-      case job:FinishedJob ⇒ 2
+      case PoisonPill      => 0
+      case NextFrame       => 2
+      case job:FinishedJob => 3
 
-      case otherwise     ⇒ 1
+      case otherwise       => 1
     })
 
 //TODO on exception, shutdown actorsystem
 class Game extends Actor with Publisher with Logger { gameLoop =>
   val master = context.actorOf( Props[Master], "master" )
   val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
+  val frameFactory = context.actorOf( Props[FrameFactory], "framefactory" )
 
   val gameState = new GameState(master)
   import gameState._
@@ -113,25 +131,21 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     checkOpenGLCapabilities()
     gameState.openGLinit()
     createWidgetSystem()
-
-    import ExecutionContext.Implicits.global
-    context.system.scheduler.schedule(0 milliseconds,
-      16.6666 milliseconds,
-      self,
-      Run)
+    Thread.currentThread().setPriority(Thread.MAX_PRIORITY)
   }
 
   def receive = {
-    case Run =>
-      //if( frameCounter < fpsLimit )
-        step()
-      //else
-        //println(s"SKIP ($frameCounter)")
-      //println()
+    case NextFrame =>
+        frame()
+        frameFactory ! LastFrame(lastFrame)
 
-    case FinishedJob(nodeinfo, node) =>
-      octree.insert( nodeinfo, node )
-      //print("#")
+    case FinishedJob(area, node) =>
+      updateTimer.restart()
+
+      octree.insert( area, node )
+      physics.worldChange(area)
+
+      lastUpdateDuration = updateTimer.readNanos
 
     case unknown =>
       println("Game: unknown message: " + unknown)
@@ -145,7 +159,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   }
 
   def createWidgetSystem() {
-    val wed = new WidgetEventDispatcher(gameState.mainWidget)
+    val wed = new WidgetEventDispatcher(mainWidget)
     wed.listenTo(gameLoop)
   }
 
@@ -157,6 +171,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     val pf = new PixelFormat(alpha, depth, stencil)
     Display.setDisplayMode( new DisplayMode(Config.windowResolutionWidth,Config.windowResolutionHeight) )
     Display.setResizable(true)
+    Display.setVSyncEnabled(false)
     Display.create(pf, ca)
     log.println( "display created" )
   }
@@ -165,31 +180,40 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   var snapshotRequest = 0L
   var snapshotCurrent = -1L
 
-  def time = System.currentTimeMillis
-  val starttime = time
-  def uptime = time - starttime
+  val timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
 
-  var lastFrame = uptime
+  def now = System.nanoTime
+  val starttime = now
+  //def uptime = now - starttime
+
+  var lastFrame = now
   var currentFps = 0
-  var timestamp = starttime
+  var lastFrameCounterReset = starttime
   var frameCounter = 0
 
-  def step() {
+  // for measuring last frame
+  val frameTimer = new Timer
+  var lastFrameDuration:Long = 0
+
+  // for measuring last octree update
+  val updateTimer = new Timer
+  var lastUpdateDuration:Long = 0
+
+  def frame() {
+    frameRateCalculations()
+    frameTimer.restart()
+
     physics.update()
 
     handleInput()
 
-    //octree.makeUpdates()
-
-    if( Config.streamWorld ) {
+    if( Config.streamWorld )
       octree stream player.pos
-    }
 
     renderer.draw()
-    frame()
-
     Display.update()
-    //Display.sync(fpsLimit)
+
+    lastFrameDuration = frameTimer.readNanos
   }
 
 
@@ -231,17 +255,21 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 	}
 
 	// Berechnet die Aktuelle Framerate
-	def frame() {
-		if(time - timestamp > 1000){
+	def frameRateCalculations() {
+		if(now - lastFrameCounterReset > 1000000000){
 			currentFps = frameCounter
-			timestamp = time
+			lastFrameCounterReset = now
 			frameCounter = 0
-      Display.setTitle("%d fps" format currentFps)
+      val possibleUpdatesPerFrame = if(lastUpdateDuration > 0 && lastFrameDuration <= timeBetweenFrames)
+        (timeBetweenFrames - lastFrameDuration) / lastUpdateDuration
+      else 0
+
+      Display.setTitle(s"$currentFps/$fpsLimit fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${possibleUpdatesPerFrame}/frame)")
 		}
 		else
 			frameCounter += 1
 	
-		lastFrame = uptime
+		lastFrame = now
 	}
 
   var windowMode:DisplayMode = null

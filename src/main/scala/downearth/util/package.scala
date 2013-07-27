@@ -225,15 +225,15 @@ package object util {
 
   class Timer {
     var startTime = 0L
-    var passedTime = 0L
+    var totalPassedTime = 0L
 
     def now = System.nanoTime
     def passed = now - startTime
 
-    def reset()   { passedTime = 0 }
+    def reset()   { totalPassedTime = 0 }
     def start()   { startTime = now }
     def restart() {reset(); start()}
-    def stop()    { passedTime += passed }
+    def stop()    { totalPassedTime += passed }
 
     def measure[A](code: => A) = {
       start()
@@ -249,15 +249,17 @@ package object util {
         code
         i += 1
       }
-      passedTime += passed / n
+      totalPassedTime += passed / n
       
       return passed.toDouble / n
     }
-  
-    def read = (if(passedTime == 0) now - startTime else passedTime)/1000000000.0
+
+    def readNanos = if(totalPassedTime == 0) passed else totalPassedTime
+    def readMillis = readNanos/1000000
+    def readSeconds = readNanos/1000000000.0
     def readHuman:String = readHuman(3)
     def readHuman(precision:Int = 8) = {
-      val time = read
+      val time = readSeconds
       val fraction = time - math.floor(time)
       var s = time.toInt
       val sb = new StringBuilder
