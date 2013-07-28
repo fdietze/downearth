@@ -5,6 +5,7 @@ import org.lwjgl.opengl.Display
 import downearth.worldoctree.{FullLeaf, FullHexaeder, Leaf}
 import gui.Listener
 import util.isPowerOfTwo
+import downearth.rendering.TextureMesh
 
 object Config extends Listener {
   val maxMeshCount = 50
@@ -42,7 +43,7 @@ object Config extends Listener {
 	
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
-	val maxMeshByteSize = 30000 * 32 //TODO: get stride from global mesh config
+	val maxMeshByteSize = 30000 * TextureMesh.byteStride
   val maxDebugDrawQubes = 200
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2

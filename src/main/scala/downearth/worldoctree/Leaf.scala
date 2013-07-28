@@ -7,9 +7,13 @@ import downearth.generation.{WorldFunction, WorldDefinition}
 import simplex3d.math.{Vec2i, Vec3i}
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
-import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder, ObjMesh}
+import downearth.rendering._
 import downearth.resources.MaterialManager
 import simplex3d.math.floatx.{Vec2f, Vec3f}
+import downearth.worldoctree.PowerOfTwoCube
+import downearth.rendering.Update
+import downearth.rendering.UpdateInfo
+import downearth.rendering.TextureMeshBuilder
 
 
 /**
@@ -180,7 +184,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
         }
       }
     }
-    vertexCounter * 32 //TODO global stride size
+    vertexCounter * TextureMesh.byteStride
   }
 
   override def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
