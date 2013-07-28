@@ -10,7 +10,6 @@ import simplex3d.math.doublex.functions._
 import downearth.rendering._
 import downearth.resources.MaterialManager
 import simplex3d.math.floatx.{Vec2f, Vec3f}
-import downearth.worldoctree.PowerOfTwoCube
 import downearth.rendering.Update
 import downearth.rendering.UpdateInfo
 import downearth.rendering.TextureMeshBuilder

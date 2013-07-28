@@ -20,6 +20,7 @@ import downearth.AkkaMessages._
 import akka.actor.ActorRef
 import downearth.util
 import scala.Some
+import downearth.generation.WorldGenerator
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated, gameState:GameState) extends Data3D[Leaf] {
@@ -44,6 +45,23 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     else
       println(s"update at $p out of range: $rootArea")
   }
+
+  def generateInitialAreaAroundPlayer() {
+    println("generating initial area...")
+    // creata an octree aligned node around the player and generate it
+    val nodeSize = nextPowerOfTwo((playerRadius * 2).toInt)
+    val start = Vec3i(startPos)
+    val startMin = start - playerRadius
+    val startMax = start + playerRadius
+    val lowerIndex = divFloor(startMin, nodeSize)
+    val higherIndex = divCeil(startMax, nodeSize)
+    for( pos <- lowerIndex until higherIndex ) {
+      val area = PowerOfTwoCube(pos*nodeSize, nodeSize)
+      val node = WorldGenerator.generateNode(area)
+      octree.insert(area, node)
+    }
+  }
+
 
   // traverse the octree in a front to back order from view of point camera
   // filter the nodes by predicate (for example frustum test)

@@ -198,7 +198,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
       case UngeneratedNode =>
         val newdata = new Array[NodeOverMesh](8)
         for(i <- 0 until 8) {
-          newdata(i) = new MeshNode(UngeneratedNode)
+          newdata(i) = MeshNode.ungenerated
         }
         mesh.freevbo()
         new InnerNodeOverMesh(newdata)

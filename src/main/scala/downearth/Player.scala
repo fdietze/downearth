@@ -24,15 +24,15 @@ class Player(gameState:GameState) extends Ray { //TODO: why extend and not conta
   
   val camDistFromCenter = Vec3(0,0,0.8)
   
-  private val m_camera = new Camera3D(startpos,Vec3(1,0,0))
+  private val m_camera = new Camera3D(startPos,Vec3(1,0,0))
 
   def camera = {
     m_camera.position := pos
     m_camera
   }
   
-  val (body, ghostObject) = physics.addCharacter(startpos)
-  val positionAsGhost = Vec3(startpos)
+  val (body, ghostObject) = physics.addCharacter(startPos)
+  val positionAsGhost = Vec3(startPos)
   
   def pos:ReadVec3 = {
     if( isGhost )
@@ -76,7 +76,7 @@ class Player(gameState:GameState) extends Ray { //TODO: why extend and not conta
 
   def resetPos() {
     DisplayEventManager.showEventText("reset")
-    pos = startpos
+    pos = startPos
   }
 
   //body setAngularFactor 0

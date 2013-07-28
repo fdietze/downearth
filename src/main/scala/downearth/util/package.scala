@@ -139,6 +139,56 @@ package object util {
 		case 64 => 6
 		case  x =>(log(x)/0.6931471805599453).toInt
 	}
+
+  def nextPowerOfTwo(x:Int) = {
+    var n = x
+    n -= 1
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n += 1
+    n
+  }
+
+  def mod(a:Int, b:Int) = (a % b + b) % b
+  def mod(a:Vec3i, b:Int):Vec3i = Vec3i(
+    mod(a.x, b),
+    mod(a.y, b),
+    mod(a.z, b)
+  )
+  def mod(a:Vec3i, b:Vec3i):Vec3i = Vec3i(
+    mod(a.x, b.x),
+    mod(a.y, b.y),
+    mod(a.z, b.z)
+  )
+
+  def divFloor(a:Int, b:Int) = (a - mod(a,b)) / b
+  def divCeil(a:Int, b:Int) = if(a % b == 0) a / b else (a + ( b - mod(a,b) )) / b
+
+  def divFloor(a:Vec3i, b:Int):Vec3i = Vec3i(
+    divFloor(a.x, b),
+    divFloor(a.y, b),
+    divFloor(a.z, b)
+  )
+  def divFloor(a:Vec3i, b:Vec3i):Vec3i = Vec3i(
+    divFloor(a.x, b.x),
+    divFloor(a.y, b.y),
+    divFloor(a.z, b.z)
+  )
+
+  def divCeil(a:Vec3i, b:Int):Vec3i = Vec3i(
+    divCeil(a.x, b),
+    divCeil(a.y, b),
+    divCeil(a.z, b)
+  )
+  def divCeil(a:Vec3i, b:Vec3i):Vec3i = Vec3i(
+    divCeil(a.x, b.x),
+    divCeil(a.y, b.y),
+    divCeil(a.z, b.z)
+  )
+
   def halves(n:Int) = (n/2, n-n/2)
   def halves(v:Vec3i) = (Vec3i(
     v.x/2,

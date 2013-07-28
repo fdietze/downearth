@@ -2,6 +2,7 @@ package downearth.generation
 
 import simplex3d.math._
 import simplex3d.math.double._
+import simplex3d.math.double.functions._
 
 import downearth._
 import downearth.Config._
@@ -24,18 +25,15 @@ object WorldGenerator {
 	import Config._
 	
 	def generateInitialWorld(gameState:GameState):WorldOctree = {
-    //TODO: generate with actors, rely on stream
-		val initArea = PowerOfTwoCube( pos = Vec3i(-8), size = 16 )
-    print("generating initial area...")
-    val initNode = generateNode(initArea)
-    println("done.")
-		val octree = new WorldOctree(initArea, initNode, gameState)
+    // create an octree that contains the player
+    val octreeSize = nextPowerOfTwo(((length(Config.startPos)+playerRadius) * 2).toInt)
+    val octreeArea = PowerOfTwoCube( pos = Vec3i(-octreeSize/2), octreeSize )
+		val octree = new WorldOctree(octreeArea, MeshNode.ungenerated, gameState)
 
     // octree( Vec3i(1,2,3) ) = new ObjLeaf(ObjManager.testMesh)
 
 		octree
 	}
-
 
   def generateNode(area:PowerOfTwoCube,
                    worldFunction:WorldFunction = WorldDefinition):MeshNode = {

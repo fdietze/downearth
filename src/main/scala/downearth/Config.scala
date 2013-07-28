@@ -33,7 +33,7 @@ object Config extends Listener {
   var c = 1.0
 	
 	lazy val ungeneratedDefault = FullLeaf
-	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
+	val startPos = Vec3(0,0,5)
 	
 	var fpsLimitd = 60.0
   def fpsLimit = fpsLimitd.toInt
@@ -44,7 +44,7 @@ object Config extends Listener {
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
 	val maxMeshByteSize = 30000 * TextureMesh.byteStride
-  val maxDebugDrawQubes = 200
+  val maxDebugDrawQubes = 1000
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2
 	val cameraTurboSpeed = 32

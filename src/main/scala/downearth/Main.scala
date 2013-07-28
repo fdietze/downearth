@@ -67,10 +67,9 @@ class GameState(val master:ActorRef) { gameState =>
   val octree = WorldGenerator.generateInitialWorld(gameState)
   val physics = new BulletPhysics(gameState)
   val dynamicWorld = DynamicWorld.testScene
+
   lazy val renderer = new Renderer(gameState)
-
   lazy val mainWidget = new MainWidget(gameState)
-
   lazy val materialManager = new MaterialManager
 
   val tools = new {
@@ -127,11 +126,14 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 
 
   override def preStart() {
+    Thread.currentThread().setPriority(Thread.MAX_PRIORITY)
+
     createOpenGLContext()
     checkOpenGLCapabilities()
     gameState.openGLinit()
     createWidgetSystem()
-    Thread.currentThread().setPriority(Thread.MAX_PRIORITY)
+
+    octree.generateInitialAreaAroundPlayer()
   }
 
   def receive = {
