@@ -17,7 +17,7 @@ object Config extends Listener {
   }
 
 	var minMeshNodeSize = loadInt("minMeshNodeSize", 16)
-	var minPredictionSize = loadInt("minPredictionSize", 8)
+	var minPredictionSize = loadInt("minPredictionSize", 16)
 	var worldWindowSize = loadInt("worldWindowSize", 32)
 
 	val vertexMaterials = true

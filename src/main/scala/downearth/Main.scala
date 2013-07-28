@@ -134,14 +134,15 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 
   def receive = {
     case NextFrame =>
-        frame()
-        frameFactory ! LastFrame(lastFrame)
+      frame()
+      frameFactory ! LastFrame(lastFrame)
 
     case FinishedJob(area, node) =>
       updateTimer.restart()
 
       octree.insert( area, node )
       physics.worldChange(area)
+      updateCounter += 1
 
       lastUpdateDuration = updateTimer.readNanos
 
@@ -188,6 +189,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   var currentFps = 0
   var lastFrameCounterReset = starttime
   var frameCounter = 0
+  var updateCounter = 0
 
   // for measuring last frame
   val frameTimer = new Timer
@@ -212,6 +214,8 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     Display.update()
 
     lastFrameDuration = frameTimer.readNanos
+    frameCounter += 1
+    lastFrame = now
   }
 
 
@@ -256,18 +260,12 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 	def frameRateCalculations() {
 		if(now - lastFrameCounterReset > 1000000000){
 			currentFps = frameCounter
+      Display.setTitle(s"$currentFps/${Config.fpsLimit} fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s)")
+
 			lastFrameCounterReset = now
 			frameCounter = 0
-      val possibleUpdatesPerFrame = if(lastUpdateDuration > 0 && lastFrameDuration <= timeBetweenFrames)
-        (timeBetweenFrames - lastFrameDuration) / lastUpdateDuration
-      else 0
-
-      Display.setTitle(s"$currentFps/${Config.fpsLimit} fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${possibleUpdatesPerFrame}/frame)")
-		}
-		else
-			frameCounter += 1
-	
-		lastFrame = now
+      updateCounter = 0
+    }
 	}
 
   var windowMode:DisplayMode = null
