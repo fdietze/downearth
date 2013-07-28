@@ -9,7 +9,6 @@ import simplex3d.math.double.functions._
 import akka.pattern.ask
 import downearth.rendering._
 import downearth.rendering.{GlDraw, ObjManager, TextureManager, Renderer}
-import downearth.Config._
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.ARBDebugOutput._
 import org.lwjgl.opengl.AMDDebugOutput._
@@ -21,9 +20,8 @@ import downearth.resources.MaterialManager
 import akka.util.Timeout
 import scala.concurrent.{ExecutionContext, Await}
 import scala.concurrent.duration._
-import com.typesafe.config.Config
-import downearth.Config
 import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
+import Config._
 
 //import downearth.server.LocalServer
 import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
@@ -105,7 +103,7 @@ class FrameFactory extends Actor {
   }
 }
 
-class GameMailbox(settings: ActorSystem.Settings, config: Config)
+class GameMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Config)
   extends UnboundedPriorityMailbox(
     // Create a new PriorityGenerator, lower prio means more important
     PriorityGenerator {
@@ -264,7 +262,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
         (timeBetweenFrames - lastFrameDuration) / lastUpdateDuration
       else 0
 
-      Display.setTitle(s"$currentFps/$fpsLimit fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${possibleUpdatesPerFrame}/frame)")
+      Display.setTitle(s"$currentFps/${Config.fpsLimit} fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${possibleUpdatesPerFrame}/frame)")
 		}
 		else
 			frameCounter += 1
@@ -411,7 +409,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
         }
 
         val c = Keyboard.getEventCharacter
-        if( c.intValue != 0 ) {
+        if( c.toInt != 0 ) {
           if( c.isControl ) {
             c match {
               case '\t' =>
@@ -423,7 +421,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
               case '\r' =>
                 print("<return>")
               case _ =>
-                print(s"<${c.intValue}>")
+                print(s"<${c.toInt}>")
             }
           }
           else
