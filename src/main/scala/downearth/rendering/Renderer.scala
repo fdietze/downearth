@@ -228,7 +228,7 @@ class Renderer(gameState:GameState) extends Logger {
       glClearBuffer(GL_DEPTH, 0, color)
     }
 
-    val camera = player.camera
+    import player.camera
     val eyeDist = 0.06f
 
     if( Config.stereoRender ) {
@@ -351,19 +351,14 @@ class Renderer(gameState:GameState) extends Logger {
 
     lighting( camera.position )
 
-    val frustumTest:FrustumTest =
-      if( Config.frustumCulling )
-        new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
-      else {
-        new FrustumTest {
-          def testNode( info:PowerOfTwoCube ) = true
-        }
-      }
+    val frustumTest = new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
 
     drawCalls = 0
     emptyDrawCalls = 0
-
-    drawOctree(octree, frustumTest, camera.position)
+    if( Config.frustumCulling )
+      drawOctree(octree, frustumTest, camera.position)
+    else
+      drawOctree(octree, new FrustumTest { def testNode( info:PowerOfTwoCube ) = true }, camera.position)
 
     dynamicWorld.entities foreach {
       case simple:SimpleEntity => ()
@@ -387,7 +382,7 @@ class Renderer(gameState:GameState) extends Logger {
       GlDraw.drawSampledNodes()
 
     if( Config.occlusionTest ) {
-      occlusionTest.doIt(camera, frustumTest)
+      occlusionTest.doIt(frustumTest)
     } else { // perform frustum test only
       octree.query( frustumTest, camera.position) {
         case (info, UngeneratedNode) =>

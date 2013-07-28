@@ -105,7 +105,7 @@ trait FrustumTest extends Function1[PowerOfTwoCube,Boolean] {
 // Idea by Mark Morley, http://web.archive.org/web/20030601123911/http://www.markmorley.com/opengl/frustumculling.html
 class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
 
-	val planes = Array(Vec4(0),Vec4(0),Vec4(0),Vec4(0),Vec4(0),Vec4(0))
+	val planes = Array.fill(6)(Vec4(0))
 	val rows = transpose(projection * view)
 	planes(0) = normalize(rows(3) - rows(0)) //right plane
 	planes(1) = normalize(rows(3) + rows(0)) //left plane

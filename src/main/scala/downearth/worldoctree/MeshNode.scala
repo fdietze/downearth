@@ -54,9 +54,6 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 
   override def toString = s"MeshNode(node=$node, mesh=$mesh)"
 
-  // Nodes unter dem MeshNode müssen gesetzt sein.
-  def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = true
-
   override def hasChildren = node.hasChildren
 
   override def getChild(i:Int) = node.getChild(i)

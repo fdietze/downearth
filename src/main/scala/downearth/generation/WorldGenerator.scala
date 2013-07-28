@@ -21,18 +21,15 @@ import downearth.worldoctree.PowerOfTwoCube
 import downearth.worldoctree.PowerOfTwoCube
 
 object WorldGenerator {
-	import Config.worldWindowSize
+	import Config._
 	
-	def genWorld(gameState:GameState):WorldOctree = {
-		// val rootNodeInfo = Cube(Vec3i(-cubesize/2), cubesize)
-		val initArea = PowerOfTwoCube( pos = Vec3i(-worldWindowSize/2), size = worldWindowSize )
+	def generateInitialWorld(gameState:GameState):WorldOctree = {
+    //TODO: generate with actors, rely on stream
+		val initArea = PowerOfTwoCube( pos = Vec3i(-16), size = 32 )
     print("generating initial area...")
     val initNode = generateNode(initArea)
     println("done.")
 		val octree = new WorldOctree(initArea, initNode, gameState)
-		//octree.incDepth()
-
-    //octree.generateArea(PowerOfTwoCube( pos = Vec3i(-worldWindowSize-worldWindowSize/2), size = worldWindowSize/2 ))
 
     // octree( Vec3i(1,2,3) ) = new ObjLeaf(ObjManager.testMesh)
 

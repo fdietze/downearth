@@ -64,7 +64,7 @@ class DebugLog extends Actor {
 }
 
 class GameState(val master:ActorRef) { gameState =>
-  val octree = WorldGenerator.genWorld(gameState)
+  val octree = WorldGenerator.generateInitialWorld(gameState)
   val physics = new BulletPhysics(gameState)
   val dynamicWorld = DynamicWorld.testScene
   lazy val renderer = new Renderer(gameState)
@@ -88,7 +88,7 @@ class GameState(val master:ActorRef) { gameState =>
   }
 }
 
-class FrameFactory extends Actor {
+class FrameGenerator extends Actor {
   def now = System.nanoTime
   val timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
 
@@ -118,7 +118,7 @@ class GameMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Co
 class Game extends Actor with Publisher with Logger { gameLoop =>
   val master = context.actorOf( Props[Master], "master" )
   val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
-  val frameFactory = context.actorOf( Props[FrameFactory], "framefactory" )
+  val frameFactory = context.actorOf( Props[FrameGenerator], "framegenerator" )
 
   val gameState = new GameState(master)
   import gameState._
@@ -208,7 +208,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     handleInput()
 
     if( Config.streamWorld )
-      octree stream player.pos
+      octree stream player
 
     renderer.draw()
     Display.update()

@@ -16,14 +16,15 @@ object Config extends Listener {
     getInt => loadInt
   }
 
-	var minMeshNodeSize = loadInt("minMeshNodeSize", 16)
 	var minPredictionSize = loadInt("minPredictionSize", 16)
-	var worldWindowSize = loadInt("worldWindowSize", 32)
+  var playerRadius = loadInt("worldWindowSize", 10)
+  var playerSightRadius = 100.0 //TODO: set farplane to playerSightRadius
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
 	val skybox =false
 
+  var occlusionTestMagicNumber = 1.0
   var a = 1.0
   var b = 1.0
   var c = 1.0
@@ -91,6 +92,7 @@ object Config extends Listener {
   var debugDraw = 0
   var backFaceCulling = true
   var wireframe = false
+  var generation = true
   var streamWorld = false
   var frustumCulling = true
   var turbo = false
@@ -100,8 +102,6 @@ object Config extends Listener {
 
   loader.load()
 
-	assert( worldWindowSize >= minMeshNodeSize )
-	assert( worldWindowSize % minMeshNodeSize  == 0 )
-	assert( isPowerOfTwo(worldWindowSize / minMeshNodeSize) )
+  assert( isPowerOfTwo(minPredictionSize) )
 }
 

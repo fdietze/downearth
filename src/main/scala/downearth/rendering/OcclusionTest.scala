@@ -46,13 +46,16 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     occTest_binding.setAttributePointers()
   }
 
-  def findUngeneratedNodes(camera:Camera, octree:WorldOctree, test:FrustumTest) = {
+  def findUngeneratedNodes(frustumTest:FrustumTest) = {
+    import gameState.player.camera
+    import gameState.player
     // TextureManager.box.bind()
 
     val nodeInfoBufferGenerating  = ArrayBuffer[PowerOfTwoCube]()
     val nodeInfoBufferUngenerated = ArrayBuffer[PowerOfTwoCube]()
+    val filter = (area:PowerOfTwoCube) => player.canSee(area) && frustumTest(area)
 
-    octree.query( test, camera.position) {
+    octree.query(filter, camera.position) {
       case (info, UngeneratedNode) =>
         nodeInfoBufferUngenerated += info
         false
@@ -70,7 +73,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val view = Mat4f(camera.view)
     val projection = Mat4f(camera.projection)
 
-    val magicNr = (8 * Config.a).toInt
+    val magicNr = (4 * Config.occlusionTestMagicNumber).toInt
     val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == renderer.frameCount % magicNr)
 
     val renderNodeInfos1 = nodeInfoBufferGenerating
@@ -153,11 +156,11 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
   }
 
 
-  def doIt(camera:Camera, frustumTest:FrustumTest) {
+  def doIt(frustumTest:FrustumTest) {
     if( query != null )
       for( result <- evalQueries(query).visible )
         octree.generateArea(result)
-    query = findUngeneratedNodes(camera, octree, frustumTest)
+    query = findUngeneratedNodes(frustumTest)
   }
 
 }

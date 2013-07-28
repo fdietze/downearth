@@ -117,8 +117,10 @@ trait CuboidLike {
   def pos:Vec3i
   def vsize:Vec3i
   def isDegenerate = vsize.x == 0 || vsize.y == 0 || vsize.z == 0
+  def positiveVolume = vsize.x >= 0 || vsize.y >= 0 || vsize.z >= 0
   def isCube = vsize.x == vsize.y && vsize.y == vsize.z
-  require(!isDegenerate, "Cuboid cannot be degenerate: " + toString)
+  require(!isDegenerate, s"Cuboid cannot be degenerate: $this")
+  require(positiveVolume, s"Cuboid needs a Positive Volume: $this")
 
   def upperPos = pos + vsize
   def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,vsize)
@@ -127,9 +129,26 @@ trait CuboidLike {
   def coordinates = pos until upperPos
   def volume = vsize.x * vsize.y * vsize.z
 
-  def inside(that:CuboidLike) = {
+  def inside(that:CuboidLike):Boolean = {
     all(greaterThanEqual(this.pos, that.pos)) &&
     all(lessThanEqual(this.upperPos, that.upperPos))
+  }
+
+  def vertices = Array(
+    pos,
+  //Vec3i(pos.x          ,pos.y          ,pos.z),
+    Vec3i(pos.x + vsize.x,pos.y          ,pos.z),
+    Vec3i(pos.x          ,pos.y + vsize.y,pos.z),
+    Vec3i(pos.x + vsize.x,pos.y + vsize.y,pos.z),
+    Vec3i(pos.x          ,pos.y          ,pos.z + vsize.z),
+    Vec3i(pos.x + vsize.x,pos.y          ,pos.z + vsize.z),
+    Vec3i(pos.x          ,pos.y + vsize.y,pos.z + vsize.z),
+    Vec3i(pos.x + vsize.x,pos.y + vsize.y,pos.z + vsize.z)
+  )
+
+  def overlaps(that:CuboidLike):Boolean = {
+    this.vertices.exists(that.indexInRange) ||
+    that.vertices.exists(this.indexInRange)
   }
 
   def intersection(that:CuboidLike) = {
@@ -205,7 +224,7 @@ trait CubeLike extends CuboidLike {
 }
 
 trait PowerOfTwoCubeLike extends CubeLike{
-  require( isPowerOfTwo(size) )
+  require( isPowerOfTwo(size), s"Edge length not a power of two: $this" )
 
   // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
   // Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an

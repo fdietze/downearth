@@ -12,24 +12,22 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import downearth.util._
-import downearth.{GameState, BulletPhysics, Config, util}
+import downearth._
 import downearth.Config._
 import collection.mutable
 import downearth.rendering.TextureMesh
 import downearth.AkkaMessages._
 import akka.actor.ActorRef
+import downearth.util
+import scala.Some
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated, gameState:GameState) extends Data3D[Leaf] {
   import gameState._
 
-  var worldWindowPos:Vec3i = rootArea.pos.clone
-  val worldWindowSize:Int = rootArea.size
-  def worldWindowCenter = worldWindowPos + worldWindowSize/2
-
   // for Data3D interface
-  val vsize = Vec3i(worldWindowSize)
-  override def indexInRange(pos:Vec3i) = util.indexInRange(pos, rootArea.pos, rootArea.size)
+  def vsize = rootArea.vsize
+  override def indexInRange(pos:Vec3i) = rootArea indexInRange pos
 
   def apply(p:Vec3i) = {
     if( rootArea.indexInRange(p) )
@@ -105,50 +103,42 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     node
   }
 
+  def ungeneratedAreasIn(area:Cube):IndexedSeq[PowerOfTwoCube] = {
+    val ungenerated = new mutable.ArrayBuffer[PowerOfTwoCube]
+    query(areaFilter = _ overlaps area) {
+      case (info, UngeneratedNode) =>
+        ungenerated += info
+        false
+      case (info, GeneratingNode) =>
+        false
+      case (info, node:MeshNode) =>
+        true
+      case (info, node:NodeUnderMesh) =>
+        !node.finishedGeneration
+      case _ =>
+        true
+    }
+    ungenerated
+  }
+
   // mark area as ungenerated and ask
   // Worldgenerator to generate it
   def generateArea(area:PowerOfTwoCube) {
+    if(!Config.generation) return;
+    // TODO: warning if generating already generated node
+    // TODO: warning if area size/zosition does not match a node in octree
     master ! area
-    // require(!isSet(info)) // TODO this fails sometimes
-
     insert( area, MeshNode.generating )
   }
 
-	def move(dir:Vec3i) {
-		// checkrange
-		worldWindowPos += dir * minMeshNodeSize
+	def stream(player:Player) {
 
-		val slicepos = worldWindowPos + (dir+1)/2*worldWindowSize - (dir+1)/2 * minMeshNodeSize
-		val slicesize = (Vec3i(1) - abs(dir)) * (worldWindowSize / minMeshNodeSize) + abs(dir)
-		
-		for(vi <- Vec3i(0) until slicesize) {
-			val nodeinfo = PowerOfTwoCube(slicepos + vi*minMeshNodeSize,minMeshNodeSize)
-			generateArea(nodeinfo)
-		}
-	}
-	
-	def stream(pos:ReadVec3) {
-		val wpos = Vec3(worldWindowPos)
-		val wsize = worldWindowSize.toDouble
-		val msize = minMeshNodeSize.toDouble
+    val outside = !(player.sightWindow inside rootArea)
 
-		//while(Util.indexInRange(worldWindowPos,worldWindowSize,Vec3i(pos))
-		
-		val lowerVertex = wpos + wsize/2 - msize/2
-		val upperVertex = wpos + wsize/2 + msize/2
-		
-		if( pos.x < lowerVertex.x )
-			move( Vec3i(-1,0,0) )
-		if( pos.y < lowerVertex.y )
-			move( Vec3i(0,-1,0) )
-		if( pos.z < lowerVertex.z )
-			move( Vec3i(0,0,-1) )
-		if( pos.x > upperVertex.x )
-			move( Vec3i(1,0,0) )
-		if( pos.y > upperVertex.y )
-			move( Vec3i(0,1,0) )
-		if( pos.z > upperVertex.z )
-			move( Vec3i(0,0,1) )
+    if(outside)
+      incDepth()
+
+    ungeneratedAreasIn (player.window) foreach generateArea //TODO: higher priority
 	}
 
   // increase Octree size
@@ -194,13 +184,6 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
 		}
 	}
 
-	def isSet(info:PowerOfTwoCube):Boolean = {
-		if(rootArea indexInRange info)
-			return root.isSet(rootArea,info)
-		else
-			return false
-	}
-	
 	def getPolygons(pos:Vec3i) = {
 		if(rootArea indexInRange pos)
 			root.getPolygons(rootArea,pos)

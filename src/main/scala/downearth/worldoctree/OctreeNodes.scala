@@ -11,7 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, Queue}
 import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder}
 
 sealed trait Node {
-	// im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
+  // im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
 	// Elternknoten ableiten lässt. Beim Traversieren durch den baum wird diese
 	// Information in Form einer Instanz von Cube weitergereicht.
 	
@@ -40,9 +40,6 @@ sealed trait Node {
 // im Octree wird unterschieden, ob sich der Node oberhalb oder unterhalb des
 // Meshes befindet
 trait NodeOverMesh extends Node {
-	// Überprüft, ob ein bestimmter Teilbereich des Knotens schon generiert wurde.
-	def isSet(info:PowerOfTwoCube, pos:PowerOfTwoCube):Boolean
-	
 	// liefert einen Knoten zurück, bei dem der Hexaeder eingefügt wurde.
 	def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf):NodeOverMesh
 	
@@ -99,16 +96,6 @@ class InnerNodeOverMesh(val data:Array[NodeOverMesh]) extends NodeOverMesh {
   override def hasChildren = true
 
   override def getChild(i:Int) = data(i)
-	
-	def isSet(info:PowerOfTwoCube,pos:PowerOfTwoCube) = {
-		assert(info indexInRange pos,"Not in range: "+info+pos)
-		if(info == pos)
-			true
-		else{
-			val (index,nodeinfo) = info(pos.pos)
-			data(index).isSet(nodeinfo,pos)
-		}
-	}
 	
 	def apply(info:PowerOfTwoCube, p:Vec3i) = {
 		val (index,nodeinfo) = info(p)
