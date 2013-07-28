@@ -90,14 +90,16 @@ class GameState(val master:ActorRef) { gameState =>
 
 class FrameGenerator extends Actor {
   def now = System.nanoTime
-  val timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
+  def timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
 
   def receive = {
     case LastFrame(lastFrame) =>
       val timeSinceLastFrame = now - lastFrame
       if(timeSinceLastFrame < timeBetweenFrames ) {
         val timeToWait = timeBetweenFrames - timeSinceLastFrame
-        Thread.sleep(timeToWait/1000000)
+        val waitMillis = timeToWait/1000000
+        val waitNanos = timeToWait - (waitMillis*1000000)
+        Thread.sleep(waitMillis, waitNanos.toInt)
       }
       sender ! NextFrame
   }
@@ -145,9 +147,11 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
       updateCounter += 1
 
       lastUpdateDuration = updateTimer.readNanos
+  }
 
-    case unknown =>
-      println("Game: unknown message: " + unknown)
+
+  override def unhandled(message: Any) {
+    println("Game: unknown message: " + message)
   }
 
   override def postStop() {
@@ -179,7 +183,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   var snapshotRequest = 0L
   var snapshotCurrent = -1L
 
-  val timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
+  def timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
 
   def now = System.nanoTime
   val starttime = now
@@ -200,6 +204,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   var lastUpdateDuration:Long = 0
 
   def frame() {
+    lastFrame = now
     frameRateCalculations()
     frameTimer.restart()
 
@@ -215,9 +220,18 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 
     lastFrameDuration = frameTimer.readNanos
     frameCounter += 1
-    lastFrame = now
   }
 
+  def frameRateCalculations() {
+    if(now - lastFrameCounterReset > 1000000000){
+      currentFps = frameCounter
+      Display.setTitle(s"$currentFps/${Config.fpsLimit} fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s)")
+
+      lastFrameCounterReset = now
+      frameCounter = 0
+      updateCounter = 0
+    }
+  }
 
   def checkOpenGLCapabilities() { //TODO split checkOpenGLCapabilities
     val caps = GLContext.getCapabilities
@@ -254,18 +268,6 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     glClearColor(0.4f, 0.6f, 0.9f, 1f)
 
     //Mouse setGrabbed true
-	}
-
-	// Berechnet die Aktuelle Framerate
-	def frameRateCalculations() {
-		if(now - lastFrameCounterReset > 1000000000){
-			currentFps = frameCounter
-      Display.setTitle(s"$currentFps/${Config.fpsLimit} fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s)")
-
-			lastFrameCounterReset = now
-			frameCounter = 0
-      updateCounter = 0
-    }
 	}
 
   var windowMode:DisplayMode = null

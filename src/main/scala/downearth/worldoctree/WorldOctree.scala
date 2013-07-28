@@ -126,15 +126,13 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   def generateArea(area:PowerOfTwoCube) {
     if(!Config.generation) return;
     // TODO: warning if generating already generated node
-    // TODO: warning if area size/zosition does not match a node in octree
+    // TODO: warning if area size/position does not match a node in octree
     master ! area
     insert( area, MeshNode.generating )
   }
 
 	def stream(player:Player) {
-
     val outside = !(player.sightWindow inside rootArea)
-
     if(outside)
       incDepth()
 

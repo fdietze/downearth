@@ -16,9 +16,9 @@ object Config extends Listener {
     getInt => loadInt
   }
 
-	var minPredictionSize = loadInt("minPredictionSize", 16)
+	var minPredictionSize = loadInt("minPredictionSize", 8)
   var playerRadius = loadInt("worldWindowSize", 10)
-  var playerSightRadius = 100.0 //TODO: set farplane to playerSightRadius
+  var playerSightRadius = 150.0 //TODO: set farplane to playerSightRadius
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
@@ -32,7 +32,8 @@ object Config extends Listener {
 	lazy val ungeneratedDefault = FullLeaf
 	val startpos = Vec3(0,0,5) // TODO: Fix streaming with other start position
 	
-	val fpsLimit = loadInt("fpsLimit", 40)
+	var fpsLimitd = 60.0
+  def fpsLimit = fpsLimitd.toInt
   def timeStep = 1.0 / fpsLimit
 
   var test = 0.29

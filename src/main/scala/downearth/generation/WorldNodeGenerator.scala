@@ -28,12 +28,11 @@ class Master extends Actor {
     // Worker has finished Job
     case job:FinishedJob =>
       context.parent ! job
-
-    case unknown =>
-      println("Master: unknown message: " + unknown)
   }
 
-  override def toString = "Master"
+  override def unhandled(message: Any) {
+    println("Master: unknown message: " + message)
+  }
 }
 
 class Worker extends Actor {

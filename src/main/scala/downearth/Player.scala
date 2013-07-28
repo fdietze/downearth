@@ -12,7 +12,7 @@ import downearth.tools._
 import org.lwjgl.input.Mouse
 import javax.vecmath.Vector3f
 import org.lwjgl.opengl.Display
-import downearth.worldoctree.{CuboidLike, Cube}
+import downearth.worldoctree.{CubeLike, Sphere, CuboidLike, Cube}
 import simplex3d.math.Vec3i
 
 
@@ -44,7 +44,9 @@ class Player(gameState:GameState) extends Ray { //TODO: why extend and not conta
 
   def window = Cube(Vec3i(pos) - playerRadius / 2, playerRadius)
   def sightWindow = Cube(Vec3i(pos) - playerSightRadius.toInt / 2, playerSightRadius.toInt)
-  def canSee(area:CuboidLike) = area overlaps sightWindow
+  def sightSphere = Sphere(Vec3i(pos), playerSightRadius.toInt)
+
+  def canSee(area:CubeLike):Boolean = area overlaps sightSphere
 
 
   def pos_= (newPos: ReadVec3) {

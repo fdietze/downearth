@@ -90,7 +90,7 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
     eyeState = State.LeftEye
   }
 
-	override val projection :Mat4f = glwrapper.util.simpleProjectionF()
+	override val projection :Mat4f = glwrapper.util.simpleProjectionF(f = Config.playerSightRadius.toFloat)
 
 	override def view:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat) translate(position)))
   override def noTranslate:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat)))
@@ -125,15 +125,15 @@ class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
 		import pos.{x,y,z}
 		while( p < 6 )
 		{
-			if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
-			if( planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
-				return false
+      if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0
+       && planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0
+       && planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0
+       && planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0
+       && planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0
+       && planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0
+       && planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0
+       && planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
+      return false
 			p += 1
 		}
 		true

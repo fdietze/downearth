@@ -213,19 +213,16 @@ class Renderer(gameState:GameState) extends Logger {
     val h = Display.getHeight
 
     def render(camera:Camera) {
-      if( Config.skybox ) {
-        Skybox.render( camera )
-      }
+      if( Config.skybox ) Skybox.render( camera )
       renderWorld( camera )
     }
 
+    val clearColor = glwrapper.util.sharedFloatBuffer(4)
+    glwrapper.util.putVec4f(clearColor, 1.0f,0.5f,0.0f,1.0f)
+    clearColor.flip
     def clear() {
-      val color = glwrapper.util.sharedFloatBuffer(4)
-      glwrapper.util.putVec4f(color, 1.0f,0.5f,0.0f,1.0f)
-      color.flip
-
-      glClearBuffer(GL_COLOR, 0, color)
-      glClearBuffer(GL_DEPTH, 0, color)
+      glClearBuffer(GL_COLOR, 0, clearColor)
+      glClearBuffer(GL_DEPTH, 0, clearColor)
     }
 
     import player.camera
@@ -273,7 +270,7 @@ class Renderer(gameState:GameState) extends Logger {
     else {
       clear()
       glViewport(0, 0, w, h)
-      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat )
+      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat, f = Config.playerSightRadius.toFloat )
       render( player.camera )
     }
 
@@ -356,9 +353,9 @@ class Renderer(gameState:GameState) extends Logger {
     drawCalls = 0
     emptyDrawCalls = 0
     if( Config.frustumCulling )
-      drawOctree(octree, frustumTest, camera.position)
+      drawOctree(frustumTest)
     else
-      drawOctree(octree, new FrustumTest { def testNode( info:PowerOfTwoCube ) = true }, camera.position)
+      drawOctree(new FrustumTest { def testNode( info:PowerOfTwoCube ) = true })
 
     dynamicWorld.entities foreach {
       case simple:SimpleEntity => ()
@@ -432,7 +429,7 @@ class Renderer(gameState:GameState) extends Logger {
 
   var randomizer = 0
 
-  def drawOctree(octree:WorldOctree, test:FrustumTest, camera:ReadVec3) {
+  def drawOctree(test:FrustumTest) {
     import org.lwjgl.opengl.GL11._
     glColor3f(1,1,1)
 
@@ -445,7 +442,7 @@ class Renderer(gameState:GameState) extends Logger {
 
       val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
-      octree.query( test, camera ) {
+      octree.query( test, player.pos ) {
         case (info, node:MeshNode) =>
           drawTextureMesh(node.mesh)
           objMeshes ++= node.objMeshes

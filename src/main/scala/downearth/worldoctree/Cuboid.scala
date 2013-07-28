@@ -221,6 +221,25 @@ trait CubeLike extends CuboidLike {
   override def shortestEdgeAxis = 0
   override def longestEdgeLength = size
   override def shortestEdgeLength = size
+
+  def overlaps(sphere:Sphere) = {
+    @inline def squared(x:Int) = x * x
+
+    val C1 = this.pos
+    val C2 = this.upperPos
+    val S = sphere.pos
+    val R = sphere.radius
+    var dist_squared = R * R
+
+    if (S.x < C1.x) dist_squared -= squared(S.x - C1.x)
+    else if (S.x > C2.x) dist_squared -= squared(S.x - C2.x)
+    if (S.y < C1.y) dist_squared -= squared(S.y - C1.y)
+    else if (S.y > C2.y) dist_squared -= squared(S.y - C2.y)
+    if (S.z < C1.z) dist_squared -= squared(S.z - C1.z)
+    else if (S.z > C2.z) dist_squared -= squared(S.z - C2.z)
+
+    dist_squared > 0
+  }
 }
 
 trait PowerOfTwoCubeLike extends CubeLike{
@@ -230,4 +249,9 @@ trait PowerOfTwoCubeLike extends CubeLike{
   // Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an
   // vielen stellen wird noch sein Verhalten imitiert.
   def indexVec(p:Vec3i, nodepos:Vec3i = pos, nodesize:Int = size) = ((p-nodepos)*2)/nodesize
+}
+
+
+case class Sphere(pos:Vec3i, radius:Int) {
+  def overlaps(cube:CubeLike) = cube overlaps this
 }

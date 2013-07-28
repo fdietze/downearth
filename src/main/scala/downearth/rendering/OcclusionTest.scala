@@ -140,9 +140,9 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val occluded = ArrayBuffer[PowerOfTwoCube]()
 
     for( (id,info) <- queries ) {
-      while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
-        Thread.sleep(1) //TODO: Don't wait! Instead check only once every frame
-      }
+      //while( glGetQueryObjectui(id, GL_QUERY_RESULT_AVAILABLE) == GL_FALSE ) {
+      //  Thread.sleep(1) //TODO: Don't wait! Instead check only once every frame
+      //}
       if( glGetQueryObjectui(id, GL_QUERY_RESULT) > 0 ) //TODO: Configurable pixel threshold
         visible += info
       else
