@@ -189,6 +189,8 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
 
   var vbo = 0
 
+  var lastDraw = System.nanoTime
+
   def hasVbo = vbo > 0
 
   def bind() {

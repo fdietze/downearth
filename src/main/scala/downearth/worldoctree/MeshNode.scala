@@ -50,6 +50,12 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
 //  assert(!node.isInstanceOf[Leaf])
   var mesh:TextureMesh = null
 
+  def free() {
+    mesh.freevbo()
+    mesh = TextureMesh.empty
+    node = UngeneratedNode
+  }
+
   val objMeshes = new mutable.ArrayBuffer[(PowerOfTwoCube,ObjMesh)]
 
   override def toString = s"MeshNode(node=$node, mesh=$mesh)"

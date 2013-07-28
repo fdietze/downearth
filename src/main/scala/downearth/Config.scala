@@ -7,6 +7,8 @@ import gui.Listener
 import util.isPowerOfTwo
 
 object Config extends Listener {
+  val maxMeshCount = 50
+
   val uCorrectChromaticAberation = true
   val uDistort = false
 
@@ -24,7 +26,7 @@ object Config extends Listener {
 	val hexaederResolution = 8
 	val skybox =false
 
-  var occlusionTestMagicNumber = 1.0
+  var occlusionTestMagicNumber = 4.0
   var a = 1.0
   var b = 1.0
   var c = 1.0

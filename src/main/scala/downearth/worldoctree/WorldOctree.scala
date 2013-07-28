@@ -139,6 +139,21 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     ungeneratedAreasIn (player.window) foreach generateArea //TODO: higher priority
 	}
 
+  def freeOldMeshNodes(){
+    var old = new mutable.ArrayBuffer[MeshNode]
+    octree.query() {
+      case (info, node:MeshNode) =>
+        if( node.mesh.nonEmpty && !player.canSee(info) )
+          old += node
+        false
+      case _ => true
+    }
+    val meshCount = old.size
+    old = old.sortBy(_.mesh.lastDraw).dropRight(Config.maxMeshCount)
+    old.foreach(_.free())
+    if(old.size > 0) println(s"freed ${old.size} of ${meshCount} meshes.")
+  }
+
   // increase Octree size
   // the root becomes
   def incDepth() {

@@ -73,7 +73,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val view = Mat4f(camera.view)
     val projection = Mat4f(camera.projection)
 
-    val magicNr = (4 * Config.occlusionTestMagicNumber).toInt
+    val magicNr = Config.occlusionTestMagicNumber.toInt
     val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == renderer.frameCount % magicNr)
 
     val renderNodeInfos1 = nodeInfoBufferGenerating

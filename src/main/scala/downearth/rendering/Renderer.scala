@@ -498,6 +498,8 @@ class Renderer(gameState:GameState) extends Logger {
       glTexCoordPointer(2,  texCoordType, byteStride,   texCoordOffset)
       glDrawArrays(GL_TRIANGLES, 0, mesh.vertexCount)
       glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
+
+      mesh.lastDraw = System.nanoTime
     }
 
     else {

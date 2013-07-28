@@ -167,7 +167,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
   }
 
   def createOpenGLContext() {
-    val ca = new ContextAttribs(3,0).withDebug(true)
+    val ca = new ContextAttribs(3,0).withDebug(false)
     val alpha = 8
     val depth = 16
     val stencil = 0
@@ -205,16 +205,18 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 
   def frame() {
     lastFrame = now
-    frameRateCalculations()
     frameTimer.restart()
 
-    physics.update()
+    if(now - lastFrameCounterReset > 1000000000){ // every second
+      octree.freeOldMeshNodes()
 
+      if( Config.streamWorld )
+        octree stream player
+    }
+
+    frameRateCalculations()
     handleInput()
-
-    if( Config.streamWorld )
-      octree stream player
-
+    physics.update()
     renderer.draw()
     Display.update()
 
@@ -248,7 +250,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
       glDebugMessageCallbackAMD(new AMDDebugOutputCallback())
     }
     else {
-      println("no debuge output")
+      println("no debug output")
     }
 
     if ( caps.GL_ARB_draw_instanced ) {
