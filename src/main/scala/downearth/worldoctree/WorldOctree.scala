@@ -116,9 +116,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
       incDepth()
     }
 
-    val generatingMeshNode = new MeshNode(GeneratingNode)
-    generatingMeshNode.mesh = TextureMesh.empty
-    insert( area, generatingMeshNode )
+    insert( area, MeshNode.generating )
     WorldNodeGenerator.master ! area
   }
 

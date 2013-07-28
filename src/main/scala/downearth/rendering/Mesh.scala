@@ -13,6 +13,8 @@ import downearth.util._
 import downearth.worldoctree.NodeUnderMesh
 import org.lwjgl.opengl.GL11
 import simplex3d.math.floatx.{Vec3f, Vec2f}
+import collection.mutable
+import mutable.ArrayBuilder
 
 // Klassen zur verwaltung von VertexArrays. Sie kapseln zum einen die Daten, und
 // erlauben einen vereinfachten Zugriff und Manipulation, zum anderen übernehmen
@@ -91,32 +93,6 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
 	}
 }
 
-//@deprecated("a","b") case class TextureMeshData(
-//			vertexArray:Array[Vec3],
-//			normalArray:Array[Vec3],
-//			texcoordsArray:Array[Vec2]
-////			colorArray:Array[Vec4]
-//		) {
-//	def size = vertexArray.size
-//  def stride = 32
-//
-//  def toByteBuffer = {
-//    val byteBuffer = BufferUtils.createByteBuffer(vertexArray.size * stride)
-//    val vertices = DataView[Vec3,RFloat](byteBuffer, 0, 8)
-//    val normals  = DataView[Vec3,RFloat](byteBuffer, 3, 8)
-//    val texcoords= DataView[Vec2,RFloat](byteBuffer, 6, 8)
-//
-//    for(i <- 0 until vertexArray.size){
-//      vertices(i) = vertexArray(i)
-//      normals(i) = normalArray(i)
-//      texcoords(i) = texcoordsArray(i)
-//    }
-//    byteBuffer
-//  }
-//}
-
-import scala.collection.mutable.ArrayBuilder
-
 case class Update(byteOffset:Int, byteOldSize:Int, data:ByteBuffer) {
   require( byteOffset >= 0, toString)
   require( byteOldSize >= 0, toString)
@@ -153,14 +129,16 @@ case class TextureMeshBuilder(
   normalBuilder:ArrayBuilder[Vec3f] = ArrayBuilder.make[Vec3f],
   texCoordBuilder:ArrayBuilder[Vec2f] = ArrayBuilder.make[Vec2f]
 ) {
-  def result = {
+  def result:ByteBuffer = result(direct = false)
+  def result(direct:Boolean = false) = {
     val verts = vertexBuilder.result()
     val normals = normalBuilder.result()
     val texCoords = texCoordBuilder.result()
     require( verts.length == normals.length && normals.length == texCoords.length )
 
     val numVerts = verts.length
-    val buffer = BufferUtils.createByteBuffer(numVerts * TextureMesh.byteStride)
+    val byteSize = numVerts * TextureMesh.byteStride
+    val buffer = (if(direct) ByteBuffer.allocateDirect(byteSize) else ByteBuffer.allocate(byteSize)).order(ByteOrder.nativeOrder)
 
     for(i <- 0 until numVerts){
       glwrapper.util.putVec3f( buffer, verts(i) )
@@ -185,7 +163,7 @@ object TextureMesh {
   @inline def texCoordType   = GL11.GL_FLOAT
   @inline def byteStride     = 32
 
-  def apply(data:TextureMeshBuilder) = new TextureMesh(data.result)
+  def apply(data:TextureMeshBuilder) = new TextureMesh(data.result(direct=true))
 	
 	def apply(meshes:Array[TextureMesh]) = {
 		val byteSize = (0 /: meshes)(_ + _.byteSize)
@@ -203,6 +181,7 @@ object TextureMesh {
 class TextureMesh(_data:ByteBuffer) extends Mesh {
   val data = _data.asReadOnlyBuffer()
 
+  require(data.isDirect)
   require(data.position == 0)
   require(data.limit == data.capacity)
 
