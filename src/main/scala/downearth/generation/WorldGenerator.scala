@@ -25,7 +25,7 @@ object WorldGenerator {
 	
 	def generateInitialWorld(gameState:GameState):WorldOctree = {
     //TODO: generate with actors, rely on stream
-		val initArea = PowerOfTwoCube( pos = Vec3i(-16), size = 32 )
+		val initArea = PowerOfTwoCube( pos = Vec3i(-8), size = 16 )
     print("generating initial area...")
     val initNode = generateNode(initArea)
     println("done.")
