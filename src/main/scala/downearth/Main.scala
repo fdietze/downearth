@@ -22,17 +22,18 @@ import scala.concurrent.{ExecutionContext, Await}
 import scala.concurrent.duration._
 import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 import Config._
+import akka.routing.RoundRobinRouter
 
 //import downearth.server.LocalServer
 import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
 import akka.actor._
-import downearth.generation.{WorldGenerator, Master}
+import downearth.generation.{WorldGenerator, Worker}
 import AkkaMessages._
 
 
 object Main extends Logger {
   var actorSystem:ActorSystem = null
-  var game:ActorRef = null
+  var gameLoop:ActorRef = null
 
   def main(args: Array[String]) {
     log.println( "started" )
@@ -41,9 +42,7 @@ object Main extends Logger {
     log.println( "Creating Actor System" )
 
     actorSystem = ActorSystem.create("gamecontext")
-    game = actorSystem.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
-
-    game ! NextFrame
+    gameLoop = actorSystem.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
 
     // TODO: shut down actorsystem on crash
     // http://doc.akka.io/docs/akka/snapshot/general/supervision.html#The_Top-Level_Supervisors
@@ -55,7 +54,7 @@ object AkkaMessages {
   case object NextFrame
   case class LastFrame(timeStamp:Long)
 
-  case class GeneratingJob(area:PowerOfTwoCube)
+  case class GeneratingJob(area:PowerOfTwoCube, playerPos:ReadVec3)
   case class FinishedGeneratingJob(area:PowerOfTwoCube, node:MeshNode)
   case class Predicted(area:PowerOfTwoCube)
 }
@@ -68,7 +67,7 @@ class DebugLog extends Actor {
   }
 }
 
-class GameState(val gameLoop:ActorRef, val master:ActorRef, val debugLog:ActorRef) { gameState =>
+class GameState(val gameLoop:ActorRef, val workers:ActorRef, val debugLog:ActorRef) { gameState =>
   val octree = WorldGenerator.generateInitialWorld(gameState)
   val physics = new BulletPhysics(gameState)
   val dynamicWorld = DynamicWorld.testScene
@@ -127,11 +126,14 @@ class FrameGenerator extends Actor {
 
 //TODO on exception, shutdown actorsystem
 class GameLoop extends Actor with Logger { gameLoop =>
-  val master = context.actorOf( Props[Master], "master" )
+  val workers = context.actorOf( Props(classOf[Worker], self)
+    .withRouter(RoundRobinRouter(Config.numWorkingThreads))
+    .withDispatcher("akka.actor.worker-dispatcher")
+    , "worker-router")
   val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
   val frameFactory = context.actorOf( Props[FrameGenerator], "framegenerator" )
 
-  val gameState = new GameState(self, master, debugLog)
+  val gameState = new GameState(self, workers, debugLog)
   import gameState._
 
 
@@ -146,6 +148,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
     octree.generateInitialAreaAroundPlayer()
 
     //Mouse setGrabbed true
+    self ! NextFrame
   }
 
   def receive = {
