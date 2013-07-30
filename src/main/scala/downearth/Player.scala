@@ -43,8 +43,8 @@ class Player(gameState:GameState) extends Ray { //TODO: why extend and not conta
   }
 
   def window = Cube(Vec3i(pos) - playerRadius / 2, playerRadius)
-  def sightWindow = Cube(Vec3i(pos) - playerSightRadius.toInt / 2, playerSightRadius.toInt)
-  def sightSphere = Sphere(Vec3i(pos), playerSightRadius.toInt)
+  def sightWindow = Cube(Vec3i(pos) - playerSightRadius / 2, playerSightRadius)
+  def sightSphere = Sphere(Vec3i(pos), playerSightRadius)
 
   def canSee(area:CubeLike):Boolean = area overlaps sightSphere
 

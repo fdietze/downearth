@@ -21,8 +21,10 @@ object Config extends Listener {
 
 	var minPredictionSized = 8.0
   def minPredictionSize = minPredictionSized.toInt
-  var playerRadius = loadInt("worldWindowSize", 10)
-  var playerSightRadius = 150.0
+  var playerRadiusd = 10.0
+  def playerRadius = playerRadiusd.toInt
+  var playerSightRadiusd = 200.0
+  def playerSightRadius = playerSightRadiusd.toInt
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
@@ -100,12 +102,12 @@ object Config extends Listener {
   var generation = true
   var testUngenerated = true
   var skipOcclusionTestWhenBusy = true
-  var streamWorld = false
+  var streamWorld = true
   var frustumCulling = true
   var turbo = false
   var occlusionTest = true
-  var visibleOcclusionTest = true
-  var prioritizeGenerationInFrustum = true
+  var visibleOcclusionTest = false
+  var prioritizeCloseGenerationJobs = true
 
   loader.load()
 
