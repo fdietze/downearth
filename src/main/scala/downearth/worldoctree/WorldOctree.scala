@@ -147,6 +147,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     // TODO: warning if area size/position does not match a node in octree
     master ! area
     insert( area, MeshNode.generating )
+    frameState.generationQueueSize += 1
   }
 
 	def stream(player:Player) {

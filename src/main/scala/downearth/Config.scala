@@ -19,7 +19,7 @@ object Config extends Listener {
     getInt => loadInt
   }
 
-	var minPredictionSize = loadInt("minPredictionSize", 8)
+	var minPredictionSize = loadInt("minPredictionSize", 16)
   var playerRadius = loadInt("worldWindowSize", 10)
   var playerSightRadius = 150.0 //TODO: set farplane to playerSightRadius
 
@@ -97,6 +97,7 @@ object Config extends Listener {
   var backFaceCulling = true
   var wireframe = false
   var generation = true
+  var testUngenerated = true
   var streamWorld = false
   var frustumCulling = true
   var turbo = false

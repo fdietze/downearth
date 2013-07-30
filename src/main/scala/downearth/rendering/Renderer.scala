@@ -378,21 +378,23 @@ class Renderer(gameState:GameState) extends Logger {
     if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
       GlDraw.drawSampledNodes()
 
-    if( Config.occlusionTest ) {
-      occlusionTest.doIt(frustumTest)
-    } else { // perform frustum test only
-      octree.query( frustumTest, camera.position) {
-        case (info, UngeneratedNode) =>
-          octree.generateArea(info)
-          false
-        case (info, GeneratingNode) =>
-          false
-        case (info, node:MeshNode) =>
-          true
-        case (info, node:NodeUnderMesh) =>
-          !node.finishedGeneration
-        case _ =>
-          true
+    if( Config.testUngenerated && !frameState.workersBusy ) {
+      if( Config.occlusionTest ) {
+        occlusionTest.doIt(frustumTest)
+      } else { // perform frustum test only
+        octree.query( frustumTest, camera.position) {
+          case (info, UngeneratedNode) =>
+            octree.generateArea(info)
+            false
+          case (info, GeneratingNode) =>
+            false
+          case (info, node:MeshNode) =>
+            true
+          case (info, node:NodeUnderMesh) =>
+            !node.finishedGeneration
+          case _ =>
+            true
+        }
       }
     }
   }

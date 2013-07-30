@@ -41,9 +41,12 @@ object Main extends Logger {
     log.println( "Creating Actor System" )
 
     actorSystem = ActorSystem.create("gamecontext")
-    game = actorSystem.actorOf( Props[Game].withDispatcher("akka.actor.single-thread-dispatcher"), "game" )
+    game = actorSystem.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
 
     game ! NextFrame
+
+    // TODO: shut down actorsystem on crash
+    // http://doc.akka.io/docs/akka/snapshot/general/supervision.html#The_Top-Level_Supervisors
   }
 
 }
@@ -63,7 +66,7 @@ class DebugLog extends Actor {
   }
 }
 
-class GameState(val master:ActorRef) { gameState =>
+class GameState(val gameLoop:ActorRef, val master:ActorRef, val debugLog:ActorRef) { gameState =>
   val octree = WorldGenerator.generateInitialWorld(gameState)
   val physics = new BulletPhysics(gameState)
   val dynamicWorld = DynamicWorld.testScene
@@ -79,6 +82,10 @@ class GameState(val master:ActorRef) { gameState =>
   }
 
   val player = new Player(gameState)
+  val frameState = new FrameState(gameState)
+  val input = new Input(gameState)
+  var windowMode:DisplayMode = null
+
 
   def openGLinit() {
     renderer
@@ -86,6 +93,18 @@ class GameState(val master:ActorRef) { gameState =>
     materialManager
   }
 }
+
+class GameMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Config)
+  extends UnboundedPriorityMailbox(
+    // Create a new PriorityGenerator, lower prio means more important
+    PriorityGenerator {
+      case PoisonPill      => 0
+      case NextFrame       => 2
+      case job:FinishedJob => 3
+
+      case otherwise       => 1
+    })
+
 
 class FrameGenerator extends Actor {
   def now = System.nanoTime
@@ -104,24 +123,13 @@ class FrameGenerator extends Actor {
   }
 }
 
-class GameMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Config)
-  extends UnboundedPriorityMailbox(
-    // Create a new PriorityGenerator, lower prio means more important
-    PriorityGenerator {
-      case PoisonPill      => 0
-      case NextFrame       => 2
-      case job:FinishedJob => 3
-
-      case otherwise       => 1
-    })
-
 //TODO on exception, shutdown actorsystem
-class Game extends Actor with Publisher with Logger { gameLoop =>
+class GameLoop extends Actor with Logger { gameLoop =>
   val master = context.actorOf( Props[Master], "master" )
   val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
   val frameFactory = context.actorOf( Props[FrameGenerator], "framegenerator" )
 
-  val gameState = new GameState(master)
+  val gameState = new GameState(self, master, debugLog)
   import gameState._
 
 
@@ -134,26 +142,30 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     createWidgetSystem()
 
     octree.generateInitialAreaAroundPlayer()
+
+    //Mouse setGrabbed true
   }
 
   def receive = {
     case NextFrame =>
-      frame()
-      frameFactory ! LastFrame(lastFrame)
+      frameState.render()
+      frameFactory ! LastFrame(frameState.lastFrame)
 
     case FinishedJob(area, node) =>
+      import frameState._
       updateTimer.restart()
 
       octree.insert( area, node )
       physics.worldChange(area)
       updateCounter += 1
+      generationQueueSize -= 1
 
       lastUpdateDuration = updateTimer.readNanos
   }
 
 
   override def unhandled(message: Any) {
-    println("Game: unknown message: " + message)
+    log.println("GameLoop: unknown message: " + message)
   }
 
   override def postStop() {
@@ -165,7 +177,7 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
 
   def createWidgetSystem() {
     val wed = new WidgetEventDispatcher(mainWidget)
-    wed.listenTo(gameLoop)
+    wed.listenTo(input)
   }
 
   def createOpenGLContext() {
@@ -181,61 +193,9 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     log.println( "display created" )
   }
 
+  //var snapshotRequest = 0L
+  //var snapshotCurrent = -1L
 
-  var snapshotRequest = 0L
-  var snapshotCurrent = -1L
-
-  def timeBetweenFrames = 1000000000 / downearth.Config.fpsLimit
-
-  def now = System.nanoTime
-  val starttime = now
-  //def uptime = now - starttime
-
-  var lastFrame = now
-  var currentFps = 0
-  var lastFrameCounterReset = starttime
-  var frameCounter = 0
-  var updateCounter = 0
-
-  // for measuring last frame
-  val frameTimer = new Timer
-  var lastFrameDuration:Long = 0
-
-  // for measuring last octree update
-  val updateTimer = new Timer
-  var lastUpdateDuration:Long = 0
-
-  def frame() {
-    lastFrame = now
-    frameTimer.restart()
-
-    if(now - lastFrameCounterReset > 1000000000){ // every second
-      octree.freeOldMeshNodes()
-
-      if( Config.streamWorld )
-        octree stream player
-    }
-
-    frameRateCalculations()
-    handleInput()
-    physics.update()
-    renderer.draw()
-    Display.update()
-
-    lastFrameDuration = frameTimer.readNanos
-    frameCounter += 1
-  }
-
-  def frameRateCalculations() {
-    if(now - lastFrameCounterReset > 1000000000){
-      currentFps = frameCounter
-      Display.setTitle(s"$currentFps/${Config.fpsLimit} fps, frame: ${lastFrameDuration/1000000}/${timeBetweenFrames/1000000}ms, update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s)")
-
-      lastFrameCounterReset = now
-      frameCounter = 0
-      updateCounter = 0
-    }
-  }
 
   def checkOpenGLCapabilities() { //TODO split checkOpenGLCapabilities
     val caps = GLContext.getCapabilities
@@ -270,201 +230,5 @@ class Game extends Actor with Publisher with Logger { gameLoop =>
     }
 
     glClearColor(0.4f, 0.6f, 0.9f, 1f)
-
-    //Mouse setGrabbed true
 	}
-
-  var windowMode:DisplayMode = null
-
-  def quit() {
-    self ! PoisonPill
-  }
-
-  def handleInput() {
-    import Mouse._
-    import Keyboard._
-
-    if( Display.isCloseRequested )
-      quit()
-
-    val mouseDelta = Vec2i(getDX, getDY)
-    // Move and rotate player
-    val delta = Vec3(0)
-    val delta_angle = Vec3(0)
-
-    if( isKeyDown(keyForward) )
-      delta.z -= 1
-    if( isKeyDown(keyBackward) )
-      delta.z += 1
-    if( isKeyDown(keyLeft) )
-      delta.x -= 1
-    if( isKeyDown(keyRight) )
-      delta.x += 1
-
-    val mouseGrabIndependant: Int => Unit = {
-      case `keyQuit` =>
-        quit()
-      case `keyScreenshot` =>
-        screenShot( "screenshot" )
-      case `keyMouseGrab` =>
-        Mouse setGrabbed !Mouse.isGrabbed
-      case `keyPlayerReset` =>
-        player.resetPos
-      case `keyStreaming` =>
-        streamWorld = !streamWorld
-      case `keyWireframe` =>
-        wireframe = !wireframe
-      case `keyFrustumCulling` =>
-        frustumCulling = !frustumCulling
-      case `keyTurbo` =>
-        turbo = ! turbo
-        log.println(s"Turbo is ${if(turbo) "on" else "off"}." )
-      case `keyPausePhysics` =>
-        physics.pause = !physics.pause
-      case `keyDebugDraw` =>
-        debugDraw += 1
-      case `keyToggleGhostPlayer` =>
-        player.toggleGhost()
-      case `keyToggleInventory` =>
-        mainWidget.inventory.visible = !mainWidget.inventory.visible
-      case `keyJump` =>
-        player.jump()
-      case `keyIncOctreeDepth` =>
-        octree.incDepth()
-      case `keyGenerateNextUngenerated` =>
-        val next = octree.getNextUngenerated
-        println("next Ungenerated:" + next)
-        for( area <- next )
-          octree.generateArea(area)
-        println("not finished:")
-        octree.query(){
-          case (area, n:InnerNodeUnderMesh) =>
-            if( !n.finishedGeneration ) {
-              println(n)
-              true
-            } else false
-          case _ =>
-            true
-        }
-      case `keyToggleFullScreen` =>
-        if( Display.isFullscreen ) {
-          Display.setDisplayModeAndFullscreen(windowMode)
-          mainWidget.resize( Vec2i(windowMode.getWidth, windowMode.getHeight) )
-        }
-        else {
-          windowMode = Display.getDisplayMode
-          val mode = Display.getDesktopDisplayMode
-          assert(mode.isFullscreenCapable)
-          Display.setDisplayModeAndFullscreen(mode)
-          mainWidget.resize( Vec2i(mode.getWidth, mode.getHeight) )
-        }
-      case _ =>
-    }
-
-    if( Mouse.isGrabbed ) {
-
-      // rotate with mouse
-      delta_angle.y = -mouseDelta.x/300.0
-      delta_angle.x = mouseDelta.y/300.0
-
-      // Turbo mode
-      if( turbo && Mouse.isButtonDown(0) )
-        player.primaryAction()
-
-      // Keyboard Events
-      while ( Keyboard.next ) {
-        if (getEventKeyState) {
-          mouseGrabIndependant(getEventKey)
-        }
-        // implement some mouse grab dependant keys here
-      }
-
-      // Mouse events
-      while( Mouse.next ) {
-        ( getEventButton, getEventButtonState ) match {
-          case (0 , true) => // left down
-          case (0 , false) => // left up
-            player.primaryAction()
-          case (1 , true) => // right down
-          case (1 , false) => // right up
-            //Player.secondarybutton
-            Mouse setGrabbed false
-            Mouse setCursorPosition( Display.getWidth / 2, Display.getHeight / 2)
-          case (-1, false) => // wheel
-          // Player.updownbutton( Mouse.getDWheel / 120 )
-          case _ =>
-        }
-      }
-    }
-    else { // if Mouse is not grabbed
-
-      // Keyboard Events
-      while ( Keyboard.next ) {
-        if( getEventKey != KEY_NONE ) {
-          if( getEventKeyState )
-            publish( KeyPress(getEventKey) )
-          else
-            publish( KeyRelease(getEventKey) )
-        }
-
-        if ( getEventKeyState ) {
-          mouseGrabIndependant(getEventKey)
-          // implement some mouse grab dependant keys here
-        }
-
-        val c = Keyboard.getEventCharacter
-        if( c.toInt != 0 ) {
-          if( c.isControl ) {
-            c match {
-              case '\t' =>
-                print("<tab>")
-              case '\b' =>
-                print("<back>")
-              case '\n' =>
-                print("<enter>")
-              case '\r' =>
-                print("<return>")
-              case _ =>
-                print(s"<${c.toInt}>")
-            }
-          }
-          else
-            print( Keyboard.getEventCharacter )
-        }
-      }
-
-      if( Display.wasResized ) {
-        mainWidget.resize(Vec2i(Display.getWidth, Display.getHeight))
-      }
-
-      // Mouse events
-      while( Mouse.next ) {
-        ( getEventButton, getEventButtonState ) match {
-          case (n , true) if n >= 0 =>
-            val event =  MouseDown(Vec2i(getEventX,Display.getHeight - getEventY), n)
-            publish( event )
-          case (n , false) if n >= 0 =>
-            val event =  MouseUp(Vec2i(getEventX,Display.getHeight - getEventY), n)
-            publish( event )
-            if(n == 1)
-              Mouse setGrabbed true
-          case (-1, _) =>
-            val dx =  Mouse.getEventDX
-            val dy = -Mouse.getEventDY
-            val x  =  Mouse.getEventX
-            val y  = Display.getHeight - Mouse.getEventY
-            val dW = Mouse.getDWheel
-            //TODO assert( (dx != 0 || dy != 0) ^ (dW != 0) )
-            if( dx != 0 || dy != 0 ) {
-              publish( MouseMove(Vec2i(x-dx,y-dy),Vec2i(x,y)) )
-            }
-          case _ =>
-        }
-      }
-    }
-
-    val factor = if(turbo) cameraTurboSpeed else cameraSpeed
-    player.move(factor*(delta/max(1,length(delta)))*timeStep)
-    player.rotate(2.0*delta_angle)
-  }
 }

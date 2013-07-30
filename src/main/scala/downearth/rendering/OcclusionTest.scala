@@ -79,6 +79,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val renderNodeInfos1 = nodeInfoBufferGenerating
     val renderNodeInfos2 = noTest map nodeInfoBufferUngenerated
     val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
+    frameState.occlusionQueryCount += doTest.size
 
     val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
     glGenQueries( buffer )
