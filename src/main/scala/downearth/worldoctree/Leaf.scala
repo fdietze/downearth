@@ -96,17 +96,18 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
         val matCount = 4//MaterialManager.materialCount.toDouble
 
         vertexBuilder += Vec3f(pos) + Vec3f(v0)
-        texCoordBuilder += Vec2f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat )
+        texCoordBuilder += Vec3f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat, 0 )
 
         vertexBuilder += Vec3f(pos) + Vec3f(v1)
-        texCoordBuilder += Vec2f( (v1(axisa)/matCount + matid/matCount).toFloat , v1(axisb).toFloat )
+        texCoordBuilder += Vec3f( (v1(axisa)/matCount + matid/matCount).toFloat , v1(axisb).toFloat, 0 )
 
         vertexBuilder += Vec3f(pos) + Vec3f(v2)
-        texCoordBuilder += Vec2f( (v2(axisa)/matCount + matid/matCount).toFloat , v2(axisb).toFloat )
+        texCoordBuilder += Vec3f( (v2(axisa)/matCount + matid/matCount).toFloat , v2(axisb).toFloat, 0 )
 
         vertexCounter += 3
 
-        val normal = Vec3f(normalize(cross(v2-v1,v0-v1)))
+        val normal3f = Vec3f(normalize(cross(v2-v1,v0-v1)))
+        val normal = Vec2f(normal3f.x, normal3f.y)
         normalBuilder += normal
         normalBuilder += normal
         normalBuilder += normal
