@@ -1,6 +1,6 @@
 package downearth.rendering
 
-import glwrapper.TextureLoader
+import glwrapper.{Texture, TextureLoader}
 
 object TextureManager {
   private val loader = new TextureLoader
@@ -14,12 +14,14 @@ object TextureManager {
   lazy val textureArrayTest = {
 
 
-    val s1 = readImageRaster("stormydays_negativeX.jpg")
-    val s2 = readImageRaster("stormydays_negativeY.jpg")
-    val s3 = readImageRaster("stormydays_negativeZ.jpg")
-    val s4 = readImageRaster("stormydays_positiveX.jpg")
-    val s5 = readImageRaster("stormydays_positiveY.jpg")
+    Array("stormydays_negativeX.jpg","stormydays_negativeY.jpg","stormydays_negativeZ.jpg","stormydays_positiveX.jpg","stormydays_positiveY.jpg")
     val s6 = readImageRaster("stormydays_positiveZ.jpg")
+
+    val surfaces = Array("stormydays_negativeX.jpg","stormydays_negativeY.jpg","stormydays_negativeZ.jpg",
+                         "stormydays_positiveX.jpg","stormydays_positiveY.jpg","stormydays_positiveZ.jpg") map
+      readImageRaster _
+
+    Texture.create2DArray(surfaces)
   }
 
 
