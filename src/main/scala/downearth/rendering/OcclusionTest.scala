@@ -24,6 +24,10 @@ import java.nio.IntBuffer
 class OcclusionTest(renderer:Renderer, gameState:GameState) {
   import gameState._
 
+  val generatingColor = Vec4f(0.6f,0.6f,0.3f,1)
+  val skipColor = Vec4f(0.2f,0.2f,0.2f,1)
+  val testColor = Vec4f(0.6f,0.3f,0.3f,1)
+
   val occTest_program = Program.auto("simple")
 
   val occTest_binding = occTest_program.getBinding
@@ -93,8 +97,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
           glColorMask(false,false,false,false)
 
         occTest_matrix := projection * view
-
-        for((renderAreas, color) <- Seq( (generatingAreas, Vec4f(1,1,0,1)), (ungeneratedAreasSkip,Vec4f(0.2f,0.2f,0.2f,1)) )
+        for((renderAreas, color) <- Seq( (generatingAreas, generatingColor), (ungeneratedAreasSkip,skipColor) )
             if renderAreas.size > 0 ) {
           occTest_u_tint := color
 
@@ -112,7 +115,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
         for( (queryId, info) <- queries ) {
           glBeginQuery(GL_SAMPLES_PASSED, queryId )
 
-          occTest_u_tint := Vec4f(1,0,0,1)
+          occTest_u_tint := testColor
           occTest_offset := Seq( Vec4f( info.pos, 0) )
           occTest_scale := Seq( info.size.toFloat )
 
