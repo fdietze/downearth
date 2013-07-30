@@ -91,6 +91,22 @@ object GlDraw extends Draw {
 		glPopMatrix()
 	}
 
+  lazy val cubeTriangleStrip = new {
+    val corners = Array(
+      Vec4f( 0, 0, 0,  1),
+      Vec4f( 1, 0, 0,  1),
+      Vec4f( 0, 0, 1,  1),
+      Vec4f( 1, 0, 1,  1),
+      Vec4f( 0, 1, 0,  1),
+      Vec4f( 1, 1, 0,  1),
+      Vec4f( 1, 1, 1,  1),
+      Vec4f( 0, 1, 1,  1)
+    )
+
+    val indices = Array(3,2,6,7,4,2,0,3,1,6,5,4,1,0)
+    val positions = indices map corners
+  }
+
   lazy val texturedCubeBuffer = new {
     // GL_QUADS
 

@@ -6,7 +6,7 @@ import downearth.{FrustumTest, Camera, Config}
 import downearth.worldoctree._
 import downearth.GameState
 
-import simplex3d.math.floatx.{Mat4f, Vec4f}
+import simplex3d.math.floatx.{Vec3f, Mat4f, Vec4f}
 import simplex3d.backend.lwjgl.ArbEquivalents
 
 import org.lwjgl.opengl.GL11._
@@ -38,7 +38,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
   val occTest_u_tint  = occTest_binding.uniformVec4f("u_tint")
   val occTest_a_pos   = occTest_binding.attributeVec4f("a_pos")
 
-  occTest_a_pos := GlDraw.texturedCubeBuffer.positions
+  occTest_a_pos := GlDraw.cubeTriangleStrip.positions
 
   val occTest_vao = VertexArrayObject.create
 
@@ -109,7 +109,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderAreas.size)
+          ArbEquivalents.GL31.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, GlDraw.cubeTriangleStrip.positions.size, renderAreas.size)
         }
 
         for( (queryId, info) <- queries ) {
@@ -121,7 +121,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
+          ArbEquivalents.GL31.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, GlDraw.cubeTriangleStrip.positions.size, 1)
 
           glEndQuery(GL_SAMPLES_PASSED)
         }
