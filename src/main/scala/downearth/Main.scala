@@ -153,14 +153,10 @@ class GameLoop extends Actor with Logger { gameLoop =>
 
     case FinishedJob(area, node) =>
       import frameState._
-      updateTimer.restart()
-
       octree.insert( area, node )
       physics.worldChange(area)
       updateCounter += 1
       generationQueueSize -= 1
-
-      lastUpdateDuration = updateTimer.readNanos
   }
 
 
@@ -188,7 +184,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
     val pf = new PixelFormat(alpha, depth, stencil)
     Display.setDisplayMode( new DisplayMode(Config.windowResolutionWidth,Config.windowResolutionHeight) )
     Display.setResizable(true)
-    Display.setVSyncEnabled(false)
+    Display.setVSyncEnabled(true)
     Display.create(pf, ca)
     log.println( "display created" )
   }

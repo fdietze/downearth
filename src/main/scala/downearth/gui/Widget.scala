@@ -335,7 +335,6 @@ class DoubleSettingsWidget(val position:Vec2i, config:AnyRef) extends Panel { wi
           case SliderChanged(slider) =>
             val newValue = pow(10, slider.value * 2 - 1) * initialValue
             val oldValue = field.getDouble(config)
-            println(oldValue,newValue)
             field.setDouble(config, newValue)
             valueLabel.text = "%4.2f" format newValue
         }

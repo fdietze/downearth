@@ -24,14 +24,13 @@ class FrameState(gameState:GameState) {
   var frameDurationSum:Long = 0
   var frameDurationMax:Long = 0
 
-  // for measuring last octree update
-  val updateTimer = new Timer
-  var lastUpdateDuration:Long = 0
+  var occlusionQueryCount = 0
+  var renderedBoxCount = 0
+
 
   var generationQueueSize = 0
-  def workersBusy = generationQueueSize > 2*Config.numWorkingThreads
+  def workersBusy = generationQueueSize > 10*Config.numWorkingThreads // threads * actor throughput
 
-  var occlusionQueryCount = 0
 
   def beforeFrame() {
     lastFrame = now
@@ -46,7 +45,7 @@ class FrameState(gameState:GameState) {
     if( Config.streamWorld )
       octree stream player
 
-    frameRateCalculations()
+    displayStats()
   }
 
   def render() {
@@ -65,15 +64,24 @@ class FrameState(gameState:GameState) {
     frameCounter += 1
   }
 
-  def frameRateCalculations() {
+  def displayStats() {
     currentFps = frameCounter
     val frameDuration = if(frameCounter > 0) frameDurationSum / frameCounter else frameDurationSum
+    val queriesPerFrame = if(frameCounter > 0) occlusionQueryCount / frameCounter else 0
+    val renderedBoxesPerFrame = if(frameCounter > 0) renderedBoxCount / frameCounter else 0
+    val insertsPerFrame = if(frameCounter > 0) updateCounter / frameCounter else 0
+    val mib = 1024 * 1024
+    def usedMemory = (sys.runtime.totalMemory - sys.runtime.freeMemory) / mib
+    def heapSize = sys.runtime.totalMemory / mib
+
     Display.setTitle(
       s"$currentFps/${Config.fpsLimit} fps, " +
       s"frame: ${frameDuration/1000000}<${frameDurationMax/1000000}/${timeBetweenFrames/1000000}ms, " +
-      s"queries: $occlusionQueryCount, " +
-      s"generating: $generationQueueSize, " +
-      s"update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s)"
+      s"OccQueries/f: $queriesPerFrame, " +
+      s"boxes/f: $renderedBoxesPerFrame, " +
+      s"genQ: $generationQueueSize, " +
+      s"inserts/f: $insertsPerFrame, " +
+      s"heap: ${usedMemory}/${heapSize}MiB"
     )
 
     lastFrameCounterReset = now
@@ -81,6 +89,7 @@ class FrameState(gameState:GameState) {
     frameDurationSum = 0
     frameDurationMax = 0
     occlusionQueryCount = 0
+    renderedBoxCount = 0
     updateCounter = 0
   }
 }

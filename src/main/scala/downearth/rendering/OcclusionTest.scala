@@ -79,7 +79,8 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
       area => {i += 1; i % magicNr == renderer.frameCount % magicNr}
     )
 
-    frameState.occlusionQueryCount += ungeneratedAreas.size
+    frameState.occlusionQueryCount += ungeneratedAreasTest.size
+    frameState.renderedBoxCount    += ungeneratedAreasSkip.size
 
 
     val buffer = BufferUtils.createIntBuffer( ungeneratedAreasTest.size )
