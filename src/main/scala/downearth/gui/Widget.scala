@@ -121,7 +121,7 @@ class Slider(val position:Vec2i) extends Panel { slider =>
   def value = slideable.value
 
   val slideable = new Widget {
-    val size     = Vec2i( 8, 12 )
+    val size     = Vec2i( 20, 12 )
     val position = slider.position + slider.size / 2 - size / 2
     val minX     = slider.position.x + 2
     val maxX     = slider.position.x + slider.size.x - size.x - 2

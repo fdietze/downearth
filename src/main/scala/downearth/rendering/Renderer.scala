@@ -378,7 +378,7 @@ class Renderer(gameState:GameState) extends Logger {
     if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
       GlDraw.drawSampledNodes()
 
-    if( Config.testUngenerated && !frameState.workersBusy ) {
+    if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
       if( Config.occlusionTest ) {
         occlusionTest.doIt(frustumTest)
       } else { // perform frustum test only

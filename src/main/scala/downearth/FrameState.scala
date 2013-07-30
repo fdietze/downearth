@@ -71,9 +71,9 @@ class FrameState(gameState:GameState) {
     Display.setTitle(
       s"$currentFps/${Config.fpsLimit} fps, " +
       s"frame: ${frameDuration/1000000}<${frameDurationMax/1000000}/${timeBetweenFrames/1000000}ms, " +
-      s"update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s), " +
-      s"queue: $generationQueueSize, " +
-      s"queries: $occlusionQueryCount"
+      s"queries: $occlusionQueryCount, " +
+      s"generating: $generationQueueSize, " +
+      s"update: ${lastUpdateDuration/1000000}ms (${updateCounter}/s)"
     )
 
     lastFrameCounterReset = now

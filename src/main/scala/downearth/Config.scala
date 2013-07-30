@@ -19,15 +19,16 @@ object Config extends Listener {
     getInt => loadInt
   }
 
-	var minPredictionSize = loadInt("minPredictionSize", 16)
+	var minPredictionSized = 8.0
+  def minPredictionSize = minPredictionSized.toInt
   var playerRadius = loadInt("worldWindowSize", 10)
-  var playerSightRadius = 150.0 //TODO: set farplane to playerSightRadius
+  var playerSightRadius = 150.0
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
 	val skybox =false
 
-  var occlusionTestMagicNumber = 4.0
+  var occlusionTestMagicNumber = 16.0
   var a = 1.0
   var b = 1.0
   var c = 1.0
@@ -98,6 +99,7 @@ object Config extends Listener {
   var wireframe = false
   var generation = true
   var testUngenerated = true
+  var skipOcclusionTestWhenBusy = true
   var streamWorld = false
   var frustumCulling = true
   var turbo = false

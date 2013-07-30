@@ -51,16 +51,16 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     import gameState.player
     // TextureManager.box.bind()
 
-    val nodeInfoBufferGenerating  = ArrayBuffer[PowerOfTwoCube]()
-    val nodeInfoBufferUngenerated = ArrayBuffer[PowerOfTwoCube]()
+    val generatingAreas  = ArrayBuffer[PowerOfTwoCube]()
+    val ungeneratedAreas = ArrayBuffer[PowerOfTwoCube]()
     val filter = (area:PowerOfTwoCube) => player.canSee(area) && frustumTest(area)
 
     octree.query(filter, camera.position) {
       case (info, UngeneratedNode) =>
-        nodeInfoBufferUngenerated += info
+        ungeneratedAreas += info
         false
       case (info, GeneratingNode) =>
-        nodeInfoBufferGenerating += info
+        generatingAreas += info
         false
       case (info, node:MeshNode) =>
         true
@@ -74,16 +74,17 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val projection = Mat4f(camera.projection)
 
     val magicNr = Config.occlusionTestMagicNumber.toInt
-    val (doTest,noTest) = (0 until nodeInfoBufferUngenerated.size).partition(i => i % magicNr == renderer.frameCount % magicNr)
+    var i = -1
+    val (ungeneratedAreasTest,ungeneratedAreasSkip) = ungeneratedAreas.partition (
+      area => {i += 1; i % magicNr == renderer.frameCount % magicNr}
+    )
 
-    val renderNodeInfos1 = nodeInfoBufferGenerating
-    val renderNodeInfos2 = noTest map nodeInfoBufferUngenerated
-    val reducedNodeInfos = doTest map nodeInfoBufferUngenerated
-    frameState.occlusionQueryCount += doTest.size
+    frameState.occlusionQueryCount += ungeneratedAreas.size
 
-    val buffer = BufferUtils.createIntBuffer( reducedNodeInfos.size )
+
+    val buffer = BufferUtils.createIntBuffer( ungeneratedAreasTest.size )
     glGenQueries( buffer )
-    val queries = new Query(buffer, reducedNodeInfos)
+    val queries = new Query(buffer, ungeneratedAreasTest)
 
     occTest_program.use {
       occTest_vao.bind {
@@ -92,18 +93,19 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
         occTest_matrix := projection * view
 
-        for( (tint, renderNodeInfos) <- Seq[(Vec4f,Seq[PowerOfTwoCube])]( (Vec4f(1,1,0,1), renderNodeInfos1), (Vec4f(0,1,0,1), renderNodeInfos2) ) if renderNodeInfos.size > 0 ) {
-          occTest_u_tint := tint
+        for((renderAreas, color) <- Seq( (generatingAreas, Vec4f(1,1,0,1)), (ungeneratedAreasSkip,Vec4f(0.2f,0.2f,0.2f,1)) )
+            if renderAreas.size > 0 ) {
+          occTest_u_tint := color
 
-          val instance_positions = renderNodeInfos.map( info => Vec4f(info.pos,0) )
-          val instance_scales = renderNodeInfos.map( info => info.size.toFloat )
+          val instance_positions = renderAreas.map( info => Vec4f(info.pos,0) )
+          val instance_scales = renderAreas.map( info => info.size.toFloat )
 
           occTest_offset := instance_positions
           occTest_scale := instance_scales
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderNodeInfos.size)
+          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderAreas.size)
         }
 
         for( (queryId, info) <- queries ) {
