@@ -74,7 +74,7 @@ object WorldGenerator {
 
     // Fall für jeden Cube ermitteln und abspeichern
     for (coord <- cubesToMarch) {
-      val exactCase = dataToCase(originalNoiseData.extract(coord))
+      val exactCase = dataToCase(originalNoiseData.extractCubeCorners(coord))
       exactCaseData(coord) = exactCase.toShort
     }
 
@@ -83,8 +83,8 @@ object WorldGenerator {
     // für jeden Cube:
     for (coord <- cubesToMarch) {
       // Datenpunkte extrahieren
-      val originalData = originalNoiseData.extract(coord)
-      val modifiedData = modifiedNoiseData.extract(coord)
+      val originalData = originalNoiseData.extractCubeCorners(coord)
+      val modifiedData = modifiedNoiseData.extractCubeCorners(coord)
 
       // Fall für diesen Cube auslesen und benennen
       val exactCase = exactCaseData(coord)
@@ -108,9 +108,9 @@ object WorldGenerator {
     }
 
     // Liest die abgespeicherten Fälle aus und erzeugt entsprechende Hexaeder
-    val hexaeders = { (pos:Vec3i) =>
+    val hexaeders = { (pos:ReadVec3i) =>
       val arraypos = pos + 1 - area.pos
-      val h = data2hexaeder(modifiedNoiseData.extract(arraypos), exactCaseData(arraypos))
+      val h = data2hexaeder(modifiedNoiseData.extractCubeCorners(arraypos), exactCaseData(arraypos))
       if (h.noVolume) EmptyHexaeder else h
     }
 

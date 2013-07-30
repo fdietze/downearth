@@ -21,12 +21,12 @@ class Master extends Actor {
 
   def receive = {
     // Master erhält neuen Job und verteilt ihn.
-    case area:PowerOfTwoCube =>
+    case GeneratingJob(area) =>
       workers ! area
     // TODO: Config.prioritizeGenerationInFrustum
 
     // Worker has finished Job
-    case job:FinishedJob =>
+    case job:FinishedGeneratingJob =>
       context.parent ! job
   }
 
@@ -48,19 +48,19 @@ class Worker extends Actor {
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
         meshNode.mesh = TextureMesh.empty
-        sender ! FinishedJob(area, meshNode)
+        sender ! FinishedGeneratingJob(area, meshNode)
       }
       // if the area is too big, it will be splitted
       else if( area.size/2 >= Config.minPredictionSize ) {
         val data = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
         val meshNode = new MeshNode(new InnerNodeUnderMesh(data))
         meshNode.mesh = TextureMesh.empty
-        sender ! FinishedJob(area, meshNode)
+        sender ! FinishedGeneratingJob(area, meshNode)
       }
       // sample the whole area
       else {
         val meshNode = WorldGenerator generateNode area
-        sender ! FinishedJob(area, meshNode)
+        sender ! FinishedGeneratingJob(area, meshNode)
       }
   }
 }

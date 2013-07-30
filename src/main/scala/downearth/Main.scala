@@ -54,7 +54,9 @@ object Main extends Logger {
 object AkkaMessages {
   case object NextFrame
   case class LastFrame(timeStamp:Long)
-  case class FinishedJob(area:PowerOfTwoCube, node:MeshNode)
+
+  case class GeneratingJob(area:PowerOfTwoCube)
+  case class FinishedGeneratingJob(area:PowerOfTwoCube, node:MeshNode)
   case class Predicted(area:PowerOfTwoCube)
 }
 
@@ -100,7 +102,7 @@ class GameMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Co
     PriorityGenerator {
       case PoisonPill      => 0
       case NextFrame       => 2
-      case job:FinishedJob => 3
+      case job:FinishedGeneratingJob => 3
 
       case otherwise       => 1
     })
@@ -151,7 +153,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
       frameState.render()
       frameFactory ! LastFrame(frameState.lastFrame)
 
-    case FinishedJob(area, node) =>
+    case FinishedGeneratingJob(area, node) =>
       import frameState._
       octree.insert( area, node )
       physics.worldChange(area)

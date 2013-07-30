@@ -2,7 +2,7 @@ package downearth.generation
 
 import simplex3d.math.double._
 import interval.{Interval, Interval3}
-import simplex3d.math.Vec3i
+import simplex3d.math.{ReadVec3i, Vec3i}
 import downearth.resources.Material
 
 abstract class WorldFunction {
@@ -23,9 +23,9 @@ abstract class WorldFunction {
       trivialBounds
   }
 
-  def density(pos:Vec3):Double
-  def material(pos:Vec3):Material
-  def materialAtBlock(pos:Vec3i) = material(Vec3(pos + 0.5))
+  def density(pos:ReadVec3):Double
+  def material(pos:ReadVec3):Material
+  def materialAtBlock(pos:ReadVec3i) = material(Vec3(pos + 0.5))
 
   def bounds(area:Interval3):Interval
   def intervalExtension(area:Interval3):Interval

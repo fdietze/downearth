@@ -12,13 +12,13 @@ import simplex3d.math.doublex.functions._
 trait ChildAccess[T] {
   // macht aus dem Vec3i index einen flachen index, der auf ein Array
   // angewendet werden kann
-  def flat(ivec:Vec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
+  def flat(ivec:ReadVec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
 
   // macht aus einem flachen Index wieder ein Vec3i-Index
   def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
 
   def apply(i:Int):T = ???
-  def apply(p:Vec3i):(Int,T) = ???
+  def apply(p:ReadVec3i):(Int,T) = ???
 
   def splitX:Array[T]   = ???
   def splitY:Array[T]   = ???
@@ -28,7 +28,7 @@ trait ChildAccess[T] {
   def fullTree:(T,Any) = ???
 }
 
-case class Cuboid(pos:Vec3i, vsize:Vec3i) extends CuboidLike with ChildAccess[Cuboid] {
+case class Cuboid(pos:ReadVec3i, vsize:ReadVec3i) extends CuboidLike with ChildAccess[Cuboid] {
   // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
   override def apply(i:Int):Cuboid = {
     val v = index2vec(i)
@@ -67,7 +67,7 @@ case class Cuboid(pos:Vec3i, vsize:Vec3i) extends CuboidLike with ChildAccess[Cu
   override def splitOct = Array.tabulate(8)(apply)
 }
 
-case class Cube(pos:Vec3i, size:Int) extends CubeLike with ChildAccess[Cuboid] {
+case class Cube(pos:ReadVec3i, size:Int) extends CubeLike with ChildAccess[Cuboid] {
   // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
   override def apply(i:Int) = {
     val v = index2vec(i)
@@ -88,7 +88,7 @@ case class Cube(pos:Vec3i, size:Int) extends CubeLike with ChildAccess[Cuboid] {
   override def splitOct = Array.tabulate(8)(apply)
 }
 
-case class PowerOfTwoCube(pos:Vec3i, size:Int) extends PowerOfTwoCubeLike with ChildAccess[PowerOfTwoCube] {
+case class PowerOfTwoCube(pos:ReadVec3i, size:Int) extends PowerOfTwoCubeLike with ChildAccess[PowerOfTwoCube] {
   // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
   override def apply(index:Int) = {
     val v = index2vec(index)
@@ -97,7 +97,7 @@ case class PowerOfTwoCube(pos:Vec3i, size:Int) extends PowerOfTwoCubeLike with C
   }
 
   // Erzeugung des Cube vom Kindknoten, aus einem Vektor-Index
-  override def apply(p:Vec3i):(Int,PowerOfTwoCube) = {
+  override def apply(p:ReadVec3i):(Int,PowerOfTwoCube) = {
     require( indexInRange(p), s"Index not in Range: $p not in $this" )
     val v = indexVec(p,pos,size)
     val index = flat(v)
@@ -114,8 +114,8 @@ case class PowerOfTwoCube(pos:Vec3i, size:Int) extends PowerOfTwoCubeLike with C
 }
 
 trait CuboidLike {
-  def pos:Vec3i
-  def vsize:Vec3i
+  def pos:ReadVec3i
+  def vsize:ReadVec3i
   def isDegenerate = vsize.x == 0 || vsize.y == 0 || vsize.z == 0
   def positiveVolume = vsize.x >= 0 || vsize.y >= 0 || vsize.z >= 0
   def isCube = vsize.x == vsize.y && vsize.y == vsize.z
@@ -123,7 +123,7 @@ trait CuboidLike {
   require(positiveVolume, s"Cuboid needs a Positive Volume: $this")
 
   def upperPos = pos + vsize
-  def indexInRange(p:Vec3i) = downearth.util.indexInRange(p,pos,vsize)
+  def indexInRange(p:ReadVec3i) = downearth.util.indexInRange(p,pos,vsize)
   def indexInRange(p:CuboidLike):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.vsize-1)
   def center = pos + (vsize / 2)
   def coordinates = pos until upperPos
@@ -248,10 +248,10 @@ trait PowerOfTwoCubeLike extends CubeLike{
   // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
   // Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an
   // vielen stellen wird noch sein Verhalten imitiert.
-  def indexVec(p:Vec3i, nodepos:Vec3i = pos, nodesize:Int = size) = ((p-nodepos)*2)/nodesize
+  def indexVec(p:ReadVec3i, nodepos:ReadVec3i = pos, nodesize:Int = size) = ((p-nodepos)*2)/nodesize
 }
 
 
-case class Sphere(pos:Vec3i, radius:Int) {
+case class Sphere(pos:ReadVec3i, radius:Int) {
   def overlaps(cube:CubeLike) = cube overlaps this
 }

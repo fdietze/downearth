@@ -4,7 +4,7 @@ import downearth._
 import downearth.util._
 import downearth.generation.{WorldFunction, WorldDefinition}
 
-import simplex3d.math.{Vec2i, Vec3i}
+import simplex3d.math.{ReadVec3i, Vec2i, Vec3i}
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
 import downearth.rendering._
@@ -33,9 +33,9 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
   def insertNode(info:PowerOfTwoCube, insertinfo:PowerOfTwoCube, insertnode:Node) = insertnode
 
-  override def apply(info:PowerOfTwoCube, p:Vec3i) = this
+  override def apply(info:PowerOfTwoCube, p:ReadVec3i) = this
 
-  override def updated(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf) = {
+  override def updated(info:PowerOfTwoCube, octree:WorldOctree, p:ReadVec3i, newLeaf:Leaf) = {
     if(h == newLeaf.h)
       this
     else{
@@ -63,7 +63,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
   // erzeugt aus Zwei aneinender grenzenden Hexaedern die Polygone, die nicht verdeckt werden.
   // performance kritischer bereich, weil es für jedes benachberte Hexaederpaar aufgerufen wird
-  def addSurface(from:Polyeder, to:Polyeder, pos:Vec3i, dir:Int ,meshBuilder:TextureMeshBuilder, worldFunction: WorldFunction = WorldDefinition) = {
+  def addSurface(from:Polyeder, to:Polyeder, pos:ReadVec3i, dir:Int ,meshBuilder:TextureMeshBuilder, worldFunction: WorldFunction = WorldDefinition) = {
     if(to != UndefHexaeder) {
       assert(from != EmptyHexaeder)
 
@@ -150,7 +150,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     if(nodesize == 1) {
       if( h != EmptyHexaeder ){
         for( i <- (0 to 5) ){
-          val p2 = nodepos.clone
+          val p2 = Vec3i(nodepos)
           p2(i >> 1) += ((i&1)<<1)-1
 
           val to = worldaccess(p2)
@@ -170,7 +170,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
           //TODO: Oberfläche eines Octanten als Quadtree abfragen
 
           for( spos <- Vec2i(0) until Vec2i(info.size) ){
-            val p1 = nodepos.clone
+            val p1 = Vec3i(nodepos)
             p1( axisa ) += spos(0)
             p1( axisb ) += spos(1)
             p1( axis )  += (nodesize-1) * (dir&1)
@@ -186,7 +186,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     vertexCounter * TextureMesh.byteStride
   }
 
-  override def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
+  override def patchWorld(info:PowerOfTwoCube, octree:WorldOctree, p:ReadVec3i, newLeaf:Leaf, vertpos:Int, vertcount:Int) : (NodeUnderMesh, Update) = {
     val replacement = updated(info, octree, p, newLeaf)
 
     val builder = new TextureMeshBuilder
@@ -204,7 +204,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     }
   }
 
-  override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i, vertpos:Int, vertcount:Int) : Update = {
+  override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:ReadVec3i, vertpos:Int, vertcount:Int) : Update = {
     require(vertpos >= 0)
     require(vertcount >= 0)
     val builder = new TextureMeshBuilder
@@ -218,7 +218,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
   def draw(info:PowerOfTwoCube,test:FrustumTest){}
 
-  override def getPolygons( info:PowerOfTwoCube, pos:Vec3i, from:Int, to:Int): (Int,Int) = {
+  override def getPolygons( info:PowerOfTwoCube, pos:ReadVec3i, from:Int, to:Int): (Int,Int) = {
     (from,to)
   }
 
@@ -260,7 +260,7 @@ object Leaf {
 
 case object EmptyLeaf extends Leaf(EmptyHexaeder) {
 
-  def fill(cube:PowerOfTwoCube, fill: (Vec3i) => Leaf ) : NodeUnderMesh = {
+  def fill[V3 >: ReadVec3i](cube:PowerOfTwoCube, fill: V3 => Leaf ) : NodeUnderMesh = {
     if(cube.size == 1){
       fill(cube.pos)
     }

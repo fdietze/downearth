@@ -12,9 +12,9 @@ import simplex3d.math.double._
 import collection.mutable.Stack
 
 object ChainHull2D {
-	@inline def isLeft(p0:Vec2,p1:Vec2,p2:Vec2) = (p1.x - p0.x)*(p2.y - p0.y) - (p2.x - p0.x)*(p1.y - p0.y)
-	val compare = (v1:Vec2,v2:Vec2) => if( v1.x == v2.x ) (v1.y < v2.y) else (v1.x < v2.x)
-	def apply( in: IndexedSeq[Vec2]):Stack[Vec2] = {
+	@inline def isLeft(p0:ReadVec2,p1:ReadVec2,p2:ReadVec2) = (p1.x - p0.x)*(p2.y - p0.y) - (p2.x - p0.x)*(p1.y - p0.y)
+	val compare = (v1:ReadVec2,v2:ReadVec2) => if( v1.x == v2.x ) (v1.y < v2.y) else (v1.x < v2.x)
+	def apply( in: IndexedSeq[ReadVec2]):Stack[ReadVec2] = {
 		val verts = in sortWith compare
 		val n = verts.size
 		
@@ -31,7 +31,7 @@ object ChainHull2D {
 			maxmin -= 1
 		}
 		
-		val stack = new Stack[Vec2]()
+		val stack = new Stack[ReadVec2]()
 		
 		if (minmax == n-1) {// degenerate case: all x-coords == xmin
 			stack push verts(minmin)

@@ -1,6 +1,6 @@
 package downearth.worldoctree
 
-import simplex3d.math.{Vec2i, Vec3i}
+import simplex3d.math.{ReadVec3i, Vec2i, Vec3i}
 
 import reflect.ClassTag
 import downearth.util._
@@ -13,11 +13,11 @@ object Data3D{
 import Data3D._
 
 trait Data3D[A]{
-	def vsize:Vec3i
-	def apply(v:Vec3i):A
-	def update(v:Vec3i,value:A)
+	def vsize:ReadVec3i
+	def apply(v:ReadVec3i):A
+	def update(v:ReadVec3i,value:A)
 	//def indexInRange(i:Vec3i) = all(lessThan(i,vsize)) && all(greaterThanEqual(i,Vec3i(0)))
-	def indexInRange(i:Vec3i) = {
+	def indexInRange(i:ReadVec3i) = {
 		i.x >= 0 &&
 		i.y >= 0 &&
 		i.z >= 0 &&
@@ -26,20 +26,20 @@ trait Data3D[A]{
 		i.z < vsize.z
 	}
 
-  def fill( elem: Vec3i => A ) {
+  def fill[V3 >: ReadVec3i]( elem: V3 => A ) {
     for( pos <- Vec3i(0) until vsize ) {
       this(pos) = elem(pos)
     }
   }
 
-  def fill(elem: Vec3i => A, areas:Iterable[CuboidLike], offset:Vec3i) {
+  def fill[V3 >: ReadVec3i](elem: V3 => A, areas:Iterable[CuboidLike], offset:ReadVec3i) {
     for( area <- areas; rawPos <- area.coordinates ) {
       val pos = offset + rawPos
       this(pos) = elem(pos)
     }
   }
 
-  def fillBorder( elem: Vec3i => A ) {
+  def fillBorder[V3 >: ReadVec3i]( elem: V3 => A ) {
     for( x <- Seq(0, vsize.x-1); yzpos <- Vec2i(0) until vsize.yz ) {
       val pos = Vec3i(x,yzpos)
       this(pos) = elem(pos)
@@ -59,37 +59,37 @@ object Array3D {
   def apply[A:ClassTag](vsize:Vec3i, default:A) = new Array3D[A](vsize, Array.fill[A](vsize.x * vsize.y * vsize.z)(default) )
 }
 
-class Array3D[@specialized(Byte,Short,Int,Float,Double) A:ClassTag](val vsize:Vec3i, val data:Array[A])
+class Array3D[@specialized(Byte,Short,Int,Float,Double) A:ClassTag](val vsize:ReadVec3i, val data:Array[A])
 extends Data3D[A] with Iterable[A] {
-  def this(vsize:Vec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
+  def this(vsize:ReadVec3i) =  this(vsize, new Array[A](vsize.x * vsize.y * vsize.z) )
 
 	import vsize.{x ⇒ sx,y ⇒ sy, z ⇒ sz}
 	val volume = sx*sy*sz
 	
-	def index(pos:Vec3i) = pos.x + sx*(pos.y + sy*pos.z)
+	def index(pos:ReadVec3i) = pos.x + sx*(pos.y + sy*pos.z)
 	
-	def apply(v:Vec3i):A = {
+	def apply(v:ReadVec3i):A = {
 		assert( indexInRange(v), s"$v not in $vsize" )
 		data( index(v) )
 	}
 
-	def update(v:Vec3i,i:Int,value:A){
+	def update(v:ReadVec3i,i:Int,value:A){
 		update(v + Vec3i(i&1,(i&2)>>1,(i&4)>>2),value)
 	}
 
-	def update(v:Vec3i,value:A){
+	def update(v:ReadVec3i,value:A){
 		assert( indexInRange(v), s"$v not in range $vsize")
 		data( index(v) ) = value
 	}
 
-	def update(v:Vec3i, data:IndexedSeq[A]){
+	def update(v:ReadVec3i, data:IndexedSeq[A]){
 		assert( indexInRange(v) )
 		for( i <- 0 until 8 )
 			update( v,i,data(i) )
 	}
 	
 	// Wird für den HexaederMC verwerdet, und extrahiert die 8 Datenpunkte, die für die Generierung eines Hexaeders relevant sind
-	def extract(pos:Vec3i) = {
+	def extractCubeCorners(pos:ReadVec3i) = {
 		vectorIndices map ( v ⇒ apply(v+pos) )
 	}
 

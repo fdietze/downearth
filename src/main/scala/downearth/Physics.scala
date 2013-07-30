@@ -68,7 +68,7 @@ class BulletPhysics(gameState:GameState) {
 	//var groundBody:Option[RigidBody] = None
 	var groundBodies:Seq[RigidBody] = Nil
 	
-	def worldChange(pos:Vec3i) {
+	def worldChange(pos:ReadVec3i) {
 		for( Body( _ , _ , stream ) <- bodies ) {
 			stream reloadAt pos
 		}
@@ -152,7 +152,7 @@ class BulletPhysics(gameState:GameState) {
 		dynamicsWorld addRigidBody body
 	}
 	
-	abstract class StreamingBox[T:Manifest](centerpos:Vec3i,radius:Int){
+	abstract class StreamingBox[T:Manifest](centerpos:ReadVec3i,radius:Int){
 		val pos = centerpos - radius
 		val size = 2*radius
 		
@@ -161,8 +161,8 @@ class BulletPhysics(gameState:GameState) {
 		val bodies = new Array3D[T](Vec3i(size))
 		bodies fill fillfunc
 		
-		def indexInRange(p:Vec3i) = util.indexInRange(p,pos,size)
-		def reloadAt(p:Vec3i){
+		def indexInRange(p:ReadVec3i) = util.indexInRange(p,pos,size)
+		def reloadAt(p:ReadVec3i){
 			if(indexInRange(p)){
 				val rpos = p-pos
 				removeBody( bodies(rpos) )
@@ -170,7 +170,7 @@ class BulletPhysics(gameState:GameState) {
 			}
 		}
 		
-		def fillfunc(v:Vec3i):T
+		def fillfunc(v:ReadVec3i):T
 		def removeBody(bodies:T)
 		
 		def move(dirvec:Vec3i){
@@ -227,9 +227,9 @@ class BulletPhysics(gameState:GameState) {
 		}
 	}
 	
-	class StreamingHexaederBox(centerpos:Vec3i,radius:Int) extends StreamingBox[Option[RigidBody]](centerpos,radius) {
+	class StreamingHexaederBox(centerpos:ReadVec3i,radius:Int) extends StreamingBox[Option[RigidBody]](centerpos,radius) {
 		
-		def fillfunc(v:Vec3i) = {
+		def fillfunc(v:ReadVec3i) = {
 			
 			val vertexdata = octree(pos+v).h.vertices.distinct
 			
@@ -256,7 +256,7 @@ class BulletPhysics(gameState:GameState) {
 	
 	class StreamingTriangleBox(centerpos:Vec3i,radius:Int) extends StreamingBox[Seq[RigidBody]](centerpos,radius){
 		
-		def fillfunc(v:Vec3i) = {
+		def fillfunc(v:ReadVec3i) = {
 			val builder = collection.mutable.ArrayBuilder.make[RigidBody]
 			
 			val polygondata = octree.getPolygons(pos+v)

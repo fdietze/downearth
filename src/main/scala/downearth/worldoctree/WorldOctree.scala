@@ -28,16 +28,16 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
 
   // for Data3D interface
   def vsize = rootArea.vsize
-  override def indexInRange(pos:Vec3i) = rootArea indexInRange pos
+  override def indexInRange(pos:ReadVec3i) = rootArea indexInRange pos
 
-  def apply(p:Vec3i) = {
+  def apply(p:ReadVec3i) = {
     if( rootArea.indexInRange(p) )
       root(rootArea,p)
     else
       Config.ungeneratedDefault
   }
 
-  def update(p:Vec3i,l:Leaf) {
+  def update(p:ReadVec3i,l:Leaf) {
     physics.worldChange(p)
 
     if(rootArea.indexInRange(p))
@@ -145,7 +145,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     if(!Config.generation) return;
     // TODO: warning if generating already generated node
     // TODO: warning if area size/position does not match a node in octree
-    master ! area
+    master ! GeneratingJob(area)
     insert( area, MeshNode.generating )
     frameState.generationQueueSize += 1
   }
@@ -210,7 +210,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     root = newRoot
   }
 
-	override def fill( foo: Vec3i => Leaf ) {
+	override def fill[V3 >: ReadVec3i]( foo: V3 => Leaf ) {
 		for( v <- rootArea.pos until rootArea.pos + rootArea.size ) {
 			this(v) = foo(v)
 		}

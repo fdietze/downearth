@@ -9,7 +9,7 @@ import downearth.resources.Material
 object WorldDefinition extends WorldFunction {
 
    
-def density(world:Vec3) = {
+def density(world:ReadVec3) = {
 
 def perlinnoise3_uid51b9c303(v:Vec3, x:Double, y:Double, z:Double, add:Double, sub:Double, size:Double, scale:Double, offset:Double):Double = {((perlinNoise3(v + Vec3(x,y,z))*size)+offset)*scale/size + add - sub}
 def scalesrcv_uid51b9c303(scale:Double):Vec3 = {world   * scale}
@@ -54,7 +54,7 @@ vn11_min2_uid51b9c303
 
 
    
-def material(world:Vec3) = {
+def material(world:ReadVec3) = {
 
 def negate(a:Double):Double = {-a}
 def addconstantexp(a:Double, value:Double):Double = {a+value}
@@ -171,4 +171,3 @@ vn11_min2_uid51b9c303
 
 
 }
-            

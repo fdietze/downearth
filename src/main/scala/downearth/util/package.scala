@@ -37,9 +37,9 @@ package object util {
     case e: AssertionError => true
   }
 
-	implicit def v2vf(in:Vec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
+	implicit def v2vf(in:ReadVec3):Vector3f = new Vector3f(in.x.toFloat,in.y.toFloat,in.z.toFloat)
 	implicit def vf2v(in:Vector3f):Vec3 =         Vec3(in.x,in.y,in.z)
-	implicit def q2qf(in:Quat4) = new Quat4f(in.a.toFloat,in.b.toFloat,in.c.toFloat,in.d.toFloat)
+	implicit def q2qf(in:ReadQuat4) = new Quat4f(in.a.toFloat,in.b.toFloat,in.c.toFloat,in.d.toFloat)
 	implicit def qf2q(in:Quat4f) = Quat4(in.w,in.x,in.y,in.z)
   implicit def λ2Runable(in: () => Any ) = new Runnable {
     def run() {
@@ -72,19 +72,19 @@ package object util {
 		buffer
 	}
 
-  def glTranslate3dv(v:Vec3) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, v.z)
-  def glTranslate3iv(v:Vec3i) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, v.z)
-	def glTranslate2iv(v:Vec2i) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, 0)
-	def glColor4dv(v:Vec4) = org.lwjgl.opengl.GL11.glColor4d(v.r, v.g, v.b, v.a)
-	def glScale3dv(v:Vec3) = org.lwjgl.opengl.GL11.glScaled(v.x, v.y, v.z)
+  def glTranslate3dv(v:ReadVec3) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, v.z)
+  def glTranslate3iv(v:ReadVec3i) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, v.z)
+	def glTranslate2iv(v:ReadVec2i) = org.lwjgl.opengl.GL11.glTranslated(v.x, v.y, 0)
+	def glColor4dv(v:ReadVec4) = org.lwjgl.opengl.GL11.glColor4d(v.r, v.g, v.b, v.a)
+	def glScale3dv(v:ReadVec3) = org.lwjgl.opengl.GL11.glScaled(v.x, v.y, v.z)
 	def glScale1d(s:Double) = org.lwjgl.opengl.GL11.glScaled(s,s,s)
 
-  def lerpVec2(a:Vec2, b:Vec2, t:Double) = a + Vec2(t) * (b - a)
+  def lerpVec2(a:ReadVec2, b:ReadVec2, t:Double) = a + Vec2(t) * (b - a)
   // def lerpVec2i(a:Vec2i, b:Vec2i, t:Double) = a + t * (b - a)
 
 	// Testet ob innerhalb eines Quaders, meistens OctreeNodes, eine Position liegt.
 	//def indexInRange(i:Vec3i,nodepos:Vec3i,nodesize:Int) = all(lessThan(i,nodepos+nodesize)) && all(greaterThanEqual(i,nodepos))
-	def indexInRange(i:Vec3i, nodepos:Vec3i, nodesize:Int) = {
+	def indexInRange(i:ReadVec3i, nodepos:ReadVec3i, nodesize:Int) = {
 		i.x >= nodepos.x &&
 		i.y >= nodepos.y &&
 		i.z >= nodepos.z &&
@@ -93,7 +93,7 @@ package object util {
 		i.z < nodepos.z + nodesize
 	}
 
-	def indexInRange(i:Vec3i, nodepos:Vec3i, nodesize:Vec3i) = {
+	def indexInRange(i:ReadVec3i, nodepos:ReadVec3i, nodesize:ReadVec3i) = {
 		i.x >= nodepos.x &&
 		i.y >= nodepos.y &&
 		i.z >= nodepos.z &&
@@ -102,7 +102,7 @@ package object util {
 		i.z < nodepos.z + nodesize.z
 	}
 	
-	def indexInRange(i:Vec2i, pos:Vec2i, size:Vec2i) = {
+	def indexInRange(i:ReadVec2i, pos:ReadVec2i, size:ReadVec2i) = {
 		i.x >= pos.x &&
 		i.y >= pos.y &&
 		i.x  < pos.x + size.x &&
@@ -153,12 +153,12 @@ package object util {
   }
 
   def mod(a:Int, b:Int) = (a % b + b) % b
-  def mod(a:Vec3i, b:Int):Vec3i = Vec3i(
+  def mod(a:ReadVec3i, b:Int):Vec3i = Vec3i(
     mod(a.x, b),
     mod(a.y, b),
     mod(a.z, b)
   )
-  def mod(a:Vec3i, b:Vec3i):Vec3i = Vec3i(
+  def mod(a:ReadVec3i, b:ReadVec3i):Vec3i = Vec3i(
     mod(a.x, b.x),
     mod(a.y, b.y),
     mod(a.z, b.z)
@@ -167,30 +167,30 @@ package object util {
   def divFloor(a:Int, b:Int) = (a - mod(a,b)) / b
   def divCeil(a:Int, b:Int) = if(a % b == 0) a / b else (a + ( b - mod(a,b) )) / b
 
-  def divFloor(a:Vec3i, b:Int):Vec3i = Vec3i(
+  def divFloor(a:ReadVec3i, b:Int):Vec3i = Vec3i(
     divFloor(a.x, b),
     divFloor(a.y, b),
     divFloor(a.z, b)
   )
-  def divFloor(a:Vec3i, b:Vec3i):Vec3i = Vec3i(
+  def divFloor(a:ReadVec3i, b:Vec3i):Vec3i = Vec3i(
     divFloor(a.x, b.x),
     divFloor(a.y, b.y),
     divFloor(a.z, b.z)
   )
 
-  def divCeil(a:Vec3i, b:Int):Vec3i = Vec3i(
+  def divCeil(a:ReadVec3i, b:Int):Vec3i = Vec3i(
     divCeil(a.x, b),
     divCeil(a.y, b),
     divCeil(a.z, b)
   )
-  def divCeil(a:Vec3i, b:Vec3i):Vec3i = Vec3i(
+  def divCeil(a:ReadVec3i, b:ReadVec3i):Vec3i = Vec3i(
     divCeil(a.x, b.x),
     divCeil(a.y, b.y),
     divCeil(a.z, b.z)
   )
 
   def halves(n:Int) = (n/2, n-n/2)
-  def halves(v:Vec3i) = (Vec3i(
+  def halves(v:ReadVec3i) = (Vec3i(
     v.x/2,
     v.y/2,
     v.z/2
@@ -203,7 +203,7 @@ package object util {
 	import scala.collection.IterableLike
 	import scala.collection.generic.CanBuildFrom
 
-	class RichCollection[A, Repr](xs: IterableLike[A, Repr]){
+	implicit class RichCollection[A, Repr](xs: IterableLike[A, Repr]){
 		def distinctBy[B, That](f: A => B)(implicit cbf: CanBuildFrom[Repr, A, That]) = {
 			val builder = cbf(xs.repr)
 			val i = xs.iterator
@@ -220,11 +220,8 @@ package object util {
 		}
 	}
 
-	implicit def toRich[A, Repr](xs: IterableLike[A, Repr]) = new RichCollection(xs)
-
-	
-	class RichVec3i(private[this] val v: inVec3i) { def until(u: inVec3i) = new PermVec3i(v, u) }
-	class PermVec3i(val from: inVec3i, val target: inVec3i) extends Iterable[Vec3i] {
+	implicit class RichVec3i(private[this] val v: ReadVec3i) { def until(u: ReadVec3i) = new PermVec3i(v, u) }
+	class PermVec3i(val from: ReadVec3i, val target: ReadVec3i) extends Iterable[Vec3i] {
 		def iterator: Iterator[Vec3i] = new Iterator[Vec3i] {
 			val cur = Vec3i(from)
 			def hasNext: Boolean = all(lessThan(cur, target))
@@ -248,10 +245,8 @@ package object util {
 		}
 	}
 
-	implicit def toRichVec2i(u: Vec2i) = new RichVec2i(u)
-
-	class RichVec2i(private[this] val v: inVec2i) { def until(u: inVec2i) = new PermVec2i(v, u) }
-	class PermVec2i(val from: inVec2i, val target: inVec2i) extends Iterable[Vec2i] {
+	implicit class RichVec2i(private[this] val v: ReadVec2i) { def until(u: ReadVec2i) = new PermVec2i(v, u) }
+	class PermVec2i(val from: ReadVec2i, val target: ReadVec2i) extends Iterable[Vec2i] {
 		def iterator: Iterator[Vec2i] = new Iterator[Vec2i] {
 			val cur = Vec2i(from)
 			def hasNext: Boolean = all(lessThan(cur, target))
@@ -270,8 +265,6 @@ package object util {
 			}
 		}
 	}
-
-	implicit def toRichVec3i(u: Vec3i) = new RichVec3i(u)
 
   class Timer {
     var startTime = 0L
@@ -407,7 +400,7 @@ package object util {
 			val direction = i & 1
 			val (triangle1, triangle2) = h.planetriangles(axis,direction).splitAt(3)
 			
-			def triangleMax(v0:Vec3, v1:Vec3, v2:Vec3) = {
+			def triangleMax(v0:ReadVec3, v1:ReadVec3, v2:ReadVec3) = {
 				(v0(axis) == direction) && (v1(axis) == direction) && (v2(axis) == direction)
 			}
 			
@@ -438,7 +431,7 @@ package object util {
 		return false
 	}
 	
-	def occludes2d(occluder:IndexedSeq[Vec2], occludee:IndexedSeq[Vec2]):Boolean = {
+	def occludes2d(occluder:IndexedSeq[ReadVec2], occludee:IndexedSeq[ReadVec2]):Boolean = {
 		if( occluder == occludee )
 			true
 		else {

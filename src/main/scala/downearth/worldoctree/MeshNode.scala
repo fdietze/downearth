@@ -1,7 +1,7 @@
 package downearth.worldoctree
 
 import downearth.{Config}
-import simplex3d.math.Vec3i
+import simplex3d.math.{ReadVec3i, Vec3i}
 import simplex3d.math.double.ConstVec3
 import scala.collection.mutable
 import downearth.rendering.{Update, TextureMesh, TextureMeshBuilder, ObjMesh}
@@ -92,7 +92,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     }
   }
 
-  def apply(info: PowerOfTwoCube, p: Vec3i) = node(info,p)
+  def apply(info: PowerOfTwoCube, p:ReadVec3i) = node(info,p)
 
   // der einzige NodeOverMesh, der genMesh implementiert
   def genMesh(info:PowerOfTwoCube, worldaccess:(Vec3i => Polyeder)) = {
@@ -126,7 +126,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     this
   }
 
-  override def updated(info:PowerOfTwoCube, octree:WorldOctree, pos:Vec3i, newLeaf:Leaf) : NodeOverMesh = {
+  override def updated(info:PowerOfTwoCube, octree:WorldOctree, pos:ReadVec3i, newLeaf:Leaf) : NodeOverMesh = {
 
     val leafInfo = PowerOfTwoCube(pos,1)
 
@@ -150,7 +150,7 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     // Nachbarn die noch innerhalb des Octanten liegen patchen
     var newsize = mesh.byteSize + patch.byteSizeDifference
     for(i <- 0 until 6) {
-      val npos = pos.clone
+      val npos = Vec3i(pos)
       npos(i >> 1) += ((i&1) << 1)-1
       if( info.indexInRange(npos) ) {
         val newpatch = node.repolyWorld(info, octree, npos, 0, newsize)
@@ -205,12 +205,12 @@ class MeshNode(var node:NodeUnderMesh) extends NodeOverMesh {
     }
   }
 
-  override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:Vec3i) {
+  override def repolyWorld(info:PowerOfTwoCube, octree:WorldOctree, p:ReadVec3i) {
     // vertpos und vertcount wird von node.repolyWorld gesetzt
     mesh = mesh applyUpdates List(node.repolyWorld(info, octree, p,0,mesh.byteSize))
   }
 
-  override def getPolygons( info:PowerOfTwoCube, pos:Vec3i) = {
+  override def getPolygons( info:PowerOfTwoCube, pos:ReadVec3i) = {
     val (from,to) = node.getPolygons( info, pos, 0, mesh.byteSize )
 
     val reader = mesh.data.duplicate()

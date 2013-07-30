@@ -19,9 +19,9 @@ object Generation {
 
     val pos = Vec3i(10,7,3)
     timer.benchmark(n) {
-      data.extract(pos)
+      data.extractCubeCorners(pos)
     }
-    println(s"extract: ${timer.readSeconds}s")
+    println(s"extractCubeCorners: ${timer.readSeconds}s")
   }
 
 
