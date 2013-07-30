@@ -1,13 +1,13 @@
 package downearth.rendering
 
 import glwrapper.{VertexArrayObject, Program}
-
+import org.lwjgl.opengl.ARBDrawInstanced
+import ARBDrawInstanced._
 import downearth.{FrustumTest, Camera, Config}
 import downearth.worldoctree._
 import downearth.GameState
 
 import simplex3d.math.floatx.{Mat4f, Vec4f}
-import simplex3d.backend.lwjgl.ArbEquivalents
 
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL15._
@@ -109,7 +109,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, renderAreas.size)
+          glDrawArraysInstancedARB(GL_QUADS, 0, 24, renderAreas.size)
         }
 
         for( (queryId, info) <- queries ) {
@@ -121,7 +121,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_QUADS, 0, 24, 1)
+          glDrawArraysInstancedARB(GL_QUADS, 0, 24, 1)
 
           glEndQuery(GL_SAMPLES_PASSED)
         }
