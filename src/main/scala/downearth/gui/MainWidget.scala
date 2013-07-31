@@ -10,8 +10,8 @@ import simplex3d.math.double._
 import downearth.tools._
 import downearth.resources.MaterialManager
 
-class MainWidget(gameState:GameState) extends Panel {
-  import gameState._
+class MainWidget(gameState:GameState) extends Panel { mainWidget =>
+  import gameState.{mainWidget => _, _ }
 
   val position = Vec2i(0)
   val size = Vec2i(Display.getWidth,Display.getHeight)
@@ -69,48 +69,7 @@ class MainWidget(gameState:GameState) extends Panel {
     }
   }
 
-  val inventory = new Inventory(Vec2i(20, 200), Vec2i(200,200)) {
-
-    backGroundColor := Vec4(0.1,0.1,0.1,0.7)
-    border = LineBorder
-
-    val shovel = new ToolWidget( tools.shovel, position+Vec2i(40, 0), player )
-    val hammer = new ToolWidget( tools.constructionTool, position+Vec2i(0 , 0), player )
-
-    children += hammer
-    children += shovel
-    assert(hammer.parent == this)
-    assert(shovel.parent == this)
-
-    children ++= materialManager.materials.zipWithIndex.map{
-      case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40), player, tools.constructionTool )
-    }
-
-    children ++= Range(0, tools.constructionTool.all.size).map(
-      i => new ShapeWidget(i, position + Vec2i(i * 40, 80), player, tools.constructionTool)
-    )
-
-    val superTool = new ToolWidget( tools.testBuildTool, position+Vec2i(80,0), player )
-
-    children += superTool
-
-    selected = shovel
-
-    listenTo(this)
-    listenTo(inventoryButton)
-
-    addReaction {
-    case WidgetResized(w) if w eq this =>
-      val newPos = Vec2i(0)
-      newPos.x = w.size.x - size.x - 20
-      newPos.y = 20
-      setPosition(newPos,0)
-    case ButtonClicked(`inventoryButton`) =>
-      visible = !visible
-    }
-
-    arrangeChildren()
-  }
+  val inventory = Inventory.gameInventory(gameState, inventoryButton, mainWidget)
 
   val keySettingWidget = new KeySettingsWidget( Vec2i(20,140), Config )
   keySettingWidget.visible = false
@@ -119,7 +78,7 @@ class MainWidget(gameState:GameState) extends Panel {
   val doubleSettingsWidget = new DoubleSettingsWidget( Vec2i(20,140), Config )
   doubleSettingsWidget.visible = false
 
-  publish( WidgetResized(this) )
+  publish( WidgetResized(mainWidget) )
 
   children ++= Seq(
     inventory,

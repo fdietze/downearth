@@ -16,6 +16,12 @@ abstract class Widget extends Listener with Publisher {
   val position:Vec2i
   val size:Vec2i
 
+  var parent:Panel = null
+  var border:Border = LineBorder
+  val lineBorderColor = Vec4(0)
+  var background = ColorBackGround
+  val backGroundColor = Vec4(1,1,1,0.25)
+
   var animationStartTime:Long = 0
 	var animationEndTime:Long = 0
 	lazy val animationStartPosition = position.clone
@@ -56,14 +62,8 @@ abstract class Widget extends Listener with Publisher {
     }
   }
 
-	var parent:Panel = Panel.empty
-	var border:Border = LineBorder
-  val lineBorderColor = Vec4(0)
-  var background = ColorBackGround
-  val backGroundColor = Vec4(1,1,1,0.25)
-
   // TODO take the animation to it's own class
-	def invokeAnimation {
+	def invokeAnimation() {
 		if( animationEndTime <= time )
 			position := animationEndPosition
 		else {
@@ -154,13 +154,6 @@ class Slider(val position:Vec2i) extends Panel { slider =>
 }
 
 abstract class TextureWidget(val texture:Texture2D, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
-
-object Panel {
-  val empty = new Panel {
-    val position = Vec2i(0)
-    val size = Vec2i(0)
-  }
-}
 
 // a panel a gui element that has children
 abstract class Panel extends Widget { thispanel =>

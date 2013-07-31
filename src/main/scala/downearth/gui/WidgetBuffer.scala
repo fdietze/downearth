@@ -13,7 +13,6 @@ trait WidgetBuffer extends Buffer[Widget] {
   def parent:Panel
 
   abstract override def update(n: Int, newelem: Widget) {
-    apply(n).parent = null
     newelem.parent = parent
     super.update(n,newelem)
   }

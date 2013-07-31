@@ -7,8 +7,9 @@ import downearth._
 import downearth.rendering.TextureManager
 import simplex3d.math.doublex.functions._
 import downearth.util.Logger
-import downearth.tools.{ConstructionTool, PlayerTool}
+import downearth.tools.{TestBuildTool, Shovel, ConstructionTool, PlayerTool}
 import downearth.resources.Material
+import downearth.gui.Border._
 
 class MaterialWidget(val material:Material, val position:Vec2i, val player:Player, val constructionTool:ConstructionTool)
 	extends TextureWidget(material.texture, material.texPos, material.texSize )
@@ -65,6 +66,7 @@ class ShapeWidget(val shapeId:Int, val position:Vec2i, val player:Player, val to
 trait InventoryItem extends Draggable {
   case class Select(item:InventoryItem) extends WidgetEvent
   case class UnSelect(item:InventoryItem) extends WidgetEvent
+
   override val size = Vec2i(32)
   listenTo(this)
 
@@ -108,6 +110,57 @@ class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) {
     val tmp = children(i)
     children(i) = children(j)
     children(j) = tmp
+  }
+
+  override def toString = "Inventory"
+}
+
+object Inventory {
+  def gameInventory(gameState:GameState, inventoryButton:Widget, _parent:Panel) = {
+    import gameState.{player, materialManager, tools}
+    val i = new Inventory(Vec2i(20, 200), Vec2i(200,200))
+
+    import i._
+
+      i.parent = _parent
+      backGroundColor := Vec4(0.1,0.1,0.1,0.7)
+      border = LineBorder
+
+      val shovel = new ToolWidget( tools.shovel, position+Vec2i(40, 0), player ) { override def toString = "shovel"}
+      val hammer = new ToolWidget( tools.constructionTool, position+Vec2i(0 , 0), player ) { override def toString = "hammer"}
+      val superTool = new ToolWidget( tools.testBuildTool, position+Vec2i(80,0), player ) { override def toString = "supertool"}
+
+      children += hammer
+      children += shovel
+      children += superTool
+
+      children ++= materialManager.materials.zipWithIndex.map{
+        case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40), player, tools.constructionTool )
+      }
+
+      children ++= Range(0, tools.constructionTool.all.size).map(
+        i => new ShapeWidget(i, position + Vec2i(i * 40, 80), player, tools.constructionTool)
+      )
+
+      selected = shovel
+
+      listenTo(parent)
+      listenTo(inventoryButton)
+
+      addReaction {
+        case WidgetResized(w) if w eq parent =>
+          println(s"$this: ${w.size}")
+          val newPos = Vec2i(0)
+          newPos.x = w.size.x - size.x - 20
+          newPos.y = 20
+          setPosition(newPos,0)
+          println(s"$newPos")
+        case ButtonClicked(`inventoryButton`) =>
+          visible = !visible
+      }
+
+      arrangeChildren()
+    i
   }
 }
 

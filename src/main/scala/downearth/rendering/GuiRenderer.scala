@@ -39,8 +39,6 @@ class GuiRenderer(gameState:GameState) {
       glMatrixMode(GL_MODELVIEW)
       glLoadIdentity()
 
-      // log.println("%d fps" format Main.currentfps )
-
       glDisable( GL_LIGHTING )
       glDisable( GL_TEXTURE_2D )
       glEnable( GL_BLEND )
@@ -61,7 +59,7 @@ class GuiRenderer(gameState:GameState) {
       if( !widget.visible )
         return
 
-      widget.invokeAnimation
+      widget.invokeAnimation()
       widget.background match {
         case ColorBackGround =>
           drawColorBackGround(widget.position, widget.size, widget.backGroundColor)
