@@ -296,7 +296,7 @@ class Renderer(gameState:GameState) extends Logger {
 //    GlDraw.renderCube(octree.worldWindowSize - 0.1)
 //    glPopMatrix()
 
-    var maximumDrawCalls = Config.maxDebugDrawQubes
+    var maximumDrawCalls = Config.maxDebugDrawCubes
     val maxDepth = log2(octree.rootArea.size)
 
     octree.query(test,camera) {
@@ -376,7 +376,7 @@ class Renderer(gameState:GameState) extends Logger {
     if( (Config.debugDraw & Config.DebugDrawPhysicsBit) != 0 )
       physics.debugDrawWorld()
     if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
-      GlDraw.drawSampledNodes()
+      GlDraw.drawPredictedNodes()
 
     if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
       if( Config.occlusionTest ) {

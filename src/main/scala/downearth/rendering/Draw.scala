@@ -10,7 +10,7 @@ import org.newdawn.slick.Color
 
 import java.nio.FloatBuffer
 import downearth.worldoctree.{CuboidLike, Cuboid, PowerOfTwoCube, Polyeder}
-import downearth.DisplayEvent
+import downearth.{Config, DisplayEvent}
 import downearth.util._
 import glwrapper.util._
 import simplex3d.math.floatx.{Vec4f, Vec2f, Vec3f}
@@ -285,13 +285,16 @@ object GlDraw extends Draw {
 		glPopMatrix()
 	}
 
-	// Für den Debugdraw: alle Bereiche, die gesampled werden
-//	var sampledNodes:List[Cube] = Nil
+	// Für den Debugdraw: alle Bereiche, die predicted werden
 	var predictedCuboids = new mutable.ArrayBuffer[CuboidLike] with mutable.SynchronizedBuffer[CuboidLike]
-//	def addSampledNode(toNodeinfo:Cube) { sampledNodes ::= toNodeinfo }
-	def addPredictedCuboid(cuboid:CuboidLike) { predictedCuboids += cuboid }
+	def addPredictedCuboid(cuboid:CuboidLike) {
+    predictedCuboids += cuboid
+    val removeCount = predictedCuboids.size - Config.maxDebugDrawCubes
+    if(removeCount > 0)
+      predictedCuboids.remove(0,removeCount)
+  }
 
-	def drawSampledNodes() {
+	def drawPredictedNodes() {
 		for( cuboid <- predictedCuboids ) {
 			if( cuboid.isCube )
 				glColor3f(0,1,0.5f)

@@ -59,7 +59,6 @@ object AkkaMessages {
   case class Predicted(area:PowerOfTwoCube)
 }
 
-
 class DebugLog extends Actor {
   def receive = {
     case Predicted(area) =>
@@ -126,12 +125,12 @@ class FrameGenerator extends Actor {
 
 //TODO on exception, shutdown actorsystem
 class GameLoop extends Actor with Logger { gameLoop =>
-  val workers = context.actorOf( Props(classOf[Worker], self)
+  val frameFactory = context.actorOf( Props[FrameGenerator], "framegenerator" )
+  val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
+  val workers = context.actorOf( Props(classOf[Worker], self, debugLog)
     .withRouter(RoundRobinRouter(Config.numWorkingThreads))
     .withDispatcher("akka.actor.worker-dispatcher")
     , "worker-router")
-  val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
-  val frameFactory = context.actorOf( Props[FrameGenerator], "framegenerator" )
 
   val gameState = new GameState(self, workers, debugLog)
   import gameState._

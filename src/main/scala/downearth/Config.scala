@@ -8,6 +8,7 @@ import util.isPowerOfTwo
 import downearth.rendering.TextureMesh
 
 object Config extends Listener {
+
   val maxMeshCount = 50
 
   val uCorrectChromaticAberation = true
@@ -49,7 +50,7 @@ object Config extends Listener {
 	// um den Meshjoin/-split Vorgang zu testen sollte dieser wert niedriger 
 	// gesetzt werden (10000)
 	val maxMeshByteSize = 30000 * TextureMesh.byteStride
-  val maxDebugDrawQubes = 1000
+  val maxDebugDrawCubes = 1000
 	val numWorkingThreads = Runtime.getRuntime.availableProcessors
 	val cameraSpeed = 2
 	val cameraTurboSpeed = 32
@@ -100,6 +101,7 @@ object Config extends Listener {
   val DebugDrawSampledNodesBit = 0x04
 
   var debugDraw = 0
+  var predictionDebug = false
   var backFaceCulling = true
   var wireframe = false
   var generation = true

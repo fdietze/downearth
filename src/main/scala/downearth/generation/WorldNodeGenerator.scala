@@ -27,7 +27,7 @@ class WorkerMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.
     })
 
 
-class Worker(gameLoop:ActorRef) extends Actor {
+class Worker(gameLoop:ActorRef, debugLog:ActorRef) extends Actor {
 
   def receive = {
     case GeneratingJob(area,_) =>
@@ -36,7 +36,8 @@ class Worker(gameLoop:ActorRef) extends Actor {
       val surfaceNotInArea = !interval(0)
 
       if( surfaceNotInArea ) {
-        //TODO: debugLog ! Predicted(area)
+        if( Config.predictionDebug )
+          debugLog ! Predicted(area)
         val meshNode = new MeshNode(Leaf(
           if(interval.isPositive) FullHexaeder else EmptyHexaeder
         ))
