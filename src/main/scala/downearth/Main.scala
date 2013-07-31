@@ -147,8 +147,9 @@ class GameLoop extends Actor with Logger { gameLoop =>
 
     octree.generateInitialAreaAroundPlayer()
 
-    //Mouse setGrabbed true
     self ! NextFrame
+
+    //Mouse setGrabbed true
   }
 
   def receive = {
@@ -182,7 +183,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
   }
 
   def createOpenGLContext() {
-    val ca = new ContextAttribs(3,0).withDebug(false)
+    val ca = new ContextAttribs(3,0).withDebug(Config.lwjglDebug)
     val alpha = 8
     val depth = 16
     val stencil = 0
@@ -193,10 +194,6 @@ class GameLoop extends Actor with Logger { gameLoop =>
     Display.create(pf, ca)
     log.println( "display created" )
   }
-
-  //var snapshotRequest = 0L
-  //var snapshotCurrent = -1L
-
 
   def checkOpenGLCapabilities() { //TODO split checkOpenGLCapabilities
     val caps = GLContext.getCapabilities

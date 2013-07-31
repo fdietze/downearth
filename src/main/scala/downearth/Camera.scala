@@ -90,7 +90,7 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
     eyeState = State.LeftEye
   }
 
-	override val projection :Mat4f = glwrapper.util.simpleProjectionF(f = Config.playerSightRadius.toFloat)
+	override val projection :Mat4f = glwrapper.util.simpleProjectionF(f = Config.farPlane.toFloat)
 
 	override def view:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat) translate(position)))
   override def noTranslate:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat)))

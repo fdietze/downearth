@@ -22,9 +22,11 @@ object Config extends Listener {
 	var minPredictionSized = 8.0
   def minPredictionSize = minPredictionSized.toInt
   var playerRadiusd = 10.0
-  def playerRadius = playerRadiusd.toInt
+  def playerRadius = playerRadiusd.toInt //TODO separate variable for farplane
   var playerSightRadiusd = 200.0
   def playerSightRadius = playerSightRadiusd.toInt
+  var farPlane = playerSightRadiusd * 2.0
+  var occlusionTestThreshold = 10.0
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
@@ -56,6 +58,7 @@ object Config extends Listener {
 	var fullscreen = false
   var stereoRender = false
   var anaglyph = false
+  var lwjglDebug = true
 
 	// Vollbild-Modus mit höchster Auflösung
 	def fullscreenDisplayMode = Display.getDesktopDisplayMode
