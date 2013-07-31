@@ -153,7 +153,8 @@ class GameLoop extends Actor with Logger { gameLoop =>
 
   def receive = {
     case NextFrame =>
-      frameState.render()
+      try { frameState.render() }
+      catch { case e:Throwable => e.printStackTrace(); self ! PoisonPill}
       frameFactory ! LastFrame(frameState.lastFrame)
 
     case FinishedGeneratingJob(area, node) =>
