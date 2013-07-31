@@ -184,20 +184,21 @@ class WorldRenderer(gameState:GameState) {
         }
         if(texCoord.location != -1) {
           texCoord.enable()
-
-          glVertexAttrib4f(texCoord.location, 0.5f, 0.5f, 0.0f, 0.0f)
           glVertexAttribPointer(texCoord.location, texCoordComponents, texCoordType, false, byteStride, texCoordOffset)
           println(texCoord.boundString)
         }
 
-//        val data:ByteBuffer = buffer.getData
-//        for( i <- 0 until mesh.vertexCount ) {
-//          val v1 = glwrapper.util.getVec4f(data, Vec4f(0))
-//          val v2 = glwrapper.util.getVec4f(data, Vec4f(0))
-//          val v3 = glwrapper.util.getVec4f(data, Vec4f(0))
-//          println(v1,v2,v3)
-//        }
-//        println()
+        val data:ByteBuffer = buffer.getData
+        for( i <- 0 until mesh.vertexCount ) {
+          val v1 = glwrapper.util.getVec3f(data, Vec3f(0))
+          val v2 = glwrapper.util.getVec3f(data, Vec3f(0))
+          val v3 = glwrapper.util.getVec3f(data, Vec3f(0))
+
+          assert( ! v1.x.isNaN && ! v1.y.isNaN && ! v1.z.isNaN )
+          assert( ! v2.x.isNaN && ! v2.y.isNaN && ! v2.z.isNaN )
+          assert( ! v3.x.isNaN && ! v3.y.isNaN && ! v3.z.isNaN )
+        }
+
       }
 
       glDrawArrays(GL_TRIANGLES, 0, mesh.vertexCount)

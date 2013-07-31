@@ -14,7 +14,7 @@ void main() {
   gl_Position = pvm * vec4(position,1);
   v_pos = position;
   v_norm_ws = clamp( normal_ws, vec3(-1), vec3(1) );
-  v_texCoord = clamp( texCoord, vec3(-1), vec3(1) );
+  v_texCoord = texCoord;//clamp( texCoord, vec3(-1), vec3(1) );
 }
 
 

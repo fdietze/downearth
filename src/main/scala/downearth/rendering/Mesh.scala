@@ -142,11 +142,8 @@ case class TextureMeshBuilder(
 
     for(i <- 0 until numVerts){
       glwrapper.util.putVec3f( buffer, verts(i) )
-      buffer.putFloat(1)
       glwrapper.util.putVec3f( buffer, normals(i) )
-      buffer.putFloat(0)
       glwrapper.util.putVec3f( buffer, texCoords(i) )
-      buffer.putFloat(0)
     }
 
     buffer.flip()
@@ -164,16 +161,16 @@ object TextureMesh {
   @inline def vertexComponents = 3
 
   // Vec3f
-  @inline def normalOffset     = 16
+  @inline def normalOffset     = 12
   @inline def normalType       = GL11.GL_FLOAT
   @inline def normalComponents = 3
 
   // Vec3f
-  @inline def texCoordOffset     = 32
+  @inline def texCoordOffset     = 24
   @inline def texCoordType       = GL11.GL_FLOAT
   @inline def texCoordComponents = 3
 
-  @inline def byteStride     = 48
+  @inline def byteStride     = 36
 
   def apply(data:TextureMeshBuilder) = new TextureMesh(data.result(direct=true))
 	
