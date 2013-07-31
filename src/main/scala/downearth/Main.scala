@@ -182,7 +182,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
   }
 
   def createOpenGLContext() {
-    val ca = new ContextAttribs(3,0).withDebug(false)
+    val ca = new ContextAttribs(3,0).withDebug(true)
     val alpha = 8
     val depth = 16
     val stencil = 0

@@ -126,7 +126,7 @@ case class UpdateInfo(node:NodeUnderMesh, oldByteOffset:Int, oldByteSize:Int, ne
 
 case class TextureMeshBuilder(
   vertexBuilder:ArrayBuilder[Vec3f] = ArrayBuilder.make[Vec3f],
-  normalBuilder:ArrayBuilder[Vec2f] = ArrayBuilder.make[Vec2f],
+  normalBuilder:ArrayBuilder[Vec3f] = ArrayBuilder.make[Vec3f],
   texCoordBuilder:ArrayBuilder[Vec3f] = ArrayBuilder.make[Vec3f]
 ) {
   def result:ByteBuffer = result(direct = false)
@@ -142,8 +142,11 @@ case class TextureMeshBuilder(
 
     for(i <- 0 until numVerts){
       glwrapper.util.putVec3f( buffer, verts(i) )
-      glwrapper.util.putVec2f( buffer, normals(i) )
+      buffer.putFloat(1)
+      glwrapper.util.putVec3f( buffer, normals(i) )
+      buffer.putFloat(0)
       glwrapper.util.putVec3f( buffer, texCoords(i) )
+      buffer.putFloat(0)
     }
 
     buffer.flip()
@@ -156,18 +159,21 @@ case class TextureMeshBuilder(
 // zu verändern.
 object TextureMesh {
   // Vec3f
-  @inline def vertexOffset   = 0
-  @inline def vertexType     = GL11.GL_FLOAT
-
-  // Vec2f
-  @inline def normalOffset   = 12
-  @inline def normalType     = GL11.GL_FLOAT
+  @inline def vertexOffset     = 0
+  @inline def vertexType       = GL11.GL_FLOAT
+  @inline def vertexComponents = 3
 
   // Vec3f
-  @inline def texCoordOffset = 20
-  @inline def texCoordType   = GL11.GL_FLOAT
+  @inline def normalOffset     = 16
+  @inline def normalType       = GL11.GL_FLOAT
+  @inline def normalComponents = 3
 
-  @inline def byteStride     = 32
+  // Vec3f
+  @inline def texCoordOffset     = 32
+  @inline def texCoordType       = GL11.GL_FLOAT
+  @inline def texCoordComponents = 3
+
+  @inline def byteStride     = 48
 
   def apply(data:TextureMeshBuilder) = new TextureMesh(data.result(direct=true))
 	

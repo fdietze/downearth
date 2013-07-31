@@ -93,24 +93,21 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
 
       @inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
         val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).id
-        val matCount = 4//MaterialManager.materialCount.toDouble
+        val normal = Vec3f(normalize(cross(v2-v1,v0-v1)))
 
         vertexBuilder += Vec3f(pos) + Vec3f(v0)
-        texCoordBuilder += Vec3f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat, 0 )
+        texCoordBuilder += Vec3f( v0(axisa).toFloat , v0(axisb).toFloat, matid )
+        normalBuilder += normal
 
         vertexBuilder += Vec3f(pos) + Vec3f(v1)
-        texCoordBuilder += Vec3f( (v1(axisa)/matCount + matid/matCount).toFloat , v1(axisb).toFloat, 0 )
+        texCoordBuilder += Vec3f( v1(axisa).toFloat , v1(axisb).toFloat, matid )
+        normalBuilder += normal
 
         vertexBuilder += Vec3f(pos) + Vec3f(v2)
-        texCoordBuilder += Vec3f( (v2(axisa)/matCount + matid/matCount).toFloat , v2(axisb).toFloat, 0 )
+        texCoordBuilder += Vec3f( v2(axisa).toFloat , v2(axisb).toFloat, matid )
+        normalBuilder += normal
 
         vertexCounter += 3
-
-        val normal3f = Vec3f(normalize(cross(v2-v1,v0-v1)))
-        val normal = Vec2f(normal3f.x, normal3f.y)
-        normalBuilder += normal
-        normalBuilder += normal
-        normalBuilder += normal
       }
 
       val t = from.planetriangles(axis, direction)

@@ -50,31 +50,6 @@ class Renderer(gameState:GameState) extends Logger {
 
   var frameCount = 0
 
-  lazy val transformFeedbackTest = {
-    val vertShader = Shader[VertexShader]( getClass.getClassLoader.getResourceAsStream("shaders/simple.vsh") )
-    val program = Program.create("transformFeedbackTest", Seq(vertShader), Nil)
-    vertShader.delete()
-    program
-  }
-
-  val tfb_binding = transformFeedbackTest.getBinding
-
-  val tfb_a_instance_position = tfb_binding.attributeVec3f("a_instance_position")
-  val tfb_instance_scale = tfb_binding.attributeFloat("a_instance_scale")
-  val tfb_a_position =  tfb_binding.attributeVec3f("tfb_a_position")
-  val tfb_u_mvp =  tfb_binding.uniformMat4f("u_mvp")
-  //val tfb_gl_Position = tfb_binding.transformFeedbackVec4f("gl_Position")
-
-  val tfb_vao = VertexArrayObject.create
-
-  tfb_vao.bind {
-    tfb_instance_scale.divisor = 1
-    tfb_a_instance_position.divisor = 1
-
-    tfb_binding.enableAttributes()
-    tfb_binding.setAttributePointers()
-  }
-
   val test_program = Program.auto("test")
   val test_binding = test_program.getBinding
 
