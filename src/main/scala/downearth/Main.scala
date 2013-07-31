@@ -29,23 +29,27 @@ import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
 import akka.actor._
 import downearth.generation.{WorldGenerator, Worker}
 import AkkaMessages._
-
+import akka.actor.ActorDSL._
 
 object Main extends Logger {
-  var actorSystem:ActorSystem = null
-  var gameLoop:ActorRef = null
+  //var actorSystem:ActorSystem = null
+  //var gameLoop:ActorRef = null
 
   def main(args: Array[String]) {
-    log.println( "started" )
-    log.println( "Assertions " + (if( assertionsActivated ) "active" else "inactive" ))
+    log.println( "Engine started" )
+    log.println( "Assertions: " + (if( assertionsActivated ) "active" else "inactive" ))
 
-    log.println( "Creating Actor System" )
+    implicit val actorSystem = ActorSystem.create("gamecontext")
 
-    actorSystem = ActorSystem.create("gamecontext")
-    gameLoop = actorSystem.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
+    val supervisor = actor(new Act {
+      val gameLoop = context.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
+      val dyingChild = context.watch(gameLoop)
+      become {
+        case Terminated(terminatedActor) =>
+          actorSystem.shutdown()
+      }
+    })
 
-    // TODO: shut down actorsystem on crash
-    // http://doc.akka.io/docs/akka/snapshot/general/supervision.html#The_Top-Level_Supervisors
   }
 
 }
@@ -123,7 +127,6 @@ class FrameGenerator extends Actor {
   }
 }
 
-//TODO on exception, shutdown actorsystem
 class GameLoop extends Actor with Logger { gameLoop =>
   val frameFactory = context.actorOf( Props[FrameGenerator], "framegenerator" )
   val debugLog = context.actorOf( Props[DebugLog], "debuglog" )
@@ -173,7 +176,6 @@ class GameLoop extends Actor with Logger { gameLoop =>
     Config.loader.save()
     TextureManager.delete()
     ObjManager.delete()
-    context.system.shutdown()
   }
 
   def createWidgetSystem() {
