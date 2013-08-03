@@ -1,3 +1,5 @@
+import sbtprotobuf.{ProtobufPlugin=>PB}
+
 name := "downearth"
 
 organization := "fdad"
@@ -20,7 +22,8 @@ libraryDependencies ++= Seq(
   "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
   "org.simplex3d" %% "simplex3d-math-float" % "2.4.7",
   //"slick" % "slick" % "274",
-  "java3d" % "vecmath" % "1.3.1"
+  "java3d" % "vecmath" % "1.3.1",
+  "com.google.protobuf" % "protobuf-java" % "2.5.0"
 )
 
 //net.virtualvoid.sbt.graph.Plugin.graphSettings
@@ -28,6 +31,8 @@ libraryDependencies ++= Seq(
 //filterScalaLibrary := false
 
 seq( LWJGLPlugin.lwjglSettings: _*)
+
+seq(PB.protobufSettings: _*)
 
 lwjgl.version := "2.9.0"
 
