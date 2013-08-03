@@ -241,7 +241,6 @@ trait Draggable extends Widget {
   case DragStart(pos) =>
     dragOriginalPosition := position
     dragStartPos := pos
-    println("DragStart"+this)
   case MouseDrag(pos1, pos2) =>
     setPosition( dragOriginalPosition + (pos2 - dragStartPos) )
   }
@@ -259,7 +258,7 @@ class KeySettingsWidget(val position:Vec2i, config:AnyRef) extends Panel {
       val child = new Label( Vec2i(position.x,y), field.getName + " " + keyName )
       child.addReaction {
       case KeyPress(key) =>
-        println("got key press " + Keyboard.getKeyName(key))
+        //println("got key press " + Keyboard.getKeyName(key))
         child.text = field.getName + " " + Keyboard.getKeyName(key)
         field.setInt(config, key)
       }

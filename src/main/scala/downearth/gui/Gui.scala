@@ -149,12 +149,10 @@ object Inventory {
 
       addReaction {
         case WidgetResized(w) if w eq parent =>
-          println(s"$this: ${w.size}")
           val newPos = Vec2i(0)
           newPos.x = w.size.x - size.x - 20
           newPos.y = 20
           setPosition(newPos,0)
-          println(s"$newPos")
         case ButtonClicked(`inventoryButton`) =>
           visible = !visible
       }
