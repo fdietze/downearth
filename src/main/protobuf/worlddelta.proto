@@ -33,7 +33,7 @@ message Delta {
 }
 
 message DeltaSet {
-  repeated Delta set = 1;
+  repeated Delta delta = 1;
 }
 
 message NodeInfo {
