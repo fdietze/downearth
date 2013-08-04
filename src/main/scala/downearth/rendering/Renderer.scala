@@ -46,38 +46,9 @@ class Renderer(gameState:GameState) extends Logger {
   val occlusionTest = new OcclusionTest(this, gameState)
   val guiRenderer = new GuiRenderer(gameState)
   val riftDistort = new RiftDistort(gameState)
-
-  val lightPos = BufferUtils.createFloatBuffer(4)
-  val ambientLight = BufferUtils.createFloatBuffer(4)
-  ambientLight.put( Array(0.2f, 0.2f, 0.2f, 1f) )
-  ambientLight.rewind()
+  val worldRenderer = new WorldRenderer(gameState)
 
   var frameCount = 0
-
-  lazy val transformFeedbackTest = {
-    val vertShader = Shader[VertexShader]( getClass.getClassLoader.getResourceAsStream("shaders/simple.vsh") )
-    val program = Program.create("transformFeedbackTest", Seq(vertShader), Nil)
-    vertShader.delete()
-    program
-  }
-
-  val tfb_binding = transformFeedbackTest.getBinding
-
-  val tfb_a_instance_position = tfb_binding.attributeVec3f("a_instance_position")
-  val tfb_instance_scale = tfb_binding.attributeFloat("a_instance_scale")
-  val tfb_a_position =  tfb_binding.attributeVec3f("tfb_a_position")
-  val tfb_u_mvp =  tfb_binding.uniformMat4f("u_mvp")
-  //val tfb_gl_Position = tfb_binding.transformFeedbackVec4f("gl_Position")
-
-  val tfb_vao = VertexArrayObject.create
-
-  tfb_vao.bind {
-    tfb_instance_scale.divisor = 1
-    tfb_a_instance_position.divisor = 1
-
-    tfb_binding.enableAttributes()
-    tfb_binding.setAttributePointers()
-  }
 
   val test_program = Program.auto("test")
   val test_binding = test_program.getBinding
@@ -214,7 +185,8 @@ class Renderer(gameState:GameState) extends Logger {
 
     def render(camera:Camera) {
       if( Config.skybox ) Skybox.render( camera )
-      renderWorld( camera )
+      worldRenderer.renderWorld( camera )
+      renderDebugWorld( camera )
     }
 
     val clearColor = glwrapper.util.sharedFloatBuffer(4)
@@ -270,23 +242,61 @@ class Renderer(gameState:GameState) extends Logger {
     else {
       clear()
       glViewport(0, 0, w, h)
-      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat, f = Config.farPlane.toFloat )
+      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat, f = Config.playerSightRadius.toFloat )
       render( player.camera )
     }
 
 
     glViewport(0, 0, w, h)
-    mainWidget.drawCallLabel.text = s"draw calls: $drawCalls, empty: $emptyDrawCalls"
-    mainWidget.playerPositionLabel.text = "Player Position: " + round10(player.pos)
 
     guiRenderer.renderGui()
 
     frameCount += 1
   }
 
+  def renderDebugWorld(camera:Camera) {
 
-  var drawCalls = 0
-  var emptyDrawCalls = 0
+    glDisable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
+
+    render3dCursor()
+
+    lazy val frustumTest = new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
+
+    if( (Config.debugDraw & Config.DebugDrawOctreeBit) != 0 )
+      drawDebugOctree(octree, camera.position, frustumTest)
+    if( (Config.debugDraw & Config.DebugDrawPhysicsBit) != 0 )
+      physics.debugDrawWorld()
+    if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
+      GlDraw.drawPredictedNodes()
+
+    if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
+      if( Config.occlusionTest ) {
+        occlusionTest.doIt(frustumTest)
+      } else { // perform frustum test only
+        octree.query( frustumTest, camera.position) {
+          case (info, UngeneratedNode) =>
+            octree.generateArea(info)
+            false
+          case (info, GeneratingNode) =>
+            false
+          case (info, node:MeshNode) =>
+            true
+          case (info, node:NodeUnderMesh) =>
+            !node.finishedGeneration
+          case _ =>
+            true
+        }
+      }
+    }
+  }
+
+  def render3dCursor() {
+    player.activeTool match {
+      case tool:EnvironmentTool =>
+        tool.renderPreview(GlDraw)
+    }
+  }
 
   def drawDebugOctree(octree:WorldOctree, camera:ReadVec3, test:FrustumTest) {
 //    glPushMatrix()
@@ -334,180 +344,9 @@ class Renderer(gameState:GameState) extends Logger {
     }
   }
 
-  def renderWorld(camera:Camera) {
-    if(Config.backFaceCulling) glEnable(GL_CULL_FACE) else glDisable(GL_CULL_FACE)
-    glEnable(GL_COLOR_MATERIAL)
-    glEnable(GL_TEXTURE_2D)
-    glEnable(GL_DEPTH_TEST)
-
-    glMatrixMode( GL_PROJECTION )
-    glLoadMatrix( camera.projectionBuffer )
-
-    glMatrixMode( GL_MODELVIEW )
-    glLoadMatrix( camera.viewBuffer )
-
-    lighting( camera.position )
-
-    val frustumTest = new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
-
-    drawCalls = 0
-    emptyDrawCalls = 0
-    if( Config.frustumCulling )
-      drawOctree(frustumTest)
-    else
-      drawOctree(new FrustumTest { def testNode( info:PowerOfTwoCube ) = true })
-
-    dynamicWorld.entities foreach {
-      case simple:SimpleEntity => ()
-        glPushMatrix()
-        glTranslated( simple.pos.x, simple.pos.y, simple.pos.z )
-        drawObjMesh( simple.mesh )
-        glPopMatrix()
-      case entity:Entity => ()
-    }
-
-    glDisable(GL_LIGHTING)
-    glDisable(GL_TEXTURE_2D)
-
-    render3dCursor()
-
-    if( (Config.debugDraw & Config.DebugDrawOctreeBit) != 0 )
-      drawDebugOctree(octree, camera.position, frustumTest)
-    if( (Config.debugDraw & Config.DebugDrawPhysicsBit) != 0 )
-      physics.debugDrawWorld()
-    if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
-      GlDraw.drawPredictedNodes()
-
-    if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
-      if( Config.occlusionTest ) {
-        occlusionTest.doIt(frustumTest)
-      } else { // perform frustum test only
-        octree.query( frustumTest, camera.position) {
-          case (info, UngeneratedNode) =>
-            octree.generateArea(info)
-            false
-          case (info, GeneratingNode) =>
-            false
-          case (info, node:MeshNode) =>
-            true
-          case (info, node:NodeUnderMesh) =>
-            !node.finishedGeneration
-          case _ =>
-            true
-        }
-      }
-    }
-  }
-
-  def render3dCursor() {
-    player.activeTool match {
-      case tool:EnvironmentTool =>
-        tool.renderPreview(GlDraw)
-    }
-  }
-
-  def lighting( position:ReadVec3 ) {
-    if( Config.wireframe ) {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
-      glDisable(GL_LIGHTING)
-    }
-    else {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
-      glEnable(GL_LIGHTING)
-
-      //Add positioned light
-      lightPos.put(0, position(0).toFloat)
-      lightPos.put(1, position(1).toFloat)
-      lightPos.put(2, position(2).toFloat)
-      lightPos.put(3, 1)
-
-      glLight(GL_LIGHT0, GL_POSITION, lightPos )
-      glEnable(GL_LIGHT0)
-
-      //Add ambient light
-      glLightModel(GL_LIGHT_MODEL_AMBIENT, ambientLight)
-    }
-  }
-
   var randomizer = 0
 
-  def drawOctree(test:FrustumTest) {
-    import org.lwjgl.opengl.GL11._
-    glColor3f(1,1,1)
 
-    materialManager.textureAtlas.bind {
-      glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
-
-      glEnableClientState(GL_VERTEX_ARRAY)
-      glEnableClientState(GL_NORMAL_ARRAY)
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-
-      val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
-
-      octree.query( test, player.pos ) {
-        case (info, node:MeshNode) =>
-          drawTextureMesh(node.mesh)
-          objMeshes ++= node.objMeshes
-          false
-        case _ => true
-      }
-
-      for((info,mesh) <- objMeshes) {
-        glPushMatrix()
-        glTranslated( info.pos.x, info.pos.y, info.pos.z )
-        glScale1d( info.size )
-        drawObjMesh( mesh )
-        glPopMatrix()
-      }
-
-      glPopClientAttrib()
-    }
-  }
-
-  def drawObjMesh(mesh:ObjMesh) {
-    TextureManager.box.bind {
-      drawCalls += 1
-      mesh.bind()
-
-      glEnableClientState(GL_VERTEX_ARRAY)
-      glEnableClientState(GL_NORMAL_ARRAY)
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-
-      glVertexPointer(mesh.posComponents, GL_FLOAT, mesh.stride, mesh.posOffset)
-      glTexCoordPointer(mesh.texCoordComponents, GL_FLOAT, mesh.stride, mesh.normalOffset)
-      glNormalPointer(GL_FLOAT, mesh.stride, mesh.normalOffset)
-
-      glDrawElements(GL_TRIANGLES, mesh.size, GL_UNSIGNED_INT, 0)
-
-      glDisableClientState(GL_VERTEX_ARRAY)
-      glDisableClientState(GL_NORMAL_ARRAY)
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-
-      mesh.unbind()
-    }
-  }
-
-  def drawTextureMesh(mesh:TextureMesh) {
-    if( !mesh.hasVbo )
-      mesh.genvbo()
-
-    if( mesh.nonEmpty ) {
-      drawCalls += 1
-      mesh.bind()
-      import TextureMesh._
-      glVertexPointer(  3,  vertexType, byteStride,  vertexOffset)
-      glNormalPointer(      normalType, byteStride,  normalOffset)
-      glTexCoordPointer(2,  texCoordType, byteStride,   texCoordOffset)
-      glDrawArrays(GL_TRIANGLES, 0, mesh.vertexCount)
-      glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0)
-
-      mesh.lastDraw = System.nanoTime
-    }
-
-    else {
-      emptyDrawCalls += 1
-    }
-  }
 }
 
 

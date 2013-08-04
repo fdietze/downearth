@@ -95,21 +95,21 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
         val matCount = 4//MaterialManager.materialCount.toDouble
         val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).texId
 
+        val normal = Vec3f(normalize(cross(v2-v1,v0-v1)))
+
         vertexBuilder += Vec3f(pos) + Vec3f(v0)
-        texCoordBuilder += Vec2f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat )
+        texCoordBuilder += Vec3f( v0(axisa).toFloat , v0(axisb).toFloat, matid )
+        normalBuilder += normal
 
         vertexBuilder += Vec3f(pos) + Vec3f(v1)
-        texCoordBuilder += Vec2f( (v1(axisa)/matCount + matid/matCount).toFloat , v1(axisb).toFloat )
+        texCoordBuilder += Vec3f( v1(axisa).toFloat , v1(axisb).toFloat, matid )
+        normalBuilder += normal
 
         vertexBuilder += Vec3f(pos) + Vec3f(v2)
-        texCoordBuilder += Vec2f( (v2(axisa)/matCount + matid/matCount).toFloat , v2(axisb).toFloat )
+        texCoordBuilder += Vec3f( v2(axisa).toFloat , v2(axisb).toFloat, matid )
+        normalBuilder += normal
 
         vertexCounter += 3
-
-        val normal = Vec3f(normalize(cross(v2-v1,v0-v1)))
-        normalBuilder += normal
-        normalBuilder += normal
-        normalBuilder += normal
       }
 
       val t = from.planetriangles(axis, direction)

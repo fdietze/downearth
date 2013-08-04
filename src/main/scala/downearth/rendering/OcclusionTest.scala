@@ -1,7 +1,8 @@
 package downearth.rendering
 
 import glwrapper.{VertexArrayObject, Program}
-
+import org.lwjgl.opengl.ARBDrawInstanced
+import ARBDrawInstanced._
 import downearth.{FrustumTest, Camera, Config}
 import downearth.worldoctree._
 import downearth.GameState
@@ -109,7 +110,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, GlDraw.cubeTriangleStrip.positions.size, renderAreas.size)
+          glDrawArraysInstancedARB(GL_TRIANGLE_STRIP, 0, GlDraw.cubeTriangleStrip.positions.size, renderAreas.size)
         }
 
         for( (queryId, info) <- queries ) {
@@ -121,7 +122,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
           occTest_binding.writeChangedUniforms()
 
-          ArbEquivalents.GL31.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, GlDraw.cubeTriangleStrip.positions.size, 1)
+          glDrawArraysInstancedARB(GL_TRIANGLE_STRIP, 0, GlDraw.cubeTriangleStrip.positions.size, 1)
 
           glEndQuery(GL_SAMPLES_PASSED)
         }
