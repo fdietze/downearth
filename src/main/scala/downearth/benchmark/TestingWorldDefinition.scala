@@ -24,7 +24,7 @@ vn4_perlinnoise3_uid51d42a78
    
 def material(world:ReadVec3) = {
 
-def material__0(r:Double, g:Double, b:Double):Material = {Material(0,r,g,b)}
+def material__0(r:Double, g:Double, b:Double):Material = {Material("Stein",r,g,b)}
 
 val vn2_material__0 = material__0(0.5, 0.5, 0.5)
 

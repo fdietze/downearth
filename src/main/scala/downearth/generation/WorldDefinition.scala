@@ -58,11 +58,11 @@ def material(world:ReadVec3) = {
 
 def negate(a:Double):Double = {-a}
 def addconstantexp(a:Double, value:Double):Double = {a+value}
-def material__3(r:Double, g:Double, b:Double):Material = {Material(3,r,g,b)}
-def material__2(r:Double, g:Double, b:Double):Material = {Material(2,r,g,b)}
+def material__3(r:Double, g:Double, b:Double):Material = {Material("Stein",r,g,b)}
+def material__2(r:Double, g:Double, b:Double):Material = {Material("Holz",r,g,b)}
 def matmix(m1:Material, t:Double, m2:Material, shift:Double):Material = {if(t >= shift) m1 else m2}
 def matmix_uid51b9c303(m1:Material, t:Double, m2:Material, shift:Double):Material = {if(t >= shift) m1 else m2}
-def material__1(r:Double, g:Double, b:Double):Material = {Material(1,r,g,b)}
+def material__1(r:Double, g:Double, b:Double):Material = {Material("Gold",r,g,b)}
 def scalesrcz_uid51b9c303(scale:Double):Double = {world.z * scale}
 
 val vn15_scalesrcz_uid51b9c303 = scalesrcz_uid51b9c303(1.0)

@@ -16,13 +16,13 @@ import downearth.util._
 import downearth.gui._
 import downearth.world.DynamicWorld
 import downearth.tools.{TestBuildTool, Shovel, ConstructionTool}
-import downearth.resources.MaterialManager
 import akka.util.Timeout
 import scala.concurrent.{ExecutionContext, Await}
 import scala.concurrent.duration._
 import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 import Config._
 import akka.routing.RoundRobinRouter
+import downearth.resources.MaterialManager
 
 //import downearth.server.LocalServer
 import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
@@ -78,6 +78,7 @@ class GameState(val gameLoop:ActorRef, val workers:ActorRef, val debugLog:ActorR
   lazy val renderer = new Renderer(gameState)
   lazy val mainWidget = new MainWidget(gameState)
   lazy val materialManager = new MaterialManager
+  //TODO: val resources = new Resources
 
   val tools = new {
     val constructionTool = new ConstructionTool(gameState)

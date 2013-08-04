@@ -7,7 +7,7 @@ import java.io._
 import downearth.message.implicits._
 import downearth.message
 import glwrapper.Texture2D
-import downearth.message.MaterialDefinitions.{Property, MaterialSet}
+import downearth.message.MaterialDefinitions.{Materials, Property}
 import downearth.message.MaterialDefinitions
 import com.google.protobuf.TextFormat
 
@@ -19,21 +19,22 @@ object Material {
   type Property = String
 
   // map material definition from WorldDefinition
-  def apply(id:Int, r:Double, g:Double, b:Double):Material = Resources.materials(id)
+  def apply(name:String, r:Double, g:Double, b:Double):Material = Resources.materialsByName(name)
 
 }
 
 case class Material(
-                     id:Int,
-                     name:String = "",
-                     parents:List[Int] = Nil,
-                     properties:Map[Material.Property, Double] = Map.empty,
+                    id:Int,
+                    name:String = "",
+                    parents:List[Int] = Nil,
+                    properties:Map[Material.Property, Double] = Map.empty,
+                    texId:Int = 0,
 
-                     texture:Texture2D = null,
-                     texPos:Vec2 = null,
-                     texSize:Vec2 = null
-                    ) extends Resource {
-  override def toString = s"Material($name($id)${parents.map(Resources.materials(_).name).mkString(" is ",",","")}${properties.map{case (name,value) => s"$name=$value"}.mkString(" with ",",","")})"
+                    texture:Texture2D = null,
+                    texPos:Vec2 = null,
+                    texSize:Vec2 = null
+                   ) extends Resource {
+  override def toString = s"Material($name($id)${parents.map(Resources.materials(_).name).mkString(" is ",",","")}${properties.map{case (name,value) => s"$name=$value"}.mkString(" with ",",","")}, texId = $texId)"
 }
 
 class Product extends Resource
@@ -41,19 +42,32 @@ class Product extends Resource
 object Resources {
   val file = getClass.getClassLoader.getResourceAsStream("materials.conf")
 
+  val materialsByName = new mutable.HashMap[String, Material]
+  var texMaterialsCount = 0
   val materials = new mutable.HashMap[Int, Material] {
     import collection.JavaConversions._
     // takes the material graph and imports it as a flat fast data structure
-    def fromMessage(materialSet:MaterialSet) {
+    def fromMessage(materialSet:Materials) {
       this.clear()
-      // add all materials
-      for( mat <- materialSet.getMaterialList )
-        this += (mat.getId -> Material(
-          mat.getId,
+      // add all materials and generate ids
+      var id = 0
+      for( mat <- materialSet.getMaterialList ) {
+        this += (id -> Material(
+          id,
           mat.getName,
-          mat.getParentList.map(_.toInt).toList,
+          Nil,
           mat.getPropertyList.map{p => (p.getKey -> p.getValue)}.toMap)
           )
+        id += 1
+      }
+
+      val nameToId = (this map {case (id,mat) => (mat.name,mat.id)}).toMap
+
+      // set the parent ids
+      for( mat <- materialSet.getMaterialList ) {
+        val id = nameToId(mat.getName)
+        this(id) = this(id).copy(parents = mat.getParentList.toList.map(nameToId))
+      }
 
       // inherit properties
       def collectProperties(id:Int):Map[Material.Property, Double] = this(id).parents.flatMap(collectProperties).toMap ++ this(id).properties
@@ -65,16 +79,23 @@ object Resources {
       for( (id,mat) <- this )
         this(id) = mat.copy(parents = collectParents(id).distinct)
 
+      // TODO: check for available textures,
+      // else dummy texture
+      texMaterialsCount = this.values.map(_.texId).toList.distinct.size
+
+
+      materialsByName.clear()
+      materialsByName ++= this map {case (id,mat) => (mat.name,mat)}
+
       //println(this.values.mkString("\n"))
     }
 
-    def toMessage:MaterialSet = {
-      val setBuilder = MaterialSet.newBuilder
+    def toMessage:Materials = {
+      val materialsBuilder = Materials.newBuilder
         for( (id,m) <- this )
-          setBuilder.addMaterial{
+          materialsBuilder.addMaterial{
             val matBuilder = MaterialDefinitions.Material.newBuilder
             matBuilder
-            .setId(m.id)
             .setName(m.name)
 
             for( (key,value) <- m.properties )
@@ -86,11 +107,11 @@ object Resources {
               )
 
             for( p <- m.parents )
-              matBuilder.addParent(p)
+              matBuilder.addParent(this(p).name)
 
             matBuilder.build
           }
-      setBuilder.build
+      materialsBuilder.build
     }
   }
 
@@ -107,7 +128,7 @@ object Resources {
 
   def load() {
     try{
-      val builder = MaterialSet.newBuilder
+      val builder = Materials.newBuilder
       val fr = new InputStreamReader(file)
       TextFormat.merge(fr, builder)
       fr.close()
@@ -115,7 +136,7 @@ object Resources {
       materials.fromMessage(msg)
     } catch {
       case e:Exception =>
-        println("Resources: couldn't open file: " + file)
+        println("Resources: couldn't open file: " + file + s"(${e.getMessage})")
     }
   }
 
@@ -141,7 +162,6 @@ object Resources {
   */
   load()
   println(materials.values.mkString("\n"))
-  sys.exit(0)
 }
 
 class MaterialManager {

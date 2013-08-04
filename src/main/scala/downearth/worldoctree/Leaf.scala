@@ -8,7 +8,7 @@ import simplex3d.math.{ReadVec3i, Vec2i, Vec3i}
 import simplex3d.math.double._
 import simplex3d.math.doublex.functions._
 import downearth.rendering._
-import downearth.resources.MaterialManager
+import downearth.resources.{Resources}
 import simplex3d.math.floatx.{Vec2f, Vec3f}
 import downearth.rendering.Update
 import downearth.rendering.UpdateInfo
@@ -92,8 +92,8 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
       }
 
       @inline def addVertices(v0:Vec3, v1:Vec3, v2:Vec3) {
-        val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).id
         val matCount = 4//MaterialManager.materialCount.toDouble
+        val matid = if( material >= 0 ) material else worldFunction.materialAtBlock(pos).texId
 
         vertexBuilder += Vec3f(pos) + Vec3f(v0)
         texCoordBuilder += Vec2f( (v0(axisa)/matCount + matid/matCount).toFloat , v0(axisb).toFloat )

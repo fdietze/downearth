@@ -8,7 +8,6 @@ import org.lwjgl.opengl.Display
 import simplex3d.math.Vec2i
 import simplex3d.math.double._
 import downearth.tools._
-import downearth.resources.MaterialManager
 
 class MainWidget(gameState:GameState) extends Panel { mainWidget =>
   import gameState.{mainWidget => _, _ }
