@@ -30,7 +30,6 @@ import downearth.util._
 import downearth.tools._
 import downearth.worldoctree._
 import downearth.entity.{Entity, SimpleEntity}
-import downearth.resources.MaterialManager
 
 import simplex3d.math.double._
 

@@ -10,7 +10,7 @@ import downearth.util.Logger
 import downearth.tools.{TestBuildTool, Shovel, ConstructionTool, PlayerTool}
 import downearth.resources.Material
 import downearth.gui.Border._
-
+/*
 class MaterialWidget(val material:Material, val position:Vec2i, val player:Player, val constructionTool:ConstructionTool)
 	extends TextureWidget(material.texture, material.texPos, material.texSize )
 	with InventoryItem {
@@ -23,7 +23,7 @@ class MaterialWidget(val material:Material, val position:Vec2i, val player:Playe
     constructionTool.selectedMaterial = matId
     DisplayEventManager.showEventText("ColorMaterial " + matId)
   }
-}
+}*/
 
 class ToolWidget(val tool:PlayerTool, val position:Vec2i, val player:Player)
 	extends TextureWidget(TextureManager.tools, tool.texturePos, tool.textureSize)
@@ -117,7 +117,7 @@ class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) {
 
 object Inventory {
   def gameInventory(gameState:GameState, inventoryButton:Widget, _parent:Panel) = {
-    import gameState.{player, materialManager, tools}
+    import gameState.{player, tools}
     val i = new Inventory(Vec2i(20, 200), Vec2i(200,200))
 
     import i._
@@ -134,9 +134,9 @@ object Inventory {
       children += shovel
       children += superTool
 
-      children ++= materialManager.materials.zipWithIndex.map{
+      /*children ++= materialManager.materials.zipWithIndex.map{
         case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40), player, tools.constructionTool )
-      }
+      }*/
 
       children ++= Range(0, tools.constructionTool.all.size).map(
         i => new ShapeWidget(i, position + Vec2i(i * 40, 80), player, tools.constructionTool)

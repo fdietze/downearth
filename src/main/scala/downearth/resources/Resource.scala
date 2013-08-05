@@ -10,6 +10,7 @@ import glwrapper.Texture2D
 import downearth.message.MaterialDefinitions.{Materials, Property}
 import downearth.message.MaterialDefinitions
 import com.google.protobuf.TextFormat
+import java.net.URI
 
 
 abstract class Resource
@@ -19,7 +20,7 @@ object Material {
   type Property = String
 
   // map material definition from WorldDefinition
-  def apply(name:String, r:Double, g:Double, b:Double):Material = Resources.materialsByName(name)
+  def apply(name:String, r:Double, g:Double, b:Double):Material = Resources.materials(name)
 
 }
 
@@ -28,11 +29,7 @@ case class Material(
                     name:String = "",
                     parents:List[Int] = Nil,
                     properties:Map[Material.Property, Double] = Map.empty,
-                    texId:Int = 0,
-
-                    texture:Texture2D = null,
-                    texPos:Vec2 = null,
-                    texSize:Vec2 = null
+                    texId:Int = 0
                    ) extends Resource {
   override def toString = s"Material($name($id)${parents.map(Resources.materials(_).name).mkString(" is ",",","")}${properties.map{case (name,value) => s"$name=$value"}.mkString(" with ",",","")}, texId = $texId)"
 }
@@ -42,12 +39,13 @@ class Product extends Resource
 object Resources {
   val file = getClass.getClassLoader.getResourceAsStream("materials.conf")
 
-  val materialsByName = new mutable.HashMap[String, Material]
-  var texMaterialsCount = 0
+  var textures = Array[String]()
   val materials = new mutable.HashMap[Int, Material] {
-    import collection.JavaConversions._
+    def apply(name:String):Material = this.values.find(_.name == name).get
+
     // takes the material graph and imports it as a flat fast data structure
     def fromMessage(materialSet:Materials) {
+      import collection.JavaConversions.{asScalaBuffer}
       this.clear()
       // add all materials and generate ids
       var id = 0
@@ -56,10 +54,12 @@ object Resources {
           id,
           mat.getName,
           Nil,
-          mat.getPropertyList.map{p => (p.getKey -> p.getValue)}.toMap)
-          )
+          mat.getPropertyList.map{p => (p.getKey -> p.getValue)}.toMap
+        ))
         id += 1
       }
+
+      require(this.values.map(_.name).toList.distinct.size == this.size)
 
       val nameToId = (this map {case (id,mat) => (mat.name,mat.id)}).toMap
 
@@ -68,6 +68,32 @@ object Resources {
         val id = nameToId(mat.getName)
         this(id) = this(id).copy(parents = mat.getParentList.toList.map(nameToId))
       }
+
+      // check for available textures,
+      // else dummy texture
+      val materialNames = this.values.map(_.name)
+      val materialsWithFiles = this.values filter { (m:Material) =>
+        val fileName = "materials/" + m.name.toLowerCase + ".png"
+        val url = getClass.getClassLoader.getResource(fileName)
+        val fileExists = url != null
+        fileExists
+      }
+      for( (mat,i) <- materialsWithFiles zipWithIndex ) {
+        val texId = i+1
+        this(mat.id) = mat.copy(texId = texId)
+      }
+      textures = Array("materials/dummy.png") ++ materialsWithFiles.map("materials/" + _.name.toLowerCase + ".png")
+
+      println(textures.mkString("\n"))
+
+      // inherit texIds
+      def collectTexIds(id:Int):Int = {
+          if( this(id).texId == 0 )
+            this(id).parents.map(collectTexIds).lastOption getOrElse 0
+          else this(id).texId
+      }
+      for( (id,mat) <- this if mat.texId == 0 )
+        this(id) = mat.copy(texId = collectTexIds(id))
 
       // inherit properties
       def collectProperties(id:Int):Map[Material.Property, Double] = this(id).parents.flatMap(collectProperties).toMap ++ this(id).properties
@@ -78,14 +104,6 @@ object Resources {
       def collectParents(id:Int):List[Int] = this(id).parents ::: this(id).parents.flatMap(collectParents)
       for( (id,mat) <- this )
         this(id) = mat.copy(parents = collectParents(id).distinct)
-
-      // TODO: check for available textures,
-      // else dummy texture
-      texMaterialsCount = this.values.map(_.texId).toList.distinct.size
-
-
-      materialsByName.clear()
-      materialsByName ++= this map {case (id,mat) => (mat.name,mat)}
 
       //println(this.values.mkString("\n"))
     }
@@ -136,7 +154,8 @@ object Resources {
       materials.fromMessage(msg)
     } catch {
       case e:Exception =>
-        println("Resources: couldn't open file: " + file + s"(${e.getMessage})")
+        println("Resources: couldn't open file: " + file)
+        e.printStackTrace()
     }
   }
 
@@ -162,16 +181,4 @@ object Resources {
   */
   load()
   println(materials.values.mkString("\n"))
-}
-
-class MaterialManager {
-  val inset = 1 // material separation texture atlas border for texture coordinates
-  val textureAtlas = TextureManager.materials
-  val materialCount = 4//textureAtlas.width / textureAtlas.height
-  val materials = Array.tabulate(materialCount){ id =>
-    Material(id,
-      texture = textureAtlas,
-      texPos  = Vec2(id.toDouble/materialCount + inset,0 + inset),
-      texSize = Vec2(1.0/materialCount - 2*inset,1 - 2*inset))
-  }
 }

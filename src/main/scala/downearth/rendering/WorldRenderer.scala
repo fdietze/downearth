@@ -47,7 +47,7 @@ class WorldRenderer(gameState:GameState) {
   val sunColor = binding.uniformVec3f("sunColor")
   val sunDir_ws = binding.uniformVec3f("sunDir_ws")
 
-  image := TextureManager.textureArrayTest
+  image := TextureManager.materials
   ambient := Vec3f(0.3f, 0.2f, 0.1f)
   sunColor := Vec3f(0.7f, 0.8f, 0.9f)
   sunDir_ws := Vec3f(0.0f, 0.0f, -1.0f)
@@ -176,16 +176,16 @@ class WorldRenderer(gameState:GameState) {
 
       buffer.bind{
         glVertexAttribPointer(position.location, vertexComponents, vertexType, false, byteStride, vertexOffset)
-        println(buffer.id)
-        println(position.boundString)
+        //println(buffer.id)
+        //println(position.boundString)
         if(normal_ws.location != -1){
           glVertexAttribPointer(normal_ws.location, normalComponents, normalType, false, byteStride, normalOffset)
-          println(normal_ws.boundString)
+          //println(normal_ws.boundString)
         }
         if(texCoord.location != -1) {
           texCoord.enable()
           glVertexAttribPointer(texCoord.location, texCoordComponents, texCoordType, false, byteStride, texCoordOffset)
-          println(texCoord.boundString)
+          //println(texCoord.boundString)
         }
 
         val data:ByteBuffer = buffer.getData

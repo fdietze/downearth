@@ -22,7 +22,6 @@ import scala.concurrent.duration._
 import akka.dispatch.{PriorityGenerator, UnboundedPriorityMailbox}
 import Config._
 import akka.routing.RoundRobinRouter
-import downearth.resources.MaterialManager
 
 //import downearth.server.LocalServer
 import downearth.worldoctree.{MeshNode, PowerOfTwoCube, InnerNodeUnderMesh}
@@ -77,7 +76,6 @@ class GameState(val gameLoop:ActorRef, val workers:ActorRef, val debugLog:ActorR
 
   lazy val renderer = new Renderer(gameState)
   lazy val mainWidget = new MainWidget(gameState)
-  lazy val materialManager = new MaterialManager
   //TODO: val resources = new Resources
 
   val tools = new {
@@ -95,7 +93,6 @@ class GameState(val gameLoop:ActorRef, val workers:ActorRef, val debugLog:ActorR
   def openGLinit() {
     renderer
     mainWidget
-    materialManager
   }
 }
 
