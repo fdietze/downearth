@@ -25,9 +25,11 @@ class MaterialWidget(val material:Material, val position:Vec2i, val player:Playe
   }
 }*/
 
-class ToolWidget(val tool:PlayerTool, val position:Vec2i, val player:Player)
-	extends TextureWidget(TextureManager.tools, tool.texturePos, tool.textureSize)
+class ToolWidget(val tool:PlayerTool, val position:Vec2i, gameState:GameState)
+	extends TextureWidget(gameState.textureManager.tools, tool.texturePos, tool.textureSize)
 	with InventoryItem with Logger {
+
+  import gameState._
 
   override def select() {
     player.selectTool(tool)
@@ -126,9 +128,9 @@ object Inventory {
       backGroundColor := Vec4(0.1,0.1,0.1,0.7)
       border = LineBorder
 
-      val shovel = new ToolWidget( tools.shovel, position+Vec2i(40, 0), player ) { override def toString = "shovel"}
-      val hammer = new ToolWidget( tools.constructionTool, position+Vec2i(0 , 0), player ) { override def toString = "hammer"}
-      val superTool = new ToolWidget( tools.testBuildTool, position+Vec2i(80,0), player ) { override def toString = "supertool"}
+      val shovel = new ToolWidget( tools.shovel, position+Vec2i(40, 0), gameState ) { override def toString = "shovel"}
+      val hammer = new ToolWidget( tools.constructionTool, position+Vec2i(0 , 0), gameState ) { override def toString = "hammer"}
+      val superTool = new ToolWidget( tools.testBuildTool, position+Vec2i(80,0), gameState ) { override def toString = "supertool"}
 
       children += hammer
       children += shovel

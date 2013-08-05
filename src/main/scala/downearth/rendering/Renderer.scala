@@ -183,7 +183,7 @@ class Renderer(gameState:GameState) extends Logger {
     val h = Display.getHeight
 
     def render(camera:Camera) {
-      if( Config.skybox ) Skybox.render( camera )
+      if( Config.skybox ) skybox.render( camera )
       worldRenderer.renderWorld( camera )
       renderDebugWorld( camera )
     }

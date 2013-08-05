@@ -5,10 +5,12 @@ import GL11._
 
 import simplex3d.math.floatx._
 
-import downearth.Camera
+import downearth.{GameState, Camera}
 import glwrapper.{VertexArrayObject, Program}
 
-object Skybox {
+class Skybox(gameState:GameState) {
+  import gameState._
+
   val skybox_program = Program.auto("skybox")
   val skybox_binding = skybox_program.getBinding
   val skybox_vao = VertexArrayObject.create
@@ -17,7 +19,7 @@ object Skybox {
   val skybox_matrix   = skybox_binding.uniformMat4f("matrix")
   val skybox_cubemap  = skybox_binding.uniformSamplerCube("cubemap")
 
-  skybox_cubemap := TextureManager.skybox2
+  skybox_cubemap := textureManager.skybox
 
   skybox_vao.bind {
     skybox_binding.enableAttributes()

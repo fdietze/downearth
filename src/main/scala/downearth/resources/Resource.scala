@@ -18,25 +18,26 @@ abstract class Resource
 
 object Material {
   type Property = String
+  var resources:Resources = null
 
   // map material definition from WorldDefinition
-  def apply(name:String, r:Double, g:Double, b:Double):Material = Resources.materials(name)
+  def apply(name:String, r:Double, g:Double, b:Double):Material = resources.materials(name)
 
 }
 
 case class Material(
                     id:Int,
                     name:String = "",
-                    parents:List[Int] = Nil,
+                    parents:List[Material] = Nil,
                     properties:Map[Material.Property, Double] = Map.empty,
                     texId:Int = 0
                    ) extends Resource {
-  override def toString = s"Material($name($id)${parents.map(Resources.materials(_).name).mkString(" is ",",","")}${properties.map{case (name,value) => s"$name=$value"}.mkString(" with ",",","")}, texId = $texId)"
+  override def toString = s"Material($name($id)${parents.map(_.name).mkString(" is ",",","")}${properties.map{case (name,value) => s"$name=$value"}.mkString(" with ",",","")}, texId = $texId)"
 }
 
 class Product extends Resource
 
-object Resources {
+class Resources {
   val file = getClass.getClassLoader.getResourceAsStream("materials.conf")
 
   var textures = Array[String]()
@@ -45,7 +46,7 @@ object Resources {
 
     // takes the material graph and imports it as a flat fast data structure
     def fromMessage(materialSet:Materials) {
-      import collection.JavaConversions.{asScalaBuffer}
+      import collection.JavaConversions.asScalaBuffer
       this.clear()
       // add all materials and generate ids
       var id = 0
@@ -61,16 +62,16 @@ object Resources {
 
       require(this.values.map(_.name).toList.distinct.size == this.size)
 
-      val nameToId = (this map {case (id,mat) => (mat.name,mat.id)}).toMap
+      val nameToMaterial = (this map {case (id,mat) => (mat.name,mat)}).toMap
 
-      // set the parent ids
+      // set direct parents
       for( mat <- materialSet.getMaterialList ) {
-        val id = nameToId(mat.getName)
-        this(id) = this(id).copy(parents = mat.getParentList.toList.map(nameToId))
+        val id = nameToMaterial(mat.getName).id
+        this(id) = this(id).copy(parents = mat.getParentList.toList.map(nameToMaterial))
       }
 
       // check for available textures,
-      // else dummy texture
+      // else dummy texture (texId = 0)
       val materialNames = this.values.map(_.name)
       val materialsWithFiles = this.values filter { (m:Material) =>
         val fileName = "materials/" + m.name.toLowerCase + ".png"
@@ -84,28 +85,24 @@ object Resources {
       }
       textures = Array("materials/dummy.png") ++ materialsWithFiles.map("materials/" + _.name.toLowerCase + ".png")
 
-      println(textures.mkString("\n"))
-
       // inherit texIds
-      def collectTexIds(id:Int):Int = {
-          if( this(id).texId == 0 )
-            this(id).parents.map(collectTexIds).lastOption getOrElse 0
-          else this(id).texId
+      def collectTexIds(mat:Material):Int = {
+          if( mat.texId == 0 )
+            mat.parents.map(collectTexIds).lastOption getOrElse 0
+          else mat.texId
       }
-      for( (id,mat) <- this if mat.texId == 0 )
-        this(id) = mat.copy(texId = collectTexIds(id))
+      for( (id,mat) <- this )
+        this(id) = mat.copy(texId = collectTexIds(mat))
 
       // inherit properties
-      def collectProperties(id:Int):Map[Material.Property, Double] = this(id).parents.flatMap(collectProperties).toMap ++ this(id).properties
+      def collectProperties(mat:Material):Map[Material.Property, Double] = mat.parents.flatMap(collectProperties).toMap ++ mat.properties
       for( (id,mat) <- this )
-        this(id) = mat.copy(properties = collectProperties(id))
+        this(id) = mat.copy(properties = collectProperties(mat))
 
-      // set indirect parent ids
-      def collectParents(id:Int):List[Int] = this(id).parents ::: this(id).parents.flatMap(collectParents)
+      // set indirect parents
+      def collectParents(mat:Material):List[Material] = mat.parents ::: mat.parents.flatMap(collectParents)
       for( (id,mat) <- this )
-        this(id) = mat.copy(parents = collectParents(id).distinct)
-
-      //println(this.values.mkString("\n"))
+        this(id) = mat.copy(parents = collectParents(mat).distinct)
     }
 
     def toMessage:Materials = {
@@ -125,7 +122,7 @@ object Resources {
               )
 
             for( p <- m.parents )
-              matBuilder.addParent(this(p).name)
+              matBuilder.addParent(p.name)
 
             matBuilder.build
           }
@@ -180,5 +177,5 @@ object Resources {
   materials ++= testData.indices zip testData
   */
   load()
-  println(materials.values.mkString("\n"))
+  //println(materials.values.mkString("\n"))
 }

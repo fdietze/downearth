@@ -1,17 +1,19 @@
 package downearth.rendering
 
 import glwrapper.{Texture, TextureLoader}
+import downearth.GameState
 
-object TextureManager {
+class TextureManager(gameState:GameState) {
+  import gameState._
+
   private val loader = new TextureLoader
   import loader._
 	
 	lazy val box              = loadAsTexture("box.png")
-	lazy val skybox           = loadAsTexture("stormydays_rearrange_lowres.jpg")
-  lazy val skybox2          = loadAsSkybox("stormydays","jpg")
+  lazy val skybox          = loadAsSkybox("stormydays","jpg")
 	lazy val tools            = loadAsTexture("werkzeug.png")
   lazy val materials = {
-    val surfaces = downearth.resources.Resources.textures map readImageRaster
+    val surfaces = resources.textures map readImageRaster
     Texture.create2DArray(surfaces)
   }
 

@@ -28,6 +28,8 @@ import java.nio.ByteBuffer
  * To change this template use File | Settings | File Templates.
  */
 class WorldRenderer(gameState:GameState) {
+  import gameState.textureManager
+
   val program = Program.auto("world")
 
   val binding = program.getBinding
@@ -47,7 +49,7 @@ class WorldRenderer(gameState:GameState) {
   val sunColor = binding.uniformVec3f("sunColor")
   val sunDir_ws = binding.uniformVec3f("sunDir_ws")
 
-  image := TextureManager.materials
+  image := textureManager.materials
   ambient := Vec3f(0.3f, 0.2f, 0.1f)
   sunColor := Vec3f(0.7f, 0.8f, 0.9f)
   sunDir_ws := Vec3f(0.0f, 0.0f, -1.0f)
@@ -142,7 +144,7 @@ class WorldRenderer(gameState:GameState) {
   }
 
   def drawObjMesh(mesh:ObjMesh) {
-    TextureManager.box.bind {
+    textureManager.box.bind {
       drawCalls += 1
       mesh.bind()
 
