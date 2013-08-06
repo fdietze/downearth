@@ -151,7 +151,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   }
 
 	def stream(player:Player) {
-    val outside = !(player.sightWindow inside rootArea)
+    val outside = !(player.generationWindow inside rootArea)
     if(outside)
       incDepth()
 

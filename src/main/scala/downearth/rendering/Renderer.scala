@@ -241,7 +241,7 @@ class Renderer(gameState:GameState) extends Logger {
     else {
       clear()
       glViewport(0, 0, w, h)
-      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat, f = Config.playerSightRadius.toFloat )
+      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat, f = Config.farPlane.toFloat )
       render( player.camera )
     }
 

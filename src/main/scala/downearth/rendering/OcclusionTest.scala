@@ -58,7 +58,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
     val generatingAreas  = ArrayBuffer[PowerOfTwoCube]()
     val ungeneratedAreas = ArrayBuffer[PowerOfTwoCube]()
-    val filter = (area:PowerOfTwoCube) => player.canSee(area) && frustumTest(area)
+    val filter = (area:PowerOfTwoCube) => player.closeEnoughToGenerate(area) && frustumTest(area)
 
     octree.query(filter, camera.position) {
       case (info, UngeneratedNode) =>

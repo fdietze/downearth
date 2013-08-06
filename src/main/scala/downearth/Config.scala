@@ -24,9 +24,9 @@ object Config extends Listener {
   def minPredictionSize = minPredictionSized.toInt
   var playerRadiusd = 10.0
   def playerRadius = playerRadiusd.toInt //TODO separate variable for farplane
-  var playerSightRadiusd = 200.0
-  def playerSightRadius = playerSightRadiusd.toInt
-  var farPlane = playerSightRadiusd * 2.0
+  var generationRadiusd = 200.0
+  def generationRadius = generationRadiusd.toInt
+  var farPlane = generationRadiusd * 2.0
   var occlusionTestThreshold = 10.0
 
 	val vertexMaterials = true
