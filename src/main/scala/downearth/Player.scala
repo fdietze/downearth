@@ -13,7 +13,8 @@ import org.lwjgl.input.Mouse
 import javax.vecmath.Vector3f
 import org.lwjgl.opengl.Display
 import downearth.worldoctree.{CubeLike, Sphere, CuboidLike, Cube}
-import simplex3d.math.Vec3i
+import simplex3d.math.{Vec2i, Vec3i}
+import downearth.gui.MaterialWidget
 
 
 class Player(gameState:GameState) extends Ray { //TODO: why extend and not contain ray?
@@ -134,8 +135,17 @@ class Player(gameState:GameState) extends Ray { //TODO: why extend and not conta
 
   val inventory = new {
     import gameState.tools._
+    import gameState.mainWidget.{inventory => inventoryWidget}
+
     val materials = new collection.mutable.HashMap[Int,Double] {
       override def default(key:Int) = 0.0
+      override def update(matid:Int, value:Double) = {
+        if( !this.isDefinedAt(matid) ) {
+          inventoryWidget.children += new MaterialWidget(resources.materials(matid), Vec2i(0), gameState )
+          inventoryWidget.arrangeChildren(300)
+        }
+        super.update(matid, value)
+      }
     }
 
     val tools:IndexedSeq[PlayerTool] = Array(shovel, constructionTool, testBuildTool)

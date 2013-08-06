@@ -153,7 +153,7 @@ class Slider(val position:Vec2i) extends Panel { slider =>
   children += slideable
 }
 
-abstract class TextureWidget(val texture:Texture2D, val texPosition:Vec2, val texSize:Vec2) extends Widget {}
+abstract class TextureWidget(val texture:Texture2D, val texPosition:Vec2 = Vec2(0), val texSize:Vec2 = Vec2(1)) extends Widget {}
 
 // a panel a gui element that has children
 abstract class Panel extends Widget { thispanel =>

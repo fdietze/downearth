@@ -49,7 +49,7 @@ class WorldRenderer(gameState:GameState) {
   val sunColor = binding.uniformVec3f("sunColor")
   val sunDir_ws = binding.uniformVec3f("sunDir_ws")
 
-  image := textureManager.materials
+  image := textureManager.materialsArray
   ambient := Vec3f(0.3f, 0.2f, 0.1f)
   sunColor := Vec3f(0.7f, 0.8f, 0.9f)
   sunDir_ws := Vec3f(0.0f, 0.0f, -1.0f)

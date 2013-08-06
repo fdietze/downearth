@@ -12,7 +12,8 @@ class TextureManager(gameState:GameState) {
 	lazy val box              = loadAsTexture("box.png")
   lazy val skybox          = loadAsSkybox("stormydays","jpg")
 	lazy val tools            = loadAsTexture("werkzeug.png")
-  lazy val materials = {
+  lazy val materials = resources.textures map loadAsTexture
+  lazy val materialsArray = {
     val surfaces = resources.textures map readImageRaster
     Texture.create2DArray(surfaces)
   }

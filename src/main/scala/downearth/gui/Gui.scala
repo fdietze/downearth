@@ -10,10 +10,13 @@ import downearth.util.Logger
 import downearth.tools.{TestBuildTool, Shovel, ConstructionTool, PlayerTool}
 import downearth.resources.Material
 import downearth.gui.Border._
-/*
-class MaterialWidget(val material:Material, val position:Vec2i, val player:Player, val constructionTool:ConstructionTool)
-	extends TextureWidget(material.texture, material.texPos, material.texSize )
+
+class MaterialWidget(val material:Material, val position:Vec2i, val gameState:GameState)
+	extends TextureWidget(gameState.textureManager.materials(material.texId))
 	with InventoryItem {
+  import gameState.tools.constructionTool
+  import gameState.player
+
   val matId = material.id
 
 	override def selected = constructionTool.selectedMaterial == matId
@@ -21,9 +24,10 @@ class MaterialWidget(val material:Material, val position:Vec2i, val player:Playe
   override def select() {
     player.selectTool(constructionTool)
     constructionTool.selectedMaterial = matId
+    println(s"selected ${material.name}")
     DisplayEventManager.showEventText("ColorMaterial " + matId)
   }
-}*/
+}
 
 class ToolWidget(val tool:PlayerTool, val position:Vec2i, gameState:GameState)
 	extends TextureWidget(gameState.textureManager.tools, tool.texturePos, tool.textureSize)
@@ -118,7 +122,7 @@ class Inventory(_pos:Vec2i, _size:Vec2i) extends GridPanel(_pos, _size, 40) {
 }
 
 object Inventory {
-  def gameInventory(gameState:GameState, inventoryButton:Widget, _parent:Panel) = {
+  def gameInventoryWidget(gameState:GameState, inventoryButton:Widget, _parent:Panel) = {
     import gameState.{player, tools}
     val i = new Inventory(Vec2i(20, 200), Vec2i(200,200))
 
@@ -135,10 +139,6 @@ object Inventory {
       children += hammer
       children += shovel
       children += superTool
-
-      /*children ++= materialManager.materials.zipWithIndex.map{
-        case (material,i) => new MaterialWidget(material, position + Vec2i(i * 40, 40), player, tools.constructionTool )
-      }*/
 
       children ++= Range(0, tools.constructionTool.all.size).map(
         i => new ShapeWidget(i, position + Vec2i(i * 40, 80), player, tools.constructionTool)

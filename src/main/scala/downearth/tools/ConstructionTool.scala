@@ -55,7 +55,7 @@ class ConstructionTool(val gameState:GameState) extends EnvironmentTool {
 
   def current = all(id)(rotation)
 
-  var selectedMaterial = 3
+  var selectedMaterial = 0
 
   override def action(pos:Vec3i) = {
     if( player.inventory.materials(selectedMaterial) >= current.volume ) {
@@ -64,10 +64,10 @@ class ConstructionTool(val gameState:GameState) extends EnvironmentTool {
       val material = if( block.material == -1 ) WorldDefinition.materialAtBlock(pos).id else block.material
       player.inventory.materials(material) += block.h.volume
       player.inventory.materials(selectedMaterial) -= current.volume
-      octree(pos) = Leaf(current, selectedMaterial)
+      octree(pos) = Leaf(current, resources.materials(selectedMaterial).texId)
     }
     else {
-      DisplayEventManager.showEventText("Not enough ColorMaterial " + selectedMaterial + ".")
+      DisplayEventManager.showEventText("Not enough " + resources.materials(selectedMaterial).name + ".")
     }
   }
 

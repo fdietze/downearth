@@ -108,14 +108,14 @@ class GuiRenderer(gameState:GameState) {
           glDisable(GL_TEXTURE_2D)
         }
       }
-      /*
+
       if( widget.isInstanceOf[MaterialWidget] ) {
         val text = floor(player.inventory.materials(widget.asInstanceOf[MaterialWidget].matId)).toInt
         val textSize = Vec2i(ConsoleFont.font.getWidth(text.toString) + 2, ConsoleFont.height)
         val textPos = widget.position + widget.size - textSize
         import org.newdawn.slick.Color.white
         GlDraw.drawString(textPos, text, white)
-      }*/
+      }
 
       if( widget.isInstanceOf[GridPanel] && widget.asInstanceOf[GridPanel].border == LineBorder ) {
         glColor4d(c.r,c.g,c.b,c.a)

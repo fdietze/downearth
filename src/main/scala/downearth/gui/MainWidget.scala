@@ -68,7 +68,7 @@ class MainWidget(gameState:GameState) extends Panel { mainWidget =>
     }
   }
 
-  val inventory = Inventory.gameInventory(gameState, inventoryButton, mainWidget)
+  val inventory = Inventory.gameInventoryWidget(gameState, inventoryButton, mainWidget)
 
   val keySettingWidget = new KeySettingsWidget( Vec2i(20,140), Config )
   keySettingWidget.visible = false
