@@ -105,7 +105,7 @@ trait FrustumTest extends Function1[PowerOfTwoCube,Boolean] {
 // Idea by Mark Morley, http://web.archive.org/web/20030601123911/http://www.markmorley.com/opengl/frustumculling.html
 class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
 
-	val planes = Array.fill(6)(Vec4(0))
+	val planes = new Array[Vec4](6)
 	val rows = transpose(projection * view)
 	planes(0) = normalize(rows(3) - rows(0)) //right plane
 	planes(1) = normalize(rows(3) + rows(0)) //left plane
@@ -115,14 +115,15 @@ class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
 	planes(5) = normalize(rows(3) + rows(2)) //near plane
 
 	def testNode( info:PowerOfTwoCube ):Boolean = {
-		val inside = testCube(Vec3(info.pos + info.size / 2), info.size / 2)
+    import info.{posX,posY,posZ}
+    val halfsize = info.size / 2
+		val inside = testCube(posX + halfsize, posY + halfsize, posZ + halfsize, info.size / 2)
 		return inside
 	}
 	
-	private def testCube( pos:Vec3, radius:Double ):Boolean = {
+	private def testCube( x:Double, y:Double, z:Double, radius:Double ):Boolean = {
 		// TODO: Give the information, if a cube is completely in the frustum
 		var p = 0
-		import pos.{x,y,z}
 		while( p < 6 )
 		{
       if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0

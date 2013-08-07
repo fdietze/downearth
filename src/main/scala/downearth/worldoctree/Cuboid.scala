@@ -15,7 +15,11 @@ trait ChildAccess[T] {
   def flat(ivec:ReadVec3i) = ivec.x+(ivec.y<<1)+(ivec.z<<2)
 
   // macht aus einem flachen Index wieder ein Vec3i-Index
-  def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
+
+  @inline def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
+  @inline def index2vecX(idx:Int) = (idx & 1)
+  @inline def index2vecY(idx:Int) = (idx & 2) >> 1
+  @inline def index2vecZ(idx:Int) = (idx & 4) >> 2
 
   def apply(i:Int):T = ???
   def apply(p:ReadVec3i):(Int,T) = ???
@@ -88,17 +92,29 @@ case class Cube(pos:ReadVec3i, size:Int) extends CubeLike with ChildAccess[Cuboi
   override def splitOct = Array.tabulate(8)(apply)
 }
 
-case class PowerOfTwoCube(pos:ReadVec3i, size:Int) extends PowerOfTwoCubeLike with ChildAccess[PowerOfTwoCube] {
+object PowerOfTwoCube {
+  def apply(pos:ReadVec3i, size:Int) = new PowerOfTwoCube(pos.x, pos.y, pos.z, size)
+}
+
+case class PowerOfTwoCube(posX:Int, posY:Int, posZ:Int, size:Int) extends PowerOfTwoCubeLike with ChildAccess[PowerOfTwoCube] {
+
+  def pos = ConstVec3i(posX, posY, posZ)
+
   // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
   override def apply(index:Int) = {
-    val v = index2vec(index)
+    val vx = index2vecX(index)
+    val vy = index2vecY(index)
+    val vz = index2vecZ(index)
     val hsize = size >> 1
-    PowerOfTwoCube(pos+v*hsize,hsize)
+    val newPosX = posX + vx*hsize
+    val newPosY = posY + vy*hsize
+    val newPosZ = posZ + vz*hsize
+    new PowerOfTwoCube(newPosX, newPosY, newPosZ, hsize)
   }
 
   // Erzeugung des Cube vom Kindknoten, aus einem Vektor-Index
   override def apply(p:ReadVec3i):(Int,PowerOfTwoCube) = {
-    require( indexInRange(p), s"Index not in Range: $p not in $this" )
+    assert( indexInRange(p), s"Index not in Range: $p not in $this" )
     val v = indexVec(p,pos,size)
     val index = flat(v)
     val hsize = size >> 1
@@ -119,8 +135,8 @@ trait CuboidLike {
   def isDegenerate = vsize.x == 0 || vsize.y == 0 || vsize.z == 0
   def positiveVolume = vsize.x >= 0 || vsize.y >= 0 || vsize.z >= 0
   def isCube = vsize.x == vsize.y && vsize.y == vsize.z
-  require(!isDegenerate, s"Cuboid cannot be degenerate: $this")
-  require(positiveVolume, s"Cuboid needs a Positive Volume: $this")
+  assert(!isDegenerate, s"Cuboid cannot be degenerate: $this")
+  assert(positiveVolume, s"Cuboid needs a Positive Volume: $this")
 
   def upperPos = pos + vsize
   def indexInRange(p:ReadVec3i) = downearth.util.indexInRange(p,pos,vsize)
@@ -134,16 +150,16 @@ trait CuboidLike {
     all(lessThanEqual(this.upperPos, that.upperPos))
   }
 
-  def vertices = Array(
+  def vertices = Array[ReadVec3i](
     pos,
   //Vec3i(pos.x          ,pos.y          ,pos.z),
-    Vec3i(pos.x + vsize.x,pos.y          ,pos.z),
-    Vec3i(pos.x          ,pos.y + vsize.y,pos.z),
-    Vec3i(pos.x + vsize.x,pos.y + vsize.y,pos.z),
-    Vec3i(pos.x          ,pos.y          ,pos.z + vsize.z),
-    Vec3i(pos.x + vsize.x,pos.y          ,pos.z + vsize.z),
-    Vec3i(pos.x          ,pos.y + vsize.y,pos.z + vsize.z),
-    Vec3i(pos.x + vsize.x,pos.y + vsize.y,pos.z + vsize.z)
+    ConstVec3i(pos.x + vsize.x,pos.y          ,pos.z),
+    ConstVec3i(pos.x          ,pos.y + vsize.y,pos.z),
+    ConstVec3i(pos.x + vsize.x,pos.y + vsize.y,pos.z),
+    ConstVec3i(pos.x          ,pos.y          ,pos.z + vsize.z),
+    ConstVec3i(pos.x + vsize.x,pos.y          ,pos.z + vsize.z),
+    ConstVec3i(pos.x          ,pos.y + vsize.y,pos.z + vsize.z),
+    ConstVec3i(pos.x + vsize.x,pos.y + vsize.y,pos.z + vsize.z)
   )
 
   def overlaps(that:CuboidLike):Boolean = {
@@ -212,8 +228,7 @@ trait CuboidLike {
 
 trait CubeLike extends CuboidLike {
   def size:Int
-  def vsize = Vec3i(size)
-  require(isCube)
+  def vsize = ConstVec3i(size)
 
   override def volume = size*size*size
 
@@ -223,7 +238,7 @@ trait CubeLike extends CuboidLike {
   override def shortestEdgeLength = size
 
   def overlaps(sphere:Sphere) = {
-    @inline def squared(x:Int) = x * x
+    @inline def squared(x:Int): Int = x * x
 
     val C1 = this.pos
     val C2 = this.upperPos
@@ -243,7 +258,7 @@ trait CubeLike extends CuboidLike {
 }
 
 trait PowerOfTwoCubeLike extends CubeLike{
-  require( isPowerOfTwo(size), s"Edge length not a power of two: $this" )
+  assert( isPowerOfTwo(size), s"Edge length not a power of two: $this" )
 
   // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
   // Berechnung ihres Index. Das Array3D wird nicht mehr verwendet, aber an
