@@ -51,7 +51,7 @@ class FrameState(gameState:GameState) {
   def render() {
     beforeFrame()
       input.handleInput()
-      physics.update()
+      if(Config.physics) physics.update()
       renderer.draw()
       Display.update()
     afterFrame()
