@@ -1,4 +1,4 @@
-#version 130
+#version 330
 
 in vec3 v_norm_ws;
 in vec3 v_texCoord;
@@ -22,4 +22,12 @@ void main() {
   //oColor = vec4(v_pos,1);
   //oColor = vec4( v_norm_ws, 1);
   oColor = vec4( light*texCol, 1 );
+  //vec3 test = sin(v_pos);
+  //test = test * test;
+  //oColor = vec4(test,1);
+  //oColor = vec4(1,0,0,1);
 }
+
+
+
+

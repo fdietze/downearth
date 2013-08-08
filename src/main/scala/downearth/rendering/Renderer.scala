@@ -250,6 +250,11 @@ class Renderer(gameState:GameState) extends Logger {
 
     guiRenderer.renderGui()
 
+    glRasterPos2f(33f,33f)
+    textureManager.box.draw()
+
+
+
     frameCount += 1
   }
 

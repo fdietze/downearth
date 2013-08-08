@@ -1,8 +1,8 @@
-#version 130
+#version 330
 
-in vec3 position;
-in vec3 normal_ws;
-in vec3 texCoord;
+layout(location = 5) in vec3 position;
+layout(location = 6) in vec3 normal_ws;
+layout(location = 7) in vec3 texCoord;
 
 uniform mat4 pvm;
 

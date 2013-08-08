@@ -36,8 +36,8 @@ class Skybox(gameState:GameState) {
     //bottom
     Vec4f(1,1,-1,1), Vec4f(-1,1,-1,1), Vec4f(-1,-1,-1,1), Vec4f(1,-1,-1,1)
   ) map ( _ * Vec4f(4,4,4,1) )
-	
-	def render( camera:Camera ) {
+
+  def render( camera:Camera ) {
     glDisable(GL_DEPTH_TEST)
 
     val projection = Mat4f(camera.projection)

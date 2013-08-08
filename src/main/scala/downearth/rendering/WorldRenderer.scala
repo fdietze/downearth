@@ -32,8 +32,10 @@ class WorldRenderer(gameState:GameState) {
 
   val program = Program.auto("world")
 
+
   val binding = program.getBinding
   println( binding )
+
   val vao = VertexArrayObject.create
   val position = binding.attributeVec3f("position")
   val normal_ws = binding.attributeVec3f("normal_ws")
@@ -108,8 +110,6 @@ class WorldRenderer(gameState:GameState) {
 
   def drawOctree(test:FrustumTest) {
     import org.lwjgl.opengl.GL11._
-
-
     val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
     vao.bind {
@@ -144,26 +144,24 @@ class WorldRenderer(gameState:GameState) {
   }
 
   def drawObjMesh(mesh:ObjMesh) {
-    textureManager.box.bind {
-      drawCalls += 1
-      mesh.bind()
+    drawCalls += 1
+    mesh.bind()
 
-      glEnableClientState(GL_VERTEX_ARRAY)
-      glEnableClientState(GL_NORMAL_ARRAY)
-      glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glEnableClientState(GL_NORMAL_ARRAY)
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-      glVertexPointer(mesh.posComponents, GL_FLOAT, mesh.stride, mesh.posOffset)
-      glTexCoordPointer(mesh.texCoordComponents, GL_FLOAT, mesh.stride, mesh.normalOffset)
-      glNormalPointer(GL_FLOAT, mesh.stride, mesh.normalOffset)
+    glVertexPointer(mesh.posComponents, GL_FLOAT, mesh.stride, mesh.posOffset)
+    glTexCoordPointer(mesh.texCoordComponents, GL_FLOAT, mesh.stride, mesh.normalOffset)
+    glNormalPointer(GL_FLOAT, mesh.stride, mesh.normalOffset)
 
-      glDrawElements(GL_TRIANGLES, mesh.size, GL_UNSIGNED_INT, 0)
+    glDrawElements(GL_TRIANGLES, mesh.size, GL_UNSIGNED_INT, 0)
 
-      glDisableClientState(GL_VERTEX_ARRAY)
-      glDisableClientState(GL_NORMAL_ARRAY)
-      glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+    glDisableClientState(GL_VERTEX_ARRAY)
+    glDisableClientState(GL_NORMAL_ARRAY)
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
-      mesh.unbind()
-    }
+    mesh.unbind()
   }
 
   def drawTextureMesh(mesh:TextureMesh) {
@@ -176,32 +174,16 @@ class WorldRenderer(gameState:GameState) {
       val buffer = new glwrapper.ArrayBuffer
       buffer.id = mesh.vbo
 
-      buffer.bind{
-        glVertexAttribPointer(position.location, vertexComponents, vertexType, false, byteStride, vertexOffset)
-        //println(buffer.id)
-        //println(position.boundString)
-        if(normal_ws.location != -1){
+      buffer.bind {
+        if(position.location != -1) {
+          glVertexAttribPointer(position.location, vertexComponents, vertexType, false, byteStride, vertexOffset)
+        }
+        if(normal_ws.location != -1) {
           glVertexAttribPointer(normal_ws.location, normalComponents, normalType, false, byteStride, normalOffset)
-          //println(normal_ws.boundString)
         }
         if(texCoord.location != -1) {
-          texCoord.enable()
           glVertexAttribPointer(texCoord.location, texCoordComponents, texCoordType, false, byteStride, texCoordOffset)
-          //println(texCoord.boundString)
         }
-
-        /*val data:ByteBuffer = buffer.getData
-        for( i <- 0 until mesh.vertexCount ) {
-          println("checking Vertex for NaN")
-          val v1 = glwrapper.util.getVec3f(data, Vec3f(0))
-          val v2 = glwrapper.util.getVec3f(data, Vec3f(0))
-          val v3 = glwrapper.util.getVec3f(data, Vec3f(0))
-
-          assert( ! v1.x.isNaN && ! v1.y.isNaN && ! v1.z.isNaN )
-          assert( ! v2.x.isNaN && ! v2.y.isNaN && ! v2.z.isNaN )
-          assert( ! v3.x.isNaN && ! v3.y.isNaN && ! v3.z.isNaN )
-        }*/
-
       }
 
       glDrawArrays(GL_TRIANGLES, 0, mesh.vertexCount)

@@ -55,11 +55,11 @@ class ObjMesh(val data:FloatBuffer, val indices:IntBuffer) extends Mesh {
   val posComponents = 3
   val texCoordComponents = 2
 
-	def bind() {
-		assert(vbo != 0 && vibo != 0)
-		glBindBuffer(GL_ARRAY_BUFFER, vbo)
+  def bind() {
+    assert(vbo != 0 && vibo != 0)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vibo)
-	}
+  }
 
   def unbind() {
     glBindBuffer(GL_ARRAY_BUFFER, 0)
