@@ -127,6 +127,29 @@ case class PowerOfTwoCube(posX:Int, posY:Int, posZ:Int, size:Int) extends PowerO
       (this, 0)
     else
       (this,splitOct.map(_.fullTree))
+
+  override def overlaps(sphere:Sphere) = {
+    @inline def squared(x:Int): Int = x * x
+
+    val C1X = this.posX
+    val C1Y = this.posY
+    val C1Z = this.posZ
+    val C2X = this.posX + this.size
+    val C2Y = this.posY + this.size
+    val C2Z = this.posZ + this.size
+    val S = sphere.pos
+    val R = sphere.radius
+    var dist_squared = R * R
+
+    if (S.x < C1X) dist_squared -= squared(S.x - C1X)
+    else if (S.x > C2X) dist_squared -= squared(S.x - C2X)
+    if (S.y < C1Y) dist_squared -= squared(S.y - C1Y)
+    else if (S.y > C2Y) dist_squared -= squared(S.y - C2Y)
+    if (S.z < C1Z) dist_squared -= squared(S.z - C1Z)
+    else if (S.z > C2Z) dist_squared -= squared(S.z - C2Z)
+
+    dist_squared > 0
+  }
 }
 
 trait CuboidLike {
@@ -163,8 +186,16 @@ trait CuboidLike {
   )
 
   def overlaps(that:CuboidLike):Boolean = {
-    this.vertices.exists(that.indexInRange) ||
-    that.vertices.exists(this.indexInRange)
+    val thisUpperX = this.pos.x + this.vsize.x
+    val thisUpperY = this.pos.y + this.vsize.y
+    val thisUpperZ = this.pos.z + this.vsize.z
+    val thatUpperX = that.pos.x + that.vsize.x
+    val thatUpperY = that.pos.y + that.vsize.y
+    val thatUpperZ = that.pos.z + that.vsize.z
+
+    this.pos.x <= thatUpperX && thisUpperX >= that.pos.x &&
+    this.pos.y <= thatUpperY && thisUpperY >= that.pos.y &&
+    this.pos.z <= thatUpperZ && thisUpperZ >= that.pos.z
   }
 
   def intersection(that:CuboidLike) = {
@@ -237,21 +268,38 @@ trait CubeLike extends CuboidLike {
   override def longestEdgeLength = size
   override def shortestEdgeLength = size
 
+  def overlaps(that:CubeLike):Boolean = {
+    val thisUpperX = this.pos.x + this.size
+    val thisUpperY = this.pos.y + this.size
+    val thisUpperZ = this.pos.z + this.size
+    val thatUpperX = that.pos.x + that.size
+    val thatUpperY = that.pos.y + that.size
+    val thatUpperZ = that.pos.z + that.size
+
+    this.pos.x <= thatUpperX && thisUpperX >= that.pos.x &&
+    this.pos.y <= thatUpperY && thisUpperY >= that.pos.y &&
+    this.pos.z <= thatUpperZ && thisUpperZ >= that.pos.z
+  }
+
   def overlaps(sphere:Sphere) = {
     @inline def squared(x:Int): Int = x * x
 
-    val C1 = this.pos
-    val C2 = this.upperPos
+    val C1X = this.pos.x
+    val C1Y = this.pos.y
+    val C1Z = this.pos.z
+    val C2X = this.pos.x + this.size
+    val C2Y = this.pos.y + this.size
+    val C2Z = this.pos.z + this.size
     val S = sphere.pos
     val R = sphere.radius
     var dist_squared = R * R
 
-    if (S.x < C1.x) dist_squared -= squared(S.x - C1.x)
-    else if (S.x > C2.x) dist_squared -= squared(S.x - C2.x)
-    if (S.y < C1.y) dist_squared -= squared(S.y - C1.y)
-    else if (S.y > C2.y) dist_squared -= squared(S.y - C2.y)
-    if (S.z < C1.z) dist_squared -= squared(S.z - C1.z)
-    else if (S.z > C2.z) dist_squared -= squared(S.z - C2.z)
+    if (S.x < C1X) dist_squared -= squared(S.x - C1X)
+    else if (S.x > C2X) dist_squared -= squared(S.x - C2X)
+    if (S.y < C1Y) dist_squared -= squared(S.y - C1Y)
+    else if (S.y > C2Y) dist_squared -= squared(S.y - C2Y)
+    if (S.z < C1Z) dist_squared -= squared(S.z - C1Z)
+    else if (S.z > C2Z) dist_squared -= squared(S.z - C2Z)
 
     dist_squared > 0
   }

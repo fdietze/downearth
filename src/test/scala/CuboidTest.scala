@@ -99,4 +99,30 @@ class CuboidTest extends FunSuite {
     assert( Cuboid(Vec3i(-1), Vec3i(2)).intersection(Cuboid(Vec3i(0), Vec3i(2))) === Cuboid(Vec3i(0), Vec3i(1)) )
     assert( Cuboid(Vec3i(0), Vec3i(2)).intersection(Cuboid(Vec3i(-1), Vec3i(2))) === Cuboid(Vec3i(0), Vec3i(1)) )
   }
+
+  test("overlap") {
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(1,1,1),2) )
+
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(1,1,2),2) )
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(1,2,1),2) )
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(2,1,1),2) )
+
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(1,1,0),2) )
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(1,0,1),2) )
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(0,1,1),2) )
+
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(0,0,0),2) )
+    assert( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(2,2,2),2) )
+
+    assert( Cube(Vec3i(-2,-2,-2),4) overlaps Cube(Vec3i(-1,-1,-1),2) )
+    assert( Cube(Vec3i(-1,-1,-1),2) overlaps Cube(Vec3i(-2,-2,-2),4) )
+
+    assert( !( Cube(Vec3i(1,1,1),2) overlaps Cube(Vec3i(4,4,4),2) ))
+    assert( !( Cube(Vec3i(4,4,4),2) overlaps Cube(Vec3i(1,1,1),2) ))
+
+    assert( !(Cube(Vec3i(-32,-32,32),32) overlaps Cube(Vec3i(-5, -5, 0),10)) )
+    assert( !(PowerOfTwoCube(0,-32,32,32) overlaps Cube(Vec3i(-5, -5, 0),10)) )
+    assert( !(PowerOfTwoCube(-32,0,32,32) overlaps Cube(Vec3i(-5, -5, 0),10)) )
+    assert( !(PowerOfTwoCube(0,0,32,32) overlaps Cube(Vec3i(-5, -5, 0),10)) )
+    assert( !(PowerOfTwoCube(-64,-64,64,64) overlaps Cube(Vec3i(-5, -5, 0),10)) )  }
 }
