@@ -10,6 +10,10 @@ abstract class WorldFunction {
   val perlinNoise3Prediction        = noise.perlin.prediction.bezierSimple
   val perlinNoise3Bounds            = noise.perlin.prediction.boundsSimple
 
+  val splitNoise3:((Vec3,Int,Int) => Double) = noise.split.splitNoise3 _
+  val splitNoise3Prediction        = noise.split.prediction.bounds //TODO: prediction
+  val splitNoise3Bounds            = noise.split.prediction.bounds
+
   val worleyNoise3:(Vec3 => Vec4)   = noise.worley.reference _
   val worleyNoise3Prediction        = noise.worley.prediction.distance
   val worleyNoise3Bounds            = noise.worley.prediction.bounds
