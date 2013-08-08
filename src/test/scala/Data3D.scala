@@ -34,8 +34,8 @@ class Data3D extends FunSuite {
 
   test("extract"){
     val a = new Array3D[Int](Vec3i(3), Array.range(0,3*3*3))
-    assert(a.extract(Vec3i(0)).toSeq === Seq(0, 1, 3, 4, 9, 10, 12, 13))
-    assert(a.extract(Vec3i(1)).toSeq === Seq(13, 14, 16, 17, 22, 23, 25, 26))
+    assert(a.extractCubeCorners(Vec3i(0)).toSeq === Seq(0, 1, 3, 4, 9, 10, 12, 13))
+    assert(a.extractCubeCorners(Vec3i(1)).toSeq === Seq(13, 14, 16, 17, 22, 23, 25, 26))
   }
 
   test("toString"){
