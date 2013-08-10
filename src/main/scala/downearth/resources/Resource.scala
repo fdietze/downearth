@@ -22,7 +22,9 @@ object Material {
 
   // map material definition from WorldDefinition
   def apply(name:String, r:Double, g:Double, b:Double):Material = resources.materials(name)
-
+  def apply(name:String):Material = resources.materials(name)
+  def apply():Material = resources.materials("Stein")
+  def apply(id:Int, r:Double, g:Double, b:Double):Material = resources.materials("Stein")
 }
 
 case class Material(
