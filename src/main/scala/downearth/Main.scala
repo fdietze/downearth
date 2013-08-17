@@ -44,17 +44,22 @@ object Main extends Logger {
     val supervisor = actor(new Act {
       val gameLoop = context.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
       val dyingChild = context.watch(gameLoop)
+
       become {
+        case Init => gameLoop ! Init
         case Terminated(terminatedActor) =>
           actorSystem.shutdown()
       }
     })
+
+    supervisor ! Init
 
   }
 
 }
 
 object AkkaMessages {
+  case object Init
   case object NextFrame
   case class LastFrame(timeStamp:Long)
 
@@ -145,7 +150,9 @@ class GameLoop extends Actor with Logger { gameLoop =>
 
   override def preStart() {
     Thread.currentThread().setPriority(Thread.MAX_PRIORITY)
+  }
 
+  def init() {
     createOpenGLContext()
     checkOpenGLCapabilities()
     gameState.openGLinit()
@@ -169,6 +176,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
       physics.worldChange(area)
       updateCounter += 1
       generationQueueSize -= 1
+    case Init => init()
   }
 
 
