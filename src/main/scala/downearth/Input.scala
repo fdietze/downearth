@@ -22,6 +22,7 @@ import downearth.gui.MouseMove
 import downearth.gui.MouseUp
 import downearth.gui.KeyRelease
 import akka.actor.PoisonPill
+import downearth.worldoctree.Node.Traverse
 
 class Input(gameState:GameState) extends Logger with Publisher {
   import gameState._
@@ -87,10 +88,10 @@ class Input(gameState:GameState) extends Logger with Publisher {
         for( area <- next )
           octree.generateArea(area)
         println("not finished:")
-        octree.query(){
-          case (area, n:InnerNodeUnderMesh) =>
-            if( !n.finishedGeneration ) {
-              println(n)
+        octree.traverse(){
+          case Traverse(area, node:InnerNodeUnderMesh) =>
+            if( !node.finishedGeneration ) {
+              println(node)
               true
             } else false
           case _ =>

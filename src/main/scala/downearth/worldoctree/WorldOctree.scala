@@ -21,6 +21,7 @@ import akka.actor.ActorRef
 import downearth.util
 import scala.Some
 import downearth.generation.WorldGenerator
+import downearth.worldoctree.Node.Traverse
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated, gameState:GameState) extends Data3D[Leaf] {
@@ -62,42 +63,8 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     }
   }
 
-
-  // traverse the octree in a front to back order from view of point camera
-  // filter the nodes by predicate (for example frustum test)
-  // and apply action to every found node
-  // recurse deeper if action returns true
-  val queryDummyOrder = Array.range(0,8)
-  def query(areaFilter:(PowerOfTwoCube) => Boolean = (_) => true, camera:ReadVec3 = null)(action: (PowerOfTwoCube,Node) => Boolean ) {
-    val areaQueue = mutable.Queue[PowerOfTwoCube](rootArea)
-    val nodeQueue = mutable.Queue[Node](root)
-
-    while( nodeQueue.nonEmpty ) {
-      val currentArea = areaQueue.dequeue()
-      val currentNode = nodeQueue.dequeue()
-
-      if( areaFilter(currentArea) &&
-          action(currentArea, currentNode) ) {
-        currentNode match {
-          // treat MeshNode as if it had one child
-          case n:MeshNode =>
-            nodeQueue += n.node
-            areaQueue += currentArea
-
-          case n if n.hasChildren =>
-            val order = if(camera != null) currentArea.traversalOrder(camera) else queryDummyOrder
-            var i = 0
-            while(i < 8) {
-              nodeQueue += currentNode.getChild(order(i))
-              areaQueue += currentArea(order(i))
-              i += 1
-            }
-
-          case _ =>
-        }
-      }
-    }
-  }
+  def traverse(culling:Culling = CullNothing, cameraPos:ReadVec3 = null)(action: Traverse => Boolean ) =
+    root.traverse(rootArea, culling, cameraPos)(action)
 
   // insert Node "that" at position and size of nodeinfo
   def insert( nodeInfo:PowerOfTwoCube, that:NodeOverMesh ) {
@@ -111,8 +78,8 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
 
   def getNextUngenerated:Option[PowerOfTwoCube] = {
     var node:Option[PowerOfTwoCube] = None
-    query(){
-      case (area, UngeneratedNode) =>
+    traverse(){
+      case Traverse(area, UngeneratedNode) =>
         node = Some(area)
         false
       case _ =>
@@ -121,17 +88,17 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     node
   }
 
-  def ungeneratedAreasIn(area:Cube):IndexedSeq[PowerOfTwoCube] = {
+  def ungeneratedAreasIn(area:CubeLike):IndexedSeq[PowerOfTwoCube] = {
     val ungenerated = new mutable.ArrayBuffer[PowerOfTwoCube]
-    query(areaFilter = _ overlaps area) {
-      case (info, UngeneratedNode) =>
-        ungenerated += info
+    traverse(culling = new CubeCulling(area)) {
+      case Traverse(area, UngeneratedNode) =>
+        ungenerated += area
         false
-      case (info, GeneratingNode) =>
+      case Traverse(area, GeneratingNode) =>
         false
-      case (info, node:MeshNode) =>
+      case Traverse(area, node:MeshNode) =>
         true
-      case (info, node:NodeUnderMesh) =>
+      case Traverse(area, node:NodeUnderMesh) =>
         !node.finishedGeneration
       case _ =>
         true
@@ -160,9 +127,9 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
 
   def freeOldMeshNodes(){
     var old = new mutable.ArrayBuffer[MeshNode]
-    octree.query() {
-      case (info, node:MeshNode) =>
-        if( node.mesh.nonEmpty && !player.canSee(info) )
+    octree.traverse(culling = new SphereCulling(player.sightSphere)) {
+      case Traverse(area, node:MeshNode) =>
+        if( node.mesh.nonEmpty )
           old += node
         false
       case _ => true

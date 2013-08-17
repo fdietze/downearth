@@ -8,6 +8,7 @@ import interval.Interval3
 import scala.Predef._
 import downearth.util._
 import simplex3d.math.doublex.functions._
+import scala.Array
 
 trait ChildAccess[T] {
   // macht aus dem Vec3i index einen flachen index, der auf ein Array
@@ -71,7 +72,7 @@ case class Cuboid(pos:ReadVec3i, vsize:ReadVec3i) extends CuboidLike with ChildA
   override def splitOct = Array.tabulate(8)(apply)
 }
 
-case class Cube(pos:ReadVec3i, size:Int) extends CubeLike with ChildAccess[Cuboid] {
+case class Cube(posX:Int, posY:Int, posZ:Int, size:Int) extends CubeLike with ChildAccess[Cuboid] {
   // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
   override def apply(i:Int) = {
     val v = index2vec(i)
@@ -97,9 +98,6 @@ object PowerOfTwoCube {
 }
 
 case class PowerOfTwoCube(posX:Int, posY:Int, posZ:Int, size:Int) extends PowerOfTwoCubeLike with ChildAccess[PowerOfTwoCube] {
-
-  def pos = ConstVec3i(posX, posY, posZ)
-
   // Erzeugung des Cuboid vom Kindknoten, aus einem flachen Index
   override def apply(index:Int) = {
     val vx = index2vecX(index)
@@ -127,29 +125,6 @@ case class PowerOfTwoCube(posX:Int, posY:Int, posZ:Int, size:Int) extends PowerO
       (this, 0)
     else
       (this,splitOct.map(_.fullTree))
-
-  override def overlaps(sphere:Sphere) = {
-    @inline def squared(x:Int): Int = x * x
-
-    val C1X = this.posX
-    val C1Y = this.posY
-    val C1Z = this.posZ
-    val C2X = this.posX + this.size
-    val C2Y = this.posY + this.size
-    val C2Z = this.posZ + this.size
-    val S = sphere.pos
-    val R = sphere.radius
-    var dist_squared = R * R
-
-    if (S.x < C1X) dist_squared -= squared(S.x - C1X)
-    else if (S.x > C2X) dist_squared -= squared(S.x - C2X)
-    if (S.y < C1Y) dist_squared -= squared(S.y - C1Y)
-    else if (S.y > C2Y) dist_squared -= squared(S.y - C2Y)
-    if (S.z < C1Z) dist_squared -= squared(S.z - C1Z)
-    else if (S.z > C2Z) dist_squared -= squared(S.z - C2Z)
-
-    dist_squared > 0
-  }
 }
 
 trait CuboidLike {
@@ -167,6 +142,8 @@ trait CuboidLike {
   def center = pos + (vsize / 2)
   def coordinates = pos until upperPos
   def volume = vsize.x * vsize.y * vsize.z
+  def diagonalLength = length(upperPos - pos)
+  def boundingSphere = Sphere(center, diagonalLength / 2)
 
   def inside(that:CuboidLike):Boolean = {
     all(greaterThanEqual(this.pos, that.pos)) &&
@@ -257,40 +234,55 @@ trait CuboidLike {
   def toInterval3 = Interval3(Vec3(pos), Vec3(pos + vsize))
 }
 
+object Cube {
+  val diagonal = math.sqrt(3.0)
+  val halfDiagonal = diagonal * 0.5
+  def apply(pos:ReadVec3i, size:Int) = new Cube(pos.x, pos.y, pos.z, size)
+}
+
 trait CubeLike extends CuboidLike {
+
+  def posX:Int
+  def posY:Int
+  def posZ:Int
+
+  def pos = ConstVec3i(posX, posY, posZ)
+
   def size:Int
   def vsize = ConstVec3i(size)
 
   override def volume = size*size*size
+  override def boundingSphere = Sphere(center, Cube.halfDiagonal*size)
 
   override def longestEdgeAxis = 0
   override def shortestEdgeAxis = 0
   override def longestEdgeLength = size
   override def shortestEdgeLength = size
+  def radius = size / 2
 
   def overlaps(that:CubeLike):Boolean = {
-    val thisUpperX = this.pos.x + this.size
-    val thisUpperY = this.pos.y + this.size
-    val thisUpperZ = this.pos.z + this.size
-    val thatUpperX = that.pos.x + that.size
-    val thatUpperY = that.pos.y + that.size
-    val thatUpperZ = that.pos.z + that.size
+    val thisUpperX = this.posX + this.size
+    val thisUpperY = this.posY + this.size
+    val thisUpperZ = this.posZ + this.size
+    val thatUpperX = that.posX + that.size
+    val thatUpperY = that.posY + that.size
+    val thatUpperZ = that.posZ + that.size
 
-    this.pos.x <= thatUpperX && thisUpperX >= that.pos.x &&
-    this.pos.y <= thatUpperY && thisUpperY >= that.pos.y &&
-    this.pos.z <= thatUpperZ && thisUpperZ >= that.pos.z
+    this.posX <= thatUpperX && thisUpperX >= that.posX &&
+    this.posY <= thatUpperY && thisUpperY >= that.posY &&
+    this.posZ <= thatUpperZ && thisUpperZ >= that.posZ
   }
 
   def overlaps(sphere:Sphere) = {
-    @inline def squared(x:Int): Int = x * x
+    @inline def squared(x:Double): Double = x * x
 
-    val C1X = this.pos.x
-    val C1Y = this.pos.y
-    val C1Z = this.pos.z
-    val C2X = this.pos.x + this.size
-    val C2Y = this.pos.y + this.size
-    val C2Z = this.pos.z + this.size
-    val S = sphere.pos
+    val C1X = this.posX
+    val C1Y = this.posY
+    val C1Z = this.posZ
+    val C2X = this.posX + this.size
+    val C2Y = this.posY + this.size
+    val C2Z = this.posZ + this.size
+    val S = sphere.center
     val R = sphere.radius
     var dist_squared = R * R
 
@@ -305,7 +297,7 @@ trait CubeLike extends CuboidLike {
   }
 }
 
-trait PowerOfTwoCubeLike extends CubeLike{
+trait PowerOfTwoCubeLike extends CubeLike {
   assert( isPowerOfTwo(size), s"Edge length not a power of two: $this" )
 
   // Wenn die Kinder als Array3D gespeichert werden würden, dann wäre dies die
@@ -315,6 +307,49 @@ trait PowerOfTwoCubeLike extends CubeLike{
 }
 
 
-case class Sphere(pos:ReadVec3i, radius:Int) {
+case class Sphere(center:ReadVec3, radius:Double) {
   def overlaps(cube:CubeLike) = cube overlaps this
+}
+
+case class Cone(apex_location:ReadVec3, direction_normal:ReadVec3, angle:Double) { cone =>
+  val angleCos = cos(angle)
+  val angleSin = sin(angle)
+  val angleTan = tan(angle)
+
+  def test(sphere:Sphere) = {
+    // http://www.cbloom.com/3d/techdocs/culling.txt
+    /*
+    val V = sphere.center - cone.apex_location
+    val a = dot(V,cone.direction_normal)
+    val b = a * cone.angleTan
+    val c = sqrt( dot(V,V) - a*a )
+    val d = c - b
+    val e = d * cone.angleCos
+
+    if ( e >= sphere.radius ) 0        // totally outside
+    else if ( e <= -sphere.radius ) 1  // totally inside
+    else -1                            // partially inside
+    */
+    // without sqrt:
+    // http://blog.julien.cayzac.name/2009/12/frustum-culling-sphere-cone-test-with.html
+    val V = sphere.center - cone.apex_location
+    val a = dot(V, cone.direction_normal)
+    val p = a*cone.angleSin
+    val q = cone.angleCos*cone.angleCos * dot(V, V) - a*a
+    val r = q - sphere.radius*sphere.radius
+    if (p<sphere.radius || q>0) {
+      if (r < 2 * sphere.radius * p) -1 // the sphere is partially included
+      else if (q<0) 1 // the sphere is totally included
+      else 0 // cull the sphere
+    }
+    else{
+      if ( -r < 2 * sphere.radius * p) -1 // the sphere is partially included
+      else if (q<0) 1 // the sphere is totally included
+      else 0 // cull the sphere
+    }
+  }
+}
+
+case class Frustum(planes:Array[Vec4]) {
+  assert(planes.size == 6)
 }

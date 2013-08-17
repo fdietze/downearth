@@ -19,6 +19,8 @@ import downearth.worldoctree.PowerOfTwoCube
 import downearth.rendering.TextureMesh._
 import downearth.worldoctree.PowerOfTwoCube
 import java.nio.ByteBuffer
+import simplex3d.math.ConstVec3i
+import downearth.worldoctree.Node.Traverse
 
 /**
  * Created with IntelliJ IDEA.
@@ -72,17 +74,15 @@ class WorldRenderer(gameState:GameState) {
 
     if(Config.backFaceCulling) glEnable(GL_CULL_FACE) else glDisable(GL_CULL_FACE)
 
-    val frustumTest = new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
+    val frustumCulling = new FrustumCulling(camera.frustum)
 
     drawCalls = 0
     emptyDrawCalls = 0
 
     glEnable(GL_DEPTH_TEST)
 
-    if( Config.frustumCulling )
-      drawOctree(frustumTest)
-    else
-      drawOctree(new FrustumTest { def testNode( info:PowerOfTwoCube ) = true })
+    if( Config.frustumCulling ) drawOctree(frustumCulling)
+    else drawOctree(CullNothing)
 
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_TEXTURE_2D)
@@ -108,7 +108,7 @@ class WorldRenderer(gameState:GameState) {
 
 
 
-  def drawOctree(test:FrustumTest) {
+  def drawOctree(culling:Culling) {
     import org.lwjgl.opengl.GL11._
     val objMeshes = ArrayBuffer[(PowerOfTwoCube,ObjMesh)]()
 
@@ -116,8 +116,8 @@ class WorldRenderer(gameState:GameState) {
       program.use {
         binding.writeChangedUniforms()
 
-        gameState.octree.query( test, gameState.player.pos ) {
-          case (info, node:MeshNode) =>
+        gameState.octree.traverse( culling, gameState.player.pos ) {
+          case Traverse(area, node:MeshNode) =>
             drawTextureMesh(node.mesh)
             objMeshes ++= node.objMeshes
             false

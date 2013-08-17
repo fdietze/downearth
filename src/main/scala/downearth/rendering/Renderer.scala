@@ -38,6 +38,7 @@ import downearth.worldoctree.PowerOfTwoCube
 import glwrapper._
 import java.nio.ByteBuffer
 import downearth.world.DynamicWorld
+import downearth.worldoctree.Node.Traverse
 
 class Renderer(gameState:GameState) extends Logger {
   import gameState._
@@ -207,12 +208,12 @@ class Renderer(gameState:GameState) extends Logger {
         glViewport(0, 0, w, h)
         glColorMask(true,false,false,false)
         glClear(GL_DEPTH_BUFFER_BIT)
-        camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = true)
+        camera.projection := glwrapper.util.stereoPorjectionF(n = Config.nearPlane.toFloat, v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = true)
         camera.move( Vec3(-eyeDist/2,0,0) )
         render( camera )
         glColorMask(false,true,true,false)
         glClear(GL_DEPTH_BUFFER_BIT)
-        camera.projection := glwrapper.util.stereoPorjectionF(v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = false)
+        camera.projection := glwrapper.util.stereoPorjectionF(n = Config.nearPlane.toFloat, v = w.toFloat/h.toFloat, eyeDist = eyeDist, leftEye = false)
         camera.move( Vec3(eyeDist,0,0) )
         render( camera )
         camera.move( Vec3(-eyeDist/2,0,0) )
@@ -223,7 +224,7 @@ class Renderer(gameState:GameState) extends Logger {
 
         riftDistort.framebuffer.bind {
           clear()
-          camera.projection := glwrapper.util.simpleProjectionF(v = w * 0.5f / h )
+          camera.projection := glwrapper.util.simpleProjectionF(n = Config.nearPlane.toFloat, v = w * 0.5f / h )
           glViewport(0, 0, w/2, h)
           camera.move( Vec3(-eyeDist/2,0,0) )
           render( camera )
@@ -241,7 +242,7 @@ class Renderer(gameState:GameState) extends Logger {
     else {
       clear()
       glViewport(0, 0, w, h)
-      camera.projection := glwrapper.util.simpleProjectionF( v = w.toFloat / h.toFloat, f = Config.farPlane.toFloat )
+      camera.projection := glwrapper.util.simpleProjectionF( n = Config.nearPlane.toFloat, v = w.toFloat / h.toFloat, f = Config.farPlane.toFloat )
       render( player.camera )
     }
 
@@ -265,10 +266,10 @@ class Renderer(gameState:GameState) extends Logger {
 
     render3dCursor()
 
-    lazy val frustumTest = new FrustumTestImpl(Mat4(camera.projection), Mat4(camera.view))
+    lazy val frustumCulling = new FrustumCulling(camera.frustum)
 
     if( (Config.debugDraw & Config.DebugDrawOctreeBit) != 0 )
-      drawDebugOctree(octree, camera.position, frustumTest)
+      drawDebugOctree(octree, camera.position, frustumCulling)
     if( (Config.debugDraw & Config.DebugDrawPhysicsBit) != 0 )
       physics.debugDrawWorld()
     if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
@@ -276,17 +277,17 @@ class Renderer(gameState:GameState) extends Logger {
 
     if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
       if( Config.occlusionTest ) {
-        occlusionTest.doIt(frustumTest)
+        occlusionTest.doIt(frustumCulling)
       } else { // perform frustum test only
-        octree.query( frustumTest, camera.position) {
-          case (info, UngeneratedNode) =>
-            octree.generateArea(info)
+        octree.traverse( frustumCulling, camera.position) {
+          case Traverse(area, UngeneratedNode) =>
+            octree.generateArea(area)
             false
-          case (info, GeneratingNode) =>
+          case Traverse(_, GeneratingNode) =>
             false
-          case (info, node:MeshNode) =>
+          case Traverse(_, node:MeshNode) =>
             true
-          case (info, node:NodeUnderMesh) =>
+          case Traverse(_, node:NodeUnderMesh) =>
             !node.finishedGeneration
           case _ =>
             true
@@ -302,7 +303,7 @@ class Renderer(gameState:GameState) extends Logger {
     }
   }
 
-  def drawDebugOctree(octree:WorldOctree, camera:ReadVec3, test:FrustumTest) {
+  def drawDebugOctree(octree:WorldOctree, camera:ReadVec3, culling:Culling) {
 //    glPushMatrix()
 //    val pos2 = octree.worldWindowPos + 0.05
 //    glTranslated(pos2.x, pos2.y, pos2.z)
@@ -313,13 +314,13 @@ class Renderer(gameState:GameState) extends Logger {
     var maximumDrawCalls = Config.maxDebugDrawCubes
     val maxDepth = log2(octree.rootArea.size)
 
-    octree.query(test,camera) {
-      case (info,octant) =>
+    octree.traverse(culling, camera) {
+      case Traverse(area, octant) =>
         glPushMatrix()
-        val depth = maxDepth - log2(info.size)
+        val depth = maxDepth - log2(area.size)
         val padding = depth*0.05f
 
-        val p = info.pos + padding
+        val p = area.pos + padding
         glTranslatef(p.x.toFloat, p.y.toFloat, p.z.toFloat)
 
         octant match {
@@ -339,7 +340,7 @@ class Renderer(gameState:GameState) extends Logger {
             glColor3f(0.5f, 0.5f, 0.5f)
         }
 
-        GlDraw.renderCube(info.size - padding*2)
+        GlDraw.renderCube(area.size - padding*2)
         glPopMatrix()
 
         maximumDrawCalls -= 1

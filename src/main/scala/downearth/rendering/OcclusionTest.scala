@@ -3,7 +3,7 @@ package downearth.rendering
 import glwrapper.{VertexArrayObject, Program}
 import org.lwjgl.opengl.ARBDrawInstanced
 import ARBDrawInstanced._
-import downearth.{FrustumTest, Camera, Config}
+import downearth.{Camera, Config}
 import downearth.worldoctree._
 import downearth.GameState
 
@@ -16,6 +16,7 @@ import org.lwjgl.BufferUtils
 
 import scala.collection.mutable.ArrayBuffer
 import java.nio.IntBuffer
+import downearth.worldoctree.Node.Traverse
 
 /**
  * User: arne
@@ -51,25 +52,24 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     occTest_binding.setAttributePointers()
   }
 
-  def findUngeneratedNodes(frustumTest:FrustumTest) = {
+  def findUngeneratedNodes(culling:Culling) = {
     import gameState.player.camera
     import gameState.player
     // TextureManager.box.bind()
 
     val generatingAreas  = ArrayBuffer[PowerOfTwoCube]()
     val ungeneratedAreas = ArrayBuffer[PowerOfTwoCube]()
-    val filter = (area:PowerOfTwoCube) => player.closeEnoughToGenerate(area) && frustumTest(area)
 
-    octree.query(filter, camera.position) {
-      case (info, UngeneratedNode) =>
-        ungeneratedAreas += info
+    octree.traverse(culling, camera.position) {
+      case Traverse(area, UngeneratedNode) =>
+        ungeneratedAreas += area
         false
-      case (info, GeneratingNode) =>
-        generatingAreas += info
+      case Traverse(area, GeneratingNode) =>
+        generatingAreas += area
         false
-      case (info, node:MeshNode) =>
+      case Traverse(area, node:MeshNode) =>
         true
-      case (info, node:NodeUnderMesh) =>
+      case Traverse(area, node:NodeUnderMesh) =>
         !node.finishedGeneration
       case _ =>
         true
@@ -137,7 +137,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
   var query:Query = null
 
-  class Query(val buffer:IntBuffer,val nodeInfos:Seq[PowerOfTwoCube]) extends IndexedSeq[(Int,PowerOfTwoCube)] {
+  class Query(val buffer:IntBuffer, val nodeInfos:Seq[PowerOfTwoCube]) extends IndexedSeq[(Int,PowerOfTwoCube)] {
     require(buffer.limit == nodeInfos.length)
     val length    = buffer.limit()
     def apply(i:Int) = Tuple2(buffer.get(i), nodeInfos(i))
@@ -166,11 +166,14 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
   }
 
 
-  def doIt(frustumTest:FrustumTest) {
+  def doIt(culling:Culling) {
+    // process queries of last frame
     if( query != null )
       for( result <- evalQueries(query).visible )
         octree.generateArea(result)
-    query = findUngeneratedNodes(frustumTest)
+
+    // generate new queries
+    query = findUngeneratedNodes(culling)
   }
 
 }

@@ -27,6 +27,7 @@ object Config extends Listener {
   var generationRadiusd = 200.0
   def generationRadius = generationRadiusd.toInt
   var farPlane = generationRadiusd * 2.0
+  var nearPlane = 0.05
   var occlusionTestThreshold = 10.0
 
 	val vertexMaterials = true

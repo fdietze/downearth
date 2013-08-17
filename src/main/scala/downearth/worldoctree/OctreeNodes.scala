@@ -9,8 +9,13 @@ import downearth.util._
 import downearth.generation.WorldDefinition
 import scala.collection.mutable.{ArrayBuffer, Queue}
 import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder}
+import scala.collection.mutable
+object Node {
+  case class Traverse(area:PowerOfTwoCube, node:Node)
+  val dummyTravaersalOrder = Array.range(0,8)
+}
 
-sealed trait Node {
+sealed trait Node { currentNode =>
   // im Oktant wird nicht Position und Größe gespeichert, da sie sich vom
 	// Elternknoten ableiten lässt. Beim Traversieren durch den baum wird diese
 	// Information in Form einer Instanz von Cube weitergereicht.
@@ -35,6 +40,37 @@ sealed trait Node {
       )
       case _ => message.Octant()
     }*/
+
+
+  // traverse the octree in a front to back order from view of point camera
+  // cull the nodes by Culling
+  // and apply action to every node intersected or totally included by culling
+  // recurse deeper if action returns true und node is intersected by culling
+  import Node._
+  def traverse(currentArea:PowerOfTwoCube, culling:Culling = CullNothing, cameraPos:ReadVec3 = null)(action: Traverse => Boolean ) {
+    val traverseDeeper = action(Traverse(currentArea, currentNode))
+
+    val cullingResult = culling.test(currentArea)
+    val nextCulling = if( cullingResult == Culling.intersected ) culling else CullNothing
+
+    if( traverseDeeper && cullingResult != Culling.totallyOutside ) {
+      currentNode match {
+        // treat MeshNode as if it had one child
+        case n:MeshNode =>
+          n.node.traverse(currentArea, nextCulling, cameraPos)(action)
+
+        case n if n.hasChildren =>
+          val order = if(cameraPos != null) currentArea.traversalOrder(cameraPos) else dummyTravaersalOrder
+          var i = 0
+          while(i < 8) {
+            currentNode.getChild(order(i)).traverse(currentArea(order(i)), nextCulling, cameraPos)(action)
+            i += 1
+          }
+
+        case _ =>
+      }
+    }
+  }
 }
 
 // im Octree wird unterschieden, ob sich der Node oberhalb oder unterhalb des

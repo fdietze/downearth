@@ -216,7 +216,7 @@ class Leaf(val h:Polyeder) extends NodeUnderMesh {
     (new MeshNode(this)).genMesh(info, worldaccess)
   }
 
-  def draw(info:PowerOfTwoCube,test:FrustumTest){}
+  //def draw(info:PowerOfTwoCube, test:FrustumTest){}
 
   override def getPolygons( info:PowerOfTwoCube, pos:ReadVec3i, from:Int, to:Int): (Int,Int) = {
     (from,to)

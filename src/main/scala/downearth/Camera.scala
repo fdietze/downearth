@@ -5,7 +5,7 @@ import simplex3d.math.double._
 import simplex3d.math.double.functions._
 
 import Config._
-import downearth.worldoctree.PowerOfTwoCube
+import downearth.worldoctree.{Frustum, Cone, PowerOfTwoCube}
 import org.lwjgl.opengl.Display
 import org.lwjgl.BufferUtils
 import simplex3d.math.floatx.{Mat4f, ReadMat4f}
@@ -39,6 +39,30 @@ abstract class Camera {
     m_projectionBuffer.flip()
     assert(m_projectionBuffer.position() == 0 && m_projectionBuffer.limit() == 16, m_projectionBuffer)
     m_projectionBuffer
+  }
+
+  def cone = {
+    val screenRatio = Display.getWidth / Display.getHeight
+    val near  = Config.nearPlane
+    val right = screenRatio * near
+    val top   = near
+    val halfDiagonal = sqrt((right * right) + (top * top))
+    val angle = atan(halfDiagonal/near)
+
+    Cone(position, direction, angle)
+  }
+
+  def frustum = {
+    val planes = new Array[Vec4](6)
+    val rows = transpose(Mat4(projection) * Mat4(view))
+    planes(0) = normalize(rows(3) - rows(0)) //right plane
+    planes(1) = normalize(rows(3) + rows(0)) //left plane
+    planes(2) = normalize(rows(3) + rows(1)) //bottom plane
+    planes(3) = normalize(rows(3) - rows(1)) //top plane
+    planes(4) = normalize(rows(3) - rows(2)) //far plane
+    planes(5) = normalize(rows(3) + rows(2)) //near plane
+
+    Frustum(planes)
   }
 }
 
@@ -94,49 +118,4 @@ class Camera3D(val _position:ReadVec3,val _directionQuat:ReadQuat4) extends Came
 
 	override def view:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat) translate(position)))
   override def noTranslate:Mat4f = Mat4f(inverse(Mat4x3 rotate(directionQuat)))
-}
-
-trait FrustumTest extends Function1[PowerOfTwoCube,Boolean] {
-	def testNode( info:PowerOfTwoCube ):Boolean
-  def apply( info:PowerOfTwoCube ) = testNode(info)
-}
-
-// Frustum Culling
-// Idea by Mark Morley, http://web.archive.org/web/20030601123911/http://www.markmorley.com/opengl/frustumculling.html
-class FrustumTestImpl(projection:Mat4, view:Mat4) extends FrustumTest {
-
-	val planes = new Array[Vec4](6)
-	val rows = transpose(projection * view)
-	planes(0) = normalize(rows(3) - rows(0)) //right plane
-	planes(1) = normalize(rows(3) + rows(0)) //left plane
-	planes(2) = normalize(rows(3) + rows(1)) //bottom plane
-	planes(3) = normalize(rows(3) - rows(1)) //top plane
-	planes(4) = normalize(rows(3) - rows(2)) //far plane
-	planes(5) = normalize(rows(3) + rows(2)) //near plane
-
-	def testNode( info:PowerOfTwoCube ):Boolean = {
-    import info.{posX,posY,posZ}
-    val halfsize = info.size / 2
-		val inside = testCube(posX + halfsize, posY + halfsize, posZ + halfsize, info.size / 2)
-		return inside
-	}
-	
-	private def testCube( x:Double, y:Double, z:Double, radius:Double ):Boolean = {
-		// TODO: Give the information, if a cube is completely in the frustum
-		var p = 0
-		while( p < 6 )
-		{
-      if( planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0
-       && planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z - radius) + planes(p).w <= 0
-       && planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0
-       && planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z - radius) + planes(p).w <= 0
-       && planes(p).x * (x - radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0
-       && planes(p).x * (x + radius) + planes(p).y * (y - radius) + planes(p).z * (z + radius) + planes(p).w <= 0
-       && planes(p).x * (x - radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0
-       && planes(p).x * (x + radius) + planes(p).y * (y + radius) + planes(p).z * (z + radius) + planes(p).w <= 0 )
-      return false
-			p += 1
-		}
-		true
-	}
 }
