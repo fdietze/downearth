@@ -62,7 +62,7 @@ class Input(gameState:GameState) extends Logger with Publisher {
       case `keyPlayerReset` =>
         player.resetPos
       case `keyStreaming` =>
-        streamWorld = !streamWorld
+        streaming = !streaming
       case `keyWireframe` =>
         wireframe = !wireframe
       case `keyFrustumCulling` =>

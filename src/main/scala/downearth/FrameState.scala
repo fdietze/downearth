@@ -40,15 +40,14 @@ class FrameState(gameState:GameState) {
   }
 
   def everySecond() {
-    octree.freeOldMeshNodes()
+    if( Config.freeOldMeshes ) octree.freeOldMeshNodes()
     displayStats()
   }
 
   def render() {
     beforeFrame()
-      if( Config.streamWorld )
-        octree stream player
       input.handleInput()
+      if( Config.streaming ) octree stream player
       if(Config.physics) physics.update()
       renderer.draw()
       Display.update()

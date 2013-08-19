@@ -184,9 +184,13 @@ class Renderer(gameState:GameState) extends Logger {
     val h = Display.getHeight
 
     def render(camera:Camera) {
+      //val fixedCamera = new Camera3D(Vec3(0,0,0), Vec3(0,1,0))
+      val renderCulling = new FrustumCulling(camera.frustum)
+      val occlusionTestCulling = if(Config.frustumCullingOptimized) new OptimizedFrustumCulling(camera.frustum) else renderCulling
+
       if( Config.skybox ) skybox.render( camera )
-      worldRenderer.renderWorld( camera )
-      renderDebugWorld( camera )
+      worldRenderer.renderWorld( camera, renderCulling )
+      renderDebugWorld( camera, occlusionTestCulling )
     }
 
     val clearColor = glwrapper.util.sharedFloatBuffer(4)
@@ -259,14 +263,12 @@ class Renderer(gameState:GameState) extends Logger {
     frameCount += 1
   }
 
-  def renderDebugWorld(camera:Camera) {
+  def renderDebugWorld(camera:Camera, frustumCulling:Culling) {
 
     glDisable(GL_LIGHTING)
     glDisable(GL_TEXTURE_2D)
 
     render3dCursor()
-
-    lazy val frustumCulling = new FrustumCulling(camera.frustum)
 
     if( (Config.debugDraw & Config.DebugDrawOctreeBit) != 0 )
       drawDebugOctree(octree, camera.position, frustumCulling)

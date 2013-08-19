@@ -66,15 +66,13 @@ class WorldRenderer(gameState:GameState) {
   var drawCalls = 0
   var emptyDrawCalls = 0
 
-  def renderWorld(camera:Camera) {
+  def renderWorld(camera:Camera, frustumCulling:Culling) {
 
     val view = camera.view
     val projection = camera.projection
     pvm := projection * view
 
     if(Config.backFaceCulling) glEnable(GL_CULL_FACE) else glDisable(GL_CULL_FACE)
-
-    val frustumCulling = new FrustumCulling(camera.frustum)
 
     drawCalls = 0
     emptyDrawCalls = 0

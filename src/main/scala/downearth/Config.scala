@@ -10,6 +10,7 @@ import downearth.rendering.TextureMesh
 object Config extends Listener {
 
   val maxMeshCount = 50
+  var freeOldMeshes = true
 
   val uCorrectChromaticAberation = true
   val uDistort = false
@@ -22,11 +23,9 @@ object Config extends Listener {
 
 	var minPredictionSized = 8.0
   def minPredictionSize = minPredictionSized.toInt
-  var playerRadiusd = 10.0
-  def playerRadius = playerRadiusd.toInt //TODO separate variable for farplane
-  var generationRadiusd = 200.0
-  def generationRadius = generationRadiusd.toInt
-  var farPlane = generationRadiusd * 2.0
+  var playerRadius = 10.0
+  var generationRadius = 200.0
+  var farPlane = generationRadius * 2.0
   var nearPlane = 0.05
   var occlusionTestThreshold = 10.0
 
@@ -109,8 +108,9 @@ object Config extends Listener {
   var generation = true
   var testUngenerated = true
   var skipOcclusionTestWhenBusy = true
-  var streamWorld = true
+  var streaming = true
   var frustumCulling = true
+  var frustumCullingOptimized = true
   var turbo = false
   var occlusionTest = true
   var visibleOcclusionTest = false

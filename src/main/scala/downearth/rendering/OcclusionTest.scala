@@ -169,8 +169,8 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
   def doIt(culling:Culling) {
     // process queries of last frame
     if( query != null )
-      for( result <- evalQueries(query).visible )
-        octree.generateArea(result)
+      for( visible <- evalQueries(query).visible )
+        octree.generateArea(visible)
 
     // generate new queries
     query = findUngeneratedNodes(culling)

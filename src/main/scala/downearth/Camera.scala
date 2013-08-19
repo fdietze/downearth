@@ -41,28 +41,9 @@ abstract class Camera {
     m_projectionBuffer
   }
 
-  def cone = {
-    val screenRatio = Display.getWidth / Display.getHeight
-    val near  = Config.nearPlane
-    val right = screenRatio * near
-    val top   = near
-    val halfDiagonal = sqrt((right * right) + (top * top))
-    val angle = atan(halfDiagonal/near)
-
-    Cone(position, direction, angle)
-  }
-
   def frustum = {
-    val planes = new Array[Vec4](6)
-    val rows = transpose(Mat4(projection) * Mat4(view))
-    planes(0) = normalize(rows(3) - rows(0)) //right plane
-    planes(1) = normalize(rows(3) + rows(0)) //left plane
-    planes(2) = normalize(rows(3) + rows(1)) //bottom plane
-    planes(3) = normalize(rows(3) - rows(1)) //top plane
-    planes(4) = normalize(rows(3) - rows(2)) //far plane
-    planes(5) = normalize(rows(3) + rows(2)) //near plane
-
-    Frustum(planes)
+    val screenRatio = Display.getWidth.toDouble / Display.getHeight.toDouble
+    Frustum(position, direction, screenRatio, Config.nearPlane, Config.farPlane, Mat4(projection * view))
   }
 }
 

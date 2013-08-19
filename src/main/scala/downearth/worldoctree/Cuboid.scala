@@ -5,10 +5,10 @@ import simplex3d.math.double._
 
 
 import interval.Interval3
-import scala.Predef._
 import downearth.util._
 import simplex3d.math.doublex.functions._
-import scala.Array
+import org.lwjgl.opengl.Display
+import downearth.Config
 
 trait ChildAccess[T] {
   // macht aus dem Vec3i index einen flachen index, der auf ein Array
@@ -246,13 +246,17 @@ trait CubeLike extends CuboidLike {
   def posY:Int
   def posZ:Int
 
+  def centerX = posX + radius
+  def centerY = posY + radius
+  def centerZ = posZ + radius
+
   def pos = ConstVec3i(posX, posY, posZ)
 
   def size:Int
   def vsize = ConstVec3i(size)
 
   override def volume = size*size*size
-  override def boundingSphere = Sphere(center, Cube.halfDiagonal*size)
+  override def boundingSphere = Sphere(centerX, centerY, centerZ, Cube.halfDiagonal*size)
 
   override def longestEdgeAxis = 0
   override def shortestEdgeAxis = 0
@@ -282,16 +286,16 @@ trait CubeLike extends CuboidLike {
     val C2X = this.posX + this.size
     val C2Y = this.posY + this.size
     val C2Z = this.posZ + this.size
-    val S = sphere.center
+    import sphere.{centerX => Sx, centerY => Sy, centerZ => Sz}
     val R = sphere.radius
     var dist_squared = R * R
 
-    if (S.x < C1X) dist_squared -= squared(S.x - C1X)
-    else if (S.x > C2X) dist_squared -= squared(S.x - C2X)
-    if (S.y < C1Y) dist_squared -= squared(S.y - C1Y)
-    else if (S.y > C2Y) dist_squared -= squared(S.y - C2Y)
-    if (S.z < C1Z) dist_squared -= squared(S.z - C1Z)
-    else if (S.z > C2Z) dist_squared -= squared(S.z - C2Z)
+    if (Sx < C1X) dist_squared -= squared(Sx - C1X)
+    else if (Sx > C2X) dist_squared -= squared(Sx - C2X)
+    if (Sy < C1Y) dist_squared -= squared(Sy - C1Y)
+    else if (Sy > C2Y) dist_squared -= squared(Sy - C2Y)
+    if (Sz < C1Z) dist_squared -= squared(Sz - C1Z)
+    else if (Sz > C2Z) dist_squared -= squared(Sz - C2Z)
 
     dist_squared > 0
   }
@@ -306,8 +310,10 @@ trait PowerOfTwoCubeLike extends CubeLike {
   def indexVec(p:ReadVec3i, nodepos:ReadVec3i = pos, nodesize:Int = size) = ((p-nodepos)*2)/nodesize
 }
 
-
-case class Sphere(center:ReadVec3, radius:Double) {
+object Sphere {
+  def apply(center:ReadVec3, radius:Double) = new Sphere(center.x, center.y, center.z, radius)
+}
+case class Sphere(centerX:Double, centerY:Double, centerZ:Double, radius:Double) {
   def overlaps(cube:CubeLike) = cube overlaps this
 }
 
@@ -315,41 +321,66 @@ case class Cone(apex_location:ReadVec3, direction_normal:ReadVec3, angle:Double)
   val angleCos = cos(angle)
   val angleSin = sin(angle)
   val angleTan = tan(angle)
-
-  def test(sphere:Sphere) = {
-    // http://www.cbloom.com/3d/techdocs/culling.txt
-    /*
-    val V = sphere.center - cone.apex_location
-    val a = dot(V,cone.direction_normal)
-    val b = a * cone.angleTan
-    val c = sqrt( dot(V,V) - a*a )
-    val d = c - b
-    val e = d * cone.angleCos
-
-    if ( e >= sphere.radius ) 0        // totally outside
-    else if ( e <= -sphere.radius ) 1  // totally inside
-    else -1                            // partially inside
-    */
-    // without sqrt:
-    // http://blog.julien.cayzac.name/2009/12/frustum-culling-sphere-cone-test-with.html
-    val V = sphere.center - cone.apex_location
-    val a = dot(V, cone.direction_normal)
-    val p = a*cone.angleSin
-    val q = cone.angleCos*cone.angleCos * dot(V, V) - a*a
-    val r = q - sphere.radius*sphere.radius
-    if (p<sphere.radius || q>0) {
-      if (r < 2 * sphere.radius * p) -1 // the sphere is partially included
-      else if (q<0) 1 // the sphere is totally included
-      else 0 // cull the sphere
-    }
-    else{
-      if ( -r < 2 * sphere.radius * p) -1 // the sphere is partially included
-      else if (q<0) 1 // the sphere is totally included
-      else 0 // cull the sphere
-    }
-  }
 }
 
-case class Frustum(planes:Array[Vec4]) {
-  assert(planes.size == 6)
+case class Frustum(cameraPos:ReadVec3, cameraDir:ReadVec3, screenRatio:Double, nearPlane:Double, farPlane:Double, matrix:Mat4) {
+  val planes = new Array[Vec4](6)
+  val rows = transpose(matrix)
+  planes(0) = normalize(rows(3) - rows(0)) //right plane
+  planes(1) = normalize(rows(3) + rows(0)) //left plane
+  planes(2) = normalize(rows(3) + rows(1)) //bottom plane
+  planes(3) = normalize(rows(3) - rows(1)) //top plane
+  planes(4) = normalize(rows(3) - rows(2)) //far plane
+  planes(5) = normalize(rows(3) + rows(2)) //near plane
+
+  def topNear   = nearPlane
+  def rightNear = screenRatio * nearPlane
+  def halfDiagonalAtNearPlane = sqrt((rightNear * rightNear) + (topNear * topNear))
+
+  def topFar = frustumLength * tan(outerAngle * 0.5)
+  def rightFar = topFar * screenRatio
+  def halfDiagonalAtFarPlane = sqrt((rightFar * rightFar) + (topFar * topFar))
+
+  def furthestCorner = ConstVec3(rightFar, topFar, frustumLength)
+
+  def frustumLength = farPlane - nearPlane
+
+  def outerAngle = atan(halfDiagonalAtNearPlane/nearPlane)
+  def innerAngle = atan((rightNear min topNear)/nearPlane)
+
+  def boundingCone = Cone(cameraPos, cameraDir, outerAngle)
+
+  def innerCone = Cone(cameraPos, cameraDir, innerAngle)
+
+  def boundingSphere:Sphere = {
+    //if( frustumLength > halfDiagonalAtFarPlane ) {
+    //  // tighter bounding sphere:
+    //  val radius = (frustumLength*frustumLength + halfDiagonalAtFarPlane*halfDiagonalAtFarPlane)/(2*frustumLength)
+    //  val center = cameraPos + cameraDir * radius
+    //  Sphere(center, radius)
+    //} else {
+      // http://www.flipcode.com/archives/Frustum_Culling.shtml
+
+      // halfway point between near/far planes starting at the origin and extending along the z axis
+      val P = ConstVec3(0.0, 0.0, nearPlane + frustumLength * 0.5)
+
+      // the calculate far corner of the frustum
+      val Q = furthestCorner
+
+      // the vector between P and Q
+      val vDiff = P - Q
+
+      // the radius becomes the length of this vector
+      val radius = length(vDiff)
+
+      // get the look vector of the camera from the view matrix
+
+      // calculate the center of the sphere
+      val center = cameraPos + (cameraDir * (frustumLength * 0.5) + nearPlane)
+
+      //val radius =
+      //val center = cameraPos + cameraDir * radius
+      Sphere(center, radius)
+    //}
+  }
 }
