@@ -27,13 +27,14 @@ object Config extends Listener {
   var generationRadius = 200.0
   var farPlane = generationRadius * 2.0
   var nearPlane = 0.05
-  var occlusionTestThreshold = 10.0
+  var occlusionTestMagicNumber = 8.0
+  var occlusionTestPixelThreshold = 10.0
+  var occlusionTestMaxSuccessfulQueriesPerFrame = 10
 
 	val vertexMaterials = true
 	val hexaederResolution = 8
 	val skybox =false
 
-  var occlusionTestMagicNumber = 16.0
   var a = 1.0
   var b = 1.0
   var c = 1.0

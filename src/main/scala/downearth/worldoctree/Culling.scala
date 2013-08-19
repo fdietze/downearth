@@ -16,6 +16,20 @@ trait Culling { culling =>
     def test(sphere:Sphere) = -culling.test(sphere)
     def test(cube:CubeLike) = -culling.test(cube)
   }
+
+  def intersection(that:Culling) = new Culling {
+    def test(sphere:Sphere):Int = intersectResults(culling test sphere, that test sphere)
+    def test(cube:CubeLike):Int = intersectResults(culling test cube, that test cube)
+
+    def intersectResults(res1:Int, res2:Int):Int = {
+      if( res1 == res2 )
+        return res1
+      else if( res1 == Culling.totallyOutside || res2 == Culling.totallyOutside )
+        return Culling.totallyOutside
+      else
+        return Culling.intersected
+    }
+  }
 }
 
 object CullNothing extends Culling {

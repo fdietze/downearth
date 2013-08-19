@@ -279,7 +279,7 @@ class Renderer(gameState:GameState) extends Logger {
 
     if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
       if( Config.occlusionTest ) {
-        occlusionTest.doIt(frustumCulling)
+        occlusionTest.scan(frustumCulling)
       } else { // perform frustum test only
         octree.traverse( frustumCulling, camera.position) {
           case Traverse(area, UngeneratedNode) =>

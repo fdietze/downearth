@@ -44,6 +44,7 @@ class Player(gameState:GameState) extends Ray { //TODO: why extend and not conta
   }
 
   def window = Cube(Vec3i(pos) - (playerRadius / 2).toInt, playerRadius.toInt)
+  def sphere = Sphere(pos, playerRadius)
   def generationWindow = Cube(Vec3i(pos) - (generationRadius / 2).toInt, generationRadius.toInt)
   def generationSphere = Sphere(Vec3i(pos), generationRadius)
   def sightSphere = Sphere(Vec3i(pos), farPlane)

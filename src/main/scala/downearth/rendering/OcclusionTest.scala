@@ -26,6 +26,11 @@ import downearth.worldoctree.Node.Traverse
 class OcclusionTest(renderer:Renderer, gameState:GameState) {
   import gameState._
 
+  var lastVisibleQueryCount = 0
+  var querySphere = player.sphere
+  def querySphereSteps = Config.fpsLimit
+  def querySphereStepSize = (Config.generationRadius - Config.playerRadius) / querySphereSteps
+
   val generatingColor = Vec4f(0.6f,0.6f,0.3f,1)
   val skipColor = Vec4f(0.2f,0.2f,0.2f,1)
   val testColor = Vec4f(0.6f,0.3f,0.3f,1)
@@ -52,6 +57,31 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     occTest_binding.setAttributePointers()
   }
 
+  def scan(culling:Culling) {
+    updateQuerySphere()
+
+    // process queries of last frame
+    if( query != null ) {
+      val results = evalQueries(query)
+      for( visible <- results.visible )
+        octree.generateArea(visible)
+      lastVisibleQueryCount = results.visible.size
+    }
+
+    // generate new queries
+    query = findUngeneratedNodes(culling)
+  }
+
+  def updateQuerySphere() {
+    //TODO: disable generation priorization
+    if( lastVisibleQueryCount <= Config.occlusionTestMaxSuccessfulQueriesPerFrame/2 )
+      querySphere = player.sphere.copy(radius = (querySphere.radius + querySphereStepSize) min Config.generationRadius)
+    else if(lastVisibleQueryCount > Config.occlusionTestMaxSuccessfulQueriesPerFrame) {
+      querySphere = player.sphere.copy(radius = (querySphere.radius - querySphereStepSize) max Config.playerRadius)
+    }
+    //println(lastVisibleQueryCount, querySphere.radius)
+  }
+
   def findUngeneratedNodes(culling:Culling) = {
     import gameState.player.camera
     import gameState.player
@@ -60,7 +90,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val generatingAreas  = ArrayBuffer[PowerOfTwoCube]()
     val ungeneratedAreas = ArrayBuffer[PowerOfTwoCube]()
 
-    octree.traverse(culling, camera.position) {
+    octree.traverse(culling intersection (new SphereCulling(querySphere)), camera.position) {
       case Traverse(area, UngeneratedNode) =>
         ungeneratedAreas += area
         false
@@ -133,7 +163,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     queries
   }
 
-  case class QueryResult(visible:Seq[PowerOfTwoCube], occluded:Seq[PowerOfTwoCube])
+  case class QueryResult(visible:Seq[PowerOfTwoCube])//, occluded:Seq[PowerOfTwoCube])
 
   var query:Query = null
 
@@ -145,11 +175,11 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
   def evalQueries(queries:Query) = {
     val visible  = ArrayBuffer[PowerOfTwoCube]()
-    val occluded = ArrayBuffer[PowerOfTwoCube]()
+    //val occluded = ArrayBuffer[PowerOfTwoCube]()
 
     for( (id,info) <- queries ) {
       if( frameState.workersBusy ) {
-        if( glGetQueryObjectui(id, GL_QUERY_RESULT) > Config.occlusionTestThreshold )
+        if( glGetQueryObjectui(id, GL_QUERY_RESULT) > Config.occlusionTestPixelThreshold )
           visible += info
       }
       else
@@ -162,18 +192,6 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     //log.println( s"occlusion query result (${queries.buffer.limit}):\noccluded: ${occluded.size}, visible: ${visible.size}" )
     glDeleteQueries(queries.buffer)
 
-    QueryResult(visible, occluded)
+    QueryResult(visible)//, occluded)
   }
-
-
-  def doIt(culling:Culling) {
-    // process queries of last frame
-    if( query != null )
-      for( visible <- evalQueries(query).visible )
-        octree.generateArea(visible)
-
-    // generate new queries
-    query = findUngeneratedNodes(culling)
-  }
-
 }
