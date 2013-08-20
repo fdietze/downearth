@@ -39,12 +39,12 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   }
 
   def update(p:ReadVec3i,l:Leaf) {
-    physics.worldChange(p)
-
     if(rootArea.indexInRange(p))
       root = root.updated(rootArea, this, p, l)
     else
       println(s"update at $p out of range: $rootArea")
+
+    physics.worldChange(p)
   }
 
   def generateInitialAreaAroundPlayer() {
