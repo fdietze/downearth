@@ -112,7 +112,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     if(!Config.generation) return;
     // TODO: warning if generating already generated node
     // TODO: warning if area size/position does not match a node in octree
-    workers ! GeneratingJob(area, player.pos)
+    workers ! GeneratingJob(area)
     insert( area, MeshNode.generating )
     frameState.generationQueueSize += 1
   }

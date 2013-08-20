@@ -9,8 +9,10 @@ import downearth.Config._
 import downearth.worldoctree._
 import downearth.util._
 import downearth.worldoctree.PowerOfTwoCube
-import downearth.rendering.ObjManager
+import downearth.rendering.{TextureMesh, ObjManager}
 import akka.util.Timeout
+import downearth.AkkaMessages.{FinishedGeneratingJob, Predicted}
+
 //import downearth.server.LocalServer
 import scala.concurrent.{ExecutionContext, Future, Await}
 import akka.pattern.ask
@@ -37,16 +39,37 @@ object WorldGenerator {
 
   def generateNode(area:PowerOfTwoCube,
                    worldFunction:WorldFunction = WorldDefinition):MeshNode = {
+    if( area.size >= Config.minPredictionSize ) {
+      // split
+      val meshNode = MeshNode.ungenerated
+      for(subarea <- area.splitOct) {
+        val interval = WorldDefinition.range(subarea.toInterval3)
+        val surfaceNotInArea = !interval(0)
+        if( surfaceNotInArea ) {
+          //TODO: if( Config.predictionDebug )
+          //  debugLog ! Predicted(area)
+          val LeafMeshNode = new MeshNode(Leaf(
+            if(interval.isPositive) FullHexaeder else EmptyHexaeder
+          ))
+          LeafMeshNode.mesh = TextureMesh.empty
 
-    val hexaeders = hexaederMC(area, worldFunction)
+          meshNode.insertNode(area, subarea, LeafMeshNode)
+        } else // surface in area: recursion
+          meshNode.insertNode(area, subarea, generateNode(subarea, worldFunction))
+      }
 
-    // Fill Octree with hexeaders
-    val root = EmptyLeaf.fill( area, pos => Leaf(hexaeders(pos)) )
+      meshNode
+    } else { // sample
+      val hexaeders = hexaederMC(area, worldFunction)
 
-    // generate Mesh
-    root.genMesh( area, x => {
-      if (area.indexInRange(x)) root(area, x).h else hexaeders(x)
-    } )
+      // Fill Octree with hexeaders
+      val root = EmptyLeaf.fill( area, pos => Leaf(hexaeders(pos)) )
+
+      // generate Mesh
+      root.genMesh( area, x => {
+        if (area.indexInRange(x)) root(area, x).h else hexaeders(x)
+      } )
+    }
   }
 
 

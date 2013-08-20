@@ -29,7 +29,7 @@ class FrameState(gameState:GameState) {
 
 
   var generationQueueSize = 0
-  def workersBusy = generationQueueSize > 10*Config.numWorkingThreads // threads * actor throughput
+  def workersBusy = generationQueueSize > 3*Config.numWorkingThreads // threads * actor throughput
 
 
   def beforeFrame() {

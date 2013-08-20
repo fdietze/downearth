@@ -17,6 +17,8 @@ import org.lwjgl.BufferUtils
 import scala.collection.mutable.ArrayBuffer
 import java.nio.IntBuffer
 import downearth.worldoctree.Node.Traverse
+import simplex3d.math._
+import simplex3d.math.double.functions._
 
 /**
  * User: arne
@@ -28,8 +30,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
   var lastVisibleQueryCount = 0
   var querySphere = player.sphere
-  def querySphereSteps = Config.fpsLimit
-  def querySphereStepSize = (Config.generationRadius - Config.playerRadius) / querySphereSteps
+  def querySphereStepSize = Config.minOcclusionSize / 2
 
   val generatingColor = Vec4f(0.6f,0.6f,0.3f,1)
   val skipColor = Vec4f(0.2f,0.2f,0.2f,1)
@@ -58,13 +59,17 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
   }
 
   def scan(culling:Culling) {
-    updateQuerySphere()
+    if( Config.adaptingOcclusionTestSphere ) {
+      updateQuerySphere()
+    } else
+      querySphere = player.generationSphere
 
     // process queries of last frame
     if( query != null ) {
       val results = evalQueries(query)
-      for( visible <- results.visible )
-        octree.generateArea(visible)
+      val visibleAreas = results.visible
+      for( area <- visibleAreas )
+        octree.generateArea(area)
       lastVisibleQueryCount = results.visible.size
     }
 
@@ -74,25 +79,28 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
 
   def updateQuerySphere() {
     //TODO: disable generation priorization
-    if( lastVisibleQueryCount <= Config.occlusionTestMaxSuccessfulQueriesPerFrame/2 )
+    if( lastVisibleQueryCount <= Config.occlusionTestMaxGeneratingNodesPerFrame / 2 )
       querySphere = player.sphere.copy(radius = (querySphere.radius + querySphereStepSize) min Config.generationRadius)
-    else if(lastVisibleQueryCount > Config.occlusionTestMaxSuccessfulQueriesPerFrame) {
+    else if(lastVisibleQueryCount > Config.occlusionTestMaxGeneratingNodesPerFrame * 2) {
       querySphere = player.sphere.copy(radius = (querySphere.radius - querySphereStepSize) max Config.playerRadius)
     }
     //println(lastVisibleQueryCount, querySphere.radius)
   }
 
-  def findUngeneratedNodes(culling:Culling) = {
+  def findUngeneratedNodes(frustumCulling:Culling) = {
     import gameState.player.camera
     import gameState.player
     // TextureManager.box.bind()
 
     val generatingAreas  = ArrayBuffer[PowerOfTwoCube]()
     val ungeneratedAreas = ArrayBuffer[PowerOfTwoCube]()
-
-    octree.traverse(culling intersection (new SphereCulling(querySphere)), camera.position) {
+    val culling = if(Config.adaptingOcclusionTestSphere) frustumCulling intersection (new SphereCulling(querySphere)) else frustumCulling
+    octree.traverse(culling, camera.position) {
       case Traverse(area, UngeneratedNode) =>
-        ungeneratedAreas += area
+        if(area.size >= Config.minOcclusionSize)
+          ungeneratedAreas += area
+        else
+          generatingAreas += area
         false
       case Traverse(area, GeneratingNode) =>
         generatingAreas += area
@@ -105,14 +113,17 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
         true
     }
 
+    lastVisibleQueryCount += generatingAreas.size
+
     val view = Mat4f(camera.view)
     val projection = Mat4f(camera.projection)
 
-    val magicNr = Config.occlusionTestMagicNumber.toInt
+    val magicNr:Int = (ungeneratedAreas.size / Config.maxOcclusionQueries).toInt max 1//Config.occlusionTestMagicNumber.toInt max 1
     var i = -1
-    val (ungeneratedAreasTest,ungeneratedAreasSkip) = ungeneratedAreas.partition (
-      area => {i += 1; i % magicNr == renderer.frameCount % magicNr}
-    )
+    val (ungeneratedAreasTest,ungeneratedAreasSkip) = ungeneratedAreas.partition { area =>
+      i += 1
+      i % magicNr == renderer.frameCount % magicNr
+    }
 
     frameState.occlusionQueryCount += ungeneratedAreasTest.size
     frameState.renderedBoxCount    += ungeneratedAreasSkip.size

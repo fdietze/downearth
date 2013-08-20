@@ -9,9 +9,6 @@ import downearth.rendering.TextureMesh
 
 object Config extends Listener {
 
-  val maxMeshCount = 50
-  var freeOldMeshes = true
-
   val uCorrectChromaticAberation = true
   val uDistort = false
 
@@ -23,15 +20,18 @@ object Config extends Listener {
 
 	var minPredictionSized = 8.0
   def minPredictionSize = minPredictionSized.toInt
+  var minOcclusionSized = 32.0
+  def minOcclusionSize = minOcclusionSized.toInt
   var playerRadius = 10.0
   var generationRadius = 200.0
   var farPlane = generationRadius * 2.0
   var nearPlane = 0.05
-  var occlusionTestMagicNumber = 8.0
   var occlusionTestPixelThreshold = 10.0
-  var occlusionTestMaxSuccessfulQueriesPerFrame = 10
+  var maxOcclusionQueries = 10.0
+  var occlusionTestMaxGeneratingNodesPerFrame = 20
 
-	val vertexMaterials = true
+
+  val vertexMaterials = true
 	val hexaederResolution = 8
 	val skybox =false
 
@@ -106,19 +106,19 @@ object Config extends Listener {
   var predictionDebug = false
   var backFaceCulling = true
   var wireframe = false
-  var generation = true
-  var testUngenerated = true
-  var skipOcclusionTestWhenBusy = true
-  var streaming = true
   var frustumCulling = true
-  var frustumCullingOptimized = true
+  var frustumCullingOptimized = false
   var turbo = false
+
+  var streaming = true
+  var testUngenerated = true
   var occlusionTest = true
+  var adaptingOcclusionTestSphere = false
   var visibleOcclusionTest = false
-  var prioritizeCloseGenerationJobs = true
+  var generation = true
+  var freeOldMeshes = true
+  val maxMeshCount = 50
 
   loader.load()
-
-  assert( isPowerOfTwo(minPredictionSize) )
 }
 

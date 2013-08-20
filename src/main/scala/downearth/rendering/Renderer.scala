@@ -48,7 +48,7 @@ class Renderer(gameState:GameState) extends Logger {
   val riftDistort = new RiftDistort(gameState)
   val worldRenderer = new WorldRenderer(gameState)
 
-  var frameCount = 0
+  var frameCount = 0 //TODO: move to Framestate
 
   val test_program = Program.auto("test")
   val test_binding = test_program.getBinding
@@ -277,7 +277,7 @@ class Renderer(gameState:GameState) extends Logger {
     if( (Config.debugDraw & Config.DebugDrawSampledNodesBit) != 0 )
       GlDraw.drawPredictedNodes()
 
-    if( Config.testUngenerated && !(Config.skipOcclusionTestWhenBusy && frameState.workersBusy) ) {
+    if( Config.testUngenerated ) {
       if( Config.occlusionTest ) {
         occlusionTest.scan(frustumCulling)
       } else { // perform frustum test only

@@ -18,19 +18,16 @@ class WorkerMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.
   extends UnboundedPriorityMailbox(
     // Create a new PriorityGenerator, lower prio means more important
     PriorityGenerator {
-      case PoisonPill      => 0
-      case GeneratingJob(area,playerPos) => if( Config.prioritizeCloseGenerationJobs )
-            2 + length(playerPos - area.center).toInt
-        else 2
-
-      case otherwise       => 1
+      case PoisonPill       => 0
+      case _:GeneratingJob => 2
+      case otherwise        => 1
     })
 
 
 class Worker(gameLoop:ActorRef, debugLog:ActorRef) extends Actor {
 
   def receive = {
-    case GeneratingJob(area,_) =>
+    case GeneratingJob(area) =>
       // Prediction:
       val interval = WorldDefinition.range(area.toInterval3)
       val surfaceNotInArea = !interval(0)
@@ -45,11 +42,11 @@ class Worker(gameLoop:ActorRef, debugLog:ActorRef) extends Actor {
         gameLoop ! FinishedGeneratingJob(area, meshNode)
       }
       // if the area is too big, it will be splitted
-      else if( area.size/2 >= Config.minPredictionSize ) {
+      else if( area.size/2 >= Config.minOcclusionSize ) {
         val data = Array.fill[NodeUnderMesh](8)(UngeneratedNode)
-        val meshNode = new MeshNode(new InnerNodeUnderMesh(data))
-        meshNode.mesh = TextureMesh.empty
-        gameLoop ! FinishedGeneratingJob(area, meshNode)
+        val ungeneratedMeshNode = new MeshNode(new InnerNodeUnderMesh(data))
+        ungeneratedMeshNode.mesh = TextureMesh.empty
+          gameLoop ! FinishedGeneratingJob(area, ungeneratedMeshNode)
       }
       // sample the whole area
       else {

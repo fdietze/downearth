@@ -203,6 +203,7 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
   def hasVbo = vbo > 0
 
   def bind() {
+    if( !hasVbo ) genvbo()
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
   }
 
@@ -238,7 +239,6 @@ class TextureMesh(_data:ByteBuffer) extends Mesh {
     val newBuffer = data.applyUpdates(dependentUpdates)
 
     val mesh = new TextureMesh(newBuffer)
-    mesh.genvbo()
 
     mesh
   }
