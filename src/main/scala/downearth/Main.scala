@@ -40,30 +40,15 @@ object Main extends Logger {
     log.println( "Assertions: " + (if( assertionsActivated ) "active" else "inactive" ))
 
     implicit val actorSystem = ActorSystem.create("gamecontext")
-
-    val supervisor = actor(new Act {
-      val gameLoop = context.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
-      val dyingChild = context.watch(gameLoop)
-
-      become {
-        case Init => gameLoop ! Init
-        case Terminated(terminatedActor) =>
-          actorSystem.shutdown()
-      }
-    })
-
-    supervisor ! Init
-
+    val gameLoop = actorSystem.actorOf( Props[GameLoop].withDispatcher("akka.actor.single-thread-dispatcher"), "gameloop" )
   }
-
 }
 
 object AkkaMessages {
-  case object Init
   case object NextFrame
   case class LastFrame(timeStamp:Long)
 
-  case class GeneratingJob(area:PowerOfTwoCube, playerPos:ReadVec3)
+  case class GeneratingJob(area:PowerOfTwoCube)
   case class FinishedGeneratingJob(area:PowerOfTwoCube, node:MeshNode)
   case class Predicted(area:PowerOfTwoCube)
 }
@@ -147,9 +132,14 @@ class GameLoop extends Actor with Logger { gameLoop =>
   val gameState = new GameState(self, workers, debugLog)
   import gameState._
 
+  def shutdownOnFail[A](code: => A) = {
+    try code
+    catch { case e:Throwable => e.printStackTrace(); context.system.shutdown()}
+  }
 
   override def preStart() {
     Thread.currentThread().setPriority(Thread.MAX_PRIORITY)
+    shutdownOnFail{ init() }
   }
 
   def init() {
@@ -167,16 +157,17 @@ class GameLoop extends Actor with Logger { gameLoop =>
 
   def receive = {
     case NextFrame =>
-      frameState.render()
+      shutdownOnFail{ frameState.render() }
       frameFactory ! LastFrame(frameState.lastFrame)
 
     case FinishedGeneratingJob(area, node) =>
+      shutdownOnFail{
+        octree.insert( area, node )
+        physics.worldChange(area)
+      }
       import frameState._
-      octree.insert( area, node )
-      physics.worldChange(area)
       updateCounter += 1
       generationQueueSize -= 1
-    case Init => init()
   }
 
 
@@ -188,6 +179,7 @@ class GameLoop extends Actor with Logger { gameLoop =>
     Config.loader.save()
     textureManager.delete()
     ObjManager.delete()
+    context.system.shutdown()
   }
 
   def createWidgetSystem() {
