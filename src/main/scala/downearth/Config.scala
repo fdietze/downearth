@@ -20,7 +20,7 @@ object Config extends Listener {
 
 	var minPredictionSized = 8.0
   def minPredictionSize = minPredictionSized.toInt
-  var minOcclusionSized = 32.0
+  var minOcclusionSized = 16.0
   def minOcclusionSize = minOcclusionSized.toInt
   var playerRadius = 10.0
   var generationRadius = 200.0
