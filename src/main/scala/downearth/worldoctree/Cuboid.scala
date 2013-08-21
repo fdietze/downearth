@@ -17,10 +17,10 @@ trait ChildAccess[T] {
 
   // macht aus einem flachen Index wieder ein Vec3i-Index
 
-  @inline def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
-  @inline def index2vecX(idx:Int) = (idx & 1)
-  @inline def index2vecY(idx:Int) = (idx & 2) >> 1
-  @inline def index2vecZ(idx:Int) = (idx & 4) >> 2
+  final def index2vec(idx:Int) = Vec3i((idx & 1),(idx & 2) >> 1,(idx & 4) >> 2)
+  final def index2vecX(idx:Int) = (idx & 1)
+  final def index2vecY(idx:Int) = (idx & 2) >> 1
+  final def index2vecZ(idx:Int) = (idx & 4) >> 2
 
   def apply(i:Int):T = ???
   def apply(p:ReadVec3i):(Int,T) = ???
@@ -131,18 +131,18 @@ trait CuboidLike {
   def pos:ReadVec3i
   def vsize:ReadVec3i
   def isDegenerate = vsize.x == 0 || vsize.y == 0 || vsize.z == 0
-  def positiveVolume = vsize.x >= 0 || vsize.y >= 0 || vsize.z >= 0
+  final def positiveVolume = vsize.x >= 0 || vsize.y >= 0 || vsize.z >= 0
   def isCube = vsize.x == vsize.y && vsize.y == vsize.z
   //assert(!isDegenerate, s"Cuboid cannot be degenerate: $this")
   assert(positiveVolume, s"Cuboid needs a Positive Volume: $this")
 
-  def upperPos = pos + vsize
-  def indexInRange(p:ReadVec3i) = downearth.util.indexInRange(p,pos,vsize)
-  def indexInRange(p:CuboidLike):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.vsize-1)
-  def center = pos + (vsize / 2)
-  def coordinates = pos until upperPos
+  final def upperPos = pos + vsize
+  final def indexInRange(p:ReadVec3i) = downearth.util.indexInRange(p,pos,vsize)
+  final def indexInRange(p:CuboidLike):Boolean = indexInRange(p.pos) && indexInRange(p.pos+p.vsize-1)
+  final def center = pos + (vsize / 2)
+  final def coordinates = pos until upperPos
   def volume = vsize.x * vsize.y * vsize.z
-  def diagonalLength = length(upperPos - pos)
+  final def diagonalLength = length(upperPos - pos)
   def boundingSphere = Sphere(center, diagonalLength / 2)
 
   def inside(that:CuboidLike):Boolean = {
@@ -246,14 +246,14 @@ trait CubeLike extends CuboidLike {
   def posY:Int
   def posZ:Int
 
-  def centerX = posX + radius
-  def centerY = posY + radius
-  def centerZ = posZ + radius
+  final def centerX = posX + radius
+  final def centerY = posY + radius
+  final def centerZ = posZ + radius
 
   def pos = ConstVec3i(posX, posY, posZ)
 
   def size:Int
-  def vsize = ConstVec3i(size)
+  final def vsize = ConstVec3i(size)
 
   override def volume = size*size*size
   override def boundingSphere = Sphere(centerX, centerY, centerZ, Cube.halfDiagonal*size)
@@ -262,7 +262,7 @@ trait CubeLike extends CuboidLike {
   override def shortestEdgeAxis = 0
   override def longestEdgeLength = size
   override def shortestEdgeLength = size
-  def radius = size / 2
+  final def radius = size / 2
 
   def overlaps(that:CubeLike):Boolean = {
     val thisUpperX = this.posX + this.size
@@ -278,7 +278,7 @@ trait CubeLike extends CuboidLike {
   }
 
   def overlaps(sphere:Sphere) = {
-    @inline def squared(x:Double): Double = x * x
+    def squared(x:Double): Double = x * x
 
     val C1X = this.posX
     val C1Y = this.posY

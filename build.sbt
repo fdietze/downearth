@@ -40,9 +40,9 @@ scalacOptions ++= Seq(
   "-unchecked", 
   "-deprecation", 
   "-feature", 
-  "-Yinline-warnings", 
+  "-Yinline", "-Yinline-warnings",
   "-language:_"
-// ,"-Xdisable-assertions", "-optimize"
+  //,"-Xdisable-assertions", "-optimize"
 )
 
 javaOptions in run ++= Seq(
