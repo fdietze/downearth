@@ -7,7 +7,7 @@ object Interval {
 }
 
 case class Interval(low:Double = 0.0, high:Double = 0.0) {
-  require(low <= high, "Invalid Interval: ["+low+", "+high+"], high < low")
+  assert(low <= high, "Invalid Interval: ["+low+", "+high+"], high < low")
 
   def isPositive = low > 0
   def isNegative = high < 0

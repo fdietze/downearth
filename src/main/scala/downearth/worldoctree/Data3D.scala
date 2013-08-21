@@ -90,7 +90,19 @@ extends Data3D[A] with Iterable[A] {
 	
 	// Wird für den HexaederMC verwerdet, und extrahiert die 8 Datenpunkte, die für die Generierung eines Hexaeders relevant sind
 	def extractCubeCorners(pos:ReadVec3i) = {
-		vectorIndices map ( v ⇒ apply(v+pos) )
+    //vectorIndices map ( v ⇒ apply(v+pos) )
+    val corners = new Array[A](8)
+    val i = index(pos)
+    corners(0) = data(i)
+    corners(1) = data(i+1)
+    corners(2) = data(i+sx)
+    corners(3) = data(i+sx+1)
+    corners(4) = data(i+sx*sy)
+    corners(5) = data(i+sx*sy+1)
+    corners(6) = data(i+sx+sx*sy)
+    corners(7) = data(i+sx+sx*sy+1)
+
+    corners
 	}
 
 	import collection.Iterator

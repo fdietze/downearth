@@ -21,7 +21,6 @@ import akka.actor.ActorRef
 import downearth.util
 import scala.Some
 import downearth.generation.WorldGenerator
-import downearth.worldoctree.Node.{TraverseDetail, Traverse}
 
 // Kapselung für die OctreeNodes
 class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.ungenerated, gameState:GameState) extends Data3D[Leaf] {
@@ -63,7 +62,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     }
   }
 
-  def traverse(culling:Culling = CullNothing, cameraPos:ReadVec3 = null)(action: TraverseDetail => Boolean ) =
+  def traverse(culling:Culling = CullNothing, cameraPos:ReadVec3 = null)( action: (PowerOfTwoCube,Node) => Boolean ) =
     root.traverse(rootArea, culling, cameraPos)(action)
 
   // insert Node "that" at position and size of nodeinfo
@@ -79,7 +78,7 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   def getNextUngenerated:Option[PowerOfTwoCube] = {
     var node:Option[PowerOfTwoCube] = None
     traverse(){
-      case Traverse(area, UngeneratedNode) =>
+      case (area, UngeneratedNode) =>
         node = Some(area)
         false
       case _ =>
@@ -91,14 +90,14 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
   def ungeneratedAreasIn(area:CubeLike):IndexedSeq[PowerOfTwoCube] = {
     val ungenerated = new mutable.ArrayBuffer[PowerOfTwoCube]
     traverse(culling = new CubeCulling(area)) {
-      case Traverse(area, UngeneratedNode) =>
+      case (area, UngeneratedNode) =>
         ungenerated += area
         false
-      case Traverse(area, GeneratingNode) =>
+      case (area, GeneratingNode) =>
         false
-      case Traverse(area, node:MeshNode) =>
+      case (area, node:MeshNode) =>
         true
-      case Traverse(area, node:NodeUnderMesh) =>
+      case (area, node:NodeUnderMesh) =>
         !node.finishedGeneration
       case _ =>
         true
@@ -129,7 +128,8 @@ class WorldOctree(var rootArea:PowerOfTwoCube, var root:NodeOverMesh = MeshNode.
     var old = new mutable.ArrayBuffer[MeshNode]
     val culling = new SphereCulling(player.sightSphere).inverted
     octree.traverse(culling) {
-      case TraverseDetail(area, node:MeshNode, cullResult) =>
+      case (area, node:MeshNode) =>
+        val cullResult = culling test area
         if( node.mesh.nonEmpty && cullResult == Culling.totallyInside ) // actually outside, because inverted
           old += node
         false

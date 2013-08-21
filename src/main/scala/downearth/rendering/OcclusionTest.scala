@@ -16,7 +16,6 @@ import org.lwjgl.BufferUtils
 
 import scala.collection.mutable.ArrayBuffer
 import java.nio.IntBuffer
-import downearth.worldoctree.Node.Traverse
 import simplex3d.math._
 import simplex3d.math.double.functions._
 
@@ -96,18 +95,18 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
     val ungeneratedAreas = ArrayBuffer[PowerOfTwoCube]()
     val culling = if(Config.adaptingOcclusionTestSphere) frustumCulling intersection (new SphereCulling(querySphere)) else frustumCulling
     octree.traverse(culling, camera.position) {
-      case Traverse(area, UngeneratedNode) =>
+      case (area, UngeneratedNode) =>
         if(area.size >= Config.minOcclusionSize)
           ungeneratedAreas += area
         else
           generatingAreas += area
         false
-      case Traverse(area, GeneratingNode) =>
+      case (area, GeneratingNode) =>
         generatingAreas += area
         false
-      case Traverse(area, node:MeshNode) =>
+      case (area, node:MeshNode) =>
         true
-      case Traverse(area, node:NodeUnderMesh) =>
+      case (area, node:NodeUnderMesh) =>
         !node.finishedGeneration
       case _ =>
         true
@@ -143,7 +142,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
             if renderAreas.size > 0 ) {
           occTest_u_tint := color
 
-          val instance_positions = renderAreas.map( info => Vec4f(info.pos,0) )
+          val instance_positions = renderAreas.map( info => Vec4f(info.posX, info.posY, info.posZ, 0) )
           val instance_scales = renderAreas.map( info => info.size.toFloat )
 
           occTest_offset := instance_positions
@@ -158,7 +157,7 @@ class OcclusionTest(renderer:Renderer, gameState:GameState) {
           glBeginQuery(GL_SAMPLES_PASSED, queryId )
 
           occTest_u_tint := testColor
-          occTest_offset := Seq( Vec4f( info.pos, 0) )
+          occTest_offset := Seq( Vec4f(info.posX, info.posY, info.posZ, 0) )
           occTest_scale := Seq( info.size.toFloat )
 
           occTest_binding.writeChangedUniforms()

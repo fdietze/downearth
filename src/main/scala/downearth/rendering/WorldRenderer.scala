@@ -20,7 +20,6 @@ import downearth.rendering.TextureMesh._
 import downearth.worldoctree.PowerOfTwoCube
 import java.nio.ByteBuffer
 import simplex3d.math.ConstVec3i
-import downearth.worldoctree.Node.Traverse
 
 /**
  * Created with IntelliJ IDEA.
@@ -115,7 +114,7 @@ class WorldRenderer(gameState:GameState) {
         binding.writeChangedUniforms()
 
         gameState.octree.traverse( culling, gameState.player.pos ) {
-          case Traverse(area, node:MeshNode) =>
+          case (area, node:MeshNode) =>
             drawTextureMesh(node.mesh)
             objMeshes ++= node.objMeshes
             false

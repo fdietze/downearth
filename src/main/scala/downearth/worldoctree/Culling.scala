@@ -82,7 +82,7 @@ class FrustumCulling(cullFrustum:Frustum) extends Culling {
     while( p < 6) {
       distance = pl(p).x * centerX + pl(p).y * centerY + pl(p).z * centerZ + pl(p).w
       if( distance < -radius ) return Culling.totallyOutside
-      else if( distance.abs < radius ) result = Culling.intersected
+      else if( abs(distance) < radius ) result = Culling.intersected
       p += 1
     }
 
@@ -106,14 +106,19 @@ class FrustumCulling(cullFrustum:Frustum) extends Culling {
       verticesInFrontOfPlane = 8
       cubeInFrontOfPlane = 1
 
-      if( pl(p).x * (x - r) + pl(p).y * (y - r) + pl(p).z * (z - r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x + r) + pl(p).y * (y - r) + pl(p).z * (z - r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x - r) + pl(p).y * (y + r) + pl(p).z * (z - r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x + r) + pl(p).y * (y + r) + pl(p).z * (z - r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x - r) + pl(p).y * (y - r) + pl(p).z * (z + r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x + r) + pl(p).y * (y - r) + pl(p).z * (z + r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x - r) + pl(p).y * (y + r) + pl(p).z * (z + r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
-      if( pl(p).x * (x + r) + pl(p).y * (y + r) + pl(p).z * (z + r) + pl(p).w <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      val plp = pl(p)
+      val plpx = plp.x
+      val plpy = plp.y
+      val plpz = plp.z
+      val plpw = plp.w
+      if( plpx * (x - r) + plpy * (y - r) + plpz * (z - r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x + r) + plpy * (y - r) + plpz * (z - r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x - r) + plpy * (y + r) + plpz * (z - r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x + r) + plpy * (y + r) + plpz * (z - r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x - r) + plpy * (y - r) + plpz * (z + r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x + r) + plpy * (y - r) + plpz * (z + r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x - r) + plpy * (y + r) + plpz * (z + r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
+      if( plpx * (x + r) + plpy * (y + r) + plpz * (z + r) + plpw <= 0 ) {cubeInFrontOfPlane = 0; verticesInFrontOfPlane -= 1}
 
       if(verticesInFrontOfPlane == 0) return Culling.totallyOutside
 

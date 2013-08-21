@@ -38,7 +38,6 @@ import downearth.worldoctree.PowerOfTwoCube
 import glwrapper._
 import java.nio.ByteBuffer
 import downearth.world.DynamicWorld
-import downearth.worldoctree.Node.Traverse
 
 class Renderer(gameState:GameState) extends Logger {
   import gameState._
@@ -282,14 +281,14 @@ class Renderer(gameState:GameState) extends Logger {
         occlusionTest.scan(frustumCulling)
       } else { // perform frustum test only
         octree.traverse( frustumCulling, camera.position) {
-          case Traverse(area, UngeneratedNode) =>
+          case (area, UngeneratedNode) =>
             octree.generateArea(area)
             false
-          case Traverse(_, GeneratingNode) =>
+          case (_, GeneratingNode) =>
             false
-          case Traverse(_, node:MeshNode) =>
+          case (_, node:MeshNode) =>
             true
-          case Traverse(_, node:NodeUnderMesh) =>
+          case (_, node:NodeUnderMesh) =>
             !node.finishedGeneration
           case _ =>
             true
@@ -317,7 +316,7 @@ class Renderer(gameState:GameState) extends Logger {
     val maxDepth = log2(octree.rootArea.size)
 
     octree.traverse(culling, camera) {
-      case Traverse(area, octant) =>
+      case (area, octant) =>
         glPushMatrix()
         val depth = maxDepth - log2(area.size)
         val padding = depth*0.05f

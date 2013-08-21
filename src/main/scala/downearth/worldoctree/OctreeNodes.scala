@@ -11,12 +11,6 @@ import scala.collection.mutable.{ArrayBuffer, Queue}
 import downearth.rendering.{UpdateInfo, Update, TextureMeshBuilder}
 import scala.collection.mutable
 object Node {
-  object Traverse {
-    def unapply(tr: TraverseDetail): Option[(PowerOfTwoCube, Node)] = {
-      Some(tr.area, tr.node)
-    }
-  }
-  case class TraverseDetail(area:PowerOfTwoCube, node:Node, cullingResult:Int)
   val dummyTravaersalOrder = Array.range(0,8)
 }
 
@@ -52,11 +46,11 @@ sealed trait Node { currentNode =>
   // and apply action to every node intersected or totally included by culling
   // recurse deeper if action returns true und node is intersected by culling
   import Node._
-  def traverse(currentArea:PowerOfTwoCube, culling:Culling = CullNothing, cameraPos:ReadVec3 = null)(action: TraverseDetail => Boolean ) {
+  def traverse(currentArea:PowerOfTwoCube, culling:Culling = CullNothing, cameraPos:ReadVec3 = null)( action: (PowerOfTwoCube,Node) => Boolean ) {
     val cullingResult = culling.test(currentArea)
     val nextCulling = if( cullingResult == Culling.intersected ) culling else CullNothing
 
-    val traverseDeeper = action(TraverseDetail(currentArea, currentNode, cullingResult))
+    val traverseDeeper = action(currentArea, currentNode)
 
     if( traverseDeeper && cullingResult != Culling.totallyOutside ) {
       currentNode match {

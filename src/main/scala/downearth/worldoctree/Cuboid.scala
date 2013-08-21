@@ -133,7 +133,7 @@ trait CuboidLike {
   def isDegenerate = vsize.x == 0 || vsize.y == 0 || vsize.z == 0
   def positiveVolume = vsize.x >= 0 || vsize.y >= 0 || vsize.z >= 0
   def isCube = vsize.x == vsize.y && vsize.y == vsize.z
-  assert(!isDegenerate, s"Cuboid cannot be degenerate: $this")
+  //assert(!isDegenerate, s"Cuboid cannot be degenerate: $this")
   assert(positiveVolume, s"Cuboid needs a Positive Volume: $this")
 
   def upperPos = pos + vsize
