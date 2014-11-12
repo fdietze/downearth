@@ -8,10 +8,10 @@ public final class PersistentWorld {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface HexaederOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface HexaederOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Hexaeder)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required .downearth.Hexaeder.Fill fill = 1;
     /**
      * <code>required .downearth.Hexaeder.Fill fill = 1;</code>
      */
@@ -21,7 +21,6 @@ public final class PersistentWorld {
      */
     downearth.message.PersistentWorld.Hexaeder.Fill getFill();
 
-    // optional .downearth.Hexaeder.Data data = 2;
     /**
      * <code>optional .downearth.Hexaeder.Data data = 2;</code>
      */
@@ -39,8 +38,9 @@ public final class PersistentWorld {
    * Protobuf type {@code downearth.Hexaeder}
    */
   public static final class Hexaeder extends
-      com.google.protobuf.GeneratedMessage
-      implements HexaederOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Hexaeder)
+      HexaederOrBuilder {
     // Use Hexaeder.newBuilder() to construct.
     private Hexaeder(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -240,10 +240,10 @@ public final class PersistentWorld {
       // @@protoc_insertion_point(enum_scope:downearth.Hexaeder.Fill)
     }
 
-    public interface DataOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface DataOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:downearth.Hexaeder.Data)
+        com.google.protobuf.MessageOrBuilder {
 
-      // required fixed32 x = 1;
       /**
        * <code>required fixed32 x = 1;</code>
        */
@@ -253,7 +253,6 @@ public final class PersistentWorld {
        */
       int getX();
 
-      // required fixed32 y = 2;
       /**
        * <code>required fixed32 y = 2;</code>
        */
@@ -263,7 +262,6 @@ public final class PersistentWorld {
        */
       int getY();
 
-      // required fixed32 z = 3;
       /**
        * <code>required fixed32 z = 3;</code>
        */
@@ -277,8 +275,9 @@ public final class PersistentWorld {
      * Protobuf type {@code downearth.Hexaeder.Data}
      */
     public static final class Data extends
-        com.google.protobuf.GeneratedMessage
-        implements DataOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:downearth.Hexaeder.Data)
+        DataOrBuilder {
       // Use Data.newBuilder() to construct.
       private Data(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -379,7 +378,6 @@ public final class PersistentWorld {
       }
 
       private int bitField0_;
-      // required fixed32 x = 1;
       public static final int X_FIELD_NUMBER = 1;
       private int x_;
       /**
@@ -395,7 +393,6 @@ public final class PersistentWorld {
         return x_;
       }
 
-      // required fixed32 y = 2;
       public static final int Y_FIELD_NUMBER = 2;
       private int y_;
       /**
@@ -411,7 +408,6 @@ public final class PersistentWorld {
         return y_;
       }
 
-      // required fixed32 z = 3;
       public static final int Z_FIELD_NUMBER = 3;
       private int z_;
       /**
@@ -435,7 +431,8 @@ public final class PersistentWorld {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         if (!hasX()) {
           memoizedIsInitialized = 0;
@@ -568,8 +565,9 @@ public final class PersistentWorld {
        * Protobuf type {@code downearth.Hexaeder.Data}
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements downearth.message.PersistentWorld.Hexaeder.DataOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:downearth.Hexaeder.Data)
+          downearth.message.PersistentWorld.Hexaeder.DataOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return downearth.message.PersistentWorld.internal_static_downearth_Hexaeder_Data_descriptor;
@@ -712,7 +710,6 @@ public final class PersistentWorld {
         }
         private int bitField0_;
 
-        // required fixed32 x = 1;
         private int x_ ;
         /**
          * <code>required fixed32 x = 1;</code>
@@ -745,7 +742,6 @@ public final class PersistentWorld {
           return this;
         }
 
-        // required fixed32 y = 2;
         private int y_ ;
         /**
          * <code>required fixed32 y = 2;</code>
@@ -778,7 +774,6 @@ public final class PersistentWorld {
           return this;
         }
 
-        // required fixed32 z = 3;
         private int z_ ;
         /**
          * <code>required fixed32 z = 3;</code>
@@ -823,7 +818,6 @@ public final class PersistentWorld {
     }
 
     private int bitField0_;
-    // required .downearth.Hexaeder.Fill fill = 1;
     public static final int FILL_FIELD_NUMBER = 1;
     private downearth.message.PersistentWorld.Hexaeder.Fill fill_;
     /**
@@ -839,7 +833,6 @@ public final class PersistentWorld {
       return fill_;
     }
 
-    // optional .downearth.Hexaeder.Data data = 2;
     public static final int DATA_FIELD_NUMBER = 2;
     private downearth.message.PersistentWorld.Hexaeder.Data data_;
     /**
@@ -868,7 +861,8 @@ public final class PersistentWorld {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasFill()) {
         memoizedIsInitialized = 0;
@@ -992,8 +986,9 @@ public final class PersistentWorld {
      * Protobuf type {@code downearth.Hexaeder}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.PersistentWorld.HexaederOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Hexaeder)
+        downearth.message.PersistentWorld.HexaederOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.PersistentWorld.internal_static_downearth_Hexaeder_descriptor;
@@ -1134,7 +1129,6 @@ public final class PersistentWorld {
       }
       private int bitField0_;
 
-      // required .downearth.Hexaeder.Fill fill = 1;
       private downearth.message.PersistentWorld.Hexaeder.Fill fill_ = downearth.message.PersistentWorld.Hexaeder.Fill.DATA;
       /**
        * <code>required .downearth.Hexaeder.Fill fill = 1;</code>
@@ -1170,7 +1164,6 @@ public final class PersistentWorld {
         return this;
       }
 
-      // optional .downearth.Hexaeder.Data data = 2;
       private downearth.message.PersistentWorld.Hexaeder.Data data_ = downearth.message.PersistentWorld.Hexaeder.Data.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           downearth.message.PersistentWorld.Hexaeder.Data, downearth.message.PersistentWorld.Hexaeder.Data.Builder, downearth.message.PersistentWorld.Hexaeder.DataOrBuilder> dataBuilder_;
@@ -1279,7 +1272,7 @@ public final class PersistentWorld {
         if (dataBuilder_ == null) {
           dataBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               downearth.message.PersistentWorld.Hexaeder.Data, downearth.message.PersistentWorld.Hexaeder.Data.Builder, downearth.message.PersistentWorld.Hexaeder.DataOrBuilder>(
-                  data_,
+                  getData(),
                   getParentForChildren(),
                   isClean());
           data_ = null;
@@ -1298,10 +1291,10 @@ public final class PersistentWorld {
     // @@protoc_insertion_point(class_scope:downearth.Hexaeder)
   }
 
-  public interface BlockOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface BlockOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Block)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required .downearth.Hexaeder shape = 1;
     /**
      * <code>required .downearth.Hexaeder shape = 1;</code>
      */
@@ -1315,7 +1308,6 @@ public final class PersistentWorld {
      */
     downearth.message.PersistentWorld.HexaederOrBuilder getShapeOrBuilder();
 
-    // required int32 material = 2;
     /**
      * <code>required int32 material = 2;</code>
      */
@@ -1329,8 +1321,9 @@ public final class PersistentWorld {
    * Protobuf type {@code downearth.Block}
    */
   public static final class Block extends
-      com.google.protobuf.GeneratedMessage
-      implements BlockOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Block)
+      BlockOrBuilder {
     // Use Block.newBuilder() to construct.
     private Block(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1434,7 +1427,6 @@ public final class PersistentWorld {
     }
 
     private int bitField0_;
-    // required .downearth.Hexaeder shape = 1;
     public static final int SHAPE_FIELD_NUMBER = 1;
     private downearth.message.PersistentWorld.Hexaeder shape_;
     /**
@@ -1456,7 +1448,6 @@ public final class PersistentWorld {
       return shape_;
     }
 
-    // required int32 material = 2;
     public static final int MATERIAL_FIELD_NUMBER = 2;
     private int material_;
     /**
@@ -1479,7 +1470,8 @@ public final class PersistentWorld {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasShape()) {
         memoizedIsInitialized = 0;
@@ -1605,8 +1597,9 @@ public final class PersistentWorld {
      * Protobuf type {@code downearth.Block}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.PersistentWorld.BlockOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Block)
+        downearth.message.PersistentWorld.BlockOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.PersistentWorld.internal_static_downearth_Block_descriptor;
@@ -1749,7 +1742,6 @@ public final class PersistentWorld {
       }
       private int bitField0_;
 
-      // required .downearth.Hexaeder shape = 1;
       private downearth.message.PersistentWorld.Hexaeder shape_ = downearth.message.PersistentWorld.Hexaeder.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           downearth.message.PersistentWorld.Hexaeder, downearth.message.PersistentWorld.Hexaeder.Builder, downearth.message.PersistentWorld.HexaederOrBuilder> shapeBuilder_;
@@ -1858,7 +1850,7 @@ public final class PersistentWorld {
         if (shapeBuilder_ == null) {
           shapeBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               downearth.message.PersistentWorld.Hexaeder, downearth.message.PersistentWorld.Hexaeder.Builder, downearth.message.PersistentWorld.HexaederOrBuilder>(
-                  shape_,
+                  getShape(),
                   getParentForChildren(),
                   isClean());
           shape_ = null;
@@ -1866,7 +1858,6 @@ public final class PersistentWorld {
         return shapeBuilder_;
       }
 
-      // required int32 material = 2;
       private int material_ ;
       /**
        * <code>required int32 material = 2;</code>
@@ -1910,10 +1901,10 @@ public final class PersistentWorld {
     // @@protoc_insertion_point(class_scope:downearth.Block)
   }
 
-  public interface DeltaOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface DeltaOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Delta)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required .downearth.Vec3i pos = 1;
     /**
      * <code>required .downearth.Vec3i pos = 1;</code>
      */
@@ -1927,7 +1918,6 @@ public final class PersistentWorld {
      */
     downearth.message.Math.Vec3iOrBuilder getPosOrBuilder();
 
-    // required .downearth.Block block = 2;
     /**
      * <code>required .downearth.Block block = 2;</code>
      */
@@ -1945,8 +1935,9 @@ public final class PersistentWorld {
    * Protobuf type {@code downearth.Delta}
    */
   public static final class Delta extends
-      com.google.protobuf.GeneratedMessage
-      implements DeltaOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Delta)
+      DeltaOrBuilder {
     // Use Delta.newBuilder() to construct.
     private Delta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2058,7 +2049,6 @@ public final class PersistentWorld {
     }
 
     private int bitField0_;
-    // required .downearth.Vec3i pos = 1;
     public static final int POS_FIELD_NUMBER = 1;
     private downearth.message.Math.Vec3i pos_;
     /**
@@ -2080,7 +2070,6 @@ public final class PersistentWorld {
       return pos_;
     }
 
-    // required .downearth.Block block = 2;
     public static final int BLOCK_FIELD_NUMBER = 2;
     private downearth.message.PersistentWorld.Block block_;
     /**
@@ -2109,7 +2098,8 @@ public final class PersistentWorld {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasPos()) {
         memoizedIsInitialized = 0;
@@ -2239,8 +2229,9 @@ public final class PersistentWorld {
      * Protobuf type {@code downearth.Delta}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.PersistentWorld.DeltaOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Delta)
+        downearth.message.PersistentWorld.DeltaOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.PersistentWorld.internal_static_downearth_Delta_descriptor;
@@ -2396,7 +2387,6 @@ public final class PersistentWorld {
       }
       private int bitField0_;
 
-      // required .downearth.Vec3i pos = 1;
       private downearth.message.Math.Vec3i pos_ = downearth.message.Math.Vec3i.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           downearth.message.Math.Vec3i, downearth.message.Math.Vec3i.Builder, downearth.message.Math.Vec3iOrBuilder> posBuilder_;
@@ -2505,7 +2495,7 @@ public final class PersistentWorld {
         if (posBuilder_ == null) {
           posBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               downearth.message.Math.Vec3i, downearth.message.Math.Vec3i.Builder, downearth.message.Math.Vec3iOrBuilder>(
-                  pos_,
+                  getPos(),
                   getParentForChildren(),
                   isClean());
           pos_ = null;
@@ -2513,7 +2503,6 @@ public final class PersistentWorld {
         return posBuilder_;
       }
 
-      // required .downearth.Block block = 2;
       private downearth.message.PersistentWorld.Block block_ = downearth.message.PersistentWorld.Block.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           downearth.message.PersistentWorld.Block, downearth.message.PersistentWorld.Block.Builder, downearth.message.PersistentWorld.BlockOrBuilder> blockBuilder_;
@@ -2622,7 +2611,7 @@ public final class PersistentWorld {
         if (blockBuilder_ == null) {
           blockBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               downearth.message.PersistentWorld.Block, downearth.message.PersistentWorld.Block.Builder, downearth.message.PersistentWorld.BlockOrBuilder>(
-                  block_,
+                  getBlock(),
                   getParentForChildren(),
                   isClean());
           block_ = null;
@@ -2641,10 +2630,10 @@ public final class PersistentWorld {
     // @@protoc_insertion_point(class_scope:downearth.Delta)
   }
 
-  public interface DeltaSetOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface DeltaSetOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.DeltaSet)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated .downearth.Delta delta = 1;
     /**
      * <code>repeated .downearth.Delta delta = 1;</code>
      */
@@ -2673,8 +2662,9 @@ public final class PersistentWorld {
    * Protobuf type {@code downearth.DeltaSet}
    */
   public static final class DeltaSet extends
-      com.google.protobuf.GeneratedMessage
-      implements DeltaSetOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.DeltaSet)
+      DeltaSetOrBuilder {
     // Use DeltaSet.newBuilder() to construct.
     private DeltaSet(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2770,7 +2760,6 @@ public final class PersistentWorld {
       return PARSER;
     }
 
-    // repeated .downearth.Delta delta = 1;
     public static final int DELTA_FIELD_NUMBER = 1;
     private java.util.List<downearth.message.PersistentWorld.Delta> delta_;
     /**
@@ -2812,7 +2801,8 @@ public final class PersistentWorld {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       for (int i = 0; i < getDeltaCount(); i++) {
         if (!getDelta(i).isInitialized()) {
@@ -2925,8 +2915,9 @@ public final class PersistentWorld {
      * Protobuf type {@code downearth.DeltaSet}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.PersistentWorld.DeltaSetOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.DeltaSet)
+        downearth.message.PersistentWorld.DeltaSetOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.PersistentWorld.internal_static_downearth_DeltaSet_descriptor;
@@ -3076,7 +3067,6 @@ public final class PersistentWorld {
       }
       private int bitField0_;
 
-      // repeated .downearth.Delta delta = 1;
       private java.util.List<downearth.message.PersistentWorld.Delta> delta_ =
         java.util.Collections.emptyList();
       private void ensureDeltaIsMutable() {
@@ -3218,7 +3208,8 @@ public final class PersistentWorld {
           java.lang.Iterable<? extends downearth.message.PersistentWorld.Delta> values) {
         if (deltaBuilder_ == null) {
           ensureDeltaIsMutable();
-          super.addAll(values, delta_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, delta_);
           onChanged();
         } else {
           deltaBuilder_.addAllMessages(values);
@@ -3327,10 +3318,10 @@ public final class PersistentWorld {
     // @@protoc_insertion_point(class_scope:downearth.DeltaSet)
   }
 
-  public interface NodeInfoOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface NodeInfoOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.NodeInfo)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required .downearth.Vec3i pos = 1;
     /**
      * <code>required .downearth.Vec3i pos = 1;</code>
      */
@@ -3344,7 +3335,6 @@ public final class PersistentWorld {
      */
     downearth.message.Math.Vec3iOrBuilder getPosOrBuilder();
 
-    // required int32 size = 2;
     /**
      * <code>required int32 size = 2;</code>
      */
@@ -3358,8 +3348,9 @@ public final class PersistentWorld {
    * Protobuf type {@code downearth.NodeInfo}
    */
   public static final class NodeInfo extends
-      com.google.protobuf.GeneratedMessage
-      implements NodeInfoOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.NodeInfo)
+      NodeInfoOrBuilder {
     // Use NodeInfo.newBuilder() to construct.
     private NodeInfo(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -3463,7 +3454,6 @@ public final class PersistentWorld {
     }
 
     private int bitField0_;
-    // required .downearth.Vec3i pos = 1;
     public static final int POS_FIELD_NUMBER = 1;
     private downearth.message.Math.Vec3i pos_;
     /**
@@ -3485,7 +3475,6 @@ public final class PersistentWorld {
       return pos_;
     }
 
-    // required int32 size = 2;
     public static final int SIZE_FIELD_NUMBER = 2;
     private int size_;
     /**
@@ -3508,7 +3497,8 @@ public final class PersistentWorld {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasPos()) {
         memoizedIsInitialized = 0;
@@ -3634,8 +3624,9 @@ public final class PersistentWorld {
      * Protobuf type {@code downearth.NodeInfo}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.PersistentWorld.NodeInfoOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.NodeInfo)
+        downearth.message.PersistentWorld.NodeInfoOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.PersistentWorld.internal_static_downearth_NodeInfo_descriptor;
@@ -3778,7 +3769,6 @@ public final class PersistentWorld {
       }
       private int bitField0_;
 
-      // required .downearth.Vec3i pos = 1;
       private downearth.message.Math.Vec3i pos_ = downearth.message.Math.Vec3i.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           downearth.message.Math.Vec3i, downearth.message.Math.Vec3i.Builder, downearth.message.Math.Vec3iOrBuilder> posBuilder_;
@@ -3887,7 +3877,7 @@ public final class PersistentWorld {
         if (posBuilder_ == null) {
           posBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               downearth.message.Math.Vec3i, downearth.message.Math.Vec3i.Builder, downearth.message.Math.Vec3iOrBuilder>(
-                  pos_,
+                  getPos(),
                   getParentForChildren(),
                   isClean());
           pos_ = null;
@@ -3895,7 +3885,6 @@ public final class PersistentWorld {
         return posBuilder_;
       }
 
-      // required int32 size = 2;
       private int size_ ;
       /**
        * <code>required int32 size = 2;</code>
@@ -3939,32 +3928,32 @@ public final class PersistentWorld {
     // @@protoc_insertion_point(class_scope:downearth.NodeInfo)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Hexaeder_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_Hexaeder_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Hexaeder_Data_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_Hexaeder_Data_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Block_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_Block_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Delta_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_Delta_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_DeltaSet_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_DeltaSet_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_NodeInfo_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -3993,54 +3982,55 @@ public final class PersistentWorld {
       "stentWorld"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_downearth_Hexaeder_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_downearth_Hexaeder_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Hexaeder_descriptor,
-              new java.lang.String[] { "Fill", "Data", });
-          internal_static_downearth_Hexaeder_Data_descriptor =
-            internal_static_downearth_Hexaeder_descriptor.getNestedTypes().get(0);
-          internal_static_downearth_Hexaeder_Data_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Hexaeder_Data_descriptor,
-              new java.lang.String[] { "X", "Y", "Z", });
-          internal_static_downearth_Block_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_downearth_Block_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Block_descriptor,
-              new java.lang.String[] { "Shape", "Material", });
-          internal_static_downearth_Delta_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_downearth_Delta_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Delta_descriptor,
-              new java.lang.String[] { "Pos", "Block", });
-          internal_static_downearth_DeltaSet_descriptor =
-            getDescriptor().getMessageTypes().get(3);
-          internal_static_downearth_DeltaSet_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_DeltaSet_descriptor,
-              new java.lang.String[] { "Delta", });
-          internal_static_downearth_NodeInfo_descriptor =
-            getDescriptor().getMessageTypes().get(4);
-          internal_static_downearth_NodeInfo_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_NodeInfo_descriptor,
-              new java.lang.String[] { "Pos", "Size", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           downearth.message.Math.getDescriptor(),
         }, assigner);
+    internal_static_downearth_Hexaeder_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_downearth_Hexaeder_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Hexaeder_descriptor,
+        new java.lang.String[] { "Fill", "Data", });
+    internal_static_downearth_Hexaeder_Data_descriptor =
+      internal_static_downearth_Hexaeder_descriptor.getNestedTypes().get(0);
+    internal_static_downearth_Hexaeder_Data_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Hexaeder_Data_descriptor,
+        new java.lang.String[] { "X", "Y", "Z", });
+    internal_static_downearth_Block_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_downearth_Block_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Block_descriptor,
+        new java.lang.String[] { "Shape", "Material", });
+    internal_static_downearth_Delta_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_downearth_Delta_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Delta_descriptor,
+        new java.lang.String[] { "Pos", "Block", });
+    internal_static_downearth_DeltaSet_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_downearth_DeltaSet_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_DeltaSet_descriptor,
+        new java.lang.String[] { "Delta", });
+    internal_static_downearth_NodeInfo_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_downearth_NodeInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_NodeInfo_descriptor,
+        new java.lang.String[] { "Pos", "Size", });
+    downearth.message.Math.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

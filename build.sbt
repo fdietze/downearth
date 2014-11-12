@@ -6,7 +6,7 @@ organization := "fdad"
 
 version := "0.2.0"
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.4"
 
 mainClass in (Compile, run) := Some("downearth.Main")
 
@@ -16,14 +16,14 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "1.9.1" % "test",
-  "com.typesafe.akka" %% "akka-actor" % "2.2.0",
+  "org.scalatest" %% "scalatest" % "2.2.2" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.2.4",
   //"org.scala-lang" % "scala-reflect" % "2.10.1",
   "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
   "org.simplex3d" %% "simplex3d-math-float" % "2.4.7",
   //"slick" % "slick" % "274",
-  "java3d" % "vecmath" % "1.3.1",
-  "com.google.protobuf" % "protobuf-java" % "2.5.0"
+  "java3d" % "vecmath" % "1.3.1"
+  // "com.google.protobuf" % "protobuf-java" % "2.5.0"
 )
 
 //net.virtualvoid.sbt.graph.Plugin.graphSettings
@@ -34,7 +34,9 @@ seq( LWJGLPlugin.lwjglSettings: _*)
 
 seq(PB.protobufSettings: _*)
 
-lwjgl.version := "2.9.0"
+version in protobufConfig := "2.6.1"
+
+lwjgl.version := "2.9.1"
 
 scalacOptions ++= Seq(
   "-unchecked", 

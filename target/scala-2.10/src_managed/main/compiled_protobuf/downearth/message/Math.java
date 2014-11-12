@@ -8,10 +8,10 @@ public final class Math {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface Vec3iOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface Vec3iOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Vec3i)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required sint32 x = 1;
     /**
      * <code>required sint32 x = 1;</code>
      */
@@ -21,7 +21,6 @@ public final class Math {
      */
     int getX();
 
-    // required sint32 y = 2;
     /**
      * <code>required sint32 y = 2;</code>
      */
@@ -31,7 +30,6 @@ public final class Math {
      */
     int getY();
 
-    // required sint32 z = 3;
     /**
      * <code>required sint32 z = 3;</code>
      */
@@ -45,8 +43,9 @@ public final class Math {
    * Protobuf type {@code downearth.Vec3i}
    */
   public static final class Vec3i extends
-      com.google.protobuf.GeneratedMessage
-      implements Vec3iOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Vec3i)
+      Vec3iOrBuilder {
     // Use Vec3i.newBuilder() to construct.
     private Vec3i(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -147,7 +146,6 @@ public final class Math {
     }
 
     private int bitField0_;
-    // required sint32 x = 1;
     public static final int X_FIELD_NUMBER = 1;
     private int x_;
     /**
@@ -163,7 +161,6 @@ public final class Math {
       return x_;
     }
 
-    // required sint32 y = 2;
     public static final int Y_FIELD_NUMBER = 2;
     private int y_;
     /**
@@ -179,7 +176,6 @@ public final class Math {
       return y_;
     }
 
-    // required sint32 z = 3;
     public static final int Z_FIELD_NUMBER = 3;
     private int z_;
     /**
@@ -203,7 +199,8 @@ public final class Math {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasX()) {
         memoizedIsInitialized = 0;
@@ -336,8 +333,9 @@ public final class Math {
      * Protobuf type {@code downearth.Vec3i}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.Math.Vec3iOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Vec3i)
+        downearth.message.Math.Vec3iOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.Math.internal_static_downearth_Vec3i_descriptor;
@@ -480,7 +478,6 @@ public final class Math {
       }
       private int bitField0_;
 
-      // required sint32 x = 1;
       private int x_ ;
       /**
        * <code>required sint32 x = 1;</code>
@@ -513,7 +510,6 @@ public final class Math {
         return this;
       }
 
-      // required sint32 y = 2;
       private int y_ ;
       /**
        * <code>required sint32 y = 2;</code>
@@ -546,7 +542,6 @@ public final class Math {
         return this;
       }
 
-      // required sint32 z = 3;
       private int z_ ;
       /**
        * <code>required sint32 z = 3;</code>
@@ -590,7 +585,7 @@ public final class Math {
     // @@protoc_insertion_point(class_scope:downearth.Vec3i)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Vec3i_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -609,23 +604,23 @@ public final class Math {
       "essageB\004Math"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_downearth_Vec3i_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_downearth_Vec3i_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Vec3i_descriptor,
-              new java.lang.String[] { "X", "Y", "Z", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_downearth_Vec3i_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_downearth_Vec3i_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Vec3i_descriptor,
+        new java.lang.String[] { "X", "Y", "Z", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

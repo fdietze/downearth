@@ -8,10 +8,10 @@ public final class MaterialDefinitions {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface MaterialsOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface MaterialsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Materials)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated .downearth.Material material = 1;
     /**
      * <code>repeated .downearth.Material material = 1;</code>
      */
@@ -40,8 +40,9 @@ public final class MaterialDefinitions {
    * Protobuf type {@code downearth.Materials}
    */
   public static final class Materials extends
-      com.google.protobuf.GeneratedMessage
-      implements MaterialsOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Materials)
+      MaterialsOrBuilder {
     // Use Materials.newBuilder() to construct.
     private Materials(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -137,7 +138,6 @@ public final class MaterialDefinitions {
       return PARSER;
     }
 
-    // repeated .downearth.Material material = 1;
     public static final int MATERIAL_FIELD_NUMBER = 1;
     private java.util.List<downearth.message.MaterialDefinitions.Material> material_;
     /**
@@ -179,7 +179,8 @@ public final class MaterialDefinitions {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       for (int i = 0; i < getMaterialCount(); i++) {
         if (!getMaterial(i).isInitialized()) {
@@ -292,8 +293,9 @@ public final class MaterialDefinitions {
      * Protobuf type {@code downearth.Materials}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.MaterialDefinitions.MaterialsOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Materials)
+        downearth.message.MaterialDefinitions.MaterialsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.MaterialDefinitions.internal_static_downearth_Materials_descriptor;
@@ -443,7 +445,6 @@ public final class MaterialDefinitions {
       }
       private int bitField0_;
 
-      // repeated .downearth.Material material = 1;
       private java.util.List<downearth.message.MaterialDefinitions.Material> material_ =
         java.util.Collections.emptyList();
       private void ensureMaterialIsMutable() {
@@ -585,7 +586,8 @@ public final class MaterialDefinitions {
           java.lang.Iterable<? extends downearth.message.MaterialDefinitions.Material> values) {
         if (materialBuilder_ == null) {
           ensureMaterialIsMutable();
-          super.addAll(values, material_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, material_);
           onChanged();
         } else {
           materialBuilder_.addAllMessages(values);
@@ -694,10 +696,10 @@ public final class MaterialDefinitions {
     // @@protoc_insertion_point(class_scope:downearth.Materials)
   }
 
-  public interface MaterialOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface MaterialOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Material)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required string name = 1;
     /**
      * <code>required string name = 1;</code>
      */
@@ -712,7 +714,6 @@ public final class MaterialDefinitions {
     com.google.protobuf.ByteString
         getNameBytes();
 
-    // repeated .downearth.Property property = 2;
     /**
      * <code>repeated .downearth.Property property = 2;</code>
      */
@@ -737,12 +738,11 @@ public final class MaterialDefinitions {
     downearth.message.MaterialDefinitions.PropertyOrBuilder getPropertyOrBuilder(
         int index);
 
-    // repeated string parent = 3;
     /**
      * <code>repeated string parent = 3;</code>
      */
-    java.util.List<java.lang.String>
-    getParentList();
+    com.google.protobuf.ProtocolStringList
+        getParentList();
     /**
      * <code>repeated string parent = 3;</code>
      */
@@ -761,8 +761,9 @@ public final class MaterialDefinitions {
    * Protobuf type {@code downearth.Material}
    */
   public static final class Material extends
-      com.google.protobuf.GeneratedMessage
-      implements MaterialOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Material)
+      MaterialOrBuilder {
     // Use Material.newBuilder() to construct.
     private Material(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -809,8 +810,9 @@ public final class MaterialDefinitions {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              name_ = input.readBytes();
+              name_ = bs;
               break;
             }
             case 18: {
@@ -822,11 +824,12 @@ public final class MaterialDefinitions {
               break;
             }
             case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                 parent_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000004;
               }
-              parent_.add(input.readBytes());
+              parent_.add(bs);
               break;
             }
           }
@@ -841,7 +844,7 @@ public final class MaterialDefinitions {
           property_ = java.util.Collections.unmodifiableList(property_);
         }
         if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-          parent_ = new com.google.protobuf.UnmodifiableLazyStringList(parent_);
+          parent_ = parent_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -875,7 +878,6 @@ public final class MaterialDefinitions {
     }
 
     private int bitField0_;
-    // required string name = 1;
     public static final int NAME_FIELD_NUMBER = 1;
     private java.lang.Object name_;
     /**
@@ -918,7 +920,6 @@ public final class MaterialDefinitions {
       }
     }
 
-    // repeated .downearth.Property property = 2;
     public static final int PROPERTY_FIELD_NUMBER = 2;
     private java.util.List<downearth.message.MaterialDefinitions.Property> property_;
     /**
@@ -954,13 +955,12 @@ public final class MaterialDefinitions {
       return property_.get(index);
     }
 
-    // repeated string parent = 3;
     public static final int PARENT_FIELD_NUMBER = 3;
     private com.google.protobuf.LazyStringList parent_;
     /**
      * <code>repeated string parent = 3;</code>
      */
-    public java.util.List<java.lang.String>
+    public com.google.protobuf.ProtocolStringList
         getParentList() {
       return parent_;
     }
@@ -992,7 +992,8 @@ public final class MaterialDefinitions {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasName()) {
         memoizedIsInitialized = 0;
@@ -1128,8 +1129,9 @@ public final class MaterialDefinitions {
      * Protobuf type {@code downearth.Material}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.MaterialDefinitions.MaterialOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Material)
+        downearth.message.MaterialDefinitions.MaterialOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.MaterialDefinitions.internal_static_downearth_Material_descriptor;
@@ -1215,8 +1217,7 @@ public final class MaterialDefinitions {
           result.property_ = propertyBuilder_.build();
         }
         if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          parent_ = new com.google.protobuf.UnmodifiableLazyStringList(
-              parent_);
+          parent_ = parent_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000004);
         }
         result.parent_ = parent_;
@@ -1314,7 +1315,6 @@ public final class MaterialDefinitions {
       }
       private int bitField0_;
 
-      // required string name = 1;
       private java.lang.Object name_ = "";
       /**
        * <code>required string name = 1;</code>
@@ -1328,9 +1328,12 @@ public final class MaterialDefinitions {
       public java.lang.String getName() {
         java.lang.Object ref = name_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          name_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            name_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1388,7 +1391,6 @@ public final class MaterialDefinitions {
         return this;
       }
 
-      // repeated .downearth.Property property = 2;
       private java.util.List<downearth.message.MaterialDefinitions.Property> property_ =
         java.util.Collections.emptyList();
       private void ensurePropertyIsMutable() {
@@ -1530,7 +1532,8 @@ public final class MaterialDefinitions {
           java.lang.Iterable<? extends downearth.message.MaterialDefinitions.Property> values) {
         if (propertyBuilder_ == null) {
           ensurePropertyIsMutable();
-          super.addAll(values, property_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, property_);
           onChanged();
         } else {
           propertyBuilder_.addAllMessages(values);
@@ -1628,7 +1631,6 @@ public final class MaterialDefinitions {
         return propertyBuilder_;
       }
 
-      // repeated string parent = 3;
       private com.google.protobuf.LazyStringList parent_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureParentIsMutable() {
         if (!((bitField0_ & 0x00000004) == 0x00000004)) {
@@ -1639,9 +1641,9 @@ public final class MaterialDefinitions {
       /**
        * <code>repeated string parent = 3;</code>
        */
-      public java.util.List<java.lang.String>
+      public com.google.protobuf.ProtocolStringList
           getParentList() {
-        return java.util.Collections.unmodifiableList(parent_);
+        return parent_.getUnmodifiableView();
       }
       /**
        * <code>repeated string parent = 3;</code>
@@ -1694,7 +1696,8 @@ public final class MaterialDefinitions {
       public Builder addAllParent(
           java.lang.Iterable<java.lang.String> values) {
         ensureParentIsMutable();
-        super.addAll(values, parent_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, parent_);
         onChanged();
         return this;
       }
@@ -1732,10 +1735,10 @@ public final class MaterialDefinitions {
     // @@protoc_insertion_point(class_scope:downearth.Material)
   }
 
-  public interface PropertyOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface PropertyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:downearth.Property)
+      com.google.protobuf.MessageOrBuilder {
 
-    // required string key = 1;
     /**
      * <code>required string key = 1;</code>
      */
@@ -1750,7 +1753,6 @@ public final class MaterialDefinitions {
     com.google.protobuf.ByteString
         getKeyBytes();
 
-    // required double value = 2;
     /**
      * <code>required double value = 2;</code>
      */
@@ -1764,8 +1766,9 @@ public final class MaterialDefinitions {
    * Protobuf type {@code downearth.Property}
    */
   public static final class Property extends
-      com.google.protobuf.GeneratedMessage
-      implements PropertyOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:downearth.Property)
+      PropertyOrBuilder {
     // Use Property.newBuilder() to construct.
     private Property(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1812,8 +1815,9 @@ public final class MaterialDefinitions {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              key_ = input.readBytes();
+              key_ = bs;
               break;
             }
             case 17: {
@@ -1861,7 +1865,6 @@ public final class MaterialDefinitions {
     }
 
     private int bitField0_;
-    // required string key = 1;
     public static final int KEY_FIELD_NUMBER = 1;
     private java.lang.Object key_;
     /**
@@ -1904,7 +1907,6 @@ public final class MaterialDefinitions {
       }
     }
 
-    // required double value = 2;
     public static final int VALUE_FIELD_NUMBER = 2;
     private double value_;
     /**
@@ -1927,7 +1929,8 @@ public final class MaterialDefinitions {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       if (!hasKey()) {
         memoizedIsInitialized = 0;
@@ -2049,8 +2052,9 @@ public final class MaterialDefinitions {
      * Protobuf type {@code downearth.Property}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements downearth.message.MaterialDefinitions.PropertyOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:downearth.Property)
+        downearth.message.MaterialDefinitions.PropertyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return downearth.message.MaterialDefinitions.internal_static_downearth_Property_descriptor;
@@ -2182,7 +2186,6 @@ public final class MaterialDefinitions {
       }
       private int bitField0_;
 
-      // required string key = 1;
       private java.lang.Object key_ = "";
       /**
        * <code>required string key = 1;</code>
@@ -2196,9 +2199,12 @@ public final class MaterialDefinitions {
       public java.lang.String getKey() {
         java.lang.Object ref = key_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          key_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            key_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2256,7 +2262,6 @@ public final class MaterialDefinitions {
         return this;
       }
 
-      // required double value = 2;
       private double value_ ;
       /**
        * <code>required double value = 2;</code>
@@ -2300,17 +2305,17 @@ public final class MaterialDefinitions {
     // @@protoc_insertion_point(class_scope:downearth.Property)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Materials_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_Materials_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Material_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_downearth_Material_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_downearth_Property_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -2333,35 +2338,35 @@ public final class MaterialDefinitions {
       "ons"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_downearth_Materials_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_downearth_Materials_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Materials_descriptor,
-              new java.lang.String[] { "Material", });
-          internal_static_downearth_Material_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_downearth_Material_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Material_descriptor,
-              new java.lang.String[] { "Name", "Property", "Parent", });
-          internal_static_downearth_Property_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_downearth_Property_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_downearth_Property_descriptor,
-              new java.lang.String[] { "Key", "Value", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_downearth_Materials_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_downearth_Materials_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Materials_descriptor,
+        new java.lang.String[] { "Material", });
+    internal_static_downearth_Material_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_downearth_Material_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Material_descriptor,
+        new java.lang.String[] { "Name", "Property", "Parent", });
+    internal_static_downearth_Property_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_downearth_Property_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_downearth_Property_descriptor,
+        new java.lang.String[] { "Key", "Value", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
