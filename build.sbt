@@ -1,62 +1,80 @@
-import sbtprotobuf.{ProtobufPlugin=>PB}
+import sbtprotobuf.{ProtobufPlugin => PB}
 
-name := "downearth"
+// Was `TaskKey[Unit]("benchmark")` + `fullRunTask` in the old build.scala;
+// both APIs are gone in sbt 1.x. Reimplemented with the modern `.toTask`
+// pattern to invoke Test's `runMain` with a fixed main class.
+lazy val benchmark = taskKey[Unit]("Run the downearth benchmark suite")
 
-organization := "fdad"
+// glWrapper (github.com/krux02/scalagl) used to be a git-based sbt
+// sub-project dependency, but its own build also depended on the dead
+// sbt-lwjgl-plugin and on the retired git:// protocol. Vendored instead
+// under src/main/scala/glwrapper/ -- see the README.md there for why.
+lazy val root = (project in file("."))
+  .enablePlugins(PB)
+  .settings(
+    name := "downearth",
+    organization := "fdad",
+    version := "0.2.0",
+    scalaVersion := "2.10.4",
 
-version := "0.2.0"
+    Compile / run / mainClass := Some("downearth.Main"),
 
-scalaVersion := "2.10.4"
+    benchmark := (Test / runMain).toTask(" downearth.benchmark.Main").value,
 
-mainClass in (Compile, run) := Some("downearth.Main")
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "2.2.2" % "test",
+      "com.typesafe.akka" %% "akka-actor" % "2.2.4",
+      "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
+      "org.simplex3d" %% "simplex3d-math-float" % "2.4.7",
+      "java3d" % "vecmath" % "1.3.1",
 
-resolvers ++= Seq(
-  //"Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
-  //"Slick" at "http://slick.cokeandcode.com/mavenrepo"
-)
+      // LWJGL: sbt-lwjgl-plugin is unmaintained/sbt-1.x-incompatible, so we
+      // depend on the LWJGL maven artifacts directly instead (same jars the
+      // plugin used to pull in under the hood). Native extraction below
+      // replaces the plugin's automatic unpacking step.
+      "org.lwjgl.lwjgl" % "lwjgl" % "2.9.1",
+      "org.lwjgl.lwjgl" % "lwjgl_util" % "2.9.1",
+      "org.lwjgl.lwjgl" % "lwjgl-platform" % "2.9.1" classifier "natives-linux" classifier "natives-windows" classifier "natives-osx"
+    ),
 
-libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.2" % "test",
-  "com.typesafe.akka" %% "akka-actor" % "2.2.4",
-  //"org.scala-lang" % "scala-reflect" % "2.10.1",
-  "org.simplex3d" %% "simplex3d-math-double" % "2.4.7",
-  "org.simplex3d" %% "simplex3d-math-float" % "2.4.7",
-  //"slick" % "slick" % "274",
-  "java3d" % "vecmath" % "1.3.1"
-  // "com.google.protobuf" % "protobuf-java" % "2.5.0"
-)
+    ProtobufConfig / version := "2.6.1",
 
-//net.virtualvoid.sbt.graph.Plugin.graphSettings
+    scalacOptions ++= Seq(
+      "-unchecked",
+      "-deprecation",
+      "-feature",
+      "-Yinline", "-Yinline-warnings",
+      "-language:_"
+    ),
 
-//filterScalaLibrary := false
+    // fork is required for javaOptions (incl. java.library.path for LWJGL
+    // natives below) to actually reach the running JVM
+    run / fork := true,
 
-seq( LWJGLPlugin.lwjglSettings: _*)
+    run / javaOptions ++= Seq(
+      "-XX:+ExplicitGCInvokesConcurrent",
+      "-Xmx512m",
+      "-Dorg.lwjgl.util.Debug=true",
+      "-Dmyprocessname"
+    ),
 
-seq(PB.protobufSettings: _*)
+    // Extract the OS-specific LWJGL native libraries (.so/.dll/.dylib) from
+    // the natives jar into target/natives, and point java.library.path at
+    // them. This replaces what sbt-lwjgl-plugin used to do automatically.
+    Compile / resourceGenerators += Def.task {
+      val dir = (Compile / target).value / "natives"
+      val nativesJars = (Compile / dependencyClasspath).value
+        .map(_.data)
+        .filter(_.getName.contains("natives"))
+      IO.createDirectory(dir)
+      nativesJars.foreach(jar => IO.unzip(jar, dir))
+      Nil // no resources added to the classpath; natives are loaded via java.library.path below
+    }.taskValue,
+    run / javaOptions += s"-Djava.library.path=${(Compile / target).value / "natives"}",
 
-version in protobufConfig := "2.6.1"
-
-lwjgl.version := "2.9.1"
-
-scalacOptions ++= Seq(
-  "-unchecked", 
-  "-deprecation", 
-  "-feature", 
-  "-Yinline", "-Yinline-warnings",
-  "-language:_"
-  //,"-Xdisable-assertions", "-optimize"
-)
-
-javaOptions in run ++= Seq(
-  "-XX:+ExplicitGCInvokesConcurrent",
-  "-Xmx512m",
-  "-Dorg.lwjgl.util.Debug=true",
-//  "-Dorg.lwjgl.opengl.Window.undecorated=true",
-  "-Dmyprocessname"
-)
-
-initialCommands := """
-import simplex3d.math._
-import simplex3d.math.double._
-import simplex3d.math.double.functions._
-"""
+    initialCommands := """
+      import simplex3d.math._
+      import simplex3d.math.double._
+      import simplex3d.math.double.functions._
+    """
+  )

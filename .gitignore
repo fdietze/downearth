@@ -1,3 +1,5 @@
+result
+
 target/
 project/boot/
 .idea*
@@ -21,4 +23,7 @@ start
 
 screenshots
 config.xml
+
+# Nix
+.direnv/
 
